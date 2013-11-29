@@ -28,11 +28,6 @@ void timer_handler (int signum){
 
 int main (void) {
 
-    const char CHANNEL_LIST_FILE[]="channels.lst";
-    const char MAP_LIST_FILE[]="maps.lst";
-    const char GUILD_LIST_FILE[]="guild.lst";
-    const char CHARACTER_LIST_FILE[]="character.lst";
-
     const uint16_t PORT=5555;
 
     int master_sock;

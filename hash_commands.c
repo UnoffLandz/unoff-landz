@@ -24,7 +24,6 @@ void save_data(int connection){
     }
 }
 
-
 int process_hash_commands(int connection, char *text){
 
     int i=0;

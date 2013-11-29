@@ -10,14 +10,18 @@
 #define MOVE_BUFFER_MAX 100 //maximum buffered MOVE_TO's
 #define PATH_QUEUE_MAX 50000 //maximum tiles that can be queued whilst exploring a path
 #define PATH_MAX 100 //longest permitted path
-#define MIN_TRAVERSABLE_VALUE 1 //lowest value on map height map that is traversable
+#define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
+
+#define CHANNEL_LIST_FILE "channels.lst"
+#define MAP_LIST_FILE "maps.lst"
+#define GUILD_LIST_FILE "guild.lst"
+#define CHARACTER_LIST_FILE "character.lst"
 
 enum { //log events
     EVENT_NEW_CHAR,
     EVENT_ERROR,
     EVENT_SESSION
 };
-
 
 enum { //return values for validate_password function
     WRONG_PASSWORD=-1,
