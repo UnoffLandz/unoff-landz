@@ -152,8 +152,8 @@ void save_map(char *map_name, int id){
     }
 
     if(!fprintf(file, "%s\n %i\n",
-            strcpy(maps.map[0]->elm_filename, "./maps/startmap.elm"),
-            maps.map[0]->map_axis=192
+            strcpy(maps.map[id]->elm_filename, "./maps/startmap.elm"),
+            maps.map[id]->map_axis=192
         )){
         printf("map file %s\n", file_name);
         perror("problem saving data to file in function save_map");
@@ -1043,7 +1043,7 @@ void log_to_file(char *file_name, char *text) {
         }
     }
 
-    if(!fprintf(file, "%s", text)){
+    if(!fprintf(file, "%s\n", text)){
         printf("log file %s\n", file_name);
         perror("can't save data to file in function log_to_file");
         exit(EXIT_FAILURE);
