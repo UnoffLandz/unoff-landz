@@ -38,7 +38,7 @@ int main (void) {
     unsigned char recv_buffer[1024];
     int bytes_recv;
     unsigned char packet[1024];
-    int packet_length;
+    int packet_length=0;
     int sock_status;
     int lsb, msb;
     char msg[1024]="";
@@ -254,37 +254,39 @@ int main (void) {
                          clients.client[i]->cmd_buffer_end=0;
                     }
 
-                    // check if any data in buffer
-                    if(clients.client[i]->packet_buffer_length>0) {
+                    do {
+                        // check if any data in buffer
+                        if(clients.client[i]->packet_buffer_length>0) {
 
-                        lsb=clients.client[i]->packet_buffer[1];
-                        msb=clients.client[i]->packet_buffer[2];
-                        packet_length=lsb+(msb*256)+2;
+                            lsb=clients.client[i]->packet_buffer[1];
+                            msb=clients.client[i]->packet_buffer[2];
+                            packet_length=lsb+(msb*256)+2;
 
-                        // check if data is data in buffer is sufficient to make a packet
-                        if(clients.client[i]->packet_buffer_length>=packet_length) {
+                            // check if data is data in buffer is sufficient to make a packet
+                            if(clients.client[i]->packet_buffer_length>=packet_length) {
 
-                            // copy packet from buffer
-                            for(j=0; j<packet_length; j++){
-                                packet[j]=clients.client[i]->packet_buffer[j];
-                            }
+                                // copy packet from buffer
+                                for(j=0; j<packet_length; j++){
+                                    packet[j]=clients.client[i]->packet_buffer[j];
+                                }
 
-                            process_packet(i, packet);
+                                process_packet(i, packet);
 
-                            // remove packet from buffer
+                                // remove packet from buffer
 
-                            // memmove(clients.client[i]->buffer, clients.client[i]->buffer+packet_length, clients.client[i]->buffer_length-packet_length);
+                                // memmove(clients.client[i]->buffer, clients.client[i]->buffer+packet_length, clients.client[i]->buffer_length-packet_length);
 
-                            clients.client[i]->packet_buffer_length=clients.client[i]->packet_buffer_length-packet_length;
+                                clients.client[i]->packet_buffer_length=clients.client[i]->packet_buffer_length-packet_length;
 
-                            for(j=0;j<=clients.client[i]->packet_buffer_length; j++){
-                                clients.client[i]->packet_buffer[j]=clients.client[i]->packet_buffer[j+packet_length];
+                                for(j=0;j<=clients.client[i]->packet_buffer_length; j++){
+                                    clients.client[i]->packet_buffer[j]=clients.client[i]->packet_buffer[j+packet_length];
+                                }
+
                             }
 
                         }
 
-                    }
-
+                    } while(clients.client[i]->packet_buffer_length>=packet_length);
                 } // end of live sockets block
                 sleep(0.1);
 
