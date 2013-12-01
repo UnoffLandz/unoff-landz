@@ -143,33 +143,18 @@ int get_char_id(char *char_name){
     // loop through character list
     for(i=0; i<characters.count; i++){
 
-        //printf("Searching character list [%s]\n", characters.character[i]->char_name);
-
         // match char_name with an existing char
-        if(strcmp(char_name, characters.character[i]->char_name)==0) {
-            //printf("found character name [%s]\n", characters.character[i]->char_name);
-            return i;
-        }
+        if(strcmp(char_name, characters.character[i]->char_name)==0) return i;
      }
 
-    return CHARNAME_NOT_FOUND;
-
+    return CHAR_NOT_FOUND;
 }
 
-int validate_password(char *char_name, char *password){
+int validate_password(int char_id, char *password){
 
-    int char_id=get_char_id(char_name);
+    if(strcmp(password, characters.character[char_id]->password)==0) return PASSWORD_CORRECT;
 
-    if(char_id>=0) {
-        if(strcmp(password, characters.character[char_id]->password)==0) {
-            return char_id;
-        }
-        else {
-            return WRONG_PASSWORD;
-        }
-    }
-
-    return CHARNAME_NOT_FOUND;
+    return PASSWORD_INCORRECT;
 }
 
 void send_pm(int connection, char *text) {
@@ -489,8 +474,6 @@ void process_packet(int connection, unsigned char *packet){
 
         if(maps.map[map_id]->height_map[tile_dest]<MIN_TRAVERSABLE_VALUE){
 
-            //printf("illegal destination\n");
-
             sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
             send_server_text(sock, CHAT_SERVER, text_out);
         }
@@ -527,109 +510,109 @@ void process_packet(int connection, unsigned char *packet){
 
         case LOG_IN:
 
-        if(count_str_island(text)==2){
+        printf("LOG_IN connection [%i]\n", connection);
 
-            get_str_island(text, char_name, 1);
-            get_str_island(text, password, 2);
+        if(count_str_island(text)!=2){
+            sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-            char_id=validate_password(char_name, password);
+            sprintf(text_out, "malformed login attempt char name [%s] password [%s]\n", char_name, password);
+            log_event(EVENT_ERROR, text_out);
+            return;
+        }
 
-            if(char_id>=0){
+        get_str_island(text, char_name, 1);
+        get_str_island(text, password, 2);
+        printf("character_name[%s] password[%s]\n", char_name, password);
 
-                printf("LOG_IN connection [%i] character_name[%s] password[%s]\n", connection, char_name, password);
+        char_id=get_char_id(char_name);
 
-                //update client details with char
-                clients.client[connection]->character_id=char_id;
-                clients.client[connection]->status=LOGGED_IN;
+        if(char_id==CHAR_NOT_FOUND) {
+            send_you_dont_exist(sock);
+            printf("Login failed - character does not exist\n");
 
-                //check char status
-                switch (characters.character[char_id]->char_status) {
+            sprintf(text_out, "login attempt with unknown char name [%s] password [%s]\n", char_name, password);
+            log_event(EVENT_ERROR, text_out);
+            return;
+        }
 
-                    case CHAR_DEAD:
-                        send_login_not_ok(sock);
-                        //printf("Char rejected as dead\n");
-                        sprintf(text_out, "%cSorry. Your character died on %s. May they rest in peace.", c_red1+127, "");
-                        send_raw_text_packet(sock, CHAT_SERVER, text_out);
-                    break;
+        if(validate_password(char_id, password)==PASSWORD_INCORRECT){
+            send_login_not_ok(sock);
+            printf("Login failed - incorrect password\n");
 
-                    case CHAR_BANNED:
-                        send_login_not_ok(sock);
-                        //printf("Char rejected as banned\n");
-                        sprintf(text_out, "%cSorry. Your character has been locked", c_red1+127);
-                        send_raw_text_packet(sock, CHAT_SERVER, text_out);
-                    break;
+            sprintf(text_out, "login attempt with incorrect password char name [%s] password [%s]\n", char_name, password);
+            log_event(EVENT_ERROR, text_out);
+            return;
+        }
 
-                    case CHAR_ALIVE:
-                        // send initial data to client
-                        send_login_ok(sock);
-                        //printf("Login successful\n");
-                        send_you_are(sock, clients.client[connection]->character_id);
-                        send_change_map(sock, maps.map[characters.character[char_id]->map_id]->elm_filename);
+        //update client details with char
+        clients.client[connection]->character_id=char_id;
+        clients.client[connection]->status=LOGGED_IN;
 
-                        //debug_channels(char_id);
+        //check char status
+        if(characters.character[char_id]->char_status==CHAR_DEAD) {
+            send_login_not_ok(sock);
+            sprintf(text_out, "%cSorry. Your character died on %s. May they rest in peace.", c_red1+127, "");
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-                        send_get_active_channels(sock,
-                            characters.character[char_id]->active_chan,
-                            characters.character[char_id]->chan[0],
-                            characters.character[char_id]->chan[1],
-                            characters.character[char_id]->chan[2]);
+            sprintf(text_out, "login attempt for dead char [%s]\n", char_name);
+            log_event(EVENT_ERROR, text_out);
+            return;
+        }
 
-                        // add client to map list
-                        add_client_to_map(connection, map_id);
+        if(characters.character[char_id]->char_status==CHAR_BANNED) {
+            send_login_not_ok(sock);
+            sprintf(text_out, "%cSorry. Your character has been locked", c_red1+127);
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-                        //add client to chan list
-                        for(i=0; i<3; i++){
-                            if(characters.character[char_id]->chan[i]>0){
-                                add_client_to_channel(connection, characters.character[char_id]->chan[i]);
-                            }
-                        }
+            sprintf(text_out, "login attempt for locked char [%s]\n", char_name);
+            log_event(EVENT_ERROR, text_out);
+            return;
+        }
 
-                        // add in-game chars to this clients
-                        send_actors_to_client(connection);
+        //if we get this far then  char is alive and not banned or dead
+        send_login_ok(sock);
+        send_you_are(sock, clients.client[connection]->character_id);
 
-                        // add this char to each connected client
-                        broadcast_add_new_enhanced_actor_packet(connection);
+        //set char map to client
+        send_change_map(sock, maps.map[characters.character[char_id]->map_id]->elm_filename);
 
-                        // notify guild that char has logged on
-                        if(guild_id>0) {
-                            chan_colour=guilds.guild[guild_id]->log_on_notification_colour;
-                            sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, characters.character[char_id]->char_name);
-                            //broadcast_raw_text_packet(connection, guilds.guild[guild_id]->guild_chan_number, CHAT_GM, text_out);
-                            broadcast_guild_channel_chat(guild_id, text_out);
-                        }
+        //add client to local map list
+        add_client_to_map(connection, map_id);
 
-                        log_event(EVENT_SESSION, char_name);
+        //send char channels to client
+        send_get_active_channels(sock,
+            characters.character[char_id]->active_chan,
+            characters.character[char_id]->chan[0],
+            characters.character[char_id]->chan[1],
+            characters.character[char_id]->chan[2]);
 
-                        //SendStatsToClient($client[$x]['SOCK'], $client[$x]['CHAR_ID']);
-                        //SendMessage($client[$x]['SOCK'], HERE_YOUR_INVENTORY, $client[$x]['INVENTORY']);
-                    break;
-                }
-            }
-            else {
-
-                //if our char name and password fails to validate, here's where return an indication of why
-
-                switch(char_id){
-
-                    case WRONG_PASSWORD:
-                    send_login_not_ok(sock);
-                    printf("Login failed - incorrect password\n");
-                    break;
-
-                    case CHARNAME_NOT_FOUND:
-                    send_you_dont_exist(sock);
-                    printf("Login failed - character does not exist\n");
-                    break;
-
-                    default:
-                    log_event(EVENT_ERROR, "unknown password validation result in function process_packet");
-                    break;
-                }
+        //add client to local channel lists
+        for(i=0; i<3; i++){
+            if(characters.character[char_id]->chan[i]>0){
+                add_client_to_channel(connection, characters.character[char_id]->chan[i]);
             }
         }
-        else {
-            log_event(EVENT_ERROR, "malformed login packet");
+
+        // add in-game chars to this clients
+        send_actors_to_client(connection);
+
+        // add this char to each connected client
+        broadcast_add_new_enhanced_actor_packet(connection);
+
+        // notify guild that char has logged on
+        if(guild_id>0) {
+            chan_colour=guilds.guild[guild_id]->log_on_notification_colour;
+            sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, characters.character[char_id]->char_name);
+            broadcast_guild_channel_chat(guild_id, text_out);
         }
+
+        sprintf(text_out, "login succesful char [%s]\n", char_name);
+        log_event(EVENT_ERROR, text_out);
+
+        //SendStatsToClient($client[$x]['SOCK'], $client[$x]['CHAR_ID']);
+        //SendMessage($client[$x]['SOCK'], HERE_YOUR_INVENTORY, $client[$x]['INVENTORY']);
+
         break;
 
         case CREATE_CHAR:
@@ -649,7 +632,7 @@ void process_packet(int connection, unsigned char *packet){
                 //printf("created new character [%s] password [%s]\n", char_name, password);
 
                 // check if a character already exists with that name
-                if(get_char_id(char_name)==CHARNAME_NOT_FOUND){
+                if(get_char_id(char_name)==CHAR_NOT_FOUND){
 
                     // check if we'll exceed maximum number of characters
                     if(characters.count+1<characters.max){

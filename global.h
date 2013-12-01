@@ -29,8 +29,12 @@ enum { //log events
 };
 
 enum { //return values for validate_password function
-    WRONG_PASSWORD=-1,
-    CHARNAME_NOT_FOUND=-2
+    PASSWORD_CORRECT=0,
+    PASSWORD_INCORRECT=-1
+};
+
+enum { //return values for get_char_id
+    CHAR_NOT_FOUND =-1,
 };
 
 enum { //return values for file loading
