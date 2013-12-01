@@ -516,7 +516,7 @@ void process_packet(int connection, unsigned char *packet){
             sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
             send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-            sprintf(text_out, "malformed login attempt char name [%s] password [%s]\n", char_name, password);
+            sprintf(text_out, "malformed login attempt for existing char name [%s] password [%s]\n", char_name, password);
             log_event(EVENT_ERROR, text_out);
             return;
         }
@@ -529,19 +529,21 @@ void process_packet(int connection, unsigned char *packet){
 
         if(char_id==CHAR_NOT_FOUND) {
             send_you_dont_exist(sock);
-            printf("Login failed - character does not exist\n");
+            sprintf(text_out, "%cSorry, but that character name does not exist", c_red1+127);
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
             sprintf(text_out, "login attempt with unknown char name [%s] password [%s]\n", char_name, password);
-            log_event(EVENT_ERROR, text_out);
+            log_event(EVENT_SESSION, text_out);
             return;
         }
 
         if(validate_password(char_id, password)==PASSWORD_INCORRECT){
             send_login_not_ok(sock);
-            printf("Login failed - incorrect password\n");
+            sprintf(text_out, "%cSorry, but that password is incorrect", c_red1+127);
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
             sprintf(text_out, "login attempt with incorrect password char name [%s] password [%s]\n", char_name, password);
-            log_event(EVENT_ERROR, text_out);
+            log_event(EVENT_SESSION, text_out);
             return;
         }
 
@@ -556,7 +558,7 @@ void process_packet(int connection, unsigned char *packet){
             send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
             sprintf(text_out, "login attempt for dead char [%s]\n", char_name);
-            log_event(EVENT_ERROR, text_out);
+            log_event(EVENT_SESSION, text_out);
             return;
         }
 
@@ -566,7 +568,7 @@ void process_packet(int connection, unsigned char *packet){
             send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
             sprintf(text_out, "login attempt for locked char [%s]\n", char_name);
-            log_event(EVENT_ERROR, text_out);
+            log_event(EVENT_SESSION, text_out);
             return;
         }
 
@@ -617,117 +619,125 @@ void process_packet(int connection, unsigned char *packet){
 
         case CREATE_CHAR:
 
-            printf("CREATE_CHAR connection [%i]\n", connection);
+        printf("CREATE_CHAR connection [%i]\n", connection);
 
-            //debug_char_packet(packet);
+        if(count_str_island(text)!=2){
+            sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
+            send_create_char_not_ok(sock);
 
-            if(count_str_island(text)==2) {
+            sprintf(text_out, "malformed login attempt for new char name [%s] password [%s]\n", char_name, password);
+            log_event(EVENT_ERROR, text_out);
+            return;
+        }
 
-                //get the char name and password from the packet
-                get_str_island(text, char_name, 1);
-                get_str_island(text, password, 2);
+        //get the char name and password from the packet
+        get_str_island(text, char_name, 1);
+        get_str_island(text, password, 2);
 
-                i=strlen(char_name)+strlen(password)+2;
+        i=strlen(char_name)+strlen(password)+2;
 
-                //printf("created new character [%s] password [%s]\n", char_name, password);
+        if(char_id!=CHAR_NOT_FOUND) {
+            send_create_char_not_ok(sock);
+            sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-                // check if a character already exists with that name
-                if(get_char_id(char_name)==CHAR_NOT_FOUND){
+            sprintf(text_out, "login attempt for new char with existing char name [%s]\n", char_name);
+            log_event(EVENT_SESSION, text_out);
+            return;
+        }
 
-                    // check if we'll exceed maximum number of characters
-                    if(characters.count+1<characters.max){
+        // check if we'll exceed maximum number of characters
+        if(characters.count+1==characters.max){
+            send_create_char_not_ok(sock);
+            sprintf(text_out, "%cSorry, but the maximum number of characters on the server has been reached", c_red1+127);
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-                        id=characters.count; // count of chars runs from 1 whereas char_id's run from 0, hence
-                        characters.count++;  // we don't increase the count until the char record has been set up
-                                             // otherwise the char_id will be wrong
+            sprintf(text_out, "maximum number of characters on server has been reached\n");
+            log_event(EVENT_ERROR, text_out);
+            return;
+        }
 
-                        clients.client[connection]->character_id=id;
-                        clients.client[connection]->status=LOGGED_IN;
+        id=characters.count; // count of chars runs from 1 whereas char_id's run from 0, hence
+        characters.count++;  // we don't increase the count until the char record has been set up
+                             // otherwise the char_id will be wrong
 
-                        strcpy(characters.character[id]->char_name, char_name);
-                        strcpy(characters.character[id]->password, password);   //1
-                        characters.character[id]->time_played=0;                //2
-                        characters.character[id]->char_status=CHAR_ALIVE;       //3
-                        characters.character[id]->active_chan=0;                //4
-                        characters.character[id]->chan[0]=0; // chan 0          //5
-                        characters.character[id]->chan[1]=0; // chan 1          //6
-                        characters.character[id]->chan[2]=0; // chan 2          //7
-                        characters.character[id]->chan[3]=0; // chan 3 (reserved)   //8
-                        characters.character[id]->gm_permission=0;              //9
-                        characters.character[id]->ig_permission=0;              //10
-                        characters.character[id]->map_id=0;                     //11
-                        characters.character[id]->map_tile=4236;                //12
-                        characters.character[id]->guild_id=0;                   //13
-                        characters.character[id]->skin_type=data[i++];          //14
-                        characters.character[id]->hair_type=data[i++];          //15
-                        characters.character[id]->shirt_type=data[i++];         //16
-                        characters.character[id]->pants_type=data[i++];         //17
-                        characters.character[id]->boots_type=data[i++];         //18
-                        characters.character[id]->char_type=data[i++];          //19
-                        characters.character[id]->head_type=data[i++];          //20
-                        characters.character[id]->shield_type=SHIELD_NONE;      //21
-                        characters.character[id]->weapon_type=WEAPON_NONE;      //22
-                        characters.character[id]->cape_type=CAPE_NONE;          //23
-                        characters.character[id]->helmet_type=HELMET_NONE;      //24
-                        characters.character[id]->neck_type=0;                  //25
-                        characters.character[id]->max_health=0;                 //26
-                        characters.character[id]->current_health=0;             //27
-                        characters.character[id]->visual_proximity=15;          //28
-                        characters.character[id]->local_text_proximity=12;      //29
+        clients.client[connection]->character_id=id;
+        clients.client[connection]->status=LOGGED_IN;
 
-                        // save the character data to file
-                        save_new_character(characters.character[id]->char_name, id);
+        strcpy(characters.character[id]->char_name, char_name);
+        strcpy(characters.character[id]->password, password);   //1
+        characters.character[id]->time_played=0;                //2
+        characters.character[id]->char_status=CHAR_ALIVE;       //3
+        characters.character[id]->active_chan=1;                //4 automatically set chan nub
+        characters.character[id]->chan[0]=1; // chan 0          //5 automatically set chan nub
+        characters.character[id]->chan[1]=0; // chan 1          //6
+        characters.character[id]->chan[2]=0; // chan 2          //7
+        characters.character[id]->chan[3]=0; // chan 3 (reserved)   //8
+        characters.character[id]->gm_permission=0;              //9
+        characters.character[id]->ig_permission=0;              //10
+        characters.character[id]->map_id=DEFAULT_MAP;            //11
+        characters.character[id]->map_tile=4236;                //12
+        characters.character[id]->guild_id=0;                   //13
+        characters.character[id]->skin_type=data[i++];          //14
+        characters.character[id]->hair_type=data[i++];          //15
+        characters.character[id]->shirt_type=data[i++];         //16
+        characters.character[id]->pants_type=data[i++];         //17
+        characters.character[id]->boots_type=data[i++];         //18
+        characters.character[id]->char_type=data[i++];          //19
+        characters.character[id]->head_type=data[i++];          //20
+        characters.character[id]->shield_type=SHIELD_NONE;      //21
+        characters.character[id]->weapon_type=WEAPON_NONE;      //22
+        characters.character[id]->cape_type=CAPE_NONE;          //23
+        characters.character[id]->helmet_type=HELMET_NONE;      //24
+        characters.character[id]->neck_type=0;                  //25
+        characters.character[id]->max_health=0;                 //26
+        characters.character[id]->current_health=0;             //27
+        characters.character[id]->visual_proximity=15;          //28
+        characters.character[id]->local_text_proximity=12;      //29
 
-                        // send initial data to client
-                        send_login_ok(sock);
-                        send_you_are(sock, clients.client[connection]->character_id);
-                        send_change_map(sock, maps.map[characters.character[id]->map_id]->elm_filename);
-                        send_get_active_channels(sock,
-                            characters.character[id]->active_chan,
-                            characters.character[id]->chan[0],
-                            characters.character[id]->chan[1],
-                            characters.character[id]->chan[2]);
+        // save the character data to file
+        save_new_character(characters.character[id]->char_name, id);
 
-                        //send_here_your_inventory(sock);
+        // send initial data to client
+        send_login_ok(sock);
+        send_you_are(sock, clients.client[connection]->character_id);
 
-                        // add in-game chars to this clients
-                        send_actors_to_client(connection);
+        //send map to client
+        send_change_map(sock, maps.map[characters.character[id]->map_id]->elm_filename);
 
-                        // add this char to each connected client
-                        broadcast_add_new_enhanced_actor_packet(connection);
+        //add client to local map list
+        add_client_to_map(connection, characters.character[id]->map_id);
 
-                        sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
-                        send_server_text(sock, CHAT_SERVER, text_out);
+        //send channels to client
+        send_get_active_channels(sock,
+            characters.character[id]->active_chan,
+            characters.character[id]->chan[0],
+            characters.character[id]->chan[1],
+            characters.character[id]->chan[2]);
 
-                        send_create_char_ok(sock);
-
-                        log_event(EVENT_NEW_CHAR, char_name);
-                    }
-                    else {
-                        //printf("Character rejected - maximum game characters exceeded\n");
-                        sprintf(text_out, "%cSorry. The maximum characters supported by the server has been exceeded.", c_red3+127);
-                        send_server_text(sock, CHAT_SERVER, text_out);
-                        sprintf(text_out, "%cPlease report the issue to the game administrator.", c_red3+127);
-                        send_server_text(sock, CHAT_SERVER, text_out);
-
-                        send_create_char_not_ok(sock);
-
-                        log_event(EVENT_ERROR, "server character max exceeded");
-                    }
-                }
-                else {
-                    //printf("Character rejected - duplication of existing character name\n");
-                    sprintf(text_out, "%cSorry. We can't create your character as one with the same name", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-                    sprintf(text_out, "%c already exists. Please try another name.", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-
-                    send_create_char_not_ok(sock);
-                }
-             }
-            else {
-                log_event(EVENT_ERROR, "malformed character creation string in function process_packet");
+        //add client to local channel lists
+        for(i=0; i<3; i++){
+            if(characters.character[char_id]->chan[i]>0){
+                add_client_to_channel(connection, characters.character[char_id]->chan[i]);
             }
+        }
+
+        //send_here_your_inventory(sock);
+
+        // add in-game chars to this clients
+        send_actors_to_client(connection);
+
+        // add this char to each connected client
+        broadcast_add_new_enhanced_actor_packet(connection);
+
+        sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        send_create_char_ok(sock);
+
+        sprintf(text_out, "New character created name [%s] password [%s]\n", char_name, password);
+        log_event(EVENT_NEW_CHAR, text_out);
 
         break;
 

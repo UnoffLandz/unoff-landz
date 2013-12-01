@@ -17,6 +17,8 @@
 #define GUILD_LIST_FILE "guild.lst"
 #define CHARACTER_LIST_FILE "character.lst"
 
+#define DEFAULT_MAP 0 //set starting map to Isla Prima for new chars
+
 enum { // return values for process_chat function
     CHAR_NOT_IN_CHAN=-1,
     CHAN_CHAT_SENT=0
