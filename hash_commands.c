@@ -176,6 +176,7 @@ int process_hash_commands(int connection, char *text){
                 break;
 
                 case CHANNEL_JOINED:
+
                     // need to echo back to player which channel was just joined and its description etc
                     sprintf(text_out, "%cYou joined channel %s", c_green3+127, channels.channel[channel_number]->channel_name);
                     send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
@@ -191,7 +192,9 @@ int process_hash_commands(int connection, char *text){
 
                     // notify other channel users that player has joined on
                     sprintf(text_out, "%c%s JOINED THE CHANNEL", c_green3+127, characters.character[char_id]->char_name);
-                    broadcast_raw_text_packet(connection, channel_number, CHAT_SERVER, text_out);
+                    broadcast_channel_chat(channel_number, text_out);
+                    //broadcast_raw_text_packet(connection, channel_number, CHAT_SERVER, text_out);
+
                 break;
 
                 default:
@@ -245,7 +248,8 @@ int process_hash_commands(int connection, char *text){
 
                     // notify other channel users that player has left channel
                     sprintf(text_out, "%c%s LEFT THE CHANNEL", c_green3+127, characters.character[char_id]->char_name);
-                    broadcast_raw_text_packet(connection, channel_number, CHAT_SERVER, text_out);
+                    broadcast_channel_chat(channel_number, text_out);
+                    //broadcast_raw_text_packet(connection, channel_number, CHAT_SERVER, text_out);
                 break;
             }
         }

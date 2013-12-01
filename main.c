@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <sys/fcntl.h>
 #include <string.h>
+#include <arpa/inet.h>
 //#include <signal.h> //required for timer
 //#include <sys/time.h> //required for timer
 
@@ -32,7 +33,7 @@ int main (void) {
 
     int master_sock;
     int new_sock;
-    int i,j;
+    int i=0, j=0;
     size_t clilen;
     struct sockaddr_in cli_addr, servername;
     unsigned char recv_buffer[1024];
@@ -42,10 +43,12 @@ int main (void) {
     int sock_status;
     int lsb, msb;
     char msg[1024]="";
-    int char_id;
+    int char_id=0;
+    int guild_id=0;
     char text_out[1024]="";
     int chan_colour=0;
-    int guild_chan_number=0;
+    //int guild_chan_number=0;
+    int yes=1;
 
 /*
     struct sigaction sa;
@@ -92,6 +95,12 @@ int main (void) {
         printf("master socket set non-blocking\n");
     }
 
+    //lose port messages
+    if(setsockopt(master_sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int))==-1){
+        perror ("set socket option error");
+        exit(EXIT_FAILURE);
+    }
+
     /* Bind the socket to an address */
     servername.sin_family = AF_INET;
     servername.sin_port = htons (PORT);
@@ -128,8 +137,8 @@ int main (void) {
                 exit(EXIT_FAILURE);
             }
 
-            //printf("Server: connect from host %s, port %hd.\n", inet_ntoa (cli_addr.sin_addr), ntohs (cli_addr.sin_port));
-            printf("New connection\n");
+            printf("New connection from %s on socket %d\n", inet_ntoa(cli_addr.sin_addr), new_sock);
+            //printf("New connection\n");
             bzero(recv_buffer, 1024);
 
             // find free connection slot
@@ -143,7 +152,7 @@ int main (void) {
                 clients.client[i]->sock=new_sock;
                 clients.client[i]->status=CONNECTED;
                 clients.client[i]->packet_buffer_length=0;
-                //clients.client[i]->ip_address=???
+                strcpy(clients.client[j]->ip_address, inet_ntoa(cli_addr.sin_addr));
 
                 sprintf(msg, "WELCOME TO THE UNOFF SERVER");
                 send_server_text(new_sock, CHAT_SERVER, msg);
@@ -195,13 +204,16 @@ int main (void) {
 
                         printf("Closed Sock %i\n", clients.client[i]->sock);
 
-                        if(characters.character[char_id]->guild_id>0) {
+                        guild_id=characters.character[char_id]->guild_id;
+
+                        if(guild_id>0) {
 
                             // broadcast to guild when char logs out
-                            guild_chan_number=guilds.guild[characters.character[char_id]->guild_id]->guild_chan_number;
-                            chan_colour=guilds.guild[characters.character[char_id]->guild_id]->log_off_notification_colour;
+                            chan_colour=guilds.guild[guild_id]->log_off_notification_colour;
                             sprintf(text_out, "%c%s LEFT THE GAME", chan_colour, characters.character[char_id]->char_name);
-                            broadcast_raw_text_packet(i, guild_chan_number, CHAT_GM, text_out);
+
+                            //broadcast_raw_text_packet(i, guild_chan_number, CHAT_GM, text_out);
+                            broadcast_guild_channel_chat(guild_id, text_out);
                         }
 
                         close(clients.client[i]->sock);

@@ -17,6 +17,11 @@
 #define GUILD_LIST_FILE "guild.lst"
 #define CHARACTER_LIST_FILE "character.lst"
 
+enum { // return values for process_chat function
+    CHAR_NOT_IN_CHAN=-1,
+    CHAN_CHAT_SENT=0
+};
+
 enum { //log events
     EVENT_NEW_CHAR,
     EVENT_ERROR,
@@ -288,6 +293,8 @@ struct map_node_type{
     int object_3d_map_size;
     unsigned char object_2d_map[50000];
     int object_2d_map_size;
+    int client_list[MAX_CLIENTS];
+    int client_list_count;
 };
 
 struct map_list_type {
@@ -327,9 +334,9 @@ struct client_node_type{
     int move_buffer_size;
     time_t time_of_last_move;
     //signed long int time_of_last_move;
-    //unsigned char *cmd_buffer[10];
     unsigned char cmd_buffer[10][1024];
     int cmd_buffer_end;
+    char ip_address[16];
  };
 
 struct client_list_type {
@@ -345,6 +352,8 @@ struct channel_node_type{
     int owner_id; /* could be char or guild depending on chan_type */
     char password[1024];
     char description[1024];
+    int client_list[MAX_CLIENTS];
+    int client_list_count;
 };
 
 struct channel_list_type {

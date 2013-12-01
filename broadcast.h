@@ -17,4 +17,10 @@ void broadcast_add_actor_packet(int connection, unsigned char move, int destinat
 
 int get_proximity(int tile1, int tile2, int map_axis);
 
+void broadcast_local_chat(int connection, int map_id, char *text);
+
+void broadcast_channel_chat(int channel, char *text);
+
+void broadcast_guild_channel_chat(int guild_id, char *text);
+
 #endif // BROADCAST_H_INCLUDED

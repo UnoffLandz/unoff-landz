@@ -14,7 +14,7 @@
 #include "character_movement.h" //needed for get_move_command_vector
 #include "chat.h"
 #include "debug.h"
-//#include "files.h"
+#include "maps.h"
 
 /*
 void send_here_your_inventory(int sock){
@@ -382,10 +382,10 @@ void process_packet(int connection, unsigned char *packet){
     char password[1024]="";
 
     int id;
-    int channel_number=0;
     int chan_colour=0;
     int char_id=clients.client[connection]->character_id;
     int map_id=characters.character[char_id]->map_id;
+    int guild_id=characters.character[char_id]->guild_id;
     int sock=clients.client[connection]->sock;
     int protocol=packet[0];
     int lsb=packet[1];
@@ -413,19 +413,23 @@ void process_packet(int connection, unsigned char *packet){
             switch(text[0]){
 
                 case '@': // chat
-                    //remove @ ------- need to move this to process_chat function
-                    memcpy(text, text+1, text_len-1);
-                    text[text_len-1]='\0';
+
+                    //memcpy(text, text+1, text_len-1);
+                    //text[text_len-1]='\0';
 
                     switch(process_chat(connection, text)){
 
-                        case -1:
+                        case CHAR_NOT_IN_CHAN:
                             sprintf(text_out, "%cyou have not joined a channel yet", c_red3+127);
                             send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
                         break;
 
+                        case CHAN_CHAT_SENT:
+                            //this case is reserved for debug purposes
+                        break;
+
                         default:
-                            //log_event(EVENT_ERROR, "unknown result from function process_chat");
+                            log_event(EVENT_ERROR, "unknown result from function process_chat");
                         break;
                     }
                 break;
@@ -435,7 +439,7 @@ void process_packet(int connection, unsigned char *packet){
                     switch(process_hash_commands(connection, text, text_len)){
 
                         case HASH_CMD_UNSUPPORTED:
-                            //for debug
+                            //this case is reserved for debug purposes
                         break;
 
                         case HASH_CMD_UNKNOWN:
@@ -444,11 +448,11 @@ void process_packet(int connection, unsigned char *packet){
                         break;
 
                         case HASH_CMD_EXECUTED:
-                            //for debug
+                             //this case is reserved for debug purposes
                         break;
 
                         case HASH_CMD_FAILED:
-                            //for debug
+                             //this case is reserved for debug purposes
                         break;
 
                         default:
@@ -460,7 +464,8 @@ void process_packet(int connection, unsigned char *packet){
 
                 default://local chat
                     sprintf(text_out, "%c[%s:] %s", c_grey1, characters.character[char_id]->char_name, text);
-                    broadcast_raw_text_packet(connection, 0, CHAT_LOCAL, text_out);
+                    broadcast_local_chat(connection, map_id, text_out);
+                    //broadcast_raw_text_packet(connection, 0, CHAT_LOCAL, text_out);
                 break;
             }
 
@@ -569,6 +574,16 @@ void process_packet(int connection, unsigned char *packet){
                             characters.character[char_id]->chan[1],
                             characters.character[char_id]->chan[2]);
 
+                        // add client to map list
+                        add_client_to_map(connection, map_id);
+
+                        //add client to chan list
+                        for(i=0; i<3; i++){
+                            if(characters.character[char_id]->chan[i]>0){
+                                add_client_to_channel(connection, characters.character[char_id]->chan[i]);
+                            }
+                        }
+
                         // add in-game chars to this clients
                         send_actors_to_client(connection);
 
@@ -576,11 +591,11 @@ void process_packet(int connection, unsigned char *packet){
                         broadcast_add_new_enhanced_actor_packet(connection);
 
                         // notify guild that char has logged on
-                        if(characters.character[char_id]->guild_id>0) {
-                            channel_number=guilds.guild[characters.character[char_id]->guild_id]->guild_chan_number;
-                            chan_colour=guilds.guild[characters.character[char_id]->guild_id]->log_on_notification_colour;
+                        if(guild_id>0) {
+                            chan_colour=guilds.guild[guild_id]->log_on_notification_colour;
                             sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, characters.character[char_id]->char_name);
-                            broadcast_raw_text_packet(connection, channel_number, CHAT_GM, text_out);
+                            //broadcast_raw_text_packet(connection, guilds.guild[guild_id]->guild_chan_number, CHAT_GM, text_out);
+                            broadcast_guild_channel_chat(guild_id, text_out);
                         }
 
                         log_event(EVENT_SESSION, char_name);
