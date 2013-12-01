@@ -354,13 +354,12 @@ int get_indirect_path(int position, int destination, int map_id, int *indirect_p
     int highest_wave=0;
     int lowest_wave=0;
     int lowest_node=0;
-
-
+/*
     unsigned char map[50000];
     for(i=0; i<50000; i++){
         map[i]=maps.map[map_id]->height_map[i];
     }
-
+*/
     queue_count=1;
     queue[queue_count-1]=position;
     parse_start=0;
@@ -384,7 +383,7 @@ int get_indirect_path(int position, int destination, int map_id, int *indirect_p
                     if(bounds==TILE_TRAVERSABLE){
 
                         if(find_existing_tile(check_tile, queue_count, queue)==-1){
-                            map[check_tile]=wave_count;
+                            //map[check_tile]=wave_count;
                             wave[queue_count]=wave_count;
                             queue[queue_count]=check_tile;
                             queue_count++;
@@ -441,11 +440,11 @@ int get_indirect_path(int position, int destination, int map_id, int *indirect_p
 
         wave_count--;
         indirect_path[wave_count-1]=queue[lowest_node];
-        map[indirect_path[wave_count-1]]=wave_count;
+        //map[indirect_path[wave_count-1]]=wave_count;
 
     }while(wave_count>0);
 
-    show_map(destination, map);
+    //show_map(destination, map);
 
     return PATH_OPEN;
 }
@@ -508,7 +507,7 @@ int get_direct_path(int position, int destination, int map_id, int *direct_path_
     return PATH_OPEN;
 }
 
-void process_char_move(int connection){
+void process_char_move(int connection, time_t current_utime){
 
     int i=0;
     int direct_path[PATH_MAX];
@@ -525,7 +524,7 @@ void process_char_move(int connection){
     int map_axis=maps.map[map_id]->map_axis;
     int current_tile=characters.character[clients.client[connection]->character_id]->map_tile;
     int destination_tile=0;
-    time_t current_utime;
+    //time_t current_utime;
     int move_cmd=0;
     char text_out[1024];
 
@@ -619,8 +618,8 @@ void process_char_move(int connection){
     if(clients.client[connection]->path_max>clients.client[connection]->path_count){
 
         // get time
-        gettimeofday(&time_check, NULL);
-        current_utime=time_check.tv_usec;
+        //gettimeofday(&time_check, NULL);
+        //current_utime=time_check.tv_usec;
 
         //adjust timer to compensate for wrap-around
         if(clients.client[connection]->time_of_last_move>current_utime) current_utime+=1000000;
@@ -639,6 +638,7 @@ void process_char_move(int connection){
                 printf(" - executed\n");
 
                 //update the time of movement
+                gettimeofday(&time_check, NULL);
                 clients.client[connection]->time_of_last_move=time_check.tv_usec;
 
                 //calculate the move_cmd to send to clients

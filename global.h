@@ -339,7 +339,7 @@ struct client_node_type{
     int move_buffer[MOVE_BUFFER_MAX];
     int move_buffer_size;
     time_t time_of_last_move;
-    //signed long int time_of_last_move;
+    time_t time_of_last_heartbeat;
     unsigned char cmd_buffer[10][1024];
     int cmd_buffer_end;
     char ip_address[16];

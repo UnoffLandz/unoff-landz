@@ -7,7 +7,7 @@ int get_heading(int tile_pos, int tile_dest, int map_axis);
 
 void create_path(int connection, int tile_pos, int tile_dest);
 
-void process_char_move(int connection);
+void process_char_move(int connection, time_t current_time);
 
 void enqueue_move_to(int connection, int tile_dest);
 

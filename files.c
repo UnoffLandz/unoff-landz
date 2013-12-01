@@ -788,7 +788,7 @@ void load_all_channels(char *file_name){
         channels.channel[i]->owner_id=0;
         channels.channel[i]->channel_id=i;
         strcpy(channels.channel[i]->description, "a public chan for trolling, flaming and mischief");
-        save_channel("pro", i);
+        save_channel("troll", i);
 
         //close the file for writing and reopen for reading
         fclose(file);

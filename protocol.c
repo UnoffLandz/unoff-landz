@@ -390,6 +390,8 @@ void process_packet(int connection, unsigned char *packet){
 
         case RAW_TEXT:
 
+            printf("RAW_TEXT [%s]\n", text);
+
             // trim off excess left hand space
             str_trim_left(text);
 
@@ -501,7 +503,11 @@ void process_packet(int connection, unsigned char *packet){
 
         case HEARTBEAT:
         printf("HEARTBEAT %i %i \n", lsb, msb);
-        save_data(connection);
+        gettimeofday(&time_check, NULL);
+        //printf("lag %i\n",time_check.tv_sec-clients.client[i]->time_of_last_heartbeat);
+        clients.client[i]->time_of_last_heartbeat=time_check.tv_sec;
+
+        save_data(connection);//needs to be on a separate timer
         break;
 
         case PING_RESPONSE:
@@ -751,6 +757,8 @@ void process_packet(int connection, unsigned char *packet){
 
         default: // UNKNOWN
         printf("UNKNOWN PROTOCOL %i %i %i \n", protocol, lsb, msb);
+        sprintf(text_out, "unknown protocol [%i]\n", protocol);
+        log_event(EVENT_ERROR, text_out);
         break;
     }
 

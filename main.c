@@ -8,7 +8,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 //#include <signal.h> //required for timer
-//#include <sys/time.h> //required for timer
+#include <sys/time.h> //required for timer
 
 #include "global.h"
 #include "initialisation.h"
@@ -18,6 +18,8 @@
 #include "broadcast.h"
 #include "files.h"
 #include "character_movement.h"
+#include "chat.h"
+#include "maps.h"
 
 /*
 void timer_handler (int signum){
@@ -49,6 +51,7 @@ int main (void) {
     int chan_colour=0;
     //int guild_chan_number=0;
     int yes=1;
+    time_t current_utime;
 
 /*
     struct sigaction sa;
@@ -194,15 +197,29 @@ int main (void) {
 
                     char_id=clients.client[i]->character_id;
 
-                    // check sock status
-                    sock_status=recv(clients.client[i]->sock, recv_buffer, 1024 ,0);
+                    // get time
+                    gettimeofday(&time_check, NULL);
+                    current_utime=time_check.tv_usec;
 
-                    // check if sock is dead
-                    if(sock_status==0){
+                    //check heartbeat
+                    if(clients.client[i]->status==LOGGED_IN && clients.client[i]->time_of_last_heartbeat+26<time_check.tv_sec){
 
+                        //broadcast to local
                         broadcast_remove_actor_packet(i);
 
-                        printf("Closed Sock %i\n", clients.client[i]->sock);
+                        //remove from map
+                        remove_client_from_map(i, characters.character[char_id]->map_id);
+
+                        //remove from channels
+                        for(j=0; j<3; j++){
+
+                            if(characters.character[char_id]->chan[j]>0){
+
+                                // TODO need to broadcast grued player to rest of chan
+
+                                remove_client_from_channel(i, characters.character[char_id]->chan[j]);
+                            }
+                        }
 
                         guild_id=characters.character[char_id]->guild_id;
 
@@ -212,93 +229,142 @@ int main (void) {
                             chan_colour=guilds.guild[guild_id]->log_off_notification_colour;
                             sprintf(text_out, "%c%s LEFT THE GAME", chan_colour, characters.character[char_id]->char_name);
 
-                            //broadcast_raw_text_packet(i, guild_chan_number, CHAT_GM, text_out);
                             broadcast_guild_channel_chat(guild_id, text_out);
                         }
 
+                        printf("Closed Sock (client lagged out) %i\n", clients.client[i]->sock);
                         close(clients.client[i]->sock);
                         clients.client[i]->status=LOGGED_OUT;
                         clients.count--;
 
-/*
-                        //stop timer to periodically save char data (position etc)
-                        if(clients.count==0){
-
-                            printf(" Stop save character data timer\n");
-
-                            timer.it_value.tv_sec = 0;
-                            timer.it_value.tv_usec = 0;
-                            timer.it_interval.tv_sec = 0;
-                            timer.it_interval.tv_usec = 0;
-
-                            setitimer (ITIMER_VIRTUAL, &timer, NULL);
-                        }
-*/
+                        sprintf(text_out, "client [%i]  char [%s]lagged out\n", i, characters.character[clients.client[i]->character_id]->char_name);
+                        log_event(EVENT_SESSION, text_out);
                     }
+                    else {
 
-                    // check if sock has new data and add to buffer
-                    if(sock_status>0) {
+                        // check sock status
+                        sock_status=recv(clients.client[i]->sock, recv_buffer, 1024 ,0);
 
-                        printf("Bytes received %i\n", sock_status);
-                        bytes_recv=sock_status;
+                        // check if sock is dead
+                        if(sock_status==0){
 
-                         for(j=0; j<bytes_recv; j++){
-                            clients.client[i]->packet_buffer[clients.client[i]->packet_buffer_length+j]=recv_buffer[j];
-                        }
- /*
-                        memmove(clients.client[i]->buffer + clients.client[i]->buffer_length, recv_buffer, bytes_recv);
- */
-                        clients.client[i]->packet_buffer_length=clients.client[i]->packet_buffer_length+bytes_recv;
-                    }
+                            //broadcast to local
+                            broadcast_remove_actor_packet(i);
 
-                    //handle movement
-                    process_char_move(i);
+                            //remove from map list
+                            remove_client_from_map(i, characters.character[char_id]->map_id);
 
+                            //remove from channel list
+                            for(j=0; j<3; j++){
 
-                    //handle other messages
-                    if(clients.client[i]->cmd_buffer_end>0){
+                                if(characters.character[char_id]->chan[j]>0){
 
-                        for(j=0; j<clients.client[i]->cmd_buffer_end; j++){
-                            packet_length=clients.client[i]->cmd_buffer[j][1]+(clients.client[i]->cmd_buffer[j][2]*256)+2;
-                            send(clients.client[i]->sock, clients.client[i]->cmd_buffer[j], packet_length, 0);
-                        }
+                                    // TODO need to broadcast logged off player to rest of chan
 
-                         clients.client[i]->cmd_buffer_end=0;
-                    }
-
-                    do {
-                        // check if any data in buffer
-                        if(clients.client[i]->packet_buffer_length>0) {
-
-                            lsb=clients.client[i]->packet_buffer[1];
-                            msb=clients.client[i]->packet_buffer[2];
-                            packet_length=lsb+(msb*256)+2;
-
-                            // check if data is data in buffer is sufficient to make a packet
-                            if(clients.client[i]->packet_buffer_length>=packet_length) {
-
-                                // copy packet from buffer
-                                for(j=0; j<packet_length; j++){
-                                    packet[j]=clients.client[i]->packet_buffer[j];
+                                    remove_client_from_channel(i, characters.character[char_id]->chan[j]);
                                 }
+                            }
 
-                                process_packet(i, packet);
+                            guild_id=characters.character[char_id]->guild_id;
 
-                                // remove packet from buffer
+                            if(guild_id>0) {
 
-                                // memmove(clients.client[i]->buffer, clients.client[i]->buffer+packet_length, clients.client[i]->buffer_length-packet_length);
+                                // broadcast to guild when char logs out
+                                chan_colour=guilds.guild[guild_id]->log_off_notification_colour;
+                                sprintf(text_out, "%c%s LEFT THE GAME", chan_colour, characters.character[char_id]->char_name);
 
-                                clients.client[i]->packet_buffer_length=clients.client[i]->packet_buffer_length-packet_length;
+                                //broadcast_raw_text_packet(i, guild_chan_number, CHAT_GM, text_out);
+                                broadcast_guild_channel_chat(guild_id, text_out);
+                            }
 
-                                for(j=0;j<=clients.client[i]->packet_buffer_length; j++){
-                                    clients.client[i]->packet_buffer[j]=clients.client[i]->packet_buffer[j+packet_length];
+                            printf("Closed Sock (client logged-off) %i\n", clients.client[i]->sock);
+                            close(clients.client[i]->sock);
+                            clients.client[i]->status=LOGGED_OUT;
+                            clients.count--;
+/*
+                            //stop timer to periodically save char data (position etc)
+                            if(clients.count==0){
+
+                                printf(" Stop save character data timer\n");
+
+                                timer.it_value.tv_sec = 0;
+                                timer.it_value.tv_usec = 0;
+                                timer.it_interval.tv_sec = 0;
+                                timer.it_interval.tv_usec = 0;
+
+                                setitimer (ITIMER_VIRTUAL, &timer, NULL);
+                            }
+*/
+                        }
+
+                        // check if sock has new data and add to buffer
+                        if(sock_status>0) {
+
+                            printf("Bytes received %i\n", sock_status);
+                            bytes_recv=sock_status;
+
+                            for(j=0; j<bytes_recv; j++){
+                                clients.client[i]->packet_buffer[clients.client[i]->packet_buffer_length+j]=recv_buffer[j];
+                            }
+ /*
+                            memmove(clients.client[i]->buffer + clients.client[i]->buffer_length, recv_buffer, bytes_recv);
+ */
+                            clients.client[i]->packet_buffer_length=clients.client[i]->packet_buffer_length+bytes_recv;
+                        }
+
+                        //handle movement
+                        process_char_move(i, current_utime);
+
+                        //handle other messages
+                        if(clients.client[i]->cmd_buffer_end>0){
+
+                            for(j=0; j<clients.client[i]->cmd_buffer_end; j++){
+                                packet_length=clients.client[i]->cmd_buffer[j][1]+(clients.client[i]->cmd_buffer[j][2]*256)+2;
+                                send(clients.client[i]->sock, clients.client[i]->cmd_buffer[j], packet_length, 0);
+                            }
+
+                            clients.client[i]->cmd_buffer_end=0;
+                        }
+
+                        do {
+                            // check if any data in buffer
+                            if(clients.client[i]->packet_buffer_length>0) {
+
+                                lsb=clients.client[i]->packet_buffer[1];
+                                msb=clients.client[i]->packet_buffer[2];
+                                packet_length=lsb+(msb*256)+2;
+
+                                // check if data is data in buffer is sufficient to make a packet
+                                if(clients.client[i]->packet_buffer_length>=packet_length) {
+
+                                    // copy packet from buffer
+                                    for(j=0; j<packet_length; j++){
+                                        packet[j]=clients.client[i]->packet_buffer[j];
+                                    }
+
+                                    //update heartbeat (we do this each time we receive any kind of message from the client)
+                                    clients.client[i]->time_of_last_heartbeat=time_check.tv_sec;
+
+                                    //process packet
+                                    process_packet(i, packet);
+
+                                    // remove packet from buffer
+
+                                    // memmove(clients.client[i]->buffer, clients.client[i]->buffer+packet_length, clients.client[i]->buffer_length-packet_length);
+
+                                    clients.client[i]->packet_buffer_length=clients.client[i]->packet_buffer_length-packet_length;
+
+                                    for(j=0;j<=clients.client[i]->packet_buffer_length; j++){
+                                        clients.client[i]->packet_buffer[j]=clients.client[i]->packet_buffer[j+packet_length];
+                                    }
+
                                 }
 
                             }
 
-                        }
+                        } while(clients.client[i]->packet_buffer_length>=packet_length);
+                    }
 
-                    } while(clients.client[i]->packet_buffer_length>=packet_length);
                 } // end of live sockets block
                 sleep(0.1);
 
