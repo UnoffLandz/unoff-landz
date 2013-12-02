@@ -9,6 +9,7 @@ enum { /* client to server protocol */
     SEND_OPENING_SCREEN=9,
     SEND_VERSION=10,
     HEARTBEAT=14,
+    USE_OBJECT=16,
     PING_RESPONSE=60,
     LOG_IN=140,
     CREATE_CHAR=141,

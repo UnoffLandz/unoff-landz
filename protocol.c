@@ -377,12 +377,15 @@ void process_packet(int connection, unsigned char *packet){
     int msb=packet[2];
     int data_length=lsb+(msb*256)-1;
     int x_dest=0, y_dest=0, tile_dest=0;
+    int map_object_id=0;
+    int use_with_position=0;
 
     // extract data from packet
     for(i=0; i<data_length; i++){
         data[i]=packet[i+3]; // unsigned char array for bit manipulation
-        text[i]=packet[i+3]; // signed char array for text manipulation
+         text[i]=packet[i+3]; // signed char array for text manipulation
     }
+
     text[data_length]='\0';
     int text_len=strlen(text);
 
@@ -506,8 +509,17 @@ void process_packet(int connection, unsigned char *packet){
         gettimeofday(&time_check, NULL);
         //printf("lag %i\n",time_check.tv_sec-clients.client[i]->time_of_last_heartbeat);
         clients.client[i]->time_of_last_heartbeat=time_check.tv_sec;
-
         save_data(connection);//needs to be on a separate timer
+        break;
+
+        case USE_OBJECT:
+        printf("USE_OBJECT %i %i \n", lsb, msb);
+        map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
+        use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
+        printf("map object id %i use with position %i\n", map_object_id, use_with_position);
+
+
+
         break;
 
         case PING_RESPONSE:
