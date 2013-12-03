@@ -5,4 +5,6 @@ int Uint32_to_dec( unsigned char byte1, unsigned char byte2, unsigned char byte3
 
 int Uint16_to_dec( unsigned char byte1, unsigned char byte2);
 
+float Uint32_to_float(unsigned char *byte);
+
 #endif // NUMERIC_FUNCTIONS_H_INCLUDED

@@ -17,7 +17,14 @@
 #define GUILD_LIST_FILE "guild.lst"
 #define CHARACTER_LIST_FILE "character.lst"
 
+#define TEMP_FILE "temp.tmp"
+
 #define DEFAULT_MAP 0 //set starting map to Isla Prima for new chars
+
+enum { //return values for rename_char
+    CHAR_RENAME_FAILED_DUPLICATE=-1,
+    CHAR_RENAME_SUCCESS
+};
 
 enum { // return values for process_chat function
     CHAR_NOT_IN_CHAN=-1,
@@ -295,10 +302,10 @@ struct map_node_type{
     int tile_map_size;
     unsigned char height_map[50000];
     int height_map_size;
-    unsigned char object_3d_map[50000];
-    int object_3d_map_size;
-    unsigned char object_2d_map[50000];
-    int object_2d_map_size;
+    unsigned char threed_object_map[200000];
+    int threed_object_map_size;
+    unsigned char twod_object_map[50000];
+    int twod_object_map_size;
     int client_list[MAX_CLIENTS];
     int client_list_count;
 };

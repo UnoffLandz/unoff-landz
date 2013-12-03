@@ -208,7 +208,7 @@ int main (void) {
                         broadcast_remove_actor_packet(i);
 
                         //remove from map
-                        remove_client_from_map(i, characters.character[char_id]->map_id);
+                        remove_client_from_map_list(i, characters.character[char_id]->map_id);
 
                         //remove from channels
                         for(j=0; j<3; j++){
@@ -252,7 +252,7 @@ int main (void) {
                             broadcast_remove_actor_packet(i);
 
                             //remove from map list
-                            remove_client_from_map(i, characters.character[char_id]->map_id);
+                            remove_client_from_map_list(i, characters.character[char_id]->map_id);
 
                             //remove from channel list
                             for(j=0; j<3; j++){

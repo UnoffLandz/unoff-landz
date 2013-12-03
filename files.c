@@ -292,9 +292,18 @@ int load_map(char *file_name, int id){
     int tile_map_offset=0;
     int height_map_offset=0;
     int threed_object_offset=0;
+    int twod_object_offset=0;
 
     int tile_map_size=0;
     int height_map_size=0;
+    int threed_object_map_size=0;
+    //int twod_object_map_size=0;
+
+    int threed_object_structure_len=0;
+    int threed_object_count=0;
+
+    //int twod_object_structure_len=0;
+    //int twod_object_count=0;
 
     int j=0;
 
@@ -357,7 +366,7 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
     //printf("vertical tiles %i\n", j);
 
     /* Because we assume that maps will always be a perfect square, if vertical tiles do not equal
@@ -402,8 +411,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("3d object structure length %i\n", j);
+    threed_object_structure_len=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    printf("3d object structure length %i\n", threed_object_structure_len);
 
     //read 3d object count
     if(fread(bytes, 4, 1, file)!=1){
@@ -412,8 +421,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("3d object count %i\n", j);
+    threed_object_count=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    printf("3d object count %i\n", threed_object_count);
 
     //read 3d object offset
     if(fread(bytes, 4, 1, file)!=1){
@@ -423,7 +432,7 @@ int load_map(char *file_name, int id){
     }
 
     threed_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("3d object count %i\n", threed_object_offset);
+    printf("3d object offset %i\n", threed_object_offset);
 
     //read 2d object structure length
     if(fread(bytes, 4, 1, file)!=1){
@@ -452,8 +461,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("2d object offset %i\n", j);
+    twod_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    printf("2d object offset %i\n", twod_object_offset);
 
     //read lights structure length
     if(fread(bytes, 4, 1, file)!=1){
@@ -719,8 +728,52 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    return FILE_FOUND;
+    //read 3d object map
 
+    /* the 2d object offset indicates the end of the 3d object map, hence we use it to calculate
+    the size of 3d object map by deducting the 3d object map offset. We can then read that number of
+    bytes to extract our 3d object map data. In the case of Isla Prima, the 3d object map is 167760 bytes*/
+
+    threed_object_map_size=twod_object_offset-threed_object_offset;
+    printf("threed map size %i\n", threed_object_map_size);
+    maps.map[id]->threed_object_map_size=threed_object_map_size;
+
+    if(fread(maps.map[id]->threed_object_map, threed_object_map_size, 1, file)!=1){
+        printf("filename [%s]\n", elm_filename);
+        perror ("problem reading 3d object map in function load_map");
+        exit (EXIT_FAILURE);
+    }
+
+/*
+    int k=0;
+    j=0;
+    unsigned char byte[4]={0};
+
+    do {
+
+        char obj_file[80]="";
+        memcpy(obj_file, maps.map[id]->threed_object_map+k, 79);
+        str_trim_right(obj_file);
+
+        printf("%i %s\n", j, obj_file);
+
+        byte[0]=maps.map[id]->threed_object_map[(j*144)+80];
+        byte[1]=maps.map[id]->threed_object_map[(j*144)+81];
+        byte[2]=maps.map[id]->threed_object_map[(j*144)+82];
+        byte[3]=maps.map[id]->threed_object_map[(j*144)+83];
+
+
+        printf("x_pos %f\n", Uint32_to_float(byte));
+
+        k=k+144;
+        j++;
+
+    }while(j<521);
+
+  exit(1);
+*/
+
+    return FILE_FOUND;
 }
 
 void load_all_channels(char *file_name){

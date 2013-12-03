@@ -23,4 +23,6 @@ void send_server_text(int sock, int channel, char *text);
 
 void send_get_active_channels(int sock, int active_chan, int chan1, int chan2, int chan3);
 
+int get_char_id(char *char_name);
+
 #endif // PROTOCOL_H_INCLUDED

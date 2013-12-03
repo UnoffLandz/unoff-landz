@@ -24,6 +24,50 @@ void save_data(int connection){
     }
 }
 
+int rename_char(char char_id, char *new_char_name){
+
+    int i=0;
+
+    char char_name[80];
+
+    char old_file_name[80]="";
+    char new_file_name[80]="";
+    FILE *file;
+
+    //get the old char name
+    sprintf(char_name, "%s", characters.character[char_id]->char_name);
+
+    //check that no existing char has the new name
+    if(get_char_id(new_file_name)!=CHAR_NOT_FOUND) return CHAR_RENAME_FAILED_DUPLICATE;
+
+    //rename the ply file name
+    sprintf(old_file_name, "%s.ply", char_name);
+    sprintf(new_file_name, "%s.ply", new_char_name);
+    rename(old_file_name, new_file_name); // *** need to test result to check for errors
+
+    //create a temp character.lst file
+    file=fopen(TEMP_FILE, "w");
+
+    for(i=0; i<characters.max; i++){
+
+        if(!fprintf(file, "\n%s", characters.character[i]->char_name)){
+            printf("error adding to temp character list\n");
+            perror("rename_char");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    fclose(file);
+
+    //delete old character list file
+    remove(CHARACTER_LIST_FILE);
+
+    //rename the temp character.lst file
+    rename(TEMP_FILE, CHARACTER_LIST_FILE); // *** need to test result to check for errors
+
+    return CHAR_RENAME_SUCCESS;
+}
+
 int process_hash_commands(int connection, char *text){
 
     int i=0;
@@ -34,6 +78,7 @@ int process_hash_commands(int connection, char *text){
     int char_id=clients.client[connection]->character_id;
     int guild_id=characters.character[char_id]->guild_id;
     int channel_number=0;
+    char old_char_name[80]="";
 
     int command_parts=count_str_island(text);
 
@@ -62,6 +107,36 @@ int process_hash_commands(int connection, char *text){
         return HASH_CMD_UNSUPPORTED;
     }
 /***************************************************************************************************/
+
+    else if(strcmp(hash_command, "NAME_CHANGE")==0){
+
+        //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by a space)
+        if(command_parts!=2) {
+            sprintf(text_out, "%cyou need to use the format #NAME_CHANGE [new name]", c_red3+127);
+            send_server_text(sock, CHAT_SERVER, text_out);
+        }
+
+        strcpy(old_char_name, characters.character[char_id]->char_name);
+
+        if(rename_char(char_id, hash_command_tail)==CHAR_RENAME_FAILED_DUPLICATE){
+            sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
+
+            sprintf(text_out, "invalid name change attempt for char[%s] to [%s]\n", old_char_name, hash_command_tail);
+            log_event(EVENT_SESSION, text_out);
+
+            return HASH_CMD_EXECUTED;
+        }
+
+        sprintf(text_out, "%cIn the future you'll need to purchase a name change token to do this", c_yellow1+127);
+        send_raw_text_packet(sock, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "%cGratz. You just changed your character name to %s", c_green1+127, hash_command_tail);
+        send_raw_text_packet(sock, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "name change for char[%s] to [%s]\n", old_char_name, hash_command_tail);
+        log_event(EVENT_SESSION, text_out);
+    }
 
     else if(strcmp(hash_command, "#GM")==0){
 

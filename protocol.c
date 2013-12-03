@@ -313,6 +313,60 @@ void send_change_map(int sock, char *elm_filename){
     send(sock, packet, packet_length, 0);
 }
 
+void transport_char(int connection, int tile, int map_id, int transport_type){
+
+    /*  RESULT  : Move a char to a new map/initialises a char on a map
+
+        PURPOSE : Consolidate all required operations into a resuable function that can be called
+                 on both the login and chan_map protocol
+
+        USAGE   : protocol.c process_packet
+    */
+/*
+    int char_id=clients.client[connection]->character_id;
+
+    if(transport_type==CHANGE_MAP) {
+
+        //    check for ticket
+
+        //broadcast actor removal to other chars on map
+        broadcast_remove_actor_packet(connection);
+
+        //remove from local map list
+        remove_client_from_map_list(connection, map_id);
+
+        //      implement 'stay' timer.
+    }
+
+    //         check for residency status
+    //      advise actor of new map ownership and policies
+
+    //adjust char map and position
+    characters.character[char_id]->map_id=map_id;
+    characters.character[char_id]->map_tile=JUMP_POINT;
+
+    //send new char map to client
+    send_change_map(sock, maps.map[characters.character[char_id]->map_id]->elm_filename);
+
+    // add in-game chars to this clients ######## need to amend packet to include actor pos
+    send_actors_to_client(connection);
+
+    // add this char to each connected client ######### need amend packet to include actor pos
+    broadcast_add_new_enhanced_actor_packet(connection);
+
+    //add client to local map list
+    add_client_to_map(connection, map_id);
+
+    // add other chars to this client
+    send_actors_to_client(connection);
+
+    // broadcast this char to other clients
+    broadcast_add_new_enhanced_actor_packet(connection);
+
+    //      log client map move (time / char_id / originating map id)
+*/
+}
+
 void send_actors_to_client(int connection){
 
     int i;
@@ -517,9 +571,13 @@ void process_packet(int connection, unsigned char *packet){
         map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
         use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
         printf("map object id %i use with position %i\n", map_object_id, use_with_position);
+/*
+        float x_pos, y_pos;
 
+        get_threed_object_pos(map_object_id, map_id, &x_pos, &y_pos);
 
-
+        printf("x_pos %f y_pos %f\n", x_pos, y_pos );
+*/
         break;
 
         case PING_RESPONSE:
@@ -654,6 +712,8 @@ void process_packet(int connection, unsigned char *packet){
         get_str_island(text, password, 2);
 
         i=strlen(char_name)+strlen(password)+2;
+
+        char_id=get_char_id(char_name);
 
         if(char_id!=CHAR_NOT_FOUND) {
             send_create_char_not_ok(sock);
