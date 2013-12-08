@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "global.h"
 #include "string_functions.h"
@@ -8,6 +9,16 @@
 #include "broadcast.h"
 #include "files.h"
 #include "chat.h"
+#include "datetime_functions.h"
+
+
+int char_type[12]={HUMAN_FEMALE, HUMAN_MALE, ELF_FEMALE, ELF_MALE, DWARF_FEMALE, DWARF_MALE, GNOME_FEMALE, GNOME_MALE, ORCHAN_FEMALE, ORCHAN_MALE, DRAEGONI_FEMALE, DRAEGONI_MALE};
+int char_race[12]={HUMAN, HUMAN, ELF, ELF, DWARF, DWARF, GNOME, GNOME, ORCHAN, ORCHAN, DRAEGONI, DRAEGONI};
+int char_gender[12]={FEMALE, MALE, FEMALE, MALE, FEMALE, MALE, FEMALE, MALE, FEMALE, MALE, FEMALE, MALE};
+
+char race_type[12][20]={"HUMAN", "ELF", "DWARF", "GNOME", "ORCHAN", "DRAEGONI"};
+char gender_type[2][10]={"FEMALE", "MALE"};
+char char_status_type[3][10]={"ALIVE", "DEAD", "BANNED"};
 
 void save_data(int connection){
 
@@ -24,33 +35,36 @@ void save_data(int connection){
     }
 }
 
-int rename_char(char char_id, char *new_char_name){
+int rename_char(int connection, char *new_char_name){
 
     int i=0;
 
-    char char_name[80];
-
     char old_file_name[80]="";
     char new_file_name[80]="";
+    int char_id=clients.client[connection]->character_id;
     FILE *file;
 
-    //get the old char name
-    sprintf(char_name, "%s", characters.character[char_id]->char_name);
-
     //check that no existing char has the new name
-    if(get_char_id(new_file_name)!=CHAR_NOT_FOUND) return CHAR_RENAME_FAILED_DUPLICATE;
+    if(get_char_id(new_char_name)!=CHAR_NOT_FOUND) return CHAR_RENAME_FAILED_DUPLICATE;
 
     //rename the ply file name
-    sprintf(old_file_name, "%s.ply", char_name);
+    sprintf(old_file_name, "%s.ply", characters.character[char_id]->char_name);
     sprintf(new_file_name, "%s.ply", new_char_name);
+
     rename(old_file_name, new_file_name); // *** need to test result to check for errors
 
+    //change name
+    strcpy(characters.character[char_id]->char_name, new_char_name);
+
     //create a temp character.lst file
-    file=fopen(TEMP_FILE, "w");
+    if((file=fopen(TEMP_FILE, "w"))==NULL){
+        perror("unable to open temp file in function rename_char");
+        exit(EXIT_FAILURE);
+    }
 
     for(i=0; i<characters.max; i++){
 
-        if(!fprintf(file, "\n%s", characters.character[i]->char_name)){
+        if(!fprintf(file, "%s\n", characters.character[i]->char_name)){
             printf("error adding to temp character list\n");
             perror("rename_char");
             exit(EXIT_FAILURE);
@@ -60,10 +74,13 @@ int rename_char(char char_id, char *new_char_name){
     fclose(file);
 
     //delete old character list file
-    remove(CHARACTER_LIST_FILE);
+    remove(CHARACTER_LIST_FILE); // *** TO DO test result for error
 
     //rename the temp character.lst file
-    rename(TEMP_FILE, CHARACTER_LIST_FILE); // *** need to test result to check for errors
+    rename(TEMP_FILE, CHARACTER_LIST_FILE); // *** TO DO need to test result to check for errors
+
+    // add this char to each connected client
+    broadcast_add_new_enhanced_actor_packet(connection);
 
     return CHAR_RENAME_SUCCESS;
 }
@@ -79,6 +96,8 @@ int process_hash_commands(int connection, char *text){
     int guild_id=characters.character[char_id]->guild_id;
     int channel_number=0;
     char old_char_name[80]="";
+    char time_stamp_str[9]="";
+    char date_stamp_str[11]="";
 
     int command_parts=count_str_island(text);
 
@@ -108,13 +127,16 @@ int process_hash_commands(int connection, char *text){
     }
 /***************************************************************************************************/
 
-    else if(strcmp(hash_command, "NAME_CHANGE")==0){
+    else if(strcmp(hash_command, "#NAME_CHANGE")==0){
 
         //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by a space)
         if(command_parts!=2) {
             sprintf(text_out, "%cyou need to use the format #NAME_CHANGE [new name]", c_red3+127);
             send_server_text(sock, CHAT_SERVER, text_out);
+            return HASH_CMD_ABORTED;
         }
+
+        get_str_island(text, hash_command_tail, 2);
 
         strcpy(old_char_name, characters.character[char_id]->char_name);
 
@@ -125,18 +147,82 @@ int process_hash_commands(int connection, char *text){
             sprintf(text_out, "invalid name change attempt for char[%s] to [%s]\n", old_char_name, hash_command_tail);
             log_event(EVENT_SESSION, text_out);
 
-            return HASH_CMD_EXECUTED;
+            return HASH_CMD_ABORTED;
         }
 
         sprintf(text_out, "%cIn the future you'll need to purchase a name change token to do this", c_yellow1+127);
         send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "%cGratz. You just changed your character name to %s", c_green1+127, hash_command_tail);
+        sprintf(text_out, "%cGratz. You just changed your character name to %s", c_green1+127, characters.character[char_id]->char_name);
         send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "name change for char[%s] to [%s]\n", old_char_name, hash_command_tail);
+        sprintf(text_out, "name change for char[%s] to [%s]\n", old_char_name, characters.character[char_id]->char_name);
         log_event(EVENT_SESSION, text_out);
+
+        return HASH_CMD_EXECUTED;
     }
+
+/***************************************************************************************************/
+
+    else if(strcmp(hash_command, "#DETAILS")==0){
+
+        //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by a space)
+        if(command_parts!=2) {
+            sprintf(text_out, "%cyou need to use the format #DETAILS [character name]", c_red3+127);
+            send_server_text(sock, CHAT_SERVER, text_out);
+            return HASH_CMD_ABORTED;
+        }
+
+        get_str_island(text, hash_command_tail, 2);
+
+        //check that the char exists
+        i=get_char_id(hash_command_tail);
+
+        if(i==CHAR_NOT_FOUND) {
+            sprintf(text_out, "%cthat character does not exist", c_red3+127);
+            send_server_text(sock, CHAT_SERVER, text_out);
+
+            return HASH_CMD_ABORTED;
+        }
+
+        //send details to client
+        sprintf(text_out, "\n");
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "%cCharacter    :%s", c_green3+127, characters.character[i]->char_name);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "%cRace         :%s", c_green3+127, race_type[char_race[characters.character[i]->char_type]]);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "%cGender       :%s", c_green3+127, gender_type[char_gender[characters.character[i]->char_type]]);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        get_time_stamp_str(characters.character[i]->char_created, time_stamp_str);
+        get_date_stamp_str(characters.character[i]->char_created, date_stamp_str);
+        sprintf(text_out, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "%cStatus       :%s", c_green3+127, char_status_type[characters.character[i]->char_status]);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        get_time_stamp_str(characters.character[i]->last_in_game, time_stamp_str);
+        get_date_stamp_str(characters.character[i]->last_in_game, date_stamp_str);
+        sprintf(text_out, "%cLast in-game :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        get_time_stamp_str(characters.character[i]->joined_guild, time_stamp_str);
+        get_date_stamp_str(characters.character[i]->joined_guild, date_stamp_str);
+        sprintf(text_out, "%cGuild        :%s joined %s %s", c_green3+127, guilds.guild[characters.character[i]->guild_id]->guild_name, date_stamp_str, time_stamp_str);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "\n");
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        return HASH_CMD_EXECUTED;
+
+    }
+/***************************************************************************************************/
 
     else if(strcmp(hash_command, "#GM")==0){
 
@@ -146,29 +232,33 @@ int process_hash_commands(int connection, char *text){
                 //malformed #GM attempt
                 sprintf(text_out, "%cyou need to use the format #GM [message]", c_red3+127);
                 send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_EXECUTED;
             break;
 
             case GM_NO_GUILD:
                 // GM attempt by non guild member
                 sprintf(text_out, "%cyou need to be a member of a guild to use #GM", c_red3+127);
                 send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_EXECUTED;
             break;
 
             case GM_NO_PERMISSION:
                 //GM attempt by muted guild member
                 sprintf(text_out, "%cyou have been muted on this guild channel", c_red3+127);
                 send_server_text(sock, CHAT_SERVER, text_out);
+
+                 return HASH_CMD_EXECUTED;
              break;
 
             case GM_SENT:
                 printf("#GM sent from %s to guild %s: %s\n", characters.character[char_id]->char_name, guilds.guild[guild_id]->guild_tag, text);
-            break;
-
-            default:
-                printf("unknown result from function process_guild_chat\n");
+                return HASH_CMD_EXECUTED;
             break;
         }
 
+        printf("unknown result from function process_guild_chat in section #GM\n");
         return HASH_CMD_FAILED;
 
      }
@@ -181,32 +271,38 @@ int process_hash_commands(int connection, char *text){
             case IG_NOT_AVAILABLE:
                 sprintf(text_out, "%cyou cannot use #IG if you are not a member of a guild", c_red3+127);
                 send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
             break;
 
             case IG_NO_PERMISSION:
                 sprintf(text_out, "%cyou do not have #IG permission in this guild", c_red3+127);
                 send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
             break;
 
             case IG_INVALID_GUILD:
                 sprintf(text_out, "%cthe guild you are attempting to contact does not exist", c_red3+127);
                 send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
             break;
 
             case IG_MALFORMED:
                 sprintf(text_out, "%cyou need to use the format #IG [guild tag] [message]", c_red3+127);
                 send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
             break;
 
             case IG_SENT:
                 printf("#IG sent from %s of %s to guild %s: %s\n", characters.character[char_id]->char_name, guilds.guild[guild_id]->guild_tag, guilds.guild[i]->guild_tag, hash_command_tail);
+                return HASH_CMD_EXECUTED;
             break;
+          }
 
-            default:
-                printf("unknown result from function process_inter_guild_chat\n");
-            break;
-        }
-
+        printf("unknown result from function process_guild_chat in section #IG\n");
         return HASH_CMD_FAILED;
     }
 
@@ -215,127 +311,127 @@ int process_hash_commands(int connection, char *text){
     else if(strcmp(hash_command, "#JC")==0){
 
         //check that #JC command is properly formed (should have 2 parts delimited by a space)
-        if(command_parts==2) {
-
-            // split the #JC command into channel number element
-            get_str_island(text, hash_command_tail, 2);
-
-            //convert command number to an integer value
-            channel_number=atoi(hash_command_tail);
-
-            switch (join_channel(connection, channel_number)){
-
-                case NO_FREE_CHANNEL_SLOTS:
-                    sprintf(text_out, "%cyou can only have three open channels", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-                break;
-
-                case CHANNEL_BARRED:
-                    sprintf(text_out, "%cyou are barred from this channel", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-                 break;
-
-                case CHANNEL_NOT_OPEN:
-                    sprintf(text_out, "%cchannel is not open", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-                break;
-
-                case CHANNEL_SYSTEM:
-                    sprintf(text_out, "%cchannel is reserved for system use", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-                break;
-
-                case CHANNEL_INVALID:
-                    sprintf(text_out, "%cinvalid channel number", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-                break;
-
-                case CHANNEL_JOINED:
-
-                    // need to echo back to player which channel was just joined and its description etc
-                    sprintf(text_out, "%cYou joined channel %s", c_green3+127, channels.channel[channel_number]->channel_name);
-                    send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
-
-                    sprintf(text_out, "%cDescription : %s", c_green2+127, channels.channel[channel_number]->description);
-                    send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
-
-                    sprintf(text_out, "%cIn channel :", c_green1+127);
-                    send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
-
-                    //echo which other players are in the chan
-                    list_clients_in_chan(connection, channel_number);
-
-                    // notify other channel users that player has joined on
-                    sprintf(text_out, "%c%s JOINED THE CHANNEL", c_green3+127, characters.character[char_id]->char_name);
-                    broadcast_channel_chat(channel_number, text_out);
-                    //broadcast_raw_text_packet(connection, channel_number, CHAT_SERVER, text_out);
-
-                break;
-
-                default:
-                    //Should catch CHANNEL_UNKNOWN
-                    sprintf(text_out, "%cyou tried to join an unknown channel type", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-
-                    printf("attempt to join channel number [%i]. Type unknown\n", channel_number);
-                break;
-            }
-
-        }
-        else {
+        if(command_parts!=2) {
             sprintf(text_out, "%cyou need to use the format #JC [channel number]", c_red3+127);
             send_server_text(sock, CHAT_SERVER, text_out);
+
+            return HASH_CMD_ABORTED;
         }
 
-        //debug_channels(char_id);
+        // split the #JC command into channel number element
+        get_str_island(text, hash_command_tail, 2);
 
-        return HASH_CMD_EXECUTED;
+        //convert command number to an integer value
+        channel_number=atoi(hash_command_tail);
+
+        switch (join_channel(connection, channel_number)){
+
+            case NO_FREE_CHANNEL_SLOTS:
+                sprintf(text_out, "%cyou can only have three open channels", c_red3+127);
+                send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
+            break;
+
+            case CHANNEL_BARRED:
+                sprintf(text_out, "%cyou are barred from that channel", c_red3+127);
+                send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
+            break;
+
+            case CHANNEL_NOT_OPEN:
+                sprintf(text_out, "%cThat channel is not open", c_red3+127);
+                send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
+            break;
+
+            case CHANNEL_SYSTEM:
+                sprintf(text_out, "%cchannel is reserved for system use", c_red3+127);
+                send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
+            break;
+
+            case CHANNEL_INVALID:
+                sprintf(text_out, "%cyou tried to join an unknown channel type", c_red3+127);
+                send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
+            break;
+
+            case CHANNEL_JOINED:
+
+                // need to echo back to player which channel was just joined and its description etc
+                sprintf(text_out, "%cYou joined channel %s", c_green3+127, channels.channel[channel_number]->channel_name);
+                send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
+
+                sprintf(text_out, "%cDescription : %s", c_green2+127, channels.channel[channel_number]->description);
+                send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
+
+                sprintf(text_out, "%cIn channel :", c_green1+127);
+                send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
+
+                //echo which other players are in the chan
+                list_clients_in_chan(connection, channel_number);
+
+                return HASH_CMD_EXECUTED;
+            break;
+        }
+
+
+        printf("unknown result from function process_guild_chat in section #JC\n");
+
+        return HASH_CMD_FAILED;
     }
 /***************************************************************************************************/
 
     else if(strcmp(hash_command, "#LC")==0){
 
         //check that #LC command is properly formed (should have 2 parts delimited by a space)
-        if(command_parts==2) {
-
-            // split the #JC command into channel number element
-            get_str_island(text, hash_command_tail, 2);
-
-            //convert command number to an integer value
-            channel_number=atoi(hash_command_tail);
-
-            switch (leave_channel(connection, channel_number)){
-
-                case CHANNEL_INVALID:
-                    sprintf(text_out, "%cinvalid channel number", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-                break;
-
-                case NOT_IN_CHANNEL:
-                    sprintf(text_out, "%cyou aren't in that channels", c_red3+127);
-                    send_server_text(sock, CHAT_SERVER, text_out);
-                break;
-
-                case CHANNEL_LEFT:
-                    // need to echo back to player which channel was left
-                    sprintf(text_out, "%cyou left channel %s", c_green3+127, channels.channel[channel_number]->channel_name);
-                    send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
-
-                    // notify other channel users that player has left channel
-                    sprintf(text_out, "%c%s LEFT THE CHANNEL", c_green3+127, characters.character[char_id]->char_name);
-                    broadcast_channel_chat(channel_number, text_out);
-                    //broadcast_raw_text_packet(connection, channel_number, CHAT_SERVER, text_out);
-                break;
-            }
-        }
-        else {
+        if(command_parts!=2) {
             sprintf(text_out, "%cyou need to use the format #LC [channel number]", c_red3+127);
             send_server_text(sock, CHAT_SERVER, text_out);
+
+            return HASH_CMD_ABORTED;
         }
 
-        //debug_channels(char_id);
+        // split the #JC command into channel number element
+        get_str_island(text, hash_command_tail, 2);
 
-        return HASH_CMD_EXECUTED;
+        //convert command number to an integer value
+        channel_number=atoi(hash_command_tail);
+
+        switch (leave_channel(connection, channel_number)){
+
+            case CHANNEL_INVALID:
+                sprintf(text_out, "%cinvalid channel number", c_red3+127);
+                send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
+            break;
+
+            case NOT_IN_CHANNEL:
+                sprintf(text_out, "%cyou aren't in that channels", c_red3+127);
+                send_server_text(sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_ABORTED;
+            break;
+
+            case CHANNEL_LEFT:
+
+                // need to echo back to player which channel was left
+                sprintf(text_out, "%cyou left channel %s", c_green3+127, channels.channel[channel_number]->channel_name);
+                send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
+
+                return HASH_CMD_EXECUTED;
+            break;
+        }
+
+        printf("unknown result from function process_guild_chat in section #LC\n");
+
+        return HASH_CMD_FAILED;
     }
 /***************************************************************************************************/
 
@@ -358,6 +454,7 @@ int process_hash_commands(int connection, char *text){
                 send_raw_text_packet(sock, CHAT_SERVER, text_out);
             }
         }
+
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
@@ -367,11 +464,13 @@ int process_hash_commands(int connection, char *text){
         channel_number=characters.character[char_id]->chan[characters.character[char_id]->active_chan];
 
         list_clients_in_chan(connection, channel_number);
+
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
 
     printf("UNKNOWN HASH COMMAND [%s] [%s]\n", hash_command, hash_command_tail);
+
     return HASH_CMD_UNKNOWN;
 }
 

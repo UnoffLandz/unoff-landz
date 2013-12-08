@@ -13,13 +13,14 @@ void add_new_enhanced_actor_packet(int char_id, unsigned char *packet, int *pack
 
 void add_actor_packet(int char_id, int move, unsigned char *packet, int *packet_length);
 
-void broadcast_add_actor_packet(int connection, unsigned char move, int destination_tile);
+void broadcast_actor_packet(int connection, unsigned char move, int destination_tile);
 
 int get_proximity(int tile1, int tile2, int map_axis);
 
-void broadcast_local_chat(int connection, int map_id, char *text);
+void broadcast_local_chat(int connection, char *text);
 
-void broadcast_channel_chat(int channel, char *text);
+void broadcast_channel_chat(int channel, int sender_connection, char *text);
+void broadcast_channel_event(int chan, int sender_connection, char *text_in);
 
 void broadcast_guild_channel_chat(int guild_id, char *text);
 

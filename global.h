@@ -21,9 +21,14 @@
 
 #define DEFAULT_MAP 0 //set starting map to Isla Prima for new chars
 
+enum { // return values for find_free_connection_slot
+    NO_FREE_SLOTS=-1
+};
+
 enum { //return values for rename_char
     CHAR_RENAME_FAILED_DUPLICATE=-1,
-    CHAR_RENAME_SUCCESS
+    CHAR_RENAME_SUCCESS=0,
+    CANNOT_CREATE_TEMP_FILE=-2
 };
 
 enum { // return values for process_chat function
@@ -90,7 +95,8 @@ enum{ //return values from process_hash_command
     HASH_CMD_UNSUPPORTED,
     HASH_CMD_UNKNOWN,
     HASH_CMD_EXECUTED,
-    HASH_CMD_FAILED
+    HASH_CMD_FAILED,
+    HASH_CMD_ABORTED
 };
 
 enum {
@@ -136,6 +142,36 @@ enum { /* channel types */
     CHAT_MODPM,
     CHAT_SERVER_PM,
 };
+
+enum{ //actor type
+    HUMAN_FEMALE=0,
+    HUMAN_MALE=1,
+    ELF_FEMALE=2,
+    ELF_MALE=3,
+    DWARF_FEMALE=4,
+    DWARF_MALE=5,
+    GNOME_FEMALE=37,
+    GNOME_MALE=38,
+    ORCHAN_FEMALE=39,
+    ORCHAN_MALE=40,
+    DRAEGONI_FEMALE=41,
+    DRAEGONI_MALE=42
+};
+
+enum{ //race
+    HUMAN,
+    ELF,
+    DWARF,
+    GNOME,
+    ORCHAN,
+    DRAEGONI
+};
+
+enum{ //gender
+    FEMALE,
+    MALE
+};
+
 
 enum { /* skin type */
     SKIN_BROWN,
@@ -268,7 +304,6 @@ struct character_node_type{
     int map_id;
     int map_tile;
     int guild_id;
-    // date joined guild
     int char_type;
     int skin_type;
     int hair_type;
@@ -285,6 +320,9 @@ struct character_node_type{
     int current_health;
     int visual_proximity; // proximity for display of other actors/creatures
     int local_text_proximity; //  proximity for local messages from other actors
+    time_t last_in_game; // date char was last in-game
+    time_t char_created; // date char was created
+    time_t joined_guild; // date joined guild
 };
 
 struct character_list_type {

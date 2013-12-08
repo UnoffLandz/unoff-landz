@@ -645,7 +645,7 @@ void process_char_move(int connection, time_t current_utime){
                 move_cmd=get_move_command(current_tile, destination_tile, map_axis);
 
                 //broadcast move to clients
-                broadcast_add_actor_packet(connection, move_cmd, destination_tile);
+                broadcast_actor_packet(connection, move_cmd, destination_tile);
                 //receive_add_actor_packet(connection, move_cmd, destination_tile);
 
                 //update char current position

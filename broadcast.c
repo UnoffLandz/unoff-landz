@@ -5,6 +5,7 @@
 
 #include "global.h"
 #include "character_movement.h"
+#include "protocol.h"
 
 int get_proximity(int tile1, int tile2, int map_axis){
 
@@ -26,7 +27,7 @@ int get_proximity(int tile1, int tile2, int map_axis){
     return 0;
 }
 
-void raw_text_packet(int channel, char *text, unsigned char *packet, int *packet_length){
+void raw_text_packet(int chan_type, char *text, unsigned char *packet, int *packet_length){
 
     int i=0,j=0;
     int data_length=0;
@@ -34,7 +35,7 @@ void raw_text_packet(int channel, char *text, unsigned char *packet, int *packet
     packet[i++]=0;             // protocol
     packet[i++]=0;             // dummy the lsb (we'll put the proper value in later
     packet[i++]=0;             // dummy the msb (we'll put the proper value in later
-    packet[i++]=channel;       // channel
+    packet[i++]=chan_type;     // channel
 
     for(j=0; j<(int)strlen(text); j++){
         packet[i++]=text[j];
@@ -52,161 +53,128 @@ void raw_text_packet(int channel, char *text, unsigned char *packet, int *packet
 
 void send_raw_text_packet(int sock, int chan_type, char *text){
 
-    // used to send personal messages
+    //sends text packet to a single connection
 
     unsigned char packet[1024];
     int packet_length=0;
 
     raw_text_packet(chan_type, text, packet, &packet_length);
-
     send(sock, packet, packet_length, 0);
 }
 
-void broadcast_local_chat(int connection, int map_id, char *text){
+void broadcast_local_chat(int sender_connection, char *text_in){
 
-    int i=0, j=0, k=0;
-    unsigned char packet[1024];
-    int packet_length=0;
+    int i=0;
 
-    int char_id=clients.client[connection]->character_id;
-    int char_tile=characters.character[char_id]->map_tile;
-    int map_axis=maps.map[map_id]->map_axis;
-    int local_text_proximity=0;
-    int receiving_char_tile=0;
-
-    for(i=0; i<maps.map[map_id]->client_list_count; i++){
-
-        j=maps.map[map_id]->client_list[i];
-        k=clients.client[j]->character_id;
-
-        local_text_proximity=characters.character[k]->local_text_proximity;
-        receiving_char_tile=characters.character[k]->map_tile;
-
-        //broadcast only to chars in local text proximity
-        if(get_proximity(char_tile, receiving_char_tile, map_axis)<local_text_proximity){
-            raw_text_packet(CHAT_LOCAL, text, packet, &packet_length);
-            memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet, packet_length);
-            clients.client[j]->cmd_buffer_end++;
-        }
-    }
-
-}
-
-void broadcast_channel_chat(int chan, char *text){
-
-    int i=0, j=0;
-    unsigned char packet[1024];
-    int packet_length=0;
-
-    for(i=0; i<channels.channel[chan]->client_list_count; i++){
-
-        j=channels.channel[chan]->client_list[i];
-
-        raw_text_packet(CHAT_SERVER, text, packet, &packet_length);
-        memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet, packet_length);
-        clients.client[j]->cmd_buffer_end++;
-    }
-
-}
-
-void broadcast_guild_channel_chat(int guild_id, char *text){
-
-    int i=0, j=0;
-    unsigned char packet[1024];
-    int packet_length=0;
-    int chan=guilds.guild[guild_id]->guild_chan_number;
-
-    for(i=0; i<channels.channel[chan]->client_list_count; i++){
-
-        j=channels.channel[chan]->client_list[i];
-
-        raw_text_packet(CHAT_GM, text, packet, &packet_length);
-        memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet, packet_length);
-        clients.client[j]->cmd_buffer_end++;
-    }
-
-}
-
-
-/*
-void broadcast_raw_text_packet(int connection, int channel, int chan_type, char *text){
-
-    int i=0,j=0;
-    unsigned char packet[1024];
-    int packet_length=0;
-
-    int char_id=clients.client[connection]->character_id;
-    int char_tile=characters.character[char_id]->map_tile;
-
+    int char_id=clients.client[sender_connection]->character_id;
+    int sender_char_tile=characters.character[char_id]->map_tile;
     int map_id=characters.character[char_id]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
 
-    int local_text_proximity=0;
-    int receiving_char_tile=0;
+    int receiver_local_text_proximity=0;
+    int receiver_char_tile=0;
+    int receiver_connection=0;
+    int receiver_char_id=0;
 
-    for(i=0; i<clients.max; i++){
+    for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
-        // restrict to clients that are logged in
-        if(clients.client[i]->status==LOGGED_IN) {
+        receiver_connection=maps.map[map_id]->client_list[i];
 
-            switch(chan_type){
+        if(receiver_connection!=sender_connection){
 
-                case CHAT_SERVER:
+            receiver_char_id=clients.client[receiver_connection]->character_id;
 
-                    for(j=0; j<3; j++){
+            receiver_local_text_proximity=characters.character[receiver_char_id]->local_text_proximity;
+            receiver_char_tile=characters.character[receiver_char_id]->map_tile;
 
-                        if(characters.character[clients.client[i]->character_id]->chan[j]==channel) {
+            //broadcast only to chars in local text proximity
+            if(get_proximity(sender_char_tile, receiver_char_tile, map_axis)<receiver_local_text_proximity){
 
-                            raw_text_packet(CHAT_SERVER, text, packet, &packet_length);
-                            memcpy(clients.client[i]->cmd_buffer[clients.client[i]->cmd_buffer_end], packet, packet_length);
-                            clients.client[i]->cmd_buffer_end++;
-                        }
-                    }
+                //raw_text_packet(CHAT_LOCAL, text_in, packet, &packet_length);
+                //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
+                //clients.client[receiver_connection]->cmd_buffer_end++;
+                send_raw_text_packet(clients.client[receiver_connection]->sock, CHAT_LOCAL, text_in);
+            }
+        }
+    }
+}
 
-                break;
+void broadcast_channel_chat(int chan, int sender_connection, char *text_in){
 
-                case CHAT_GM:
-                    // do we need this now that guild and chat chans are the same ?? - yes, gm chat is more efficient
-                    //   than SERVER_CHAT because the latter needs to test multiple chans for each client whereas the
-                    //   former only needs to test 1 chan
+    int i=0;
+    int receiver_connection=0;
+    int receiver_char_id=0;
+    int receiver_active_chan=0;
+    char text_out[1024]="";
 
-                    if(characters.character[clients.client[i]->character_id]->chan[0]==channel) {
+    //send to channel
+    for(i=0; i<channels.channel[chan]->client_list_count; i++){
 
-                        raw_text_packet(CHAT_GM, text, packet, &packet_length);
-                        memcpy(clients.client[i]->cmd_buffer[clients.client[i]->cmd_buffer_end], packet, packet_length);
-                        clients.client[i]->cmd_buffer_end++;
-                    }
-                break;
+        receiver_connection=channels.channel[chan]->client_list[i];
 
-                case CHAT_LOCAL:
+        if(receiver_connection!=sender_connection){
 
-                    //broadcast only to chars on local map
-                    if(characters.character[clients.client[i]->character_id]->map_id==map_id){
+            receiver_char_id=clients.client[receiver_connection]->character_id;
+            receiver_active_chan=characters.character[receiver_char_id]->active_chan;
 
-                        local_text_proximity=characters.character[char_id]->local_text_proximity;
-                        receiving_char_tile=characters.character[i]->map_tile;
-
-                        //broadcast only to chars in local text proximity
-                        if(get_proximity(char_tile, receiving_char_tile, map_axis)<local_text_proximity){
-
-                            raw_text_packet(channel, text, packet, &packet_length);
-                            memcpy(clients.client[i]->cmd_buffer[clients.client[i]->cmd_buffer_end], packet, packet_length);
-                            clients.client[i]->cmd_buffer_end++;
-                        }
-                    }
-
-                break;
-
-                default:
-                break;
+            //show non-active chan in darker grey
+            if(characters.character[receiver_char_id]->chan[receiver_active_chan]==chan){
+                sprintf(text_out, "%c%s", c_grey1+127, text_in);
+            }
+            else {
+                sprintf(text_out, "%c%s", c_grey2+127, text_in);
             }
 
+            //raw_text_packet(CHAT_SERVER, text_in, packet, &packet_length);
+            //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
+            //clients.client[receiver_connection]->cmd_buffer_end++;
+            send_raw_text_packet(clients.client[receiver_connection]->sock, CHAT_SERVER, text_out);
         }
-
     }
-
 }
-*/
+
+void broadcast_channel_event(int chan, int sender_connection, char *text_in){
+
+    int i=0;
+    int receiver_connection=0;
+
+    //send to channel
+    for(i=0; i<channels.channel[chan]->client_list_count; i++){
+
+        receiver_connection=channels.channel[chan]->client_list[i];
+
+        if(receiver_connection!=sender_connection){
+
+            //raw_text_packet(CHAT_SERVER, text_in, packet, &packet_length);
+            //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
+            //clients.client[receiver_connection]->cmd_buffer_end++;
+            send_raw_text_packet(clients.client[receiver_connection]->sock, CHAT_SERVER, text_in);
+        }
+    }
+}
+
+void broadcast_guild_channel_chat(int sender_connection, char *text_in){
+
+    int i=0;
+    int char_id=clients.client[sender_connection]->character_id;
+    int guild_id=characters.character[char_id]->guild_id;
+    int chan=guilds.guild[guild_id]->guild_chan_number;
+    int receiver_connection=0;
+
+    //send to channel
+    for(i=0; i<channels.channel[chan]->client_list_count; i++){
+
+        receiver_connection=channels.channel[chan]->client_list[i];
+
+        if(receiver_connection!=sender_connection){
+
+            //raw_text_packet(CHAT_GM, text_in, packet, &packet_length);
+            //memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet, packet_length);
+            //clients.client[j]->cmd_buffer_end++;
+            send_raw_text_packet(clients.client[receiver_connection]->sock, CHAT_GM, text_in);
+        }
+    }
+}
 
 void add_new_enhanced_actor_packet(int char_id, unsigned char *packet, int *packet_length){
 
@@ -282,43 +250,42 @@ void add_new_enhanced_actor_packet(int char_id, unsigned char *packet, int *pack
     packet[2]=data_length / 256;
 }
 
-void broadcast_add_new_enhanced_actor_packet(int connection){
+void broadcast_add_new_enhanced_actor_packet(int sender_connection){
 
     //broadcasts a single char to all connected clients
 
-    int i=0, j=0;
+    int i=0;
+    //int j=0;
     unsigned char packet[1024];
     int packet_length=0;
-
-    int char_id=clients.client[connection]->character_id;
-    int map_id=characters.character[char_id]->map_id;
-    int char_tile=characters.character[char_id]->map_tile;
-    int map_axis=maps.map[map_id]->map_axis;
 
     int receiving_char_id=0;
     int receiving_char_tile=0;
     int receiving_char_visual_proximity=0;
+    int receiver_connection=0;
+
+    int char_id=clients.client[sender_connection]->character_id;
+    int map_id=characters.character[char_id]->map_id;
+    int char_tile=characters.character[char_id]->map_tile;
+    int map_axis=maps.map[map_id]->map_axis;
 
     // create the packet to be broadcast
     add_new_enhanced_actor_packet(char_id, packet, &packet_length);
 
-    printf("Broadcasting add_new_enhanced_actor for %s to...\n", characters.character[char_id]->char_name);
+    for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
-    for(i=0; i<maps.map[i]->client_list_count; i++){
+        receiver_connection=maps.map[map_id]->client_list[i];
 
-        j=maps.map[map_id]->client_list[i];
-
-        receiving_char_id=clients.client[j]->character_id;
+        receiving_char_id=clients.client[receiver_connection]->character_id;
         receiving_char_tile=characters.character[receiving_char_id]->map_tile;
         receiving_char_visual_proximity=characters.character[receiving_char_id]->visual_proximity;
 
-        //printf("char tile %i receiving char tile %i map axis %i\n", char_tile, receiving_char_tile, map_axis);
-        //printf("name=%s proximity=%i char view within=%i\n", characters.character[receiving_char_id]->char_name, get_proximity(char_tile, receiving_char_tile, map_axis), receiving_char_visual_proximity);
-
         //restrict to characters within visual proximity
         if(get_proximity(char_tile, receiving_char_tile, map_axis)<receiving_char_visual_proximity){
-            memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet, packet_length);
-            clients.client[j]->cmd_buffer_end++;
+
+            //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
+            //clients.client[receiver_connection]->cmd_buffer_end++;
+            send(clients.client[receiver_connection]->sock, packet, packet_length, 0);
         }
     }
 }
@@ -346,36 +313,39 @@ void remove_actor_packet(int char_id, unsigned char *packet, int *packet_length)
 
 }
 
-void broadcast_remove_actor_packet(int connection) {
+void broadcast_remove_actor_packet(int sender_connection) {
 
-    int i=0, j=0;
+    int i=0;
     unsigned char packet[1024];
     int packet_length=0;
 
-    int char_id=clients.client[connection]->character_id;
+    int char_id=clients.client[sender_connection]->character_id;
     int map_id=characters.character[char_id]->map_id;
     int char_tile=characters.character[char_id]->map_tile;
     int map_axis=maps.map[map_id]->map_axis;
 
-    int receiving_char_id=0;
-    int receiving_char_tile=0;
-    int receiving_char_visual_proximity=0;
+    int receiver_connection=0;
+    int receiver_char_id=0;
+    int receiver_char_tile=0;
+    int receiver_char_visual_proximity=0;
 
     remove_actor_packet(char_id, packet, &packet_length);
 
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
-        j=maps.map[map_id]->client_list[i];
+        receiver_connection=maps.map[map_id]->client_list[i];
 
-        receiving_char_id=clients.client[j]->character_id;
-        receiving_char_tile=characters.character[receiving_char_id]->map_tile;
-        receiving_char_visual_proximity=characters.character[receiving_char_id]->visual_proximity;
+        receiver_char_id=clients.client[receiver_connection]->character_id;
+        receiver_char_tile=characters.character[receiver_char_id]->map_tile;
+        receiver_char_visual_proximity=characters.character[receiver_char_id]->visual_proximity;
 
         //filter for receiving char visual proximity
-        if(get_proximity(char_tile, receiving_char_tile, map_axis)>receiving_char_visual_proximity){
-            memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet, packet_length);
-            clients.client[j]->cmd_buffer_end++;
-        }
+        if(get_proximity(char_tile, receiver_char_tile, map_axis)<=receiver_char_visual_proximity){
+
+            //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
+            //clients.client[receiver_connection]->cmd_buffer_end++;
+            send(clients.client[receiver_connection]->sock, packet, packet_length, 0);
+         }
     }
 }
 
@@ -401,11 +371,14 @@ void add_actor_packet(int char_id, unsigned char move, unsigned char *packet, in
     packet[2]=data_length / 256;
 }
 
-void broadcast_add_actor_packet(int connection, unsigned char move, int destination_tile){
+void broadcast_actor_packet(int sender_connection, unsigned char move, int sender_destination_tile){
 
-    //broadcasts a single char to all connected clients
+    //broadcasts a specific char's movement to all connected clients
 
-    int i=0, j=0;
+    int i=0;
+
+    unsigned char packet[1024];// sending char packets
+    int packet_length=0;
 
     unsigned char packet1[1024];// receiving char add_actor packet
     int packet1_length=0;
@@ -416,110 +389,97 @@ void broadcast_add_actor_packet(int connection, unsigned char move, int destinat
     unsigned char packet3[1024];// receiving char remove_actor packet
     int packet3_length=0;
 
-    unsigned char packet4[1024];
-    int packet4_length=0;
-
-    unsigned char packet5[1024];
-    int packet5_length=0;
-
-    unsigned char packet6[1024];
-    int packet6_length=0;
-
-    int char_id=clients.client[connection]->character_id;
-    int map_id=characters.character[char_id]->map_id;
-    int char_tile=characters.character[char_id]->map_tile;
+    int sender_char_id=clients.client[sender_connection]->character_id;
+    int sender_current_tile=characters.character[sender_char_id]->map_tile;
+    int map_id=characters.character[sender_char_id]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
-    int char_visual_proximity=characters.character[char_id]->visual_proximity;
+    int sender_visual_proximity=characters.character[sender_char_id]->visual_proximity;
 
     int proximity_before_move=0;
     int proximity_after_move=0;
 
-    int receiving_char_id=0;
-    int receiving_char_tile=0;
-    int receiving_char_visual_proximity=0;
+    int receiver_connection=0;
+    int receiver_char_id=0;
+    int receiver_char_tile=0;
+    int receiver_char_visual_proximity=0;
 
     // pre-create packets that will be sent more than once in order to save time
-    add_actor_packet(char_id, move, packet1, &packet1_length);
-    add_new_enhanced_actor_packet(char_id, packet2, &packet2_length);
-    remove_actor_packet(char_id, packet3, &packet3_length);
+    add_actor_packet(sender_char_id, move, packet1, &packet1_length);
+    add_new_enhanced_actor_packet(sender_char_id, packet2, &packet2_length);
+    remove_actor_packet(sender_char_id, packet3, &packet3_length);
 
-    //printf("Broadcasting for %s to...\n", characters.character[char_id]->char_name);
+    // broadcast sender char move to all receiver clients
+    for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
-    for(i=0; i<maps.map[i]->client_list_count; i++){
+        receiver_connection=maps.map[map_id]->client_list[i];
 
-        j=maps.map[map_id]->client_list[i];
+        receiver_char_id=clients.client[receiver_connection]->character_id;
+        receiver_char_tile=characters.character[receiver_char_id]->map_tile;
+        receiver_char_visual_proximity=characters.character[receiver_char_id]->visual_proximity;
 
-        receiving_char_id=clients.client[j]->character_id;
-        receiving_char_tile=characters.character[receiving_char_id]->map_tile;
-        receiving_char_visual_proximity=characters.character[receiving_char_id]->visual_proximity;
-
-        //printf("name=%s proximity=%i char view within=%i\n", characters.character[receiving_char_id]->char_name, get_proximity(char_tile, receiving_char_tile, map_axis), receiving_char_visual_proximity);
-
-        proximity_before_move=get_proximity(char_tile, receiving_char_tile, map_axis);
-        proximity_after_move=get_proximity(destination_tile, receiving_char_tile, map_axis);
-        //printf("proximity before move %i proximity_after_move %i\n", proximity_before_move, proximity_after_move);
+        proximity_before_move=get_proximity(sender_current_tile, receiver_char_tile, map_axis);
+        proximity_after_move=get_proximity(sender_destination_tile, receiver_char_tile, map_axis);
 
         //This block deals with receiving char vision
-        if(j!=connection){
+        if(receiver_connection!=sender_connection){
 
-            if(proximity_before_move>receiving_char_visual_proximity && proximity_after_move<=receiving_char_visual_proximity){
+            if(proximity_before_move>receiver_char_visual_proximity && proximity_after_move<=receiver_char_visual_proximity){
 
                 //sending char moves into visual proximity of receiving char
-                //printf("sending char moves into range of receiving char\n");
 
-                memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet2, packet2_length);
-                clients.client[j]->cmd_buffer_end++;
+                //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet2, packet2_length);
+                //clients.client[receiver_connection]->cmd_buffer_end++;
+                send(clients.client[receiver_connection]->sock, packet2, packet2_length, 0);
             }
-            else if(proximity_before_move<=receiving_char_visual_proximity && proximity_after_move>receiving_char_visual_proximity){
+            else if(proximity_before_move<=receiver_char_visual_proximity && proximity_after_move>receiver_char_visual_proximity){
 
                 //sending char moves out of visual proximity of receiving char
-                //printf("sending char moves out of range of receiving char\n");
 
-                memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet3, packet3_length);
-                clients.client[j]->cmd_buffer_end++;
+                //memcpy(clients.client[sender_connection]->cmd_buffer[clients.client[sender_connection]->cmd_buffer_end], packet3, packet3_length);
+                //clients.client[sender_connection]->cmd_buffer_end++;
+                send(clients.client[receiver_connection]->sock, packet3, packet3_length, 0);
             }
-            else if(proximity_before_move<=receiving_char_visual_proximity && proximity_after_move<=receiving_char_visual_proximity){
+            else if(proximity_before_move<=receiver_char_visual_proximity && proximity_after_move<=receiver_char_visual_proximity){
 
                 //sending char moving within visual proximity of receiving char
-                //printf("sending char moves within range of receiving char\n");
 
-                memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet1, packet1_length);
-                clients.client[j]->cmd_buffer_end++;
+                //memcpy(clients.client[sender_connection]->cmd_buffer[clients.client[sender_connection]->cmd_buffer_end], packet1, packet1_length);
+                //clients.client[sender_connection]->cmd_buffer_end++;
+                send(clients.client[receiver_connection]->sock, packet1, packet1_length, 0);
             }
 
         }
 
-        if(proximity_before_move>char_visual_proximity && proximity_after_move<=char_visual_proximity){
+        //this block deals with sending char vision
+
+        if(proximity_before_move>sender_visual_proximity && proximity_after_move<=sender_visual_proximity){
 
             //sending char moves into visual proximity of receiving char
-            //printf("receiving char moves into range of sending char\n");
 
-            add_new_enhanced_actor_packet(clients.client[j]->character_id, packet4, &packet4_length);
-            send(clients.client[connection]->sock, packet4, packet4_length, 0);
+            add_new_enhanced_actor_packet(clients.client[receiver_connection]->character_id, packet, &packet_length);
+            send(clients.client[sender_connection]->sock, packet, packet_length, 0);
         }
-        else if(proximity_before_move<=char_visual_proximity && proximity_after_move>char_visual_proximity){
+        else if(proximity_before_move<=sender_visual_proximity && proximity_after_move>sender_visual_proximity){
 
             //sending char moves out of visual proximity of receiving char
-            //printf("receiving char moves out of range of sending char\n");
 
-            remove_actor_packet(clients.client[j]->character_id, packet5, &packet5_length);
-            send(clients.client[connection]->sock, packet5, packet5_length, 0);
+            remove_actor_packet(clients.client[receiver_connection]->character_id, packet, &packet_length);
+            send(clients.client[sender_connection]->sock, packet, packet_length, 0);
         }
-        else if(proximity_before_move<=char_visual_proximity && proximity_after_move<=char_visual_proximity){
+        else if(proximity_before_move<=sender_visual_proximity && proximity_after_move<=sender_visual_proximity){
 
             //sending char moves within visual proximity of receiving char
-            //printf("receiving char moves within range of sending char\n");
 
-            if(j==connection) {
+            if(receiver_connection==sender_connection) {
                 // only move our actor
-                add_actor_packet(clients.client[j]->character_id, move, packet6, &packet6_length);
+                add_actor_packet(clients.client[receiver_connection]->character_id, move, packet, &packet_length);
             }
             else{
                 // other actors remain stationary
-                add_actor_packet(clients.client[j]->character_id, 0, packet6, &packet6_length);
+                add_actor_packet(clients.client[receiver_connection]->character_id, 0, packet, &packet_length);
             }
 
-            send(clients.client[connection]->sock, packet6, packet6_length, 0);
+            send(clients.client[sender_connection]->sock, packet, packet_length, 0);
         }
 
     }

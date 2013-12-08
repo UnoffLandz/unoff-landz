@@ -9,14 +9,22 @@
 
 void add_client_to_channel(int connection, int chan){
 
+    char text_out[1024]="";
+    int char_id=clients.client[connection]->character_id;
+
     channels.channel[chan]->client_list[channels.channel[chan]->client_list_count]=connection;
     channels.channel[chan]->client_list_count++;
+
+    sprintf(text_out, "%c%s has joined channel %s", c_yellow1+127, characters.character[char_id]->char_name, channels.channel[chan]->channel_name);
+    broadcast_channel_event(chan, connection, text_out);
 }
 
 void remove_client_from_channel(int connection, int chan){
 
     int i=0, j=0;
     int found=0;
+    char text_out[1024]="";
+    int char_id=clients.client[connection]->character_id;
 
     for(i=0; i<channels.channel[chan]->client_list_count; i++){
 
@@ -34,9 +42,12 @@ void remove_client_from_channel(int connection, int chan){
     for(j=i; i<channels.channel[chan]->client_list_count-1; i++){
 
         channels.channel[chan]->client_list[j]=channels.channel[chan]->client_list[j+1];
-    }
+   }
 
     channels.channel[chan]->client_list_count--;
+
+    sprintf(text_out, "%c%s has left channel %s", c_yellow1+127, characters.character[char_id]->char_name, channels.channel[chan]->channel_name);
+    broadcast_channel_event(chan, connection, text_out);
 }
 
 int get_chan_slot(int char_id, int chan) {
@@ -217,11 +228,13 @@ int process_chat(int connection, char *text_in){
     // find the channel number for the active slot
     chan=characters.character[char_id]->chan[chan_slot];
 
-    // send text over channel
+    // echo to sender
     sprintf(text_out, "%c[%s:] %s", c_grey1, characters.character[char_id]->char_name, text_in);
+    send_raw_text_packet(clients.client[connection]->sock, CHAT_SERVER, text_out);
 
-    broadcast_channel_chat(chan, text_out);
-    //broadcast_raw_text_packet(connection, chan, CHAT_SERVER, text_out);
+    //send to others in chan (don't send colour as thats added in function broadcast_channel_chat
+    sprintf(text_out, "[%s:] %s", characters.character[char_id]->char_name, text_in);
+    broadcast_channel_chat(chan, char_id, text_out);
 
     printf("Chat sent from %s to channel %s: %s\n", characters.character[char_id]->char_name, channels.channel[chan]->channel_name, text_in);
 

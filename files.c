@@ -7,6 +7,7 @@
 #include "protocol.h" //required for read_motd
 #include "string_functions.h"
 #include "numeric_functions.h"
+#include "datetime_functions.h"
 
 int read_motd(int sock){
 
@@ -39,7 +40,7 @@ void save_character(char *char_name, int id){
         exit(EXIT_FAILURE);
     }
 
-    if(!fprintf(file, "%s\n %i\n %u\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n",
+    if(!fprintf(file, "%s\n%i\n%u\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%li\n%li\n%li\n",
             characters.character[id]->password,     //1
             characters.character[id]->time_played,  //2
             characters.character[id]->char_status,  //3
@@ -67,9 +68,12 @@ void save_character(char *char_name, int id){
             characters.character[id]->neck_type,    //25
             characters.character[id]->max_health,   //26
             characters.character[id]->current_health,//27
-            characters.character[id]->visual_proximity,
-            characters.character[id]->local_text_proximity
-            )){
+            characters.character[id]->visual_proximity,     //28
+            characters.character[id]->local_text_proximity, //29
+            characters.character[id]->last_in_game,         //30
+            characters.character[id]->char_created,          //31
+            characters.character[id]->joined_guild          //32
+        )){
         printf("character file %s\n", file_name);
         perror("problem saving data to file in function save_character");
         exit(EXIT_FAILURE);
@@ -92,7 +96,7 @@ void save_guild(char *guild_name, int id){
         exit(EXIT_FAILURE);
     }
 
-   if(!fprintf(file, "%s %i %i %i %i %i",
+   if(!fprintf(file, "%s\n%i\n%i\n%i\n%i\n%i",
             guilds.guild[id]->guild_tag,
             guilds.guild[id]->tag_colour,
             guilds.guild[id]->log_on_notification_colour,
@@ -122,7 +126,7 @@ void save_channel(char *chan_name, int id){
         exit(EXIT_FAILURE);
     }
 
-    if(!fprintf(file, "%u\n %s\n %i\n %i\n %s\n", /* the %u is needed because chan_type is an enum */
+    if(!fprintf(file, "%u\n%s\n%i\n%i\n%s\n", /* the %u is needed because chan_type is an enum */
             channels.channel[id]->chan_type,
             channels.channel[id]->password,
             channels.channel[id]->owner_id,
@@ -151,7 +155,7 @@ void save_map(char *map_name, int id){
         exit(EXIT_FAILURE);
     }
 
-    if(!fprintf(file, "%s\n %i\n",
+    if(!fprintf(file, "%s\n%i\n",
             strcpy(maps.map[id]->elm_filename, "./maps/startmap.elm"),
             maps.map[id]->map_axis=192
         )){
@@ -191,41 +195,43 @@ int load_character(char *file_name, int i){
 
     if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
 
-    if(!fscanf(file, "%s\n %i\n %u\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n",
-            characters.character[i]->password,     //1
-            &characters.character[i]->time_played, //2
-            &characters.character[i]->char_status, //3
-            &characters.character[i]->active_chan, //4
-            &characters.character[i]->chan[0],     //5
-            &characters.character[i]->chan[1],     //6
-            &characters.character[i]->chan[2],     //7
-            &characters.character[i]->chan[3],     //8
-            &characters.character[i]->gm_permission,//9
-            &characters.character[i]->ig_permission,//10
-            &characters.character[i]->map_id,       //11
-            &characters.character[i]->map_tile,     //12
-            &characters.character[i]->guild_id,     //13
-            &characters.character[i]->char_type,    //14
-            &characters.character[i]->skin_type,    //15
-            &characters.character[i]->hair_type,    //16
-            &characters.character[i]->shirt_type,   //17
-            &characters.character[i]->pants_type,   //18
-            &characters.character[i]->boots_type,   //19
-            &characters.character[i]->head_type,    //20
-            &characters.character[i]->shield_type,  //21
-            &characters.character[i]->weapon_type,  //22
-            &characters.character[i]->cape_type,    //23
-            &characters.character[i]->helmet_type,  //24
-            &characters.character[i]->neck_type,    //25
-            &characters.character[i]->max_health,   //26
-            &characters.character[i]->current_health,//27
-            &characters.character[i]->visual_proximity, //28
-            &characters.character[i]->local_text_proximity //29
+    if(!fscanf(file, "%s\n %i\n %u\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %li\n %li\n %li\n",
+        characters.character[i]->password,     //1
+        &characters.character[i]->time_played, //2
+        &characters.character[i]->char_status, //3
+        &characters.character[i]->active_chan, //4
+        &characters.character[i]->chan[0],     //5
+        &characters.character[i]->chan[1],     //6
+        &characters.character[i]->chan[2],     //7
+        &characters.character[i]->chan[3],     //8
+        &characters.character[i]->gm_permission,//9
+        &characters.character[i]->ig_permission,//10
+        &characters.character[i]->map_id,       //11
+        &characters.character[i]->map_tile,     //12
+        &characters.character[i]->guild_id,     //13
+        &characters.character[i]->char_type,    //14
+        &characters.character[i]->skin_type,    //15
+        &characters.character[i]->hair_type,    //16
+        &characters.character[i]->shirt_type,   //17
+        &characters.character[i]->pants_type,   //18
+        &characters.character[i]->boots_type,   //19
+        &characters.character[i]->head_type,    //20
+        &characters.character[i]->shield_type,  //21
+        &characters.character[i]->weapon_type,  //22
+        &characters.character[i]->cape_type,    //23
+        &characters.character[i]->helmet_type,  //24
+        &characters.character[i]->neck_type,    //25
+        &characters.character[i]->max_health,   //26
+        &characters.character[i]->current_health,//27
+        &characters.character[i]->visual_proximity, //28
+        &characters.character[i]->local_text_proximity, //29
+        &characters.character[i]->last_in_game,        //30
+        &characters.character[i]->char_created,         //31
+        &characters.character[i]->joined_guild         //32
         )){
-            printf("character file %s\n", file_name);
-            perror("data missing from file");
-            exit(EXIT_FAILURE);
-
+        printf("character file %s\n", file_name);
+        perror("data missing from file");
+        exit(EXIT_FAILURE);
     }
 
     fclose(file);
@@ -240,7 +246,7 @@ int load_channel(char *file_name, int i){
 
     if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
 
-    if(!fscanf(file, "%u %s %i %i %[^\n]", /* the %u is needed because chan_type is an enum */
+    if(!fscanf(file, "%u %s %i %i %[^\n]", // the %u is needed because chan_type is an enum
             &channels.channel[i]->chan_type,
             channels.channel[i]->password,
             &channels.channel[i]->owner_id,
@@ -813,7 +819,7 @@ void load_all_channels(char *file_name){
             exit(EXIT_FAILURE);
         }
 
-        //assume that the chn files for the system channel is missing and create new one
+        //create new  chn files for the permanent channels
         channels.channel[i]->chan_type=CHAN_SYSTEM;
         strcpy(channels.channel[i]->password, "password");
         channels.channel[i]->owner_id=0;
@@ -823,6 +829,8 @@ void load_all_channels(char *file_name){
 
         i++;
         channels.channel[i]->chan_type=CHAN_PERMANENT;
+        strcpy(channels.channel[i]->password, "password");
+        channels.channel[i]->owner_id=0;
         channels.channel[i]->channel_id=i;
         strcpy(channels.channel[i]->description, "a public chan for nubs to be nubby in");
         save_channel("nub", i);
@@ -847,6 +855,8 @@ void load_all_channels(char *file_name){
         fclose(file);
         file=fopen(file_name, "r");
     }
+
+    i=0;
 
     printf("\nLoading channel list file [%s]...\n", file_name);
 
@@ -891,7 +901,7 @@ void load_all_characters(char *file_name) {
     //check we have an existing list file and, if not, then create one
     if((file=fopen(file_name, "r"))==NULL) {
 
-        printf("Can't find character list file [%s]. Creating new one\n", file_name);
+        printf("\nCan't find character list file [%s]. Creating new one\n", file_name);
 
         if((file=fopen(file_name, "w"))==NULL) {
             perror("unable to create list file in function load_all_characters");
@@ -1110,34 +1120,32 @@ void log_event(int event_type, char *text_in){
     char file_name[1024]="";
     char text_out[1024]="";
 
-    time_t rawtime;
-    struct tm * timeinfo;
-    char time_str[80]="";
+    char time_stamp_str[9]="";
+    char date_stamp_str[11]="";
 
-    time ( &rawtime );
-    timeinfo = localtime ( &rawtime );
-    sprintf(time_str, "[%i:%i:%i - %i:%i:%i]", timeinfo->tm_sec, timeinfo->tm_min, timeinfo->tm_hour, timeinfo->tm_mday, timeinfo->tm_mon, timeinfo->tm_year);
+    get_time_stamp_str(time(NULL), time_stamp_str);
+    get_date_stamp_str(time(NULL), date_stamp_str);
 
     switch(event_type){
 
         case EVENT_NEW_CHAR:
             strcpy(file_name, "character.log");
-            sprintf(text_out, "%s New Character -%s", time_str, text_in);
+            sprintf(text_out, "[%s][%s] New Character Created - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_ERROR:
             strcpy(file_name, "error.log");
-            sprintf(text_out, "%s New Character -%s", time_str, text_in);
+            sprintf(text_out, "[%s][%s] ERROR - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_SESSION:
             strcpy(file_name, "session.log");
-            sprintf(text_out, "%s Character -%s", time_str, text_in);
+            sprintf(text_out, "[%s][%s] Character - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         default:
             strcpy(file_name, "error.log");
-            sprintf(text_out, "%s Unknown Event %s", time_str, text_in);
+            sprintf(text_out, "[%s][%s] Unknown Event - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
     }
