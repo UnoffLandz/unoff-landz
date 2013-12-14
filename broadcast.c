@@ -93,7 +93,7 @@ void broadcast_local_chat(int sender_connection, char *text_in){
                 //raw_text_packet(CHAT_LOCAL, text_in, packet, &packet_length);
                 //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
                 //clients.client[receiver_connection]->cmd_buffer_end++;
-                send_raw_text_packet(clients.client[receiver_connection]->sock, CHAT_LOCAL, text_in);
+                send_raw_text_packet(receiver_connection, CHAT_LOCAL, text_in);
             }
         }
     }
@@ -106,6 +106,7 @@ void broadcast_channel_chat(int chan, int sender_connection, char *text_in){
     int receiver_char_id=0;
     int receiver_active_chan=0;
     char text_out[1024]="";
+    int sender_char_id=clients.client[sender_connection]->character_id;
 
     //send to channel
     for(i=0; i<channels.channel[chan]->client_list_count; i++){
@@ -118,17 +119,14 @@ void broadcast_channel_chat(int chan, int sender_connection, char *text_in){
             receiver_active_chan=characters.character[receiver_char_id]->active_chan;
 
             //show non-active chan in darker grey
-            if(characters.character[receiver_char_id]->chan[receiver_active_chan]==chan){
-                sprintf(text_out, "%c%s", c_grey1+127, text_in);
+            if(characters.character[receiver_char_id]->chan[receiver_active_chan-1]==chan){
+                sprintf(text_out, "%c[%s @ %i(%s)] %s", c_grey1+127, characters.character[sender_char_id]->char_name, chan, channels.channel[chan]->channel_name, text_in);
             }
             else {
-                sprintf(text_out, "%c%s", c_grey2+127, text_in);
+                sprintf(text_out, "%c[%s @ %i(%s)] %s", c_grey1+127, characters.character[sender_char_id]->char_name, chan, channels.channel[chan]->channel_name, text_in);
             }
 
-            //raw_text_packet(CHAT_SERVER, text_in, packet, &packet_length);
-            //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
-            //clients.client[receiver_connection]->cmd_buffer_end++;
-            send_raw_text_packet(clients.client[receiver_connection]->sock, CHAT_SERVER, text_out);
+            send_raw_text_packet(receiver_connection, CHAT_SERVER, text_out);
         }
     }
 }
@@ -148,7 +146,7 @@ void broadcast_channel_event(int chan, int sender_connection, char *text_in){
             //raw_text_packet(CHAT_SERVER, text_in, packet, &packet_length);
             //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
             //clients.client[receiver_connection]->cmd_buffer_end++;
-            send_raw_text_packet(clients.client[receiver_connection]->sock, CHAT_SERVER, text_in);
+            send_raw_text_packet(receiver_connection, CHAT_SERVER, text_in);
         }
     }
 }
@@ -171,7 +169,7 @@ void broadcast_guild_channel_chat(int sender_connection, char *text_in){
             //raw_text_packet(CHAT_GM, text_in, packet, &packet_length);
             //memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet, packet_length);
             //clients.client[j]->cmd_buffer_end++;
-            send_raw_text_packet(clients.client[receiver_connection]->sock, CHAT_GM, text_in);
+            send_raw_text_packet(receiver_connection, CHAT_GM, text_in);
         }
     }
 }
@@ -285,7 +283,7 @@ void broadcast_add_new_enhanced_actor_packet(int sender_connection){
 
             //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
             //clients.client[receiver_connection]->cmd_buffer_end++;
-            send(clients.client[receiver_connection]->sock, packet, packet_length, 0);
+            send(receiver_connection, packet, packet_length, 0);
         }
     }
 }
@@ -344,7 +342,7 @@ void broadcast_remove_actor_packet(int sender_connection) {
 
             //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
             //clients.client[receiver_connection]->cmd_buffer_end++;
-            send(clients.client[receiver_connection]->sock, packet, packet_length, 0);
+            send(receiver_connection, packet, packet_length, 0);
          }
     }
 }
@@ -429,7 +427,7 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
 
                 //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet2, packet2_length);
                 //clients.client[receiver_connection]->cmd_buffer_end++;
-                send(clients.client[receiver_connection]->sock, packet2, packet2_length, 0);
+                send(receiver_connection, packet2, packet2_length, 0);
             }
             else if(proximity_before_move<=receiver_char_visual_proximity && proximity_after_move>receiver_char_visual_proximity){
 
@@ -437,7 +435,7 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
 
                 //memcpy(clients.client[sender_connection]->cmd_buffer[clients.client[sender_connection]->cmd_buffer_end], packet3, packet3_length);
                 //clients.client[sender_connection]->cmd_buffer_end++;
-                send(clients.client[receiver_connection]->sock, packet3, packet3_length, 0);
+                send(receiver_connection, packet3, packet3_length, 0);
             }
             else if(proximity_before_move<=receiver_char_visual_proximity && proximity_after_move<=receiver_char_visual_proximity){
 
@@ -445,7 +443,7 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
 
                 //memcpy(clients.client[sender_connection]->cmd_buffer[clients.client[sender_connection]->cmd_buffer_end], packet1, packet1_length);
                 //clients.client[sender_connection]->cmd_buffer_end++;
-                send(clients.client[receiver_connection]->sock, packet1, packet1_length, 0);
+                send(receiver_connection, packet1, packet1_length, 0);
             }
 
         }
@@ -455,21 +453,18 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
         if(proximity_before_move>sender_visual_proximity && proximity_after_move<=sender_visual_proximity){
 
             //sending char moves into visual proximity of receiving char
-
             add_new_enhanced_actor_packet(clients.client[receiver_connection]->character_id, packet, &packet_length);
-            send(clients.client[sender_connection]->sock, packet, packet_length, 0);
+            send(sender_connection, packet, packet_length, 0);
         }
         else if(proximity_before_move<=sender_visual_proximity && proximity_after_move>sender_visual_proximity){
 
             //sending char moves out of visual proximity of receiving char
-
             remove_actor_packet(clients.client[receiver_connection]->character_id, packet, &packet_length);
-            send(clients.client[sender_connection]->sock, packet, packet_length, 0);
+            send(sender_connection, packet, packet_length, 0);
         }
         else if(proximity_before_move<=sender_visual_proximity && proximity_after_move<=sender_visual_proximity){
 
             //sending char moves within visual proximity of receiving char
-
             if(receiver_connection==sender_connection) {
                 // only move our actor
                 add_actor_packet(clients.client[receiver_connection]->character_id, move, packet, &packet_length);
@@ -479,9 +474,7 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
                 add_actor_packet(clients.client[receiver_connection]->character_id, 0, packet, &packet_length);
             }
 
-            send(clients.client[sender_connection]->sock, packet, packet_length, 0);
+            send(sender_connection, packet, packet_length, 0);
         }
-
     }
-
 }

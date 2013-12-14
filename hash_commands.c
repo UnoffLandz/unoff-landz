@@ -22,7 +22,7 @@ char char_status_type[3][10]={"ALIVE", "DEAD", "BANNED"};
 
 void save_data(int connection){
 
-    int sock=clients.client[connection]->sock;
+    int sock=connection;
     int char_id=clients.client[connection]->character_id;
     char text_out[1024]="";
 
@@ -91,7 +91,7 @@ int process_hash_commands(int connection, char *text){
     char hash_command[1024]="";
     char hash_command_tail[1024]="";
     char text_out[1024]="";
-    int sock=clients.client[connection]->sock;
+    int sock=connection;
     int char_id=clients.client[connection]->character_id;
     int guild_id=characters.character[char_id]->guild_id;
     int channel_number=0;
@@ -110,6 +110,24 @@ int process_hash_commands(int connection, char *text){
 
     if(strcmp(hash_command, "#IL")==0) {
         //printf("#IL\n");
+        return HASH_CMD_UNSUPPORTED;
+    }
+/***************************************************************************************************/
+
+    else if(strcmp(hash_command, "#TEST")==0){
+
+        // split the #TEST command into channel number element
+        get_str_island(text, hash_command_tail, 2);
+
+        //convert text to an integer value
+        channel_number=atoi(hash_command_tail);
+
+        characters.character[char_id]->active_chan=channel_number;
+
+        send_get_active_channels(connection);
+
+        printf("set active chan %i\n", characters.character[char_id]->active_chan);
+
         return HASH_CMD_UNSUPPORTED;
     }
 /***************************************************************************************************/
@@ -365,13 +383,13 @@ int process_hash_commands(int connection, char *text){
 
                 // need to echo back to player which channel was just joined and its description etc
                 sprintf(text_out, "%cYou joined channel %s", c_green3+127, channels.channel[channel_number]->channel_name);
-                send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
+                send_server_text(connection, CHAT_SERVER, text_out);
 
                 sprintf(text_out, "%cDescription : %s", c_green2+127, channels.channel[channel_number]->description);
-                send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
+                send_server_text(connection, CHAT_SERVER, text_out);
 
                 sprintf(text_out, "%cIn channel :", c_green1+127);
-                send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
+                send_server_text(connection, CHAT_SERVER, text_out);
 
                 //echo which other players are in the chan
                 list_clients_in_chan(connection, channel_number);
@@ -379,7 +397,6 @@ int process_hash_commands(int connection, char *text){
                 return HASH_CMD_EXECUTED;
             break;
         }
-
 
         printf("unknown result from function process_guild_chat in section #JC\n");
 
@@ -423,7 +440,7 @@ int process_hash_commands(int connection, char *text){
 
                 // need to echo back to player which channel was left
                 sprintf(text_out, "%cyou left channel %s", c_green3+127, channels.channel[channel_number]->channel_name);
-                send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
+                send_server_text(connection, CHAT_SERVER, text_out);
 
                 return HASH_CMD_EXECUTED;
             break;

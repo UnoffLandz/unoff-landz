@@ -19,8 +19,6 @@
 
 #define TEMP_FILE "temp.tmp"
 
-#define DEFAULT_MAP 0 //set starting map to Isla Prima for new chars
-
 enum { // return values for find_free_connection_slot
     NO_FREE_SLOTS=-1
 };
@@ -39,7 +37,8 @@ enum { // return values for process_chat function
 enum { //log events
     EVENT_NEW_CHAR,
     EVENT_ERROR,
-    EVENT_SESSION
+    EVENT_SESSION,
+    EVENT_CHAT
 };
 
 enum { //return values for validate_password function
@@ -374,7 +373,7 @@ struct guild_list_type {
 /* create the clients struct */
 struct client_node_type{
     enum {LOGGED_IN, CONNECTED, LOGGED_OUT} status;
-    int sock;
+    //int sock;
     int packet_buffer[1024];
     int packet_buffer_length;
     int character_id;

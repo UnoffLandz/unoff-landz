@@ -820,6 +820,7 @@ void load_all_channels(char *file_name){
         }
 
         //create new  chn files for the permanent channels
+        i=0;
         channels.channel[i]->chan_type=CHAN_SYSTEM;
         strcpy(channels.channel[i]->password, "password");
         channels.channel[i]->owner_id=0;
@@ -827,7 +828,7 @@ void load_all_channels(char *file_name){
         strcpy(channels.channel[i]->description, "a permanent restricted system channel");
         save_channel("system", i);
 
-        i++;
+        i=1;
         channels.channel[i]->chan_type=CHAN_PERMANENT;
         strcpy(channels.channel[i]->password, "password");
         channels.channel[i]->owner_id=0;
@@ -835,7 +836,7 @@ void load_all_channels(char *file_name){
         strcpy(channels.channel[i]->description, "a public chan for nubs to be nubby in");
         save_channel("nub", i);
 
-        i++;
+        i=2;
         channels.channel[i]->chan_type=CHAN_PERMANENT;
         strcpy(channels.channel[i]->password, "password");
         channels.channel[i]->owner_id=0;
@@ -843,7 +844,7 @@ void load_all_channels(char *file_name){
         strcpy(channels.channel[i]->description, "a public chan so pro's don't get a headache from nubby nubs");
         save_channel("pro", i);
 
-        i++;
+        i=3;
         channels.channel[i]->chan_type=CHAN_PERMANENT;
         strcpy(channels.channel[i]->password, "password");
         channels.channel[i]->owner_id=0;
@@ -896,7 +897,7 @@ void load_all_characters(char *file_name) {
 
     FILE *file;
     char character_file_name[1024];
-    int i=0;
+    int i=1;// set to 1 (rather than 0) otherwise it won't be possible to detect concurrent logins
 
     //check we have an existing list file and, if not, then create one
     if((file=fopen(file_name, "r"))==NULL) {
@@ -933,7 +934,8 @@ void load_all_characters(char *file_name) {
 
     }
 
-    printf("[%i] characters were loaded\n", i);
+    //we deduct 1 from the number if chars loaded because the char count starts at 1 rather than zero
+    printf("[%i] characters were loaded\n", i-1);
 
     characters.count=i;
 
@@ -1141,6 +1143,11 @@ void log_event(int event_type, char *text_in){
         case EVENT_SESSION:
             strcpy(file_name, "session.log");
             sprintf(text_out, "[%s][%s] Character - %s", date_stamp_str, time_stamp_str, text_in);
+        break;
+
+        case EVENT_CHAT:
+            strcpy(file_name, "chat.log");
+            sprintf(text_out, "[%s][%s] %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         default:

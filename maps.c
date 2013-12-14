@@ -8,18 +8,20 @@ void add_client_to_map(int connection, int map_id){
 
     int map_client_count=maps.map[map_id]->client_list_count;
 
+    printf("add client %i to map %i\n", connection, map_id);
+
     maps.map[map_id]->client_list[map_client_count]=connection;
     maps.map[map_id]->client_list_count++;
 }
 
-void remove_client_from_map_list(int client_id, int map_id){
+void remove_client_from_map_list(int connection, int map_id){
 
     int i=0, j=0;
     int found=0;
 
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
-        if(maps.map[map_id]->client_list[i]==client_id) {
+        if(maps.map[map_id]->client_list[i]==connection) {
             found=1;
             break;
         }

@@ -11,6 +11,7 @@ enum { /* client to server protocol */
     HEARTBEAT=14,
     USE_OBJECT=16,
     PING_RESPONSE=60,
+    SET_ACTIVE_CHANNEL=61,
     LOG_IN=140,
     CREATE_CHAR=141,
     GET_DATE=230,
@@ -21,7 +22,8 @@ void process_packet(int connection, unsigned char *packet); //, struct client_li
 
 void send_server_text(int sock, int channel, char *text);
 
-void send_get_active_channels(int sock, int active_chan, int chan1, int chan2, int chan3);
+//void send_get_active_channels(int sock, int active_chan, int chan1, int chan2, int chan3);
+void send_get_active_channels(int connection);
 
 int get_char_id(char *char_name);
 

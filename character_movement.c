@@ -5,7 +5,7 @@
 #include "global.h"
 #include "broadcast.h"
 #include "protocol.h"
-
+#include "debug.h"
 
 enum {// actor movement vectors
     NORTH,
@@ -518,7 +518,7 @@ void process_char_move(int connection, time_t current_utime){
     int indirect_path_count=0;
     int indirect_path_result=0;
 
-    int sock=clients.client[connection]->sock;
+    int sock=connection;
     int char_id=clients.client[connection]->character_id;
     int map_id=characters.character[char_id]->map_id;
     int map_axis=maps.map[map_id]->map_axis;

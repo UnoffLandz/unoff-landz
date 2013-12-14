@@ -6,6 +6,8 @@
 #include "protocol.h"
 #include "broadcast.h"
 #include "string_functions.h"
+#include "debug.h"
+#include "files.h"
 
 void add_client_to_channel(int connection, int chan){
 
@@ -15,8 +17,10 @@ void add_client_to_channel(int connection, int chan){
     channels.channel[chan]->client_list[channels.channel[chan]->client_list_count]=connection;
     channels.channel[chan]->client_list_count++;
 
-    sprintf(text_out, "%c%s has joined channel %s", c_yellow1+127, characters.character[char_id]->char_name, channels.channel[chan]->channel_name);
+    sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, characters.character[char_id]->char_name, channels.channel[chan]->channel_name);
     broadcast_channel_event(chan, connection, text_out);
+
+    debug_channel_client_list(chan);
 }
 
 void remove_client_from_channel(int connection, int chan){
@@ -87,7 +91,7 @@ void list_clients_in_chan(int connection, int chan){
 
     int i=0, j=0;
     char text_out[1024];
-    int sock=clients.client[connection]->sock;
+    int sock=connection;
     int char_id;
 
     sprintf(text_out, "%cListing for channel [%i]: %s", c_blue1+127, chan, channels.channel[chan]->channel_name);
@@ -157,12 +161,15 @@ int join_channel(int connection, int chan){
 
     characters.character[char_id]->active_chan=slot;
 
+    send_get_active_channels(connection);
+
+/*
     send_get_active_channels(clients.client[connection]->sock,
         characters.character[char_id]->active_chan,
         characters.character[char_id]->chan[0],
         characters.character[char_id]->chan[1],
         characters.character[char_id]->chan[2]);
-
+*/
     return CHANNEL_JOINED;
 }
 
@@ -198,12 +205,15 @@ int leave_channel(int connection, int chan){
         characters.character[char_id]->active_chan=slot;
     }
 
+    send_get_active_channels(connection);
+
+/*
     send_get_active_channels(clients.client[connection]->sock,
         characters.character[char_id]->active_chan,
         characters.character[char_id]->chan[0],
         characters.character[char_id]->chan[1],
         characters.character[char_id]->chan[2]);
-
+*/
     return CHANNEL_LEFT;
 }
 
@@ -215,7 +225,7 @@ int process_chat(int connection, char *text_in){
     char text_out[1024]="";
     int text_len=strlen(text_in);
 
-    //remove the @ from text
+    //remove the @ from text string
     memcpy(text_in, text_in+1, text_len-1);
     text_in[text_len-1]='\0';
 
@@ -228,15 +238,22 @@ int process_chat(int connection, char *text_in){
     // find the channel number for the active slot
     chan=characters.character[char_id]->chan[chan_slot];
 
+    printf("active chan slot %i\n",characters.character[char_id]->active_chan);
+    printf("active chan %i\n", characters.character[char_id]->chan[chan_slot]);
+
+    //create the chat string
+    sprintf(text_out, "%c[%s @ %i(%s)] %s", c_grey1+127, characters.character[char_id]->char_name, chan, channels.channel[chan]->channel_name, text_in);
+
     // echo to sender
-    sprintf(text_out, "%c[%s:] %s", c_grey1, characters.character[char_id]->char_name, text_in);
-    send_raw_text_packet(clients.client[connection]->sock, CHAT_SERVER, text_out);
+    send_raw_text_packet(connection, CHAT_SERVER, text_out);
 
     //send to others in chan (don't send colour as thats added in function broadcast_channel_chat
-    sprintf(text_out, "[%s:] %s", characters.character[char_id]->char_name, text_in);
-    broadcast_channel_chat(chan, char_id, text_out);
+    broadcast_channel_chat(chan, connection, text_in);
 
     printf("Chat sent from %s to channel %s: %s\n", characters.character[char_id]->char_name, channels.channel[chan]->channel_name, text_in);
+
+    sprintf(text_out, "[%s @ %i(%s)] %s", characters.character[char_id]->char_name, chan, channels.channel[chan]->channel_name, text_in);
+    log_event(EVENT_CHAT, text_out);
 
     return CHAN_CHAT_SENT;
 }

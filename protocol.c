@@ -40,6 +40,34 @@ void send_here_your_inventory(int sock){
 }
 */
 
+void send_get_active_channels(int connection){
+
+    unsigned char packet[1024];
+    int i=0, j=0;
+
+    int char_id=clients.client[connection]->character_id;
+
+    packet[0]=71;
+    packet[1]=14;
+    packet[2]=0;
+    packet[3]=characters.character[char_id]->active_chan;
+
+
+    for(i=0; i<3; i++){
+
+        j=i*4;
+
+        packet[j+4]=characters.character[char_id]->chan[i] % 256;
+        packet[j+5]=characters.character[char_id]->chan[i]/256 % 256;
+        packet[j+6]=characters.character[char_id]->chan[i]/256/256 % 256;
+        packet[j+7]=characters.character[char_id]->chan[i]/256/256/256 % 256;
+    }
+
+    send(connection, packet, 16, 0);
+}
+
+
+/*
 void send_get_active_channels(int sock, int active_chan, int chan1, int chan2, int chan3){
 
     unsigned char packet[1024];
@@ -90,6 +118,7 @@ void send_get_active_channels(int sock, int active_chan, int chan1, int chan2, i
 
     send(sock, packet, 16, 0);
 }
+*/
 
 void send_server_text(int sock, int channel, char *text){
 
@@ -178,7 +207,7 @@ void send_pm(int connection, char *text) {
 
         // echo message back to sender
         sprintf(text_out, "%c[PM to %s: %s]", c_orange1+127, receiver_name, msg);
-        send_server_text(clients.client[receiver_connection]->sock, CHAT_PERSONAL, text_out);
+        send_server_text(receiver_connection, CHAT_PERSONAL, text_out);
 
         // determine id of the receiver char
         receiver_id=get_char_id(receiver_name);
@@ -190,12 +219,12 @@ void send_pm(int connection, char *text) {
             if(receiver_connection!=-1) {
                 // receiver char is in-game
                 sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, sender_name, msg);
-                send_server_text(clients.client[connection]->sock, CHAT_PERSONAL, text_out);
+                send_server_text(connection, CHAT_PERSONAL, text_out);
             }
             else {
                 // receiver char is not in-game
                 sprintf(text_out, "%ccharacter is not currently logged on. To send a letter use #LETTER [name] [message]", c_red2+127);
-                send_server_text(clients.client[connection]->sock, CHAT_PERSONAL, text_out);
+                send_server_text(connection, CHAT_PERSONAL, text_out);
                 printf("SEND_PM from [%s] to [%s] message [%s] - receiver not in-game\n", sender_name, receiver_name, msg);
             }
         }
@@ -203,14 +232,14 @@ void send_pm(int connection, char *text) {
 
             // receiver char does not exist
             sprintf(text_out, "%ccharacter does not exist\n", c_red1+127);
-            send_server_text(clients.client[connection]->sock, CHAT_PERSONAL, text_out);
+            send_server_text(connection, CHAT_PERSONAL, text_out);
             printf("SEND_PM from [%s] to [%s] message [%s] - receiver does not exist\n", sender_name, receiver_name, msg);
         }
     }
     else {
         // tried to send a zero length message
         sprintf(text_out, "%cno text in message", c_red1+127);
-        send_server_text(clients.client[connection]->sock, CHAT_PERSONAL, text_out);
+        send_server_text(connection, CHAT_PERSONAL, text_out);
         printf("SEND_PM from [%s] to [%s] - zero length message\n", sender_name, receiver_name);
     }
 
@@ -293,20 +322,20 @@ void send_change_map(int sock, char *elm_filename){
     int i;
 
     /* calculate msb/lsb */
-    int filename_length=strlen(elm_filename)+1; /* +1 to include null terminator */
+    int filename_length=strlen(elm_filename)+1; // +1 to include null terminator
     int msb=(filename_length) / 256;
     int lsb=(filename_length) % 256;
-    lsb++; /* +1 as required by EL protocol */
+    lsb++; // +1 as required by EL protocol
 
-    /* calculate packet length */
+    // calculate packet length
     int packet_length=filename_length+3;
 
-    /* construct packet header */
+    // construct packet header
     packet[0]=7;
     packet[1]=lsb;
     packet[2]=msb;
 
-    // TODO (derekl#2#): convert loop to memcpy    /* add packet content */
+    // TODO (derekl#2#): convert loop to memcpy    // add packet content
     for(i=3; i<3+filename_length; i++){
         packet[i]=elm_filename[i-3];
     }
@@ -314,7 +343,7 @@ void send_change_map(int sock, char *elm_filename){
     send(sock, packet, packet_length, 0);
 }
 
-void transport_char(int connection, int tile, int map_id, int transport_type){
+//void transport_char(int connection, int tile, int map_id, int transport_type){
 
     /*  RESULT  : Move a char to a new map/initialises a char on a map
 
@@ -365,8 +394,9 @@ void transport_char(int connection, int tile, int map_id, int transport_type){
     broadcast_add_new_enhanced_actor_packet(connection);
 
     //      log client map move (time / char_id / originating map id)
-*/
+
 }
+*/
 
 void send_actors_to_client(int connection){
 
@@ -402,7 +432,7 @@ void send_actors_to_client(int connection){
                     if(get_proximity(char_tile, other_char_tile, map_axis)<char_visual_proximity){
 
                         add_new_enhanced_actor_packet(clients.client[i]->character_id, packet, &packet_length);
-                        send(clients.client[connection]->sock, packet, packet_length, 0);
+                        send(connection, packet, packet_length, 0);
                     }
                 }
             }
@@ -417,21 +447,21 @@ void process_packet(int connection, unsigned char *packet){
     unsigned char data[1024];
     char text[1024]="";
 
-    char text_in[1024]="";
+    //char text_in[1024]="";
     char text_out[1024]="";
 
     char char_name[1024]="";
     char password[1024]="";
 
-    int chan=0;
+    //int chan=0;
     int chan_colour=0;
     int char_id=clients.client[connection]->character_id;
     int map_id=characters.character[char_id]->map_id;
     int guild_id=characters.character[char_id]->guild_id;
-    int sock=clients.client[connection]->sock;
+    int sock=connection;
     int protocol=packet[0];
-    int lsb=packet[1];
-    int msb=packet[2];
+    int lsb=packet[1];// not working
+    int msb=packet[2];// not working
     int data_length=lsb+(msb*256)-1;
     int x_dest=0, y_dest=0, tile_dest=0;
     int map_object_id=0;
@@ -465,7 +495,7 @@ void process_packet(int connection, unsigned char *packet){
 
                         case CHAR_NOT_IN_CHAN:
                             sprintf(text_out, "%cyou have not joined a channel yet", c_red3+127);
-                            send_server_text(clients.client[connection]->sock, CHAT_SERVER, text_out);
+                            send_server_text(connection, CHAT_SERVER, text_out);
                         break;
 
                         case CHAN_CHAT_SENT:
@@ -488,7 +518,7 @@ void process_packet(int connection, unsigned char *packet){
 
                         case HASH_CMD_UNKNOWN:
                             sprintf(text_out, "%cThat command isn't supported yet. You may want to tell the game administrator", c_red3+127);
-                            send_server_text(clients.client[connection]->sock, CHAT_MOD, text_out);
+                            send_server_text(connection, CHAT_SERVER, text_out);
                         break;
 
                         case HASH_CMD_EXECUTED:
@@ -510,7 +540,7 @@ void process_packet(int connection, unsigned char *packet){
                 break;
 
                 default://local chat
-                    sprintf(text_out, "%c%s: %s", c_grey1, characters.character[char_id]->char_name, text);
+                    sprintf(text_out, "%c%s: %s", c_grey1+127, characters.character[char_id]->char_name, text);
 
                     //echo to sender
                     send_raw_text_packet(sock, CHAT_LOCAL, text_out);
@@ -591,17 +621,24 @@ void process_packet(int connection, unsigned char *packet){
         printf("PING_RESPONSE %i %i \n", lsb, msb);
         break;
 
+        case SET_ACTIVE_CHANNEL:
+        printf("SET_ACTIVE_CHANNEL %i %i \n", lsb, msb);
+        printf("active chan=%i\n", data[0]-32);
+        characters.character[char_id]->active_chan=data[0]-32;
+        break;
+
         case LOG_IN:
 
         printf("LOG_IN connection [%i]\n", connection);
 
         if(count_str_island(text)!=2){
 
-            send_login_not_ok(sock);
+            printf("login not ok\n");
 
-            // doesn't display
-            //sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
-            //send_raw_text_packet(sock, CHAT_SERVER, text_out);
+            sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
+            send_raw_text_packet(sock, CHAT_SERVER, text_out);
+
+            send_login_not_ok(sock);
 
             sprintf(text_out, "malformed login attempt for existing char name [%s] password [%s]\n", char_name, password);
             log_event(EVENT_ERROR, text_out);
@@ -618,23 +655,14 @@ void process_packet(int connection, unsigned char *packet){
 
             send_you_dont_exist(sock);
 
-            //doesn't display
-            //sprintf(text_out, "%cSorry, but that character name does not exist", c_red1+127);
-            //send_raw_text_packet(sock, CHAT_SERVER, text_out);
-
             sprintf(text_out, "login attempt with unknown char name [%s] password [%s]\n", char_name, password);
             log_event(EVENT_SESSION, text_out);
             return;
         }
 
-
         if(validate_password(char_id, password)==PASSWORD_INCORRECT){
 
             send_login_not_ok(sock);
-
-            //doesn't display
-            //sprintf(text_out, "%cSorry, but that password is incorrect", c_red1+127);
-            //send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
             sprintf(text_out, "login attempt with incorrect password char name [%s] password [%s]\n", char_name, password);
             log_event(EVENT_SESSION, text_out);
@@ -673,10 +701,11 @@ void process_packet(int connection, unsigned char *packet){
         }
 
         //prevent concurrent login on char
-        for(i=0; i<clients.count; i++){
+        for(i=0; i<clients.max; i++){
 
             if(clients.client[i]->character_id==clients.client[connection]->character_id && i!=connection){
 
+                printf("char concurrent\n");
                 send_login_not_ok(sock);
 
                 //doesn't display
@@ -701,15 +730,13 @@ void process_packet(int connection, unsigned char *packet){
         add_client_to_map(connection, map_id);
 
         //send char channels to client
-        send_get_active_channels(sock,
-            characters.character[char_id]->active_chan,
-            characters.character[char_id]->chan[0],
-            characters.character[char_id]->chan[1],
-            characters.character[char_id]->chan[2]);
+        send_get_active_channels(connection);
 
-        //add client to local channel lists
+       //add client to local channel lists
         for(i=0; i<3; i++){
-            if(characters.character[char_id]->chan[i]>0) add_client_to_channel(connection, characters.character[char_id]->chan[i]);
+            if(characters.character[char_id]->chan[i]>0) {
+                add_client_to_channel(connection, characters.character[char_id]->chan[i]);
+            }
         }
 
         // add in-game chars to this clients
@@ -738,9 +765,13 @@ void process_packet(int connection, unsigned char *packet){
         printf("CREATE_CHAR connection [%i]\n", connection);
 
         if(count_str_island(text)!=2){
+
+            send_create_char_not_ok(sock);
+
+            printf("create char not ok\n");
+
             sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
             send_raw_text_packet(sock, CHAT_SERVER, text_out);
-            send_create_char_not_ok(sock);
 
             sprintf(text_out, "malformed login attempt for new char name [%s] password [%s]\n", char_name, password);
             log_event(EVENT_ERROR, text_out);
@@ -751,16 +782,14 @@ void process_packet(int connection, unsigned char *packet){
         get_str_island(text, char_name, 1);
         get_str_island(text, password, 2);
 
-        i=strlen(char_name)+strlen(password)+2;
+        if(get_char_id(char_name)!=CHAR_NOT_FOUND) {
 
-        char_id=get_char_id(char_name);
-
-        if(char_id!=CHAR_NOT_FOUND) {
             send_create_char_not_ok(sock);
+
             sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
             send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-            sprintf(text_out, "login attempt for new char with existing char name [%s]\n", char_name);
+            sprintf(text_out, "Attempt to create new char with existing char name [%s]\n", char_name);
             log_event(EVENT_SESSION, text_out);
             return;
         }
@@ -787,23 +816,27 @@ void process_packet(int connection, unsigned char *packet){
         strcpy(characters.character[char_id]->password, password);   //1
         characters.character[char_id]->time_played=0;                //2
         characters.character[char_id]->char_status=CHAR_ALIVE;       //3
-        characters.character[char_id]->active_chan=1;                //4 automatically set chan nub
+        characters.character[char_id]->active_chan=0;                //4 automatically set chan nub
         characters.character[char_id]->chan[0]=1; // chan 0          //5 automatically set chan nub
         characters.character[char_id]->chan[1]=0; // chan 1          //6
         characters.character[char_id]->chan[2]=0; // chan 2          //7
         characters.character[char_id]->chan[3]=0; // chan 3 (reserved)   //8
         characters.character[char_id]->gm_permission=0;              //9
         characters.character[char_id]->ig_permission=0;              //10
-        characters.character[char_id]->map_id=DEFAULT_MAP;            //11
+        characters.character[char_id]->map_id=0;                     //11
         characters.character[char_id]->map_tile=4236;                //12
         characters.character[char_id]->guild_id=0;                   //13
+
+        i=strlen(char_name)+strlen(password)+2;
+
         characters.character[char_id]->skin_type=data[i++];          //14
         characters.character[char_id]->hair_type=data[i++];          //15
         characters.character[char_id]->shirt_type=data[i++];         //16
         characters.character[char_id]->pants_type=data[i++];         //17
         characters.character[char_id]->boots_type=data[i++];         //18
         characters.character[char_id]->char_type=data[i++];          //19
-        characters.character[char_id]->head_type=data[i++];          //20
+        characters.character[char_id]->head_type=data[i++];
+                 //20
         characters.character[char_id]->shield_type=SHIELD_NONE;      //21
         characters.character[char_id]->weapon_type=WEAPON_NONE;      //22
         characters.character[char_id]->cape_type=CAPE_NONE;          //23
@@ -819,39 +852,6 @@ void process_packet(int connection, unsigned char *packet){
 
         // save the character data to file
         save_new_character(characters.character[char_id]->char_name, char_id);
-
-        // send initial data to client
-        send_login_ok(sock);
-        send_you_are(sock, clients.client[connection]->character_id);
-
-        //send map to client
-        send_change_map(sock, maps.map[characters.character[char_id]->map_id]->elm_filename);
-
-        //send channels to client
-        send_get_active_channels(sock,
-            characters.character[char_id]->active_chan,
-            characters.character[char_id]->chan[0],
-            characters.character[char_id]->chan[1],
-            characters.character[char_id]->chan[2]);
-
-        //add client to client channel lists
-        for(i=0; i<3; i++){
-
-            if(characters.character[char_id]->chan[i]>0){
-                add_client_to_channel(connection, characters.character[char_id]->chan[i]);
-            }
-        }
-
-        //add client to client map list
-        add_client_to_map(connection, characters.character[char_id]->map_id);
-
-        //send_here_your_inventory(sock);
-
-        // add in-game chars to this clients
-        send_actors_to_client(connection);
-
-        // add this char to each connected client
-        broadcast_add_new_enhanced_actor_packet(connection);
 
         sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
         send_server_text(sock, CHAT_SERVER, text_out);
