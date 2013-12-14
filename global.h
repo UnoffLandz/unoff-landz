@@ -19,6 +19,10 @@
 
 #define TEMP_FILE "temp.tmp"
 
+enum { // transport types
+    CHANGE_MAP
+};
+
 enum { // return values for find_free_connection_slot
     NO_FREE_SLOTS=-1
 };

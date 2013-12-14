@@ -6,6 +6,7 @@
 #include "broadcast.h"
 #include "protocol.h"
 #include "debug.h"
+#include "files.h"
 
 enum {// actor movement vectors
     NORTH,
@@ -650,6 +651,8 @@ void process_char_move(int connection, time_t current_utime){
 
                 //update char current position
                 characters.character[clients.client[connection]->character_id]->map_tile=destination_tile;
+
+                save_character(characters.character[char_id]->char_name, char_id);
             }
             else {
                 printf(" - ignored\n");

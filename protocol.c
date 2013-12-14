@@ -66,60 +66,6 @@ void send_get_active_channels(int connection){
     send(connection, packet, 16, 0);
 }
 
-
-/*
-void send_get_active_channels(int sock, int active_chan, int chan1, int chan2, int chan3){
-
-    unsigned char packet[1024];
-
-    packet[0]=71;
-    packet[1]=14;
-    packet[2]=0;
-    packet[3]=active_chan;
-
-    if(chan1>0) {
-        packet[4]=chan1 % 256;
-        packet[5]=chan1/256 % 256;
-        packet[6]=chan1/256/256 % 256;
-        packet[7]=chan1/256/256/256 % 256;
-    }
-    else {
-        packet[4]=0;
-        packet[5]=0;
-        packet[6]=0;
-        packet[7]=0;
-    }
-
-    if(chan2>0) {
-        packet[8]=chan2 % 256;
-        packet[9]=chan2/256 % 256;
-        packet[10]=chan2/256/256 % 256;
-        packet[11]=chan2/256/256/256 % 256;
-    }
-    else {
-        packet[8]=0;
-        packet[9]=0;
-        packet[10]=0;
-        packet[11]=0;
-    }
-
-    if(chan3>0) {
-        packet[12]=chan3 % 256;
-        packet[13]=chan3/256 % 256;
-        packet[14]=chan3/256/256 % 256;
-        packet[15]=chan3/256/256/256 % 256;
-    }
-    else {
-        packet[12]=0;
-        packet[13]=0;
-        packet[14]=0;
-        packet[15]=0;
-    }
-
-    send(sock, packet, 16, 0);
-}
-*/
-
 void send_server_text(int sock, int channel, char *text){
 
 /* function definition sends to sock rather than connection so that we can reach clients when a connection has not been allocated
@@ -343,60 +289,6 @@ void send_change_map(int sock, char *elm_filename){
     send(sock, packet, packet_length, 0);
 }
 
-//void transport_char(int connection, int tile, int map_id, int transport_type){
-
-    /*  RESULT  : Move a char to a new map/initialises a char on a map
-
-        PURPOSE : Consolidate all required operations into a resuable function that can be called
-                 on both the login and chan_map protocol
-
-        USAGE   : protocol.c process_packet
-    */
-/*
-    int char_id=clients.client[connection]->character_id;
-
-    if(transport_type==CHANGE_MAP) {
-
-        //    check for ticket
-
-        //broadcast actor removal to other chars on map
-        broadcast_remove_actor_packet(connection);
-
-        //remove from local map list
-        remove_client_from_map_list(connection, map_id);
-
-        //      implement 'stay' timer.
-    }
-
-    //         check for residency status
-    //      advise actor of new map ownership and policies
-
-    //adjust char map and position
-    characters.character[char_id]->map_id=map_id;
-    characters.character[char_id]->map_tile=JUMP_POINT;
-
-    //send new char map to client
-    send_change_map(sock, maps.map[characters.character[char_id]->map_id]->elm_filename);
-
-    // add in-game chars to this clients ######## need to amend packet to include actor pos
-    send_actors_to_client(connection);
-
-    // add this char to each connected client ######### need amend packet to include actor pos
-    broadcast_add_new_enhanced_actor_packet(connection);
-
-    //add client to local map list
-    add_client_to_map(connection, map_id);
-
-    // add other chars to this client
-    send_actors_to_client(connection);
-
-    // broadcast this char to other clients
-    broadcast_add_new_enhanced_actor_packet(connection);
-
-    //      log client map move (time / char_id / originating map id)
-
-}
-*/
 
 void send_actors_to_client(int connection){
 
@@ -438,6 +330,62 @@ void send_actors_to_client(int connection){
             }
         }
     }
+}
+
+void transport_char(int connection, int tile, int map_id, int transport_type){
+
+    /*  RESULT  : Move a char to a new map/initialises a char on a map
+
+        PURPOSE : Consolidate all required operations into a resuable function that can be called
+                 on both the login and chan_map protocol
+
+        USAGE   : protocol.c process_packet
+    */
+
+    int char_id=clients.client[connection]->character_id;
+
+    if(transport_type==CHANGE_MAP) {
+
+        //    check for ticket
+
+        //broadcast actor removal to other chars on map
+        broadcast_remove_actor_packet(connection);
+
+        //remove from local map list
+        remove_client_from_map_list(connection, characters.character[char_id]->map_id);
+
+        //      implement 'stay' timer.
+    }
+
+    //         check for residency status
+    //      advise actor of new map ownership and policies
+
+    //adjust char map and position
+    characters.character[char_id]->map_id=map_id;
+    characters.character[char_id]->map_tile=tile;
+
+    //send new char map to client
+    send_change_map(connection, maps.map[characters.character[char_id]->map_id]->elm_filename);
+    printf("got here\n");
+
+    // add in-game chars to this clients
+    send_actors_to_client(connection);
+
+    // add this char to each connected client
+    broadcast_add_new_enhanced_actor_packet(connection);
+
+    //add client to local map list
+    add_client_to_map(connection, map_id);
+
+    // add other chars to this client
+    send_actors_to_client(connection);
+
+    // broadcast this char to other clients
+    broadcast_add_new_enhanced_actor_packet(connection);
+
+    //#TODO log client map move (time / char_id / originating map id)
+
+    save_character(characters.character[char_id]->char_name, char_id);
 }
 
 void process_packet(int connection, unsigned char *packet){
@@ -615,6 +563,11 @@ void process_packet(int connection, unsigned char *packet){
 
         printf("x_pos %f y_pos %f\n", x_pos, y_pos );
 */
+        if(map_object_id==520) {
+
+            transport_char(connection, 3000, 1, CHANGE_MAP);
+        }
+
         break;
 
         case PING_RESPONSE:

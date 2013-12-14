@@ -28,7 +28,7 @@ void remove_client_from_map_list(int connection, int map_id){
     }
 
     if(found==0) {
-        perror("unable to find character in function remove_char_from_map");
+        perror("unable to find character in function remove_client_from_map");
         exit(EXIT_FAILURE);
     }
 
