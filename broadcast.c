@@ -340,9 +340,7 @@ void broadcast_remove_actor_packet(int sender_connection) {
         //filter for receiving char visual proximity
         if(get_proximity(char_tile, receiver_char_tile, map_axis)<=receiver_char_visual_proximity){
 
-            //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
-            //clients.client[receiver_connection]->cmd_buffer_end++;
-            send(receiver_connection, packet, packet_length, 0);
+             send(receiver_connection, packet, packet_length, 0);
          }
     }
 }

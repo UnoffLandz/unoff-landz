@@ -22,6 +22,9 @@
 #include "chat.h"
 #include "maps.h"
 
+/* credit for the underlying libev socket code goes to Pierce <jqug123321@gmail.com>, details of which can be
+found @ http://jqug.blogspot.co.uk/2013/02/libev-socket.html */
+
 ev_timer timeout_watcher;
 
 void close_connection_slot(int connection){
@@ -65,7 +68,6 @@ void close_connection_slot(int connection){
     clients.count--;
 }
 
-
 void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
 
     unsigned char buffer[1024];
@@ -80,8 +82,30 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
 
     //read error
     if (read < 0) {
-        perror("read ");
-        return;
+
+        if(errno==104){
+
+            //client has terminated prematurely (probably due to not having a required map file)
+            printf("read error in function recv_data (probably due to bad map change) %i\n", watcher->fd);
+            close_connection_slot(watcher->fd);
+
+            sprintf(text_out, "client [%i]  char [%s] was terminated by the server in function recv_data\n", watcher->fd, characters.character[clients.client[watcher->fd]->character_id]->char_name);
+            log_event(EVENT_ERROR, text_out);
+
+            ev_io_stop(loop, watcher);
+            free(watcher);
+
+            return;
+        }
+        else {
+            //unknown read error
+            perror("read error in function recv_data");
+
+            sprintf(text_out, "client [%i]  char [%s] read error [%i]in function recv_data", watcher->fd, characters.character[clients.client[watcher->fd]->character_id]->char_name, errno);
+            log_event(EVENT_ERROR, text_out);
+            exit(EXIT_FAILURE);
+
+        }
     }
 
     //client disconnect

@@ -133,64 +133,6 @@ int validate_password(int char_id, char *password){
     return PASSWORD_INCORRECT;
 }
 
-void send_pm(int connection, char *text) {
-
-    char msg[1024]="";
-    char text_out[1024]="";
-    int receiver_id=0;
-    int receiver_connection=0;
-    char sender_name[1024]="";
-    char receiver_name[1024]="";
-
-    if(count_str_island(text)>=2) {
-
-        get_str_island(text, receiver_name, 1);
-        get_str_island(text, msg, 2);
-
-        strcpy(sender_name, characters.character[clients.client[connection]->character_id]->char_name);
-
-        printf("PM from [%s] to [%s]: %s\n", receiver_name, sender_name, msg);
-
-        // echo message back to sender
-        sprintf(text_out, "%c[PM to %s: %s]", c_orange1+127, receiver_name, msg);
-        send_server_text(receiver_connection, CHAT_PERSONAL, text_out);
-
-        // determine id of the receiver char
-        receiver_id=get_char_id(receiver_name);
-
-        if(receiver_id>=0) {
-            // determine if the receiver char exists by seeing if it has a connection
-            receiver_connection=get_char_connection(receiver_id);
-
-            if(receiver_connection!=-1) {
-                // receiver char is in-game
-                sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, sender_name, msg);
-                send_server_text(connection, CHAT_PERSONAL, text_out);
-            }
-            else {
-                // receiver char is not in-game
-                sprintf(text_out, "%ccharacter is not currently logged on. To send a letter use #LETTER [name] [message]", c_red2+127);
-                send_server_text(connection, CHAT_PERSONAL, text_out);
-                printf("SEND_PM from [%s] to [%s] message [%s] - receiver not in-game\n", sender_name, receiver_name, msg);
-            }
-        }
-        else {
-
-            // receiver char does not exist
-            sprintf(text_out, "%ccharacter does not exist\n", c_red1+127);
-            send_server_text(connection, CHAT_PERSONAL, text_out);
-            printf("SEND_PM from [%s] to [%s] message [%s] - receiver does not exist\n", sender_name, receiver_name, msg);
-        }
-    }
-    else {
-        // tried to send a zero length message
-        sprintf(text_out, "%cno text in message", c_red1+127);
-        send_server_text(connection, CHAT_PERSONAL, text_out);
-        printf("SEND_PM from [%s] to [%s] - zero length message\n", sender_name, receiver_name);
-    }
-
-}
-
 void send_login_ok(int sock){
 
     unsigned char packet[3];
@@ -289,6 +231,22 @@ void send_change_map(int sock, char *elm_filename){
     send(sock, packet, packet_length, 0);
 }
 
+void send_partial_stats(int connection, int attribute_type, int attribute_level){
+
+    unsigned char packet[1024];
+
+    // construct packet header
+    packet[0]=SEND_PARTIAL_STATS;
+    packet[1]=6;
+    packet[2]=0;
+    packet[3]=attribute_type;
+    packet[4]=attribute_level % 256;
+    packet[5]=attribute_level / 256 % 256;
+    packet[6]=attribute_level / 256 / 256 % 256;
+    packet[7]=attribute_level / 256 / 256 / 256 % 256;
+
+    send(connection, packet, 11, 0);
+}
 
 void send_actors_to_client(int connection){
 
@@ -332,12 +290,12 @@ void send_actors_to_client(int connection){
     }
 }
 
-void transport_char(int connection, int tile, int map_id, int transport_type){
+void transport_char(int connection, int tile, int new_map_id, int transport_type){
 
     /*  RESULT  : Move a char to a new map/initialises a char on a map
 
         PURPOSE : Consolidate all required operations into a resuable function that can be called
-                 on both the login and chan_map protocol
+                  at login and on map change
 
         USAGE   : protocol.c process_packet
     */
@@ -354,19 +312,18 @@ void transport_char(int connection, int tile, int map_id, int transport_type){
         //remove from local map list
         remove_client_from_map_list(connection, characters.character[char_id]->map_id);
 
+        //adjust char map and position
+        characters.character[char_id]->map_id=new_map_id;
+        characters.character[char_id]->map_tile=tile;
+
         //      implement 'stay' timer.
     }
 
     //         check for residency status
     //      advise actor of new map ownership and policies
 
-    //adjust char map and position
-    characters.character[char_id]->map_id=map_id;
-    characters.character[char_id]->map_tile=tile;
-
     //send new char map to client
     send_change_map(connection, maps.map[characters.character[char_id]->map_id]->elm_filename);
-    printf("got here\n");
 
     // add in-game chars to this clients
     send_actors_to_client(connection);
@@ -375,13 +332,7 @@ void transport_char(int connection, int tile, int map_id, int transport_type){
     broadcast_add_new_enhanced_actor_packet(connection);
 
     //add client to local map list
-    add_client_to_map(connection, map_id);
-
-    // add other chars to this client
-    send_actors_to_client(connection);
-
-    // broadcast this char to other clients
-    broadcast_add_new_enhanced_actor_packet(connection);
+    add_client_to_map(connection, characters.character[char_id]->map_id);
 
     //#TODO log client map move (time / char_id / originating map id)
 
@@ -462,29 +413,35 @@ void process_packet(int connection, unsigned char *packet){
 
                         case HASH_CMD_UNSUPPORTED:
                             //this case is reserved for debug purposes
+                            return;
                         break;
 
                         case HASH_CMD_UNKNOWN:
                             sprintf(text_out, "%cThat command isn't supported yet. You may want to tell the game administrator", c_red3+127);
                             send_server_text(connection, CHAT_SERVER, text_out);
+                            return;
                         break;
 
                         case HASH_CMD_EXECUTED:
                              //this case is reserved for debug purposes
+                             return;
                         break;
 
                         case HASH_CMD_ABORTED:
                             // debug purposes
+                            return;
                         break;
 
                         case HASH_CMD_FAILED:
                              //this case is reserved for debug purposes
+                            return;
                         break;
+
+                        default:
+                            sprintf(text_out, "unknown result from function process_hash_command [%s]", text);
+                            log_event(EVENT_ERROR, text_out);
+                        return;
                     }
-
-                    sprintf(text_out, "unknown result from function process_hash_command [%s]", text);
-                    log_event(EVENT_ERROR, text_out);
-
                 break;
 
                 default://local chat
@@ -495,6 +452,7 @@ void process_packet(int connection, unsigned char *packet){
 
                     //broadcast to receivers
                     broadcast_local_chat(connection, text_out);
+                    return;
                 break;
             }
 
@@ -552,7 +510,9 @@ void process_packet(int connection, unsigned char *packet){
         break;
 
         case USE_OBJECT:
+
         printf("USE_OBJECT %i %i \n", lsb, msb);
+
         map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
         use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
         printf("map object id %i use with position %i\n", map_object_id, use_with_position);
@@ -565,9 +525,12 @@ void process_packet(int connection, unsigned char *packet){
 */
         if(map_object_id==520) {
 
-            transport_char(connection, 3000, 1, CHANGE_MAP);
+            transport_char(connection, 3000, 2, CHANGE_MAP);
         }
 
+        break;
+
+        case HARVEST:
         break;
 
         case PING_RESPONSE:
@@ -575,8 +538,6 @@ void process_packet(int connection, unsigned char *packet){
         break;
 
         case SET_ACTIVE_CHANNEL:
-        printf("SET_ACTIVE_CHANNEL %i %i \n", lsb, msb);
-        printf("active chan=%i\n", data[0]-32);
         characters.character[char_id]->active_chan=data[0]-32;
         break;
 
@@ -676,12 +637,6 @@ void process_packet(int connection, unsigned char *packet){
         send_login_ok(sock);
         send_you_are(sock, clients.client[connection]->character_id);
 
-        //set char map to client
-        send_change_map(sock, maps.map[characters.character[char_id]->map_id]->elm_filename);
-
-        //add client to local map list
-        add_client_to_map(connection, map_id);
-
         //send char channels to client
         send_get_active_channels(connection);
 
@@ -692,12 +647,6 @@ void process_packet(int connection, unsigned char *packet){
             }
         }
 
-        // add in-game chars to this clients
-        send_actors_to_client(connection);
-
-        // add this char to each connected client
-        broadcast_add_new_enhanced_actor_packet(connection);
-
         // notify guild that char has logged on
         if(guild_id>0) {
             chan_colour=guilds.guild[guild_id]->log_on_notification_colour;
@@ -705,6 +654,21 @@ void process_packet(int connection, unsigned char *packet){
             broadcast_guild_channel_chat(guild_id, text_out);
         }
 
+        transport_char(connection, characters.character[char_id]->map_tile, characters.character[char_id]->map_id, LOGIN_MAP);
+
+/*
+        //set char map to client
+        send_change_map(sock, maps.map[characters.character[char_id]->map_id]->elm_filename);
+
+        // add in-game chars to this clients
+        send_actors_to_client(connection);
+
+        // add this char to each connected client
+        broadcast_add_new_enhanced_actor_packet(connection);
+
+        //add client to local map list
+        add_client_to_map(connection, map_id);
+*/
         sprintf(text_out, "login succesful char [%s]\n", char_name);
         log_event(EVENT_SESSION, text_out);
 

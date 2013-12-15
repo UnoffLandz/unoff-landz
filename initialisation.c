@@ -18,12 +18,6 @@ void initialise_client_list(int max_nodes){
         exit (EXIT_FAILURE);
     }
 
-    /* allocate memory for our struct
-    if( !(clients.client=malloc(sizeof(struct node_type*)*max_nodes))) {
-        perror ("unable to allocate suffient memory for client struct");
-        exit (EXIT_FAILURE);
-    }*/
-
     // allocate memory for our struct nodes
     for(i=0; i<max_nodes; i++){
 
@@ -36,19 +30,7 @@ void initialise_client_list(int max_nodes){
         clients.client[i]->path_count=0;
         clients.client[i]->cmd_buffer_end=0;
 
-        // allocate memory for cmd buffer array
-        /*
-        for(j=0; j<10; j++){
-
-            if( !(clients.client[i]->cmd_buffer[j]=malloc(sizeof(unsigned char) *1024))){
-                perror ("unable to allocate suffient memory for cmd buffer array");
-                exit (EXIT_FAILURE);
-            }
-
-        }
-        */
-
-    }
+     }
 }
 
 void initialise_map_list(int max_nodes){

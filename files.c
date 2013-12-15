@@ -305,8 +305,8 @@ int load_map(char *file_name, int id){
     int threed_object_map_size=0;
     //int twod_object_map_size=0;
 
-    int threed_object_structure_len=0;
-    int threed_object_count=0;
+    //int threed_object_structure_len=0;
+    //int threed_object_count=0;
 
     //int twod_object_structure_len=0;
     //int twod_object_count=0;
@@ -317,10 +317,8 @@ int load_map(char *file_name, int id){
     if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
 
     // extract the data
-    if(!fscanf(file, "%s %i",
-        maps.map[id]->elm_filename,
-        &maps.map[id]->map_axis
-        )){
+    if(!fscanf(file, "%s", maps.map[id]->elm_filename)){
+        printf("file %s\n", maps.map[id]->elm_filename);
         perror("problem loading data from file");
         exit(EXIT_FAILURE);
     }
@@ -417,8 +415,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    threed_object_structure_len=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    printf("3d object structure length %i\n", threed_object_structure_len);
+    //threed_object_structure_len=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    //printf("3d object structure length %i\n", threed_object_structure_len);
 
     //read 3d object count
     if(fread(bytes, 4, 1, file)!=1){
@@ -427,8 +425,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    threed_object_count=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    printf("3d object count %i\n", threed_object_count);
+    //threed_object_count=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    //printf("3d object count %i\n", threed_object_count);
 
     //read 3d object offset
     if(fread(bytes, 4, 1, file)!=1){
@@ -438,7 +436,7 @@ int load_map(char *file_name, int id){
     }
 
     threed_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    printf("3d object offset %i\n", threed_object_offset);
+    //printf("3d object offset %i\n", threed_object_offset);
 
     //read 2d object structure length
     if(fread(bytes, 4, 1, file)!=1){
@@ -468,7 +466,7 @@ int load_map(char *file_name, int id){
     }
 
     twod_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    printf("2d object offset %i\n", twod_object_offset);
+    //printf("2d object offset %i\n", twod_object_offset);
 
     //read lights structure length
     if(fread(bytes, 4, 1, file)!=1){
@@ -710,6 +708,13 @@ int load_map(char *file_name, int id){
     consists of 32 x 32 =1024 bytes */
 
     tile_map_size=height_map_offset-tile_map_offset;
+
+    if(tile_map_size>TILE_MAP_MAX) {
+        printf("file name [%s] tile map size %i\n",  maps.map[id]->elm_filename, tile_map_size);
+        perror("tile map exceeds maximum size in function load_map");
+        exit(EXIT_FAILURE);
+    }
+
     maps.map[id]->tile_map_size=tile_map_size;
 
      if(fread(maps.map[id]->tile_map, tile_map_size, 1, file)!=1){
@@ -726,6 +731,13 @@ int load_map(char *file_name, int id){
     of 192 x 192 = 36864 bytes */
 
     height_map_size=threed_object_offset-height_map_offset;
+
+    if(height_map_size>HEIGHT_MAP_MAX) {
+        printf("file name [%s] height map size %i\n", maps.map[id]->elm_filename, height_map_size);
+        perror("height map exceeds maximum size in function load_map");
+        exit(EXIT_FAILURE);
+    }
+
     maps.map[id]->height_map_size=height_map_size;
 
     if(fread(maps.map[id]->height_map, height_map_size, 1, file)!=1){
@@ -741,7 +753,14 @@ int load_map(char *file_name, int id){
     bytes to extract our 3d object map data. In the case of Isla Prima, the 3d object map is 167760 bytes*/
 
     threed_object_map_size=twod_object_offset-threed_object_offset;
-    printf("threed map size %i\n", threed_object_map_size);
+
+    if(threed_object_map_size>THREED_OBJECT_MAP_MAX) {
+        printf("file name [%s] 3d object map size %i\n", maps.map[id]->elm_filename, threed_object_map_size);
+        printf("threed map size %i\n", threed_object_map_size);
+        perror("3d object map exceeds maximum size in function load_map");
+        exit(EXIT_FAILURE);
+    }
+
     maps.map[id]->threed_object_map_size=threed_object_map_size;
 
     if(fread(maps.map[id]->threed_object_map, threed_object_map_size, 1, file)!=1){
@@ -1015,7 +1034,7 @@ void load_all_maps(char *file_name){
 
     FILE *file;
     char map_file_name[1024];
-    int i=0;
+    int i=1;// set to 1 (rather than 0) otherwise it won't be possible to when no map has been found
 
     //check we have an existing list file and, if not, then create one
     if((file=fopen(file_name, "r"))==NULL) {
@@ -1070,7 +1089,7 @@ void load_all_maps(char *file_name){
         }
     }
 
-    printf("[%i] maps were loaded\n", i);
+    printf("[%i] maps were loaded\n", i-1);
 
     maps.count=i;
 

@@ -103,9 +103,9 @@ void debug_char_struct(int connection){
     printf("current health %i\n",characters.character[char_id]->current_health);
     printf("visual proximity %i\n",characters.character[char_id]->visual_proximity);
     printf("local_text_proximity %i\n",characters.character[char_id]->local_text_proximity);
-    printf("last in game %d\n",characters.character[char_id]->last_in_game);
-    printf("char created %d\n",characters.character[char_id]->char_created);
-    printf("joined guild %d\n",characters.character[char_id]->joined_guild);
+    //printf("last in game %d\n",characters.character[char_id]->last_in_game);
+    //printf("char created %d\n",characters.character[char_id]->char_created);
+    //printf("joined guild %d\n",characters.character[char_id]->joined_guild);
 }
 
 void debug_map_client_list(int map_id){

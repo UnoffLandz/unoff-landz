@@ -353,3 +353,60 @@ int process_inter_guild_chat(int connection, char *text){
     return IG_SENT;
 }
 
+void send_pm(int connection, char *text) {
+
+    char msg[1024]="";
+    char text_out[1024]="";
+    int receiver_id=0;
+    int receiver_connection=0;
+    char sender_name[1024]="";
+    char receiver_name[1024]="";
+
+    if(count_str_island(text)>=2) {
+
+        get_str_island(text, receiver_name, 1);
+        get_str_island(text, msg, 2);
+
+        strcpy(sender_name, characters.character[clients.client[connection]->character_id]->char_name);
+
+        printf("PM from [%s] to [%s]: %s\n", receiver_name, sender_name, msg);
+
+        // echo message back to sender
+        sprintf(text_out, "%c[PM to %s: %s]", c_orange1+127, receiver_name, msg);
+        send_server_text(receiver_connection, CHAT_PERSONAL, text_out);
+
+        // determine id of the receiver char
+        receiver_id=get_char_id(receiver_name);
+
+        if(receiver_id>=0) {
+            // determine if the receiver char exists by seeing if it has a connection
+            receiver_connection=get_char_connection(receiver_id);
+
+            if(receiver_connection!=-1) {
+                // receiver char is in-game
+                sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, sender_name, msg);
+                send_server_text(connection, CHAT_PERSONAL, text_out);
+            }
+            else {
+                // receiver char is not in-game
+                sprintf(text_out, "%ccharacter is not currently logged on. To send a letter use #LETTER [name] [message]", c_red2+127);
+                send_server_text(connection, CHAT_PERSONAL, text_out);
+                printf("SEND_PM from [%s] to [%s] message [%s] - receiver not in-game\n", sender_name, receiver_name, msg);
+            }
+        }
+        else {
+
+            // receiver char does not exist
+            sprintf(text_out, "%ccharacter does not exist\n", c_red1+127);
+            send_server_text(connection, CHAT_PERSONAL, text_out);
+            printf("SEND_PM from [%s] to [%s] message [%s] - receiver does not exist\n", sender_name, receiver_name, msg);
+        }
+    }
+    else {
+        // tried to send a zero length message
+        sprintf(text_out, "%cno text in message", c_red1+127);
+        send_server_text(connection, CHAT_PERSONAL, text_out);
+        printf("SEND_PM from [%s] to [%s] - zero length message\n", sender_name, receiver_name);
+    }
+
+}

@@ -10,6 +10,8 @@ enum { /* client to server protocol */
     SEND_VERSION=10,
     HEARTBEAT=14,
     USE_OBJECT=16,
+    HARVEST=21,
+    SEND_PARTIAL_STATS=49,
     PING_RESPONSE=60,
     SET_ACTIVE_CHANNEL=61,
     LOG_IN=140,
@@ -22,9 +24,10 @@ void process_packet(int connection, unsigned char *packet); //, struct client_li
 
 void send_server_text(int sock, int channel, char *text);
 
-//void send_get_active_channels(int sock, int active_chan, int chan1, int chan2, int chan3);
 void send_get_active_channels(int connection);
 
 int get_char_id(char *char_name);
+
+int get_char_connection(char char_id);
 
 #endif // PROTOCOL_H_INCLUDED

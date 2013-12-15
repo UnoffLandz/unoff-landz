@@ -17,9 +17,15 @@
 #define GUILD_LIST_FILE "guild.lst"
 #define CHARACTER_LIST_FILE "character.lst"
 
+#define TILE_MAP_MAX 50000
+#define HEIGHT_MAP_MAX 150000
+#define TWOD_OBJECT_MAP_MAX 1 //not yet used
+#define THREED_OBJECT_MAP_MAX 800000
+
 #define TEMP_FILE "temp.tmp"
 
 enum { // transport types
+    LOGIN_MAP,
     CHANGE_MAP
 };
 
@@ -339,13 +345,13 @@ struct map_node_type{
     char map_name[1024];    // eg Isla Prima
     char elm_filename[1024];// eg startmap.elm
     int map_axis;
-    unsigned char tile_map[50000];
+    unsigned char tile_map[TILE_MAP_MAX];
     int tile_map_size;
-    unsigned char height_map[50000];
+    unsigned char height_map[HEIGHT_MAP_MAX];
     int height_map_size;
-    unsigned char threed_object_map[200000];
+    unsigned char threed_object_map[THREED_OBJECT_MAP_MAX];
     int threed_object_map_size;
-    unsigned char twod_object_map[50000];
+    unsigned char twod_object_map[TWOD_OBJECT_MAP_MAX];
     int twod_object_map_size;
     int client_list[MAX_CLIENTS];
     int client_list_count;

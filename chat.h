@@ -25,4 +25,6 @@ void add_client_to_channel(int connection, int chan);
 
 void remove_client_from_channel(int connection, int chan);
 
+void send_pm(int connection, char *text);
+
 #endif // CHAT_H_INCLUDED
