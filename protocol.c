@@ -203,7 +203,7 @@ void send_you_are(int sock, int id){
     send(sock, packet, 5, 0);
 }
 
-void send_change_map(int sock, char *elm_filename){
+void send_change_map(int connection, char *elm_filename){
 
     unsigned char packet[1024];
 
@@ -228,7 +228,7 @@ void send_change_map(int sock, char *elm_filename){
         packet[i]=elm_filename[i-3];
     }
 
-    send(sock, packet, packet_length, 0);
+    send(connection, packet, packet_length, 0);
 }
 
 void send_partial_stats(int connection, int attribute_type, int attribute_level){
@@ -270,10 +270,10 @@ void send_actors_to_client(int connection){
             other_char_id=clients.client[i]->character_id;
             other_char_tile=characters.character[other_char_id]->map_tile;
 
-            /* restrict to characters on the same map */
+            // restrict to characters on the same map
             if(characters.character[other_char_id]->map_id==map_id){
 
-                printf("add %s char to client %i\n", characters.character[other_char_id]->char_name, connection);
+                //printf("add %s char to client %i\n", characters.character[other_char_id]->char_name, connection);
 
                 // restrict to characters other than self
                 if(connection!=i){
@@ -290,9 +290,11 @@ void send_actors_to_client(int connection){
     }
 }
 
-void transport_char(int connection, int tile, int new_map_id, int transport_type){
+int remove_char_from_map(int connection){
 
-    /*  RESULT  : Move a char to a new map/initialises a char on a map
+    /*  RESULT  : Removes actor from map
+
+        RETURNS : 0=sucess / -1=fail
 
         PURPOSE : Consolidate all required operations into a resuable function that can be called
                   at login and on map change
@@ -301,6 +303,134 @@ void transport_char(int connection, int tile, int new_map_id, int transport_type
     */
 
     int char_id=clients.client[connection]->character_id;
+    int map_id=characters.character[char_id]->map_id;
+    char text_out[1024]="";
+
+    //check for illegal map
+    if(map_id>maps.max || map_id<START_MAP_ID) return -1;
+
+    //broadcast actor removal to other chars on map
+    broadcast_remove_actor_packet(connection);
+
+    //remove from local map list
+    remove_client_from_map_list(connection, characters.character[char_id]->map_id);
+
+    sprintf(text_out, "char %s removed from map %s", characters.character[char_id]->char_name, maps.map[map_id]->map_name);
+    log_event(EVENT_SESSION, text_out);
+
+    return 0;
+}
+
+int add_char_to_map(int connection, int new_map_id, int map_tile){
+
+    /*  RESULT  : sends actor to map
+
+        RETURNS : 0=sucess / -1=fail
+
+        PURPOSE : Consolidate all required operations into a resuable function that can be called
+                  at login and on map change
+
+        USAGE   : protocol.c process_packet
+    */
+
+    int char_id=clients.client[connection]->character_id;
+    char text_out[1024]="";
+
+    //check for illegal maps
+    if(new_map_id>maps.max || new_map_id<START_MAP_ID) return -1;
+
+    characters.character[char_id]->map_id=new_map_id;
+    characters.character[char_id]->map_tile=map_tile;
+
+    //send new char map to client
+    send_change_map(connection, maps.map[new_map_id]->elm_filename);
+
+    //add client to local map list
+    add_client_to_map(connection, characters.character[char_id]->map_id);
+
+    // add in-game chars to this clients
+    send_actors_to_client(connection);
+
+    // add this char to each connected client
+    broadcast_add_new_enhanced_actor_packet(connection);
+
+    //#TODO log client map move (time / char_id / originating map id)
+
+    save_character(characters.character[char_id]->char_name, char_id);
+
+    sprintf(text_out, "char %s added to map %s", characters.character[char_id]->char_name, maps.map[new_map_id]->map_name);
+    log_event(EVENT_SESSION, text_out);
+
+    return 0;
+}
+
+void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
+
+    /*  RESULT  : Move a char between maps
+
+        RETURNS : void
+
+        PURPOSE : Consolidate all required operations into a resuable function that can be called
+                  to move a char between maps
+
+        USAGE   : protocol.c process_packet
+    */
+
+    int char_id=clients.client[connection]->character_id;
+    int old_map_id=characters.character[char_id]->map_id;
+    char text_out[1024]="";
+
+    //check to see if old map is legal and, if not, transport char to Isla Prima
+    if(remove_char_from_map(connection)==-1) {
+
+        printf("attempt to leave illegal map_id [%i] map name [%s]\n", old_map_id, maps.map[old_map_id]->map_name);
+
+        sprintf(text_out, "attempt to leave illegal map (id[%i] map name [%s]) in function remove_char_from_map", old_map_id, maps.map[old_map_id]->map_name);
+        log_event(EVENT_ERROR, text_out);
+
+        new_map_id=START_MAP_ID;
+        new_map_tile=START_MAP_START_TILE;
+    }
+
+    //check to see if new map is legal and, if not, return char to old map
+    if(add_char_to_map(connection, new_map_id, new_map_tile)==-1){
+
+        printf("attempt to join illegal map_id [%i] map name [%s]\n", new_map_id, maps.map[new_map_id]->map_name);
+
+        sprintf(text_out, "attempt to join illegal map (id[%i] map name [%s]) in function remove_char_from_map", new_map_id, maps.map[new_map_id]->map_name);
+        log_event(EVENT_ERROR, text_out);
+
+        if(add_char_to_map(connection, old_map_id, characters.character[char_id]->map_tile)==-1){
+
+            //if old map and new map are illegal, close down the server
+            log_event(EVENT_ERROR, "severe map error in function move_char_between_maps - shutting down server");
+            exit(EXIT_FAILURE);
+            //#TODO simply remove client rather than crash server
+        }
+
+    }
+
+}
+
+/*
+void transport_char(int connection, int tile, int new_map_id, int transport_type){
+
+    int char_id=clients.client[connection]->character_id;
+    int old_map_id=characters.character[char_id]->map_id;
+    char text_out[1024]="";
+
+    //check for illegal maps
+    if(new_map_id>maps.max || new_map_id<START_MAP_ID){
+
+        printf("illegal map_id [%i] map name [%s]\n", new_map_id, maps.map[new_map_id]->map_name);
+
+        sprintf(text_out, "attempt to access illegal map map_id[%i] map name [%s]\n", new_map_id, maps.map[new_map_id]->map_name);
+        log_event(EVENT_ERROR, text_out);
+
+        //redirect char to the start map
+        new_map_id=START_MAP_ID;
+        tile=START_MAP_START_TILE;
+    }
 
     if(transport_type==CHANGE_MAP) {
 
@@ -312,18 +442,30 @@ void transport_char(int connection, int tile, int new_map_id, int transport_type
         //remove from local map list
         remove_client_from_map_list(connection, characters.character[char_id]->map_id);
 
-        //adjust char map and position
-        characters.character[char_id]->map_id=new_map_id;
-        characters.character[char_id]->map_tile=tile;
-
         //      implement 'stay' timer.
+
+        sprintf(text_out, "char %s moved from map %s to map %s\n", characters.character[char_id]->char_name, maps.map[old_map_id]->map_name, maps.map[new_map_id]->map_name);
+        log_event(EVENT_SESSION, text_out);
+    }
+    else if(transport_type==LOGIN_MAP){
+        //sprintf(text_out, "char %s move logged in at map %s\n", maps.map[old_map_id]->map_name);
+        log_event(EVENT_SESSION, text_out);
     }
 
     //         check for residency status
     //      advise actor of new map ownership and policies
 
+    //set new map and tile
+    characters.character[char_id]->map_id=new_map_id;
+    characters.character[char_id]->map_tile=tile;
+
+    printf("Beam char [%s] to map [%i] [%s]\n", characters.character[char_id]->char_name, new_map_id, maps.map[new_map_id]->map_name);
+
     //send new char map to client
-    send_change_map(connection, maps.map[characters.character[char_id]->map_id]->elm_filename);
+    send_change_map(connection, maps.map[new_map_id]->elm_filename);
+
+    //add client to local map list
+    add_client_to_map(connection, characters.character[char_id]->map_id);
 
     // add in-game chars to this clients
     send_actors_to_client(connection);
@@ -331,13 +473,11 @@ void transport_char(int connection, int tile, int new_map_id, int transport_type
     // add this char to each connected client
     broadcast_add_new_enhanced_actor_packet(connection);
 
-    //add client to local map list
-    add_client_to_map(connection, characters.character[char_id]->map_id);
-
     //#TODO log client map move (time / char_id / originating map id)
 
     save_character(characters.character[char_id]->char_name, char_id);
 }
+*/
 
 void process_packet(int connection, unsigned char *packet){
 
@@ -502,11 +642,12 @@ void process_packet(int connection, unsigned char *packet){
         break;
 
         case HEARTBEAT:
+
         printf("HEARTBEAT %i %i \n", lsb, msb);
+
         gettimeofday(&time_check, NULL);
-        //printf("lag %i\n",time_check.tv_sec-clients.client[i]->time_of_last_heartbeat);
         clients.client[i]->time_of_last_heartbeat=time_check.tv_sec;
-        save_data(connection);//needs to be on a separate timer
+        //save_data(connection);//needs to be on a separate timer
         break;
 
         case USE_OBJECT:
@@ -516,16 +657,12 @@ void process_packet(int connection, unsigned char *packet){
         map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
         use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
         printf("map object id %i use with position %i\n", map_object_id, use_with_position);
-/*
-        float x_pos, y_pos;
 
-        get_threed_object_pos(map_object_id, map_id, &x_pos, &y_pos);
+        if(map_object_id==520 && characters.character[char_id]->map_id==1) move_char_between_maps(connection, 2, 64946);
+        if(map_object_id==5416 && characters.character[char_id]->map_id==2) move_char_between_maps(connection, 1, 4053);
 
-        printf("x_pos %f y_pos %f\n", x_pos, y_pos );
-*/
-        if(map_object_id==520) {
-
-            transport_char(connection, 3000, 2, CHANGE_MAP);
+        if(map_object_id==4986 && characters.character[char_id]->map_id==2 && characters.character[char_id]->map_tile==108627){
+            move_char_between_maps(connection, 3, 3000);
         }
 
         break;
@@ -564,6 +701,9 @@ void process_packet(int connection, unsigned char *packet){
         printf("character_name[%s] password[%s]\n", char_name, password);
 
         char_id=get_char_id(char_name);
+
+        //now we have the char id, get the map id for the char
+        map_id=characters.character[char_id]->map_id;
 
         if(char_id==CHAR_NOT_FOUND) {
 
@@ -654,21 +794,19 @@ void process_packet(int connection, unsigned char *packet){
             broadcast_guild_channel_chat(guild_id, text_out);
         }
 
-        transport_char(connection, characters.character[char_id]->map_tile, characters.character[char_id]->map_id, LOGIN_MAP);
+        //transport_char(connection, characters.character[char_id]->map_tile, map_id, LOGIN_MAP);
 
-/*
-        //set char map to client
-        send_change_map(sock, maps.map[characters.character[char_id]->map_id]->elm_filename);
+        if(add_char_to_map(connection, map_id, characters.character[char_id]->map_tile)==-1){
 
-        // add in-game chars to this clients
-        send_actors_to_client(connection);
+            perror("cannot add char to map in function process_packet");
 
-        // add this char to each connected client
-        broadcast_add_new_enhanced_actor_packet(connection);
+            sprintf(text_out, "cannot add char [%s] to map [%s]", char_name, maps.map[map_id]->map_name);
+            log_event(EVENT_ERROR, text_out);
 
-        //add client to local map list
-        add_client_to_map(connection, map_id);
-*/
+            exit(EXIT_FAILURE);
+            //#TODO simply remove client and keep server running rather than crash
+        }
+
         sprintf(text_out, "login succesful char [%s]\n", char_name);
         log_event(EVENT_SESSION, text_out);
 
@@ -740,8 +878,8 @@ void process_packet(int connection, unsigned char *packet){
         characters.character[char_id]->chan[3]=0; // chan 3 (reserved)   //8
         characters.character[char_id]->gm_permission=0;              //9
         characters.character[char_id]->ig_permission=0;              //10
-        characters.character[char_id]->map_id=0;                     //11
-        characters.character[char_id]->map_tile=4236;                //12
+        characters.character[char_id]->map_id=START_MAP_ID;                     //11
+        characters.character[char_id]->map_tile=START_MAP_START_TILE;//12
         characters.character[char_id]->guild_id=0;                   //13
 
         i=strlen(char_name)+strlen(password)+2;

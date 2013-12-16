@@ -13,4 +13,6 @@ void debug_map_client_list(int map_id);
 
 void debug_channel_client_list(int chan);
 
+void show_map(int tile, unsigned char *height_map);
+
 #endif // DEBUG_H_INCLUDED

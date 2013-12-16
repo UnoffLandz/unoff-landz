@@ -5,6 +5,54 @@
 #include "chat.h"
 #include "global.h"
 
+void show_map(int tile, unsigned char *height_map) {
+
+
+    int x=0, y=0, z=0;
+
+    printf("\n\n");
+
+    for(y=40; y>=0; y--){
+
+        printf("|");
+
+        for(x=0; x<70; x++){
+
+            z=x+(y*192);
+
+            if(height_map[z]>0){
+
+                if(z!=tile){
+
+                    if(height_map[z]>1 && height_map[z]<9) {
+                        printf("%i", height_map[z]);
+                    }
+                    else {
+                        printf("-");
+                    }
+                }
+                else {
+                    printf("X");
+                }
+            }
+            else {
+                if(z!=tile){
+                    printf(" ");
+                }
+                else {
+                    printf("X");
+                }
+
+            }
+        }
+
+        printf("\n");
+    }
+    printf("----------------------------------------\n");
+
+    //printf("tile [%i] height [%i]\n", tile, height_map[tile]);
+}
+
 void debug_raw_text(int connection, char *text, int text_len){
 
     switch(text[0]){

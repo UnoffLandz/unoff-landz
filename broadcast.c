@@ -179,6 +179,7 @@ void add_new_enhanced_actor_packet(int char_id, unsigned char *packet, int *pack
     int i=0,j=0;
     int data_length=0;
     int guild_id=characters.character[char_id]->guild_id;
+
     int map_id=characters.character[char_id]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
     int x=characters.character[char_id]->map_tile % map_axis;
@@ -223,6 +224,7 @@ void add_new_enhanced_actor_packet(int char_id, unsigned char *packet, int *pack
 
     // add guild name
 	if(guild_id>0) {
+
         packet[i++]=32;
         packet[i++]=guilds.guild[guild_id]->tag_colour;
 

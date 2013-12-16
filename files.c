@@ -295,6 +295,7 @@ int load_map(char *file_name, int id){
 
     char elm_filename[1024]="";
 
+    int h_tiles=0, v_tiles=0;
     int tile_map_offset=0;
     int height_map_offset=0;
     int threed_object_offset=0;
@@ -311,9 +312,9 @@ int load_map(char *file_name, int id){
     //int twod_object_structure_len=0;
     //int twod_object_count=0;
 
-    int j=0;
+    //int j=0;
 
-    //open the map overview file
+    //open the .map overview file and extract the .elm filename
     if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
 
     // extract the data
@@ -323,10 +324,9 @@ int load_map(char *file_name, int id){
         exit(EXIT_FAILURE);
     }
 
-    //close the file
     fclose(file);
 
-    //open the elm file
+    //open the elm file and extract map data
     extract_file_name(maps.map[id]->elm_filename, elm_filename);
 
     if((file=fopen(elm_filename, "r"))==NULL) {
@@ -355,13 +355,19 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("horizontal tiles %i\n", j);
+    h_tiles=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+
+    if(h_tiles<MIN_MAP_AXIS) {
+        printf("file name [%s] horizontal tiles %i\n", maps.map[id]->elm_filename, h_tiles);
+        perror("map axis is too small");
+        exit(EXIT_FAILURE);
+    }
+    //printf("horizontal tiles %i\n", h_tiles);
 
     /* because a char can move 6 steps per tile, we calculate the map axis as 6x the number
     of horizontal tiles. In the case of Isla Prima, the number of horizontal tiles is 32, so
     our map axis is calculated as 6x32=192 */
-    maps.map[id]->map_axis=j*6;
+    maps.map[id]->map_axis=h_tiles*6;
 
     //read vertical tile count
     if(fread(bytes, 4, 1, file)!=1){
@@ -370,12 +376,12 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    v_tiles=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
     //printf("vertical tiles %i\n", j);
 
     /* Because we assume that maps will always be a perfect square, if vertical tiles do not equal
     the number of horizontal tiles, we need to flag it as a serious problem */
-    if(maps.map[id]->map_axis/6!=j){
+    if(maps.map[id]->map_axis/6!=v_tiles){
         printf("filename [%s]\n", elm_filename);
         perror ("map is not a perfect square in function load_map");
         exit (EXIT_FAILURE);

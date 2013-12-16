@@ -29,7 +29,6 @@ int vector_x[8]={0, 1, 1, 1, 0, -1, -1, -1};
 int vector_y[8]={1, 1, 0, -1, -1, -1, 0, 1};
 unsigned char movement_cmd[8]={20, 21, 22, 23, 24, 25, 26, 27};
 
-
 int get_move_command_vector(int cmd, int tile_pos, int map_axis){
 
     //returns the new tile position after a move_cmd from tile_pos
@@ -130,54 +129,6 @@ int get_heading(int tile_pos, int tile_dest, int map_axis) {
     exit (EXIT_FAILURE);
 
     return -1; //we never get here
-}
-
-void show_map(int tile, unsigned char *height_map) {
-
-
-    int x=0, y=0, z=0;
-
-    printf("\n\n");
-
-    for(y=40; y>=0; y--){
-
-        printf("|");
-
-        for(x=0; x<70; x++){
-
-            z=x+(y*192);
-
-            if(height_map[z]>0){
-
-                if(z!=tile){
-
-                    if(height_map[z]>1 && height_map[z]<9) {
-                        printf("%i", height_map[z]);
-                    }
-                    else {
-                        printf("-");
-                    }
-                }
-                else {
-                    printf("X");
-                }
-            }
-            else {
-                if(z!=tile){
-                    printf(" ");
-                }
-                else {
-                    printf("X");
-                }
-
-            }
-        }
-
-        printf("\n");
-    }
-    printf("----------------------------------------\n");
-
-    //printf("tile [%i] height [%i]\n", tile, height_map[tile]);
 }
 
 void enqueue_move_to(int connection, int tile_dest){
@@ -618,10 +569,6 @@ void process_char_move(int connection, time_t current_utime){
     // move actor one step along the path
     if(clients.client[connection]->path_max>clients.client[connection]->path_count){
 
-        // get time
-        //gettimeofday(&time_check, NULL);
-        //current_utime=time_check.tv_usec;
-
         //adjust timer to compensate for wrap-around
         if(clients.client[connection]->time_of_last_move>current_utime) current_utime+=1000000;
 
@@ -659,5 +606,4 @@ void process_char_move(int connection, time_t current_utime){
             }
         }
     }
-
 }

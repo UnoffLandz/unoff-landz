@@ -22,6 +22,12 @@
 #define TWOD_OBJECT_MAP_MAX 1 //not yet used
 #define THREED_OBJECT_MAP_MAX 800000
 
+#define START_MAP_ID 1 //1=Isla Prima
+//#define START_MAP_START_TILE 4236
+#define START_MAP_START_TILE 27225
+
+#define MIN_MAP_AXIS 10 //used to bounds check maps
+
 #define TEMP_FILE "temp.tmp"
 
 enum { // transport types

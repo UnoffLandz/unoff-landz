@@ -19,8 +19,6 @@ void add_client_to_channel(int connection, int chan){
 
     sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, characters.character[char_id]->char_name, channels.channel[chan]->channel_name);
     broadcast_channel_event(chan, connection, text_out);
-
-    debug_channel_client_list(chan);
 }
 
 void remove_client_from_channel(int connection, int chan){
