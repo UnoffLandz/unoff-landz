@@ -114,21 +114,17 @@ int process_hash_commands(int connection, char *text){
     }
 /***************************************************************************************************/
 
-    else if(strcmp(hash_command, "#TEST")==0){
+    else if(strcmp(hash_command, "#BEAM_ME")==0){
 
-        // split the #TEST command into channel number element
-        get_str_island(text, hash_command_tail, 2);
+        if(command_parts!=1){
+            sprintf(text_out, "%cyou need to use the format #BEAM_ME", c_red3+127);
+            send_server_text(sock, CHAT_SERVER, text_out);
+            return HASH_CMD_ABORTED;
+        }
 
-        //convert text to an integer value
-        channel_number=atoi(hash_command_tail);
+        move_char_between_maps(connection, BEAM_ME_MAP, BEAM_ME_TILE);
 
-        characters.character[char_id]->active_chan=channel_number;
-
-        send_get_active_channels(connection);
-
-        printf("set active chan %i\n", characters.character[char_id]->active_chan);
-
-        return HASH_CMD_UNSUPPORTED;
+        return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
 

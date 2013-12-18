@@ -20,8 +20,6 @@ int load_map(char *file_name, int i);
 void load_all_maps(char *file_name);
 void save_map(char *file_name, int id);
 
-int read_motd(int new_sock);
-
 int get_file_size(char *file_name);
 
 void log_event(int event_type, char *text_in);

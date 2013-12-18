@@ -21,6 +21,7 @@
 #include "character_movement.h"
 #include "chat.h"
 #include "maps.h"
+#include "motd.h"
 
 /* credit for the underlying libev socket code goes to Pierce <jqug123321@gmail.com>, details of which can be
 found @ http://jqug.blogspot.co.uk/2013/02/libev-socket.html */
@@ -134,22 +135,23 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
     // check if any data in buffer
     if(clients.client[watcher->fd]->packet_buffer_length>0) {
 
+        //if we have data in the buffer then read all the available packets
         do {
             lsb=clients.client[watcher->fd]->packet_buffer[1];
             msb=clients.client[watcher->fd]->packet_buffer[2];
 
             packet_length=lsb+(msb*256)+2;
 
-            // check if data is data in buffer is sufficient to make a packet
+            //update heartbeat (we do this each time we receive any data from the client)
+            clients.client[watcher->fd]->time_of_last_heartbeat=time_check.tv_sec;
+
+            // if insufficient data received then wait for more data
             if(clients.client[watcher->fd]->packet_buffer_length<packet_length) break;
 
             // copy packet from buffer
             for(j=0; j<packet_length; j++){
                 packet[j]=clients.client[watcher->fd]->packet_buffer[j];
             }
-
-            //update heartbeat (we do this each time we receive any kind of message from the client)
-            clients.client[watcher->fd]->time_of_last_heartbeat=time_check.tv_sec;
 
             //process packet
             process_packet(watcher->fd, packet);
@@ -190,7 +192,7 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     clients.client[client_sockfd]->packet_buffer_length=0;
     strcpy(clients.client[client_sockfd]->ip_address, inet_ntoa(client_address.sin_addr));
 
-    read_motd(client_sockfd);
+    send_motd(client_sockfd);
 
     clients.count++;
 }
@@ -234,6 +236,9 @@ int main(void) {
     struct ev_loop *loop = ev_default_loop(0);
     struct ev_io stdin_watcher;
     int bReuseaddr = 1;
+
+    //set server start time for motd
+    server_start_time=time(NULL);
 
     //initialise data structs
     initialise_channel_list(MAX_CHANNELS);

@@ -292,7 +292,7 @@ void send_actors_to_client(int connection){
 
 int remove_char_from_map(int connection){
 
-    /*  RESULT  : Removes actor from map
+    /** RESULT  : Removes actor from map
 
         RETURNS : 0=sucess / -1=fail
 
@@ -366,15 +366,7 @@ int add_char_to_map(int connection, int new_map_id, int map_tile){
 
 void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
 
-    /*  RESULT  : Move a char between maps
-
-        RETURNS : void
-
-        PURPOSE : Consolidate all required operations into a resuable function that can be called
-                  to move a char between maps
-
-        USAGE   : protocol.c process_packet
-    */
+    /** public function - see header */
 
     int char_id=clients.client[connection]->character_id;
     int old_map_id=characters.character[char_id]->map_id;
@@ -658,9 +650,13 @@ void process_packet(int connection, unsigned char *packet){
         use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
         printf("map object id %i use with position %i\n", map_object_id, use_with_position);
 
+        //travel from IP to Ravens Isle
         if(map_object_id==520 && characters.character[char_id]->map_id==1) move_char_between_maps(connection, 2, 64946);
+
+        //travel from Ravens Isle to IP
         if(map_object_id==5416 && characters.character[char_id]->map_id==2) move_char_between_maps(connection, 1, 4053);
 
+        //travel from Ravens Isle to neiva
         if(map_object_id==4986 && characters.character[char_id]->map_id==2 && characters.character[char_id]->map_tile==108627){
             move_char_between_maps(connection, 3, 3000);
         }

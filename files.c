@@ -9,23 +9,6 @@
 #include "numeric_functions.h"
 #include "datetime_functions.h"
 
-int read_motd(int sock){
-
-    FILE *file;
-    char line_in[1024]="";
-
-    if((file=fopen("motd.msg", "r"))==NULL) return FILE_NOT_FOUND;
-
-    while( fgets(line_in, 80, file) != NULL){
-        str_trim_right(line_in);
-        if(strcmp(line_in, "")==0) strcpy(line_in, " ");
-        send_server_text(sock, CHAT_SERVER, line_in);
-    }
-
-    fclose(file);
-
-    return FILE_FOUND;
-}
 
 void save_character(char *char_name, int id){
 

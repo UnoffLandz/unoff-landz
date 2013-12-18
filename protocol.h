@@ -30,4 +30,15 @@ int get_char_id(char *char_name);
 
 int get_char_connection(char char_id);
 
+/** RESULT  : Move a char between maps
+
+    RETURNS : void
+
+    PURPOSE : Consolidate all required operations into a resuable function that can be called
+              to move a char between maps
+
+    USAGE   : protocol.c process_packet
+*/
+void move_char_between_maps(int connection, int new_map_id, int new_map_tile);
+
 #endif // PROTOCOL_H_INCLUDED
