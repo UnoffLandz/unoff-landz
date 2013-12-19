@@ -4,6 +4,7 @@
 #include <sys/socket.h> //needed for send function
 #include <sys/time.h> //needed for usec time
 #include <time.h>
+#include <unistd.h>
 
 #include "global.h"
 #include "string_functions.h"
@@ -126,6 +127,33 @@ int get_char_id(char *char_name){
     return CHAR_NOT_FOUND;
 }
 
+int is_char_concurrent(int connection){
+
+     /** RESULT  : checks is a char is concurrently logged to the server
+
+        RETURNS : 0=non-concurrent / -1=concurrent
+
+        PURPOSE : prevent concurrent logins on the same char
+
+        USAGE   : protocol.c process_packet
+    */
+
+    int i=0;
+    int char_id=clients.client[connection]->character_id;
+    int char_count=0;
+
+    for(i=0; i<clients.max; i++){
+
+        if(clients.client[i]->character_id==char_id && i!=connection){
+            char_count++;
+            if(char_count>0) return CHAR_CONCURRENT;
+        }
+    }
+
+    return CHAR_NON_CONCURRENT;
+}
+
+
 int validate_password(int char_id, char *password){
 
     if(strcmp(password, characters.character[char_id]->password)==0) return PASSWORD_CORRECT;
@@ -247,7 +275,7 @@ void send_partial_stats(int connection, int attribute_type, int attribute_level)
 
     send(connection, packet, 11, 0);
 }
-
+/*
 void send_actors_to_client(int connection){
 
     int i;
@@ -289,6 +317,48 @@ void send_actors_to_client(int connection){
         }
     }
 }
+*/
+
+void send_actors_to_client(int connection){
+
+    /** RESULT  : make other actors in proximity visible to this actor
+
+       RETURNS : void
+
+       PURPOSE : ensures our actor can see other actors after log on or a map jump
+
+       USAGE   : protocol.c process_packet
+    */
+
+    int i;
+    unsigned char packet[1024];
+    int packet_length;
+    int char_id=clients.client[connection]->character_id;
+    int map_id=characters.character[char_id]->map_id;
+    int char_tile=characters.character[char_id]->map_tile;
+    int map_axis=maps.map[map_id]->map_axis;
+    int char_visual_proximity=characters.character[char_id]->visual_proximity;
+
+    int other_char_id=0;
+    int other_char_tile=0;
+
+    for(i=0; i<maps.map[map_id]->client_list_count; i++){
+
+        other_char_id=clients.client[i]->character_id;
+        other_char_tile=characters.character[other_char_id]->map_tile;
+
+        // restrict to characters other than self
+        if(connection!=i){
+
+            //restrict to characters within visual proximity
+            if(get_proximity(char_tile, other_char_tile, map_axis)<char_visual_proximity){
+
+                add_new_enhanced_actor_packet(clients.client[i]->character_id, packet, &packet_length);
+                send(connection, packet, packet_length, 0);
+            }
+        }
+    }
+}
 
 int remove_char_from_map(int connection){
 
@@ -323,7 +393,7 @@ int remove_char_from_map(int connection){
 
 int add_char_to_map(int connection, int new_map_id, int map_tile){
 
-    /*  RESULT  : sends actor to map
+    /**  RESULT  : sends actor to map
 
         RETURNS : 0=sucess / -1=fail
 
@@ -403,73 +473,6 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
     }
 
 }
-
-/*
-void transport_char(int connection, int tile, int new_map_id, int transport_type){
-
-    int char_id=clients.client[connection]->character_id;
-    int old_map_id=characters.character[char_id]->map_id;
-    char text_out[1024]="";
-
-    //check for illegal maps
-    if(new_map_id>maps.max || new_map_id<START_MAP_ID){
-
-        printf("illegal map_id [%i] map name [%s]\n", new_map_id, maps.map[new_map_id]->map_name);
-
-        sprintf(text_out, "attempt to access illegal map map_id[%i] map name [%s]\n", new_map_id, maps.map[new_map_id]->map_name);
-        log_event(EVENT_ERROR, text_out);
-
-        //redirect char to the start map
-        new_map_id=START_MAP_ID;
-        tile=START_MAP_START_TILE;
-    }
-
-    if(transport_type==CHANGE_MAP) {
-
-        //    check for ticket
-
-        //broadcast actor removal to other chars on map
-        broadcast_remove_actor_packet(connection);
-
-        //remove from local map list
-        remove_client_from_map_list(connection, characters.character[char_id]->map_id);
-
-        //      implement 'stay' timer.
-
-        sprintf(text_out, "char %s moved from map %s to map %s\n", characters.character[char_id]->char_name, maps.map[old_map_id]->map_name, maps.map[new_map_id]->map_name);
-        log_event(EVENT_SESSION, text_out);
-    }
-    else if(transport_type==LOGIN_MAP){
-        //sprintf(text_out, "char %s move logged in at map %s\n", maps.map[old_map_id]->map_name);
-        log_event(EVENT_SESSION, text_out);
-    }
-
-    //         check for residency status
-    //      advise actor of new map ownership and policies
-
-    //set new map and tile
-    characters.character[char_id]->map_id=new_map_id;
-    characters.character[char_id]->map_tile=tile;
-
-    printf("Beam char [%s] to map [%i] [%s]\n", characters.character[char_id]->char_name, new_map_id, maps.map[new_map_id]->map_name);
-
-    //send new char map to client
-    send_change_map(connection, maps.map[new_map_id]->elm_filename);
-
-    //add client to local map list
-    add_client_to_map(connection, characters.character[char_id]->map_id);
-
-    // add in-game chars to this clients
-    send_actors_to_client(connection);
-
-    // add this char to each connected client
-    broadcast_add_new_enhanced_actor_packet(connection);
-
-    //#TODO log client map move (time / char_id / originating map id)
-
-    save_character(characters.character[char_id]->char_name, char_id);
-}
-*/
 
 void process_packet(int connection, unsigned char *packet){
 
@@ -750,22 +753,19 @@ void process_packet(int connection, unsigned char *packet){
             return;
         }
 
-        //prevent concurrent login on char
-        for(i=0; i<clients.max; i++){
+        //prevent concurrent login on same char
+        if(is_char_concurrent(connection)==CHAR_CONCURRENT){
 
-            if(clients.client[i]->character_id==clients.client[connection]->character_id && i!=connection){
+            printf("char concurrent\n");
+            send_login_not_ok(sock);
 
-                printf("char concurrent\n");
-                send_login_not_ok(sock);
+            //doesn't display
+            //sprintf(text_out, "%cSorry. Your character is already in-game", c_red1+127);
+            //send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-                //doesn't display
-                //sprintf(text_out, "%cSorry. Your character is already in-game", c_red1+127);
-                //send_raw_text_packet(sock, CHAT_SERVER, text_out);
-
-                sprintf(text_out, "concurrent login attempt for char [%s]\n", char_name);
-                log_event(EVENT_SESSION, text_out);
-                return;
-            }
+            sprintf(text_out, "concurrent login attempt for char [%s]\n", char_name);
+            log_event(EVENT_SESSION, text_out);
+            return;
         }
 
         //if we get this far then  char is alive and not banned, dead or already logged on

@@ -184,6 +184,7 @@ int process_hash_commands(int connection, char *text){
         if(command_parts!=2) {
             sprintf(text_out, "%cyou need to use the format #DETAILS [character name]", c_red3+127);
             send_server_text(sock, CHAT_SERVER, text_out);
+
             return HASH_CMD_ABORTED;
         }
 
@@ -272,9 +273,10 @@ int process_hash_commands(int connection, char *text){
             break;
         }
 
-        printf("unknown result from function process_guild_chat in section #GM\n");
-        return HASH_CMD_FAILED;
+        sprintf(text_out, "#JC [%s] failed. Unknown result from function process_guild_chat by char [%s]", text, characters.character[char_id]->char_name);
+        log_event(EVENT_ERROR, text_out);
 
+        return HASH_CMD_FAILED;
      }
 /***************************************************************************************************/
 
@@ -314,9 +316,11 @@ int process_hash_commands(int connection, char *text){
                 printf("#IG sent from %s of %s to guild %s: %s\n", characters.character[char_id]->char_name, guilds.guild[guild_id]->guild_tag, guilds.guild[i]->guild_tag, hash_command_tail);
                 return HASH_CMD_EXECUTED;
             break;
-          }
+        }
 
-        printf("unknown result from function process_guild_chat in section #IG\n");
+        sprintf(text_out, "#IG [%s] failed. Unknown result from function process_inter_guild_chat by char [%s]", text, characters.character[char_id]->char_name);
+        log_event(EVENT_ERROR, text_out);
+
         return HASH_CMD_FAILED;
     }
 
@@ -394,7 +398,8 @@ int process_hash_commands(int connection, char *text){
             break;
         }
 
-        printf("unknown result from function process_guild_chat in section #JC\n");
+        sprintf(text_out, "#JC [%s] failed. Unknown result from function join_channel by char [%s]", text, characters.character[char_id]->char_name);
+        log_event(EVENT_ERROR, text_out);
 
         return HASH_CMD_FAILED;
     }
@@ -442,7 +447,8 @@ int process_hash_commands(int connection, char *text){
             break;
         }
 
-        printf("unknown result from function process_guild_chat in section #LC\n");
+        sprintf(text_out, "#LC [%s] failed. Unknown result from function leave_channel by char [%s]", text, characters.character[char_id]->char_name);
+        log_event(EVENT_ERROR, text_out);
 
         return HASH_CMD_FAILED;
     }
@@ -457,13 +463,13 @@ int process_hash_commands(int connection, char *text){
 
     else if (strcmp(hash_command, "#LCD")==0){
 
-        sprintf(text_out, "/n%cNumber  Channel              Description", c_blue1+127);
+        sprintf(text_out, "\n%cNo   Channel    Description", c_blue1+127);
         send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
         for(i=0; i<channels.max; i++){
 
             if(channels.channel[i]->chan_type!=CHAN_VACANT) {
-                sprintf(text_out, "%c -%20s -%40s", c_blue1+127, channels.channel[i]->channel_name, channels.channel[i]->description);
+                sprintf(text_out, "%c%i %s %-10s %-30s", c_blue1+127, i, "  ", channels.channel[i]->channel_name, channels.channel[i]->description);
                 send_raw_text_packet(sock, CHAT_SERVER, text_out);
             }
         }
@@ -482,7 +488,8 @@ int process_hash_commands(int connection, char *text){
     }
 /***************************************************************************************************/
 
-    printf("UNKNOWN HASH COMMAND [%s] [%s]\n", hash_command, hash_command_tail);
+    sprintf(text_out, "Unknown #command [%s] by char [%s]", text, characters.character[char_id]->char_name);
+    log_event(EVENT_SESSION, text_out);
 
     return HASH_CMD_UNKNOWN;
 }

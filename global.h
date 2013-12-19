@@ -33,6 +33,11 @@
 #define TEMP_FILE "temp.tmp"
 #define MOTD_FILE "motd.msg"
 
+enum { //return values from is_char_concurrent
+    CHAR_NON_CONCURRENT=0,
+    CHAR_CONCURRENT=-1
+};
+
 enum { // transport types
     LOGIN_MAP,
     CHANGE_MAP

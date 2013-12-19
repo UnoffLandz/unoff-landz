@@ -66,6 +66,7 @@ void close_connection_slot(int connection){
     }
 
     clients.client[connection]->status=LOGGED_OUT;
+    clients.client[connection]->character_id=0;
     clients.count--;
 }
 
@@ -173,6 +174,7 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     size_t client_len = sizeof(client_address);
     int client_sockfd;
     struct ev_io *w_client = (struct ev_io*) malloc (sizeof(struct ev_io));
+    char text_out[1024]="";
 
     client_sockfd = accept( watcher->fd, (struct sockaddr *)&client_address, &client_len);
 
@@ -187,6 +189,9 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     ev_io_start(loop, w_client);
 
     printf("New connection from %s on socket %d\n", inet_ntoa(client_address.sin_addr), client_sockfd);
+
+    sprintf(text_out, "New connection from %s on socket %d", inet_ntoa(client_address.sin_addr), client_sockfd);
+    log_event(EVENT_SESSION, text_out);
 
     clients.client[client_sockfd]->status=CONNECTED;
     clients.client[client_sockfd]->packet_buffer_length=0;
@@ -213,10 +218,11 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
         if(clients.client[i]->status==LOGGED_IN && clients.client[i]->time_of_last_heartbeat+26<time_check.tv_sec){
 
             printf("Closed Sock (client lagged out) %i %s\n", i, characters.character[clients.client[i]->character_id]->char_name);
-            close_connection_slot(i);
 
             sprintf(text_out, "client [%i]  char [%s]lagged out\n", i, characters.character[clients.client[i]->character_id]->char_name);
             log_event(EVENT_SESSION, text_out);
+
+            close_connection_slot(i);
 
             //ev_io_stop(loop, watcher);
             //free(watcher);
