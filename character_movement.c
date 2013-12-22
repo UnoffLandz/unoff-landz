@@ -8,27 +8,6 @@
 #include "debug.h"
 #include "files.h"
 
-enum {// actor movement vectors
-    NORTH,
-    NORTH_EAST,
-    EAST,
-    SOUTH_EAST,
-    SOUTH,
-    SOUTH_WEST,
-    WEST,
-    NORTH_WEST,
-};
-
-enum{//tile bounds returned from check_tile_bounds function
-    TILE_OUTSIDE_BOUNDS=-2,
-    TILE_NON_TRAVERSABLE=-1,
-    TILE_TRAVERSABLE=0
-};
-
-int vector_x[8]={0, 1, 1, 1, 0, -1, -1, -1};
-int vector_y[8]={1, 1, 0, -1, -1, -1, 0, 1};
-unsigned char movement_cmd[8]={20, 21, 22, 23, 24, 25, 26, 27};
-
 int get_move_command_vector(int cmd, int tile_pos, int map_axis){
 
     //returns the new tile position after a move_cmd from tile_pos

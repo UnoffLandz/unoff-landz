@@ -33,6 +33,37 @@
 #define TEMP_FILE "temp.tmp"
 #define MOTD_FILE "motd.msg"
 
+enum { //return values from add_char_to_map / remove_char_from_map
+    LEGAL_MAP=0,
+    ILLEGAL_MAP=-1
+};
+
+enum {// actor movement vectors
+    NORTH,
+    NORTH_EAST,
+    EAST,
+    SOUTH_EAST,
+    SOUTH,
+    SOUTH_WEST,
+    WEST,
+    NORTH_WEST,
+};
+
+int vector_x[8];
+int vector_y[8];
+unsigned char movement_cmd[8];
+
+enum{//tile bounds returned from check_tile_bounds function
+    TILE_OUTSIDE_BOUNDS=-2,
+    TILE_NON_TRAVERSABLE=-1,
+    TILE_TRAVERSABLE=0
+};
+
+enum {// return values for is_map_tile_occupied
+    TILE_OCCUPIED,
+    TILE_UNOCCUPIED
+};
+
 enum { //return values from is_char_concurrent
     CHAR_NON_CONCURRENT=0,
     CHAR_CONCURRENT=-1
@@ -194,7 +225,6 @@ enum{ //gender
     FEMALE,
     MALE
 };
-
 
 enum { /* skin type */
     SKIN_BROWN,
@@ -447,8 +477,6 @@ struct channel_list_type channels;
 //other structs
 struct timeval time_check;
 
-
 time_t server_start_time;
-
 
 #endif // GLOBAL_H_INCLUDED

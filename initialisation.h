@@ -15,5 +15,6 @@ void initialise_character_list(int max_nodes);
 
 void initialise_map_list(int max_nodes);
 
+void initialise_movement_vectors();
 
 #endif // INITIALISATION_H_INCLUDED

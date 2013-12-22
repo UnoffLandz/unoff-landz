@@ -41,4 +41,16 @@ int get_char_connection(char char_id);
 */
 void move_char_between_maps(int connection, int new_map_id, int new_map_tile);
 
+/** RESULT  : if the target tile is occupied, finds nearest unoccupied tile
+
+    RETURNS : address of the nearest unoccupied tile
+
+    PURPOSE : To ensure that actors don't move to occupied tiles
+
+    USAGE   : protocol.c add_char_to_map / hash_commands.c process_hash_command
+*/
+int get_nearest_unoccupied_tile(int map_id, int map_tile);
+
+
+
 #endif // PROTOCOL_H_INCLUDED

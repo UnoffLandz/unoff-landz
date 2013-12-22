@@ -4,7 +4,7 @@
 #include "global.h"
 #include "numeric_functions.h"
 
-void add_client_to_map(int connection, int map_id){
+void add_client_to_map_list(int connection, int map_id){
 
     int map_client_count=maps.map[map_id]->client_list_count;
 

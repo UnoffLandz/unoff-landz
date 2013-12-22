@@ -3,16 +3,28 @@
 
 #include "global.h"
 
+
+void initialise_movement_vectors(){
+
+    vector_x[0]=0; vector_y[0]=1; movement_cmd[0]=20;
+    vector_x[1]=1; vector_y[1]=1; movement_cmd[1]=21;
+    vector_x[2]=1; vector_y[2]=0; movement_cmd[2]=22;
+    vector_x[3]=1; vector_y[3]=-1; movement_cmd[3]=23;
+    vector_x[4]=0; vector_y[4]=-1; movement_cmd[4]=24;
+    vector_x[5]=-1; vector_y[5]=-1; movement_cmd[5]=25;
+    vector_x[6]=-1; vector_y[6]=0; movement_cmd[6]=26;
+    vector_x[7]=-1; vector_y[7]=1; movement_cmd[7]=27;
+}
+
 void initialise_client_list(int max_nodes){
 
     int i=0;
-    //int j=0;
 
-    /* zero our struct data */
+    // zero our struct data
     clients.count=0;
     clients.max=max_nodes;
 
-    /* allocate memory for our struct */
+    // allocate memory for our struct
     if( !(clients.client=malloc(sizeof(struct client_node_type*)*max_nodes))) {
         perror ("unable to allocate suffient memory for client struct");
         exit (EXIT_FAILURE);

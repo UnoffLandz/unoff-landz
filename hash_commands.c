@@ -95,6 +95,7 @@ int process_hash_commands(int connection, char *text){
     int char_id=clients.client[connection]->character_id;
     int guild_id=characters.character[char_id]->guild_id;
     int channel_number=0;
+    int new_map_tile=0;
     char old_char_name[80]="";
     char time_stamp_str[9]="";
     char date_stamp_str[11]="";
@@ -122,7 +123,9 @@ int process_hash_commands(int connection, char *text){
             return HASH_CMD_ABORTED;
         }
 
-        move_char_between_maps(connection, BEAM_ME_MAP, BEAM_ME_TILE);
+        new_map_tile=get_nearest_unoccupied_tile(BEAM_ME_MAP, BEAM_ME_TILE);
+
+        move_char_between_maps(connection, BEAM_ME_MAP, new_map_tile);
 
         return HASH_CMD_EXECUTED;
     }

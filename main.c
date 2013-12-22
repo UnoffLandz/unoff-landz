@@ -261,6 +261,8 @@ int main(void) {
 
     initialise_client_list(MAX_CLIENTS);
 
+    initialise_movement_vectors();
+
     printf("\n");
 
     //create server socket & bind it to socket address
