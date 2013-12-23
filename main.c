@@ -197,7 +197,10 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     clients.client[client_sockfd]->packet_buffer_length=0;
     strcpy(clients.client[client_sockfd]->ip_address, inet_ntoa(client_address.sin_addr));
 
+    send_server_text(client_sockfd, CHAT_SERVER, SERVER_WELCOME_MSG);
+
     send_motd(client_sockfd);
+    send_server_text(client_sockfd, CHAT_SERVER, "\nHit any key to continue...\n");
 
     clients.count++;
 }

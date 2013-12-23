@@ -5,6 +5,7 @@ enum { /* client to server protocol */
     RAW_TEXT=0,
     MOVE_TO=1,
     SEND_PM=2,
+    GET_PLAYER_INFO=5,
     SEND_ME_MY_ACTORS=8,
     SEND_OPENING_SCREEN=9,
     SEND_VERSION=10,
@@ -18,6 +19,7 @@ enum { /* client to server protocol */
     CREATE_CHAR=141,
     GET_DATE=230,
     GET_TIME=231,
+    SERVER_STATS=232
 };
 
 void process_packet(int connection, unsigned char *packet); //, struct client_list_type *clients, struct guild_list_type *guilds, struct character_list_type *characters, struct map_list_type *maps, struct message_list_type *messages, struct channel_list_type *channels);
@@ -30,27 +32,16 @@ int get_char_id(char *char_name);
 
 int get_char_connection(char char_id);
 
-/** RESULT  : Move a char between maps
+void send_change_map(int connection, char *elm_filename);
+
+/** RESULT  : make other actors in proximity visible to this actor
 
     RETURNS : void
 
-    PURPOSE : Consolidate all required operations into a resuable function that can be called
-              to move a char between maps
+    PURPOSE : ensures our actor can see other actors after log on or a map jump
 
     USAGE   : protocol.c process_packet
 */
-void move_char_between_maps(int connection, int new_map_id, int new_map_tile);
-
-/** RESULT  : if the target tile is occupied, finds nearest unoccupied tile
-
-    RETURNS : address of the nearest unoccupied tile
-
-    PURPOSE : To ensure that actors don't move to occupied tiles
-
-    USAGE   : protocol.c add_char_to_map / hash_commands.c process_hash_command
-*/
-int get_nearest_unoccupied_tile(int map_id, int map_tile);
-
-
+void send_actors_to_client(int connection);
 
 #endif // PROTOCOL_H_INCLUDED

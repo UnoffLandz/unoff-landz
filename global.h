@@ -32,6 +32,7 @@
 
 #define TEMP_FILE "temp.tmp"
 #define MOTD_FILE "motd.msg"
+#define SERVER_WELCOME_MSG "\nWELCOME TO THE UNOFF SERVER\n------------------------------------------------------------"
 
 enum { //return values from add_char_to_map / remove_char_from_map
     LEGAL_MAP=0,

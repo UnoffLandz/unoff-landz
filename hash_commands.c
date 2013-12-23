@@ -10,7 +10,8 @@
 #include "files.h"
 #include "chat.h"
 #include "datetime_functions.h"
-
+#include "character_movement.h"
+#include "motd.h"
 
 int char_type[12]={HUMAN_FEMALE, HUMAN_MALE, ELF_FEMALE, ELF_MALE, DWARF_FEMALE, DWARF_MALE, GNOME_FEMALE, GNOME_MALE, ORCHAN_FEMALE, ORCHAN_MALE, DRAEGONI_FEMALE, DRAEGONI_MALE};
 int char_race[12]={HUMAN, HUMAN, ELF, ELF, DWARF, DWARF, GNOME, GNOME, ORCHAN, ORCHAN, DRAEGONI, DRAEGONI};
@@ -114,6 +115,10 @@ int process_hash_commands(int connection, char *text){
         return HASH_CMD_UNSUPPORTED;
     }
 /***************************************************************************************************/
+    else if(strcmp(hash_command, "#MOTD")==0){
+        send_motd_file(connection);
+        return HASH_CMD_EXECUTED;
+    }
 
     else if(strcmp(hash_command, "#BEAM_ME")==0){
 
@@ -122,6 +127,26 @@ int process_hash_commands(int connection, char *text){
             send_server_text(sock, CHAT_SERVER, text_out);
             return HASH_CMD_ABORTED;
         }
+
+        new_map_tile=get_nearest_unoccupied_tile(BEAM_ME_MAP, BEAM_ME_TILE);
+
+        move_char_between_maps(connection, BEAM_ME_MAP, new_map_tile);
+
+        return HASH_CMD_EXECUTED;
+    }
+
+    else if(strcmp(hash_command, "#BEAM")==0){
+
+        if(command_parts!=2){
+            sprintf(text_out, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
+            send_server_text(sock, CHAT_SERVER, text_out);
+            return HASH_CMD_ABORTED;
+        }
+
+        get_str_island(text, hash_command_tail, 2);
+        str_conv_upper(hash_command_tail);
+
+        if(strcmp(hash_command_tail, "ME")!=0) return HASH_CMD_ABORTED;
 
         new_map_tile=get_nearest_unoccupied_tile(BEAM_ME_MAP, BEAM_ME_TILE);
 
