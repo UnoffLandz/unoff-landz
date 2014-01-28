@@ -3,6 +3,11 @@
 
 #include "global.h"
 
+enum { //return values for file loading
+    FILE_FOUND=0,
+    FILE_NOT_FOUND=-1
+};
+
 int load_character(char *file_name, int char_id);
 void load_all_characters(char *file_name);
 void save_character(char *file_name, int char_id);

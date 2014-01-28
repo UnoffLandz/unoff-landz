@@ -1,8 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "global.h"
 
+
+void initialise_harvestables(){
+
+    harvestables[Chrysanthemums].exp=10;
+    harvestables[Chrysanthemums].emu=1;
+    harvestables[Chrysanthemums].nexus=0;
+    strcpy(harvestables[Chrysanthemums].name, "Chrysanthemums");
+    harvestables[Chrysanthemums].interval=1;
+}
 
 void initialise_movement_vectors(){
 
@@ -47,25 +57,19 @@ void initialise_client_list(int max_nodes){
 
 void initialise_map_list(int max_nodes){
 
-    int i;
+    int i=0;
 
-    /* zero our struct data */
+    // zero our struct data
     maps.count=0;
     maps.max=max_nodes;
 
-    /* allocate memory for our struct */
+    // allocate memory for our struct
     if( !(maps.map=malloc(sizeof(struct map_node_type*)*max_nodes))) {
         perror ("unable to allocate sufficient memory for map struct");
         exit (EXIT_FAILURE);
     }
 
-    /* allocate memory for our struct
-    if( !(maps.map=malloc(sizeof(struct node_type*)*max_nodes))) {
-        perror ("unable to allocate sufficient memory for map struct");
-        exit (EXIT_FAILURE);
-    }*/
-
-    /* allocate memory for our struct nodes */
+    // allocate memory for our struct nodes
     for(i=0; i<max_nodes; i++){
 
         if( !(maps.map[i]=malloc(sizeof(struct map_node_type)))) {

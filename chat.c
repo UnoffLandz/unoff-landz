@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h> //needed for send function
 
 #include "global.h"
 #include "protocol.h"
@@ -8,6 +9,61 @@
 #include "string_functions.h"
 #include "debug.h"
 #include "files.h"
+#include "chat.h"
+
+void send_get_active_channels(int connection){
+
+    unsigned char packet[1024];
+    int i=0, j=0;
+
+    int char_id=clients.client[connection]->character_id;
+
+    packet[0]=71;
+    packet[1]=14;
+    packet[2]=0;
+    packet[3]=characters.character[char_id]->active_chan;
+
+
+    for(i=0; i<3; i++){
+
+        j=i*4;
+
+        packet[j+4]=characters.character[char_id]->chan[i] % 256;
+        packet[j+5]=characters.character[char_id]->chan[i]/256 % 256;
+        packet[j+6]=characters.character[char_id]->chan[i]/256/256 % 256;
+        packet[j+7]=characters.character[char_id]->chan[i]/256/256/256 % 256;
+    }
+
+    send(connection, packet, 16, 0);
+}
+
+int get_char_connection(char char_id){
+
+    /** RESULT  : finds the character id from a character name
+
+        RETURNS : character id
+
+        PURPOSE : allows private messages to be vectored by char name
+
+        USAGE   : send_pm
+    */
+
+    int i=0;
+
+    /* loop through client list */
+    for(i=0; i<clients.count; i++){
+
+        /* match username with an existing user */
+        if(char_id==clients.client[i]->character_id){
+            return i;
+        }
+
+    }
+
+    /* return -1 to show when char is not in-game */
+    return -1;
+
+}
 
 void add_client_to_channel(int connection, int chan){
 

@@ -18,6 +18,8 @@
 #include "debug.h"
 #include "maps.h"
 #include "motd.h"
+#include "pathfinding.h"
+#include "chat.h"
 
 /*
 void send_here_your_inventory(int sock){
@@ -42,38 +44,12 @@ void send_here_your_inventory(int sock){
 }
 */
 
-void send_get_active_channels(int connection){
-
-    unsigned char packet[1024];
-    int i=0, j=0;
-
-    int char_id=clients.client[connection]->character_id;
-
-    packet[0]=71;
-    packet[1]=14;
-    packet[2]=0;
-    packet[3]=characters.character[char_id]->active_chan;
-
-
-    for(i=0; i<3; i++){
-
-        j=i*4;
-
-        packet[j+4]=characters.character[char_id]->chan[i] % 256;
-        packet[j+5]=characters.character[char_id]->chan[i]/256 % 256;
-        packet[j+6]=characters.character[char_id]->chan[i]/256/256 % 256;
-        packet[j+7]=characters.character[char_id]->chan[i]/256/256/256 % 256;
-    }
-
-    send(connection, packet, 16, 0);
-}
-
 void send_server_text(int sock, int channel, char *text){
 
-/* function definition sends to sock rather than connection so that we can reach clients when a connection has not been allocated
-   This happens when a client tries to connect after the maximum number of connections has been exceeded, in which case, we need
-   to be able to send a message to that client telling it to wait until a connection becomes available. See the 'find free connection'
-   block in main.c */
+    /* function definition sends to sock rather than connection so that we can reach clients when a connection has not been
+    allocated. This happens when a client tries to connect after the maximum number of connections has been exceeded, in
+    which case, we need to be able to send a message to that client telling it to wait until a connection becomes available.
+    See the 'find free connection' block in main.c */
 
     unsigned char packet[1024];
     int text_length;
@@ -95,24 +71,7 @@ void send_server_text(int sock, int channel, char *text){
     send(sock, packet, packet_length, 0);
 }
 
-int get_char_connection(char char_id){
 
-    int i=0;
-
-    /* loop through client list */
-    for(i=0; i<clients.count; i++){
-
-        /* match username with an existing user */
-        if(char_id==clients.client[i]->character_id){
-            return i;
-        }
-
-    }
-
-    /* return -1 to show when char is not in-game */
-    return -1;
-
-}
 
 int get_char_id(char *char_name){
 
@@ -153,7 +112,6 @@ int is_char_concurrent(int connection){
 
     return CHAR_NON_CONCURRENT;
 }
-
 
 int validate_password(int char_id, char *password){
 
@@ -260,6 +218,202 @@ void send_change_map(int connection, char *elm_filename){
     send(connection, packet, packet_length, 0);
 }
 
+void here_your_stats(int connection){
+
+    unsigned char packet[1024];
+    int char_id=clients.client[connection]->character_id;
+
+    int i=0;
+
+    packet[0]=HERE_YOUR_STATS;
+    packet[1]=227;
+    packet[2]=0;
+
+    for(i=3; i<230; i++){
+        packet[i]=0;
+    }
+
+    packet[3]=characters.character[char_id]->physique % 256;
+    packet[4]=characters.character[char_id]->physique / 256;
+    packet[5]=characters.character[char_id]->max_physique % 256;
+    packet[6]=characters.character[char_id]->max_physique / 256;
+    packet[7]=characters.character[char_id]->coordination % 256;
+    packet[8]=characters.character[char_id]->coordination / 256;
+    packet[9]=characters.character[char_id]->max_coordination % 256;
+    packet[10]=characters.character[char_id]->max_coordination / 256;
+    packet[11]=characters.character[char_id]->reasoning % 256;
+    packet[12]=characters.character[char_id]->reasoning / 256;
+    packet[13]=characters.character[char_id]->max_reasoning % 256;
+    packet[14]=characters.character[char_id]->max_reasoning / 256;
+    packet[15]=characters.character[char_id]->will % 256;
+    packet[16]=characters.character[char_id]->will / 256;
+    packet[17]=characters.character[char_id]->max_will % 256;
+    packet[18]=characters.character[char_id]->max_will / 256;
+    packet[19]=characters.character[char_id]->instinct % 256;
+    packet[20]=characters.character[char_id]->instinct / 256;
+    packet[21]=characters.character[char_id]->max_instinct % 256;
+    packet[22]=characters.character[char_id]->max_instinct / 256;
+    packet[23]=characters.character[char_id]->vitality % 256;
+    packet[24]=characters.character[char_id]->vitality / 256;
+    packet[25]=characters.character[char_id]->max_vitality % 256;
+    packet[26]=characters.character[char_id]->max_vitality / 256;
+
+    packet[27]=characters.character[char_id]->human % 256;
+    packet[28]=characters.character[char_id]->human / 256;
+    packet[29]=characters.character[char_id]->max_human % 256;
+    packet[30]=characters.character[char_id]->max_human / 256;
+    packet[31]=characters.character[char_id]->animal % 256;
+    packet[32]=characters.character[char_id]->animal / 256;
+    packet[33]=characters.character[char_id]->max_animal % 256;
+    packet[34]=characters.character[char_id]->max_animal / 256;
+    packet[35]=characters.character[char_id]->vegetal % 256;
+    packet[36]=characters.character[char_id]->vegetal / 256;
+    packet[37]=characters.character[char_id]->max_vegetal % 256;
+    packet[38]=characters.character[char_id]->max_vegetal / 256;
+    packet[39]=characters.character[char_id]->inorganic % 256;
+    packet[40]=characters.character[char_id]->inorganic / 256;
+    packet[41]=characters.character[char_id]->max_inorganic % 256;
+    packet[42]=characters.character[char_id]->max_inorganic / 256;
+    packet[43]=characters.character[char_id]->artificial % 256;
+    packet[44]=characters.character[char_id]->artificial / 256;
+    packet[45]=characters.character[char_id]->max_artificial % 256;
+    packet[46]=characters.character[char_id]->max_artificial / 256;
+    packet[47]=characters.character[char_id]->magic % 256;
+    packet[48]=characters.character[char_id]->magic / 256;
+    packet[49]=characters.character[char_id]->max_magic % 256;
+    packet[50]=characters.character[char_id]->max_magic / 256;
+
+    packet[51]=characters.character[char_id]->manufacturing_lvl % 256;
+    packet[52]=characters.character[char_id]->manufacturing_lvl / 256;
+    packet[53]=characters.character[char_id]->max_manufacturing_lvl % 256;
+    packet[54]=characters.character[char_id]->max_manufacturing_lvl / 256;
+    packet[55]=characters.character[char_id]->harvest_lvl % 256;
+    packet[56]=characters.character[char_id]->harvest_lvl / 256;
+    packet[57]=characters.character[char_id]->max_harvest_lvl % 256;
+    packet[58]=characters.character[char_id]->max_harvest_lvl / 256;
+    packet[59]=characters.character[char_id]->alchemy_lvl % 256;
+    packet[60]=characters.character[char_id]->alchemy_lvl / 256;
+    packet[61]=characters.character[char_id]->max_alchemy_lvl % 256;
+    packet[62]=characters.character[char_id]->max_alchemy_lvl / 256;
+    packet[63]=characters.character[char_id]->overall_lvl % 256;
+    packet[64]=characters.character[char_id]->overall_lvl / 256;
+    packet[65]=characters.character[char_id]->max_overall_lvl % 256;
+    packet[66]=characters.character[char_id]->max_overall_lvl / 256;
+    packet[67]=characters.character[char_id]->attack_lvl % 256;
+    packet[68]=characters.character[char_id]->attack_lvl / 256;
+    packet[69]=characters.character[char_id]->max_attack_lvl % 256;
+    packet[70]=characters.character[char_id]->max_attack_lvl / 256;
+    packet[71]=characters.character[char_id]->defence_lvl % 256;
+    packet[72]=characters.character[char_id]->defence_lvl / 256;
+    packet[73]=characters.character[char_id]->max_defence_lvl % 256;
+    packet[74]=characters.character[char_id]->max_defence_lvl / 256;
+    packet[75]=characters.character[char_id]->magic_lvl % 256;
+    packet[76]=characters.character[char_id]->magic_lvl / 256;
+    packet[77]=characters.character[char_id]->max_magic_lvl % 256;
+    packet[78]=characters.character[char_id]->max_magic_lvl / 256;
+    packet[79]=characters.character[char_id]->potion_lvl % 256;
+    packet[80]=characters.character[char_id]->potion_lvl / 256;
+    packet[81]=characters.character[char_id]->max_potion_lvl % 256;
+    packet[82]=characters.character[char_id]->max_potion_lvl / 256;
+
+    //packet[83]=; Unused
+    //packet[84]=; Unused
+    //packet[85]=; Unused
+    //packet[86]=; Unused
+
+    packet[87]=characters.character[char_id]->material_pts % 256;
+    packet[88]=characters.character[char_id]->material_pts / 256;
+    packet[89]=characters.character[char_id]->max_material_pts % 256;
+    packet[90]=characters.character[char_id]->max_material_pts / 256;
+
+    packet[91]=characters.character[char_id]->ethereal_pts % 256;
+    packet[92]=characters.character[char_id]->ethereal_pts / 256;
+    packet[93]=characters.character[char_id]->max_ethereal_pts % 256;
+    packet[94]=characters.character[char_id]->max_ethereal_pts / 256;
+
+    packet[95]=characters.character[char_id]->food_lvl % 256;
+    packet[96]=characters.character[char_id]->food_lvl / 256;
+    packet[97]=characters.character[char_id]->elapsed_book_time % 256;
+    packet[98]=characters.character[char_id]->elapsed_book_time / 256;
+
+    //packet[99]=; Unused
+    //packet[100]=; Unused
+
+    packet[101]=characters.character[char_id]->manufacture_exp % 256;
+    packet[102]=characters.character[char_id]->manufacture_exp / 256 % 256;
+    packet[103]=characters.character[char_id]->manufacture_exp / 256 / 256 % 256;
+    packet[104]=characters.character[char_id]->manufacture_exp / 256 / 256 / 256 % 256;
+    packet[105]=characters.character[char_id]->max_manufacture_exp % 256;
+    packet[106]=characters.character[char_id]->max_manufacture_exp / 256 % 256;
+    packet[107]=characters.character[char_id]->max_manufacture_exp / 256 / 256 % 256;
+    packet[108]=characters.character[char_id]->max_manufacture_exp / 256 / 256 / 256 % 256;
+    packet[109]=characters.character[char_id]->harvest_exp % 256;
+    packet[110]=characters.character[char_id]->harvest_exp / 256 % 256;
+    packet[111]=characters.character[char_id]->harvest_exp / 256 / 256 % 256;
+    packet[112]=characters.character[char_id]->harvest_exp / 256 / 256 / 256 % 256 ;
+    packet[113]=characters.character[char_id]->max_harvest_exp % 256;
+    packet[114]=characters.character[char_id]->max_harvest_exp / 256 % 256;
+    packet[115]=characters.character[char_id]->max_harvest_exp / 256 / 256 % 256;
+    packet[116]=characters.character[char_id]->max_harvest_exp / 256 / 256 / 256 % 256;
+    packet[117]=characters.character[char_id]->alchemy_exp % 256;
+    packet[118]=characters.character[char_id]->alchemy_exp / 256 % 256;
+    packet[119]=characters.character[char_id]->alchemy_exp / 256 / 256 % 256;
+    packet[120]=characters.character[char_id]->alchemy_exp / 256 / 256 / 256 % 256;
+    packet[121]=characters.character[char_id]->max_alchemy_exp % 256;
+    packet[122]=characters.character[char_id]->max_alchemy_exp / 256 % 256;
+    packet[123]=characters.character[char_id]->max_alchemy_exp / 256 / 256 % 256;
+    packet[124]=characters.character[char_id]->max_alchemy_exp / 256 / 256 / 256 % 256;
+    packet[125]=characters.character[char_id]->overall_exp % 256;
+    packet[126]=characters.character[char_id]->overall_exp / 256 % 256;
+    packet[127]=characters.character[char_id]->overall_exp / 256 / 256 % 256;
+    packet[128]=characters.character[char_id]->overall_exp / 256 / 256 / 256 % 256;
+    packet[129]=characters.character[char_id]->max_overall_exp % 256;
+    packet[130]=characters.character[char_id]->max_overall_exp / 256 % 256;
+    packet[131]=characters.character[char_id]->max_overall_exp / 256 / 256 % 256;
+    packet[132]=characters.character[char_id]->max_overall_exp / 256 / 256 / 256 % 256;
+    packet[133]=characters.character[char_id]->attack_exp % 256;
+    packet[134]=characters.character[char_id]->attack_exp / 256 % 256;
+    packet[135]=characters.character[char_id]->attack_exp / 256 / 256 % 256;
+    packet[136]=characters.character[char_id]->attack_exp / 256 / 256 / 256 % 256;
+    packet[137]=characters.character[char_id]->max_attack_exp % 256;
+    packet[138]=characters.character[char_id]->max_attack_exp / 256 % 256;
+    packet[139]=characters.character[char_id]->max_attack_exp / 256 / 256 % 256;
+    packet[140]=characters.character[char_id]->max_attack_exp / 256 / 256 / 256 % 256;
+    packet[141]=characters.character[char_id]->defence_exp % 256;
+    packet[142]=characters.character[char_id]->defence_exp / 256 % 256;
+    packet[143]=characters.character[char_id]->defence_exp / 256 / 256 % 256;
+    packet[144]=characters.character[char_id]->defence_exp / 256 / 256 / 256 % 256;
+    packet[145]=characters.character[char_id]->max_defence_exp % 256;
+    packet[146]=characters.character[char_id]->max_defence_exp / 256 % 256;
+    packet[147]=characters.character[char_id]->max_defence_exp / 256 / 256 % 256;
+    packet[148]=characters.character[char_id]->max_defence_exp / 256 / 256 / 256 % 256;
+    packet[149]=characters.character[char_id]->magic_exp % 256;
+    packet[150]=characters.character[char_id]->magic_exp / 256 % 256;
+    packet[151]=characters.character[char_id]->magic_exp / 256 / 256 % 256;
+    packet[152]=characters.character[char_id]->magic_exp / 256 / 256 / 256 % 256;
+    packet[153]=characters.character[char_id]->max_magic_exp % 256;
+    packet[154]=characters.character[char_id]->max_magic_exp / 256 % 256;
+    packet[155]=characters.character[char_id]->max_magic_exp / 256 / 256 % 256;
+    packet[156]=characters.character[char_id]->max_magic_exp / 256 / 256 / 256 % 256;
+    packet[157]=characters.character[char_id]->potion_exp % 256;
+    packet[158]=characters.character[char_id]->potion_exp / 256 % 256;
+    packet[159]=characters.character[char_id]->potion_exp / 256 / 256 % 256;
+    packet[160]=characters.character[char_id]->potion_exp / 256 / 256 / 256 % 256;
+    packet[161]=characters.character[char_id]->max_potion_exp % 256;
+    packet[162]=characters.character[char_id]->max_potion_exp / 256 % 256;
+    packet[163]=characters.character[char_id]->max_potion_exp / 256 / 256 % 256;
+    packet[164]=characters.character[char_id]->max_potion_exp / 256 / 256 / 256 % 256;
+
+    packet[165]=characters.character[char_id]->book_id % 256;
+    packet[166]=characters.character[char_id]->book_id / 256;
+    packet[167]=characters.character[char_id]->max_book_time % 256;
+    packet[168]=characters.character[char_id]->max_book_time / 256;
+
+   //packet[169]=10; summoning lvl
+
+    send(connection, packet, 229, 0);
+}
+
 void send_partial_stats(int connection, int attribute_type, int attribute_level){
 
     unsigned char packet[1024];
@@ -274,7 +428,7 @@ void send_partial_stats(int connection, int attribute_type, int attribute_level)
     packet[6]=attribute_level / 256 / 256 % 256;
     packet[7]=attribute_level / 256 / 256 / 256 % 256;
 
-    send(connection, packet, 11, 0);
+    send(connection, packet, 8, 0);
 }
 
 void send_actors_to_client(int connection){
@@ -321,7 +475,6 @@ void send_actors_to_client(int connection){
     }
 }
 
-
 void process_packet(int connection, unsigned char *packet){
 
     int i=0;
@@ -338,6 +491,7 @@ void process_packet(int connection, unsigned char *packet){
     //int chan=0;
     int chan_colour=0;
     int char_id=clients.client[connection]->character_id;
+    int current_tile=characters.character[char_id]->map_tile;
     int other_char_id=0;
     int map_id=characters.character[char_id]->map_id;
     int guild_id=characters.character[char_id]->guild_id;
@@ -349,6 +503,8 @@ void process_packet(int connection, unsigned char *packet){
     int x_dest=0, y_dest=0, tile_dest=0;
     int map_object_id=0;
     int use_with_position=0;
+    int result=0;
+    int item=0;
 
     // extract data from packet
     for(i=0; i<data_length; i++){
@@ -444,28 +600,58 @@ void process_packet(int connection, unsigned char *packet){
 
         case MOVE_TO:
 
+        //if char is harvesting then stop
+        if(clients.client[connection]->harvest_flag==TRUE){
+
+            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, harvestables[item].name);
+            send_server_text(sock, CHAT_SERVER, text_out);
+
+            clients.client[connection]->harvest_flag=FALSE;
+            break;
+        }
+
         x_dest=Uint16_to_dec(data[0], data[1]);
         y_dest=Uint16_to_dec(data[2], data[3]);
-
         tile_dest=x_dest+(y_dest*maps.map[characters.character[char_id]->map_id]->map_axis);
 
         printf("MOVE_TO position x[%i] y[%i] tile[%i]\n", x_dest, y_dest, tile_dest);
 
-        /*We buffer MOVE_TO commands as they are received, rather than sending them directly to the client. This
-        is because the client breaks down long journeys into a series of interim destination, which are sent
-        in-turn to the server. Whilst the client will continually repeat a destination to the server until it is
-        reached, the timing means that, unless buffered, the char has to hang around waiting for the next one to
-        be received (resulting in the char movement being jerky). Hence, we buffer MOVE_TO's and process them as
-        necessary. */
-
         if(maps.map[map_id]->height_map[tile_dest]<MIN_TRAVERSABLE_VALUE){
-
             sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
             send_server_text(sock, CHAT_SERVER, text_out);
+            break;
         }
-        else {
-            enqueue_move_to(connection, tile_dest);
+
+        if(current_tile!=tile_dest){
+
+            result=get_astar_path(connection, current_tile, tile_dest);
+
+            if(result==ASTAR_UNREACHABLE) {
+                printf("path unreachable ???\n");
+                exit(EXIT_FAILURE);
+            }
+
+            if(result==ASTAR_ABORT) {
+                printf("path aborted ???\n");
+                exit(EXIT_FAILURE);
+            }
+
+            if(result==ASTAR_UNKNOWN) {
+                printf("path unknown\n");
+                exit(EXIT_FAILURE);
+            }
+
+            printf("got new path\n");
+            for(i=0; i<clients.client[connection]->path_count; i++){
+                printf("%i %i\n", i, clients.client[connection]->path[i]);
+            }
+
+            //reset time of last move to zero so the movement is processed without delay
+            clients.client[connection]->time_of_last_move=0;
+            break;
         }
+
+        printf("current tile = destination (ignored)\n");
 
         break;
 
@@ -494,7 +680,6 @@ void process_packet(int connection, unsigned char *packet){
         break;
 
         case HEARTBEAT:
-
         printf("HEARTBEAT %i %i \n", lsb, msb);
 
         gettimeofday(&time_check, NULL);
@@ -510,6 +695,9 @@ void process_packet(int connection, unsigned char *packet){
         use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
         printf("map object id %i use with position %i\n", map_object_id, use_with_position);
 
+        //if char is moving when protocol arrives, cancel rest of path
+        clients.client[connection]->path_count=0;
+
         //travel from IP to Ravens Isle
         if(map_object_id==520 && characters.character[char_id]->map_id==1) move_char_between_maps(connection, 2, 64946);
 
@@ -520,10 +708,35 @@ void process_packet(int connection, unsigned char *packet){
         if(map_object_id==4986 && characters.character[char_id]->map_id==2 && characters.character[char_id]->map_tile==108627){
             move_char_between_maps(connection, 3, 3000);
         }
-
         break;
 
         case HARVEST:
+
+        item=Uint16_to_dec(data[0], data[1]);
+
+        printf("HARVEST item %i\n", item);
+
+        if(harvestables[item].exp==0){
+            sprintf(text_out, "%cYou tried to harvest an unknown item", c_red3+127);
+            send_server_text(sock, CHAT_SERVER, text_out);
+            break;
+        }
+
+        if(clients.client[connection]->harvest_flag==TRUE){
+
+            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, harvestables[item].name);
+            send_server_text(sock, CHAT_SERVER, text_out);
+
+            clients.client[connection]->harvest_flag=FALSE;
+            break;
+        }
+
+        clients.client[connection]->harvest_item=item;
+        clients.client[connection]->harvest_flag=TRUE;
+
+        sprintf(text_out, "%cYou started to harvest %s", c_green3+127, harvestables[item].name);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
         break;
 
         case PING_RESPONSE:
@@ -536,7 +749,6 @@ void process_packet(int connection, unsigned char *packet){
         break;
 
         case LOG_IN:
-
         printf("LOG_IN connection [%i]\n", connection);
 
         if(count_str_island(text)!=2){
@@ -648,7 +860,7 @@ void process_packet(int connection, unsigned char *packet){
             broadcast_guild_channel_chat(guild_id, text_out);
         }
 
-        if(add_char_to_map(connection, map_id, characters.character[char_id]->map_tile)==-1){
+        if(add_char_to_map(connection, map_id, characters.character[char_id]->map_tile)==ILLEGAL_MAP){
 
             perror("cannot add char to map in function process_packet");
 
@@ -659,11 +871,10 @@ void process_packet(int connection, unsigned char *packet){
             //#TODO simply remove client and keep server running rather than crash
         }
 
+        here_your_stats(connection);
+
         sprintf(text_out, "login succesful char [%s]\n", char_name);
         log_event(EVENT_SESSION, text_out);
-
-        //SendStatsToClient($client[$x]['SOCK'], $client[$x]['CHAR_ID']);
-        //SendMessage($client[$x]['SOCK'], HERE_YOUR_INVENTORY, $client[$x]['INVENTORY']);
 
         break;
 

@@ -22,6 +22,7 @@
 #include "chat.h"
 #include "maps.h"
 #include "motd.h"
+#include "harvesting.h"
 
 /* credit for the underlying libev socket code goes to Pierce <jqug123321@gmail.com>, details of which can be
 found @ http://jqug.blogspot.co.uk/2013/02/libev-socket.html */
@@ -88,7 +89,7 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
         if(errno==104){
 
             //client has terminated prematurely (probably due to not having a required map file)
-            printf("read error in function recv_data (probably due to bad map change) %i\n", watcher->fd);
+            printf("read error in function recv_data (probably due to bad map change) connection %i\n", watcher->fd);
             close_connection_slot(watcher->fd);
 
             sprintf(text_out, "client [%i]  char [%s] was terminated by the server in function recv_data\n", watcher->fd, characters.character[clients.client[watcher->fd]->character_id]->char_name);
@@ -102,7 +103,6 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
         else {
             //unknown read error
             perror("read error in function recv_data");
-
             sprintf(text_out, "client [%i]  char [%s] read error [%i]in function recv_data", watcher->fd, characters.character[clients.client[watcher->fd]->character_id]->char_name, errno);
             log_event(EVENT_ERROR, text_out);
             exit(EXIT_FAILURE);
@@ -202,21 +202,24 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     send_motd(client_sockfd);
     send_server_text(client_sockfd, CHAT_SERVER, "\nHit any key to continue...\n");
 
-    clients.count++;
+    clients.count++;// is this really necessary ???
 }
 
 static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
     int i=0;
     time_t current_utime;
+    time_t current_time;
     char text_out[1024]="";
 
     gettimeofday(&time_check, NULL);
     current_utime=time_check.tv_usec;
+    current_time=time_check.tv_sec;
 
     for(i=0; i<clients.max; i++){
 
         process_char_move(i, current_utime);
+        process_harvesting(i, current_time);
 
         if(clients.client[i]->status==LOGGED_IN && clients.client[i]->time_of_last_heartbeat+26<time_check.tv_sec){
 
@@ -265,6 +268,7 @@ int main(void) {
     initialise_client_list(MAX_CLIENTS);
 
     initialise_movement_vectors();
+    initialise_harvestables();
 
     printf("\n");
 

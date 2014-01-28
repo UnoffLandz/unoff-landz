@@ -1,7 +1,7 @@
 #ifndef PROTOCOL_H_INCLUDED
 #define PROTOCOL_H_INCLUDED
 
-enum { /* client to server protocol */
+enum { // client to server protocol
     RAW_TEXT=0,
     MOVE_TO=1,
     SEND_PM=2,
@@ -22,17 +22,77 @@ enum { /* client to server protocol */
     SERVER_STATS=232
 };
 
+enum { // server to client protocol
+    CHANGE_MAP=7,
+    HERE_YOUR_STATS=18
+};
+
+enum { //return values from is_char_concurrent
+    CHAR_NON_CONCURRENT=0,
+    CHAR_CONCURRENT=-1
+};
+
+enum { //return values for validate_password function
+    PASSWORD_CORRECT=0,
+    PASSWORD_INCORRECT=-1
+};
+
+enum { //return values for get_char_id
+    CHAR_FOUND=0,
+    CHAR_NOT_FOUND =-1,
+};
+
+enum { // return values for find_free_connection_slot
+    NO_FREE_SLOTS=-1,
+    FREE_SLOTES=0
+};
+
+/** RESULT  : processes a data packet received from the client
+
+    RETURNS : void
+
+    PURPOSE : reduce need for code in main.c
+
+    USAGE   : main.c
+*/
 void process_packet(int connection, unsigned char *packet); //, struct client_list_type *clients, struct guild_list_type *guilds, struct character_list_type *characters, struct map_list_type *maps, struct message_list_type *messages, struct channel_list_type *channels);
 
+
+/** RESULT  : sends a text string to the client
+
+    RETURNS : void
+
+    PURPOSE : function definition sends to sock rather than connection so that we can reach clients when
+              a connection has not been allocated. This happens when a client tries to connect after the
+              maximum number of connections has been exceeded, in which case, we need to be able to send
+              a message to that client telling it to wait until a connection becomes available.
+
+    USAGE   : lots
+*/
 void send_server_text(int sock, int channel, char *text);
 
-void send_get_active_channels(int connection);
 
+/** RESULT  : determines character id from character name
+
+    RETURNS : character id
+
+    PURPOSE : various
+
+    USAGE   : chat.c send_pm, hash_command.c rename_char
+*/
 int get_char_id(char *char_name);
 
-int get_char_connection(char char_id);
 
+/** RESULT  : instructs client to change map
+
+    RETURNS : void
+
+    PURPOSE : allows characters to change maps
+
+    USAGE   : character_movement.c add_char_to_map
+*/
 void send_change_map(int connection, char *elm_filename);
+
 
 /** RESULT  : make other actors in proximity visible to this actor
 
@@ -43,5 +103,18 @@ void send_change_map(int connection, char *elm_filename);
     USAGE   : protocol.c process_packet
 */
 void send_actors_to_client(int connection);
+
+
+/** RESULT  : updates char stats
+
+    RETURNS : void
+
+    PURPOSE : send updated stats to client
+
+    USAGE   : harvesting.c process_harvesting
+*/
+void send_partial_stats(int connection, int attribute_type, int attribute_level);
+
+void here_your_stats(int connection);
 
 #endif // PROTOCOL_H_INCLUDED

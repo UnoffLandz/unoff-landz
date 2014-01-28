@@ -17,4 +17,6 @@ void initialise_map_list(int max_nodes);
 
 void initialise_movement_vectors();
 
+void initialise_harvestables();
+
 #endif // INITIALISATION_H_INCLUDED

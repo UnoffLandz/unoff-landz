@@ -23,7 +23,7 @@ void save_character(char *char_name, int id){
         exit(EXIT_FAILURE);
     }
 
-    if(!fprintf(file, "%s\n%i\n%u\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%li\n%li\n%li\n",
+    if(!fprintf(file, "%s\n%i\n%u\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%i\n%li\n%li\n%li\n%i\n",
             characters.character[id]->password,     //1
             characters.character[id]->time_played,  //2
             characters.character[id]->char_status,  //3
@@ -55,7 +55,8 @@ void save_character(char *char_name, int id){
             characters.character[id]->local_text_proximity, //29
             characters.character[id]->last_in_game,         //30
             characters.character[id]->char_created,          //31
-            characters.character[id]->joined_guild          //32
+            characters.character[id]->joined_guild,          //32
+            characters.character[id]->harvest_exp            //33
         )){
         printf("character file %s\n", file_name);
         perror("problem saving data to file in function save_character");
@@ -178,7 +179,7 @@ int load_character(char *file_name, int i){
 
     if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
 
-    if(!fscanf(file, "%s\n %i\n %u\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %li\n %li\n %li\n",
+    if(!fscanf(file, "%s\n %i\n %u\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %i\n %li\n %li\n %li\n %i\n",
         characters.character[i]->password,     //1
         &characters.character[i]->time_played, //2
         &characters.character[i]->char_status, //3
@@ -210,7 +211,8 @@ int load_character(char *file_name, int i){
         &characters.character[i]->local_text_proximity, //29
         &characters.character[i]->last_in_game,        //30
         &characters.character[i]->char_created,         //31
-        &characters.character[i]->joined_guild         //32
+        &characters.character[i]->joined_guild,         //32
+        &characters.character[i]->harvest_exp           //33
         )){
         printf("character file %s\n", file_name);
         perror("data missing from file");
@@ -281,19 +283,21 @@ int load_map(char *file_name, int id){
     int h_tiles=0, v_tiles=0;
     int tile_map_offset=0;
     int height_map_offset=0;
-    int threed_object_offset=0;
-    int twod_object_offset=0;
 
     int tile_map_size=0;
     int height_map_size=0;
-    int threed_object_map_size=0;
-    //int twod_object_map_size=0;
 
+    int threed_object_offset=0;
+    int threed_object_map_size=0;
     //int threed_object_structure_len=0;
     //int threed_object_count=0;
 
-    //int twod_object_structure_len=0;
-    //int twod_object_count=0;
+    int twod_object_offset=0;
+    int twod_object_map_size=0;
+    int twod_object_structure_len=0;
+    int twod_object_count=0;
+
+    int lights_object_offset=0;
 
     //int j=0;
 
@@ -434,8 +438,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("2d object structure len %i\n", j);
+    twod_object_structure_len=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    printf("2d object structure len %i\n", twod_object_structure_len);
 
     //read 2d object count
     if(fread(bytes, 4, 1, file)!=1){
@@ -444,8 +448,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("2d object count %i\n", j);
+    twod_object_count=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    printf("2d object count %i\n", twod_object_count);
 
     //read 2d object offset
     if(fread(bytes, 4, 1, file)!=1){
@@ -455,7 +459,7 @@ int load_map(char *file_name, int id){
     }
 
     twod_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("2d object offset %i\n", twod_object_offset);
+    printf("2d object offset %i\n", twod_object_offset);
 
     //read lights structure length
     if(fread(bytes, 4, 1, file)!=1){
@@ -484,8 +488,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("lights offset %i\n", j);
+    lights_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    printf("lights offset %i\n", lights_object_offset);
 
     //read dungeon flag
     if(fread(bytes, 1, 1, file)!=1){
@@ -689,9 +693,9 @@ int load_map(char *file_name, int id){
     //j=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
     //printf("res 17 %i\n", j);
 
-    //read tile map
+    /**read tile map
 
-    /* the height map offset indicates the end of the tile map, hence we use it to calculate
+    the height map offset indicates the end of the tile map, hence we use it to calculate
     the size of the tile map by deducting the tile map offset (header size). We can then read
     that number of bytes to extract our tile map data. In the case of Isla Prima, the tile map
     consists of 32 x 32 =1024 bytes */
@@ -712,9 +716,20 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //read height map
+/*
+    //TEST TILE MAP
 
-    /* the 3d object offset indicates the end of the height map, hence we use it to calculate
+    int j=0;
+
+    for(j=0; j<160; j++){
+        printf("%i %i\n", j, maps.map[id]->tile_map[j]);
+    }
+    exit(1);
+*/
+
+    /**read height map
+
+    the 3d object offset indicates the end of the height map, hence we use it to calculate
     the size of height map by deducting the height map offset. We can then read that number of
     bytes to extract our height map data. In the case of Isla Prima, the height map consists
     of 192 x 192 = 36864 bytes */
@@ -735,9 +750,9 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //read 3d object map
+    /**read 3d object map
 
-    /* the 2d object offset indicates the end of the 3d object map, hence we use it to calculate
+    the 2d object offset indicates the end of the 3d object map, hence we use it to calculate
     the size of 3d object map by deducting the 3d object map offset. We can then read that number of
     bytes to extract our 3d object map data. In the case of Isla Prima, the 3d object map is 167760 bytes*/
 
@@ -758,7 +773,64 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
+    /**read 2d object map
+
+    the lights object offset indicates the end of the 2d object map, hence we use it to calculate
+    the size of 2d object map by deducting the 2d object map offset. We can then read that number of
+    bytes to extract our 2d object map data. In the case of Isla Prima, the 2d object map is 130944 bytes*/
+
+    twod_object_map_size=lights_object_offset-twod_object_offset;
+
+    if(twod_object_map_size>TWOD_OBJECT_MAP_MAX) {
+        printf("file name [%s] 2d object map size %i\n", maps.map[id]->elm_filename, twod_object_map_size);
+        printf("twod map size %i\n", twod_object_map_size);
+        perror("2d object map exceeds maximum size in function load_map");
+        exit(EXIT_FAILURE);
+    }
+
+    maps.map[id]->twod_object_map_size=twod_object_map_size;
+
+    if(fread(maps.map[id]->twod_object_map, twod_object_map_size, 1, file)!=1){
+        printf("filename [%s]\n", elm_filename);
+        perror ("problem reading 2d object map in function load_map");
+        exit(EXIT_FAILURE);
+    }
+
 /*
+    //TEST 2D structure
+
+    int k=0;
+    int j=0;
+    unsigned char byte[4]={0};
+    unsigned char x;
+
+    for(j=0; j<(128*200);j+=128){
+
+        byte[0]=maps.map[id]->twod_object_map[j+80];
+        byte[1]=maps.map[id]->twod_object_map[j+81];
+        byte[2]=maps.map[id]->twod_object_map[j+82];
+        byte[3]=maps.map[id]->twod_object_map[j+83];
+        printf("x_pos %f\n", Uint32_to_float(byte));
+
+        byte[0]=maps.map[id]->twod_object_map[j+84];
+        byte[1]=maps.map[id]->twod_object_map[j+85];
+        byte[2]=maps.map[id]->twod_object_map[j+86];
+        byte[3]=maps.map[id]->twod_object_map[j+87];
+        printf("y_pos %f\n", Uint32_to_float(byte));
+
+        for(k=j; k<j+80; k++){
+            x=maps.map[id]->twod_object_map[k];
+            printf("%c", x);
+        }
+        printf("#\n");
+    }
+  exit(1);
+*/
+
+
+/*
+    //TEST 3D STRUCTURE
+
     int k=0;
     j=0;
     unsigned char byte[4]={0};
@@ -1145,7 +1217,7 @@ void log_event(int event_type, char *text_in){
 
         case EVENT_ERROR:
             strcpy(file_name, "error.log");
-            sprintf(text_out, "[%s][%s] ERROR - %s", date_stamp_str, time_stamp_str, text_in);
+            sprintf(text_out, "[%s][%s] Error - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_SESSION:
@@ -1155,7 +1227,12 @@ void log_event(int event_type, char *text_in){
 
         case EVENT_CHAT:
             strcpy(file_name, "chat.log");
-            sprintf(text_out, "[%s][%s] %s", date_stamp_str, time_stamp_str, text_in);
+            sprintf(text_out, "[%s][%s] Event - %s", date_stamp_str, time_stamp_str, text_in);
+        break;
+
+        case EVENT_MOVE_ERROR:
+            strcpy(file_name, "move.log");
+            sprintf(text_out, "[%s][%s] Move-error - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         default:

@@ -12,6 +12,7 @@
 #include "datetime_functions.h"
 #include "character_movement.h"
 #include "motd.h"
+#include "hash_commands.h"
 
 int char_type[12]={HUMAN_FEMALE, HUMAN_MALE, ELF_FEMALE, ELF_MALE, DWARF_FEMALE, DWARF_MALE, GNOME_FEMALE, GNOME_MALE, ORCHAN_FEMALE, ORCHAN_MALE, DRAEGONI_FEMALE, DRAEGONI_MALE};
 int char_race[12]={HUMAN, HUMAN, ELF, ELF, DWARF, DWARF, GNOME, GNOME, ORCHAN, ORCHAN, DRAEGONI, DRAEGONI};
@@ -86,7 +87,7 @@ int rename_char(int connection, char *new_char_name){
     return CHAR_RENAME_SUCCESS;
 }
 
-int process_hash_commands(int connection, char *text){
+int process_hash_commands(int connection, char *text, int text_len){
 
     int i=0;
     char hash_command[1024]="";
@@ -109,7 +110,6 @@ int process_hash_commands(int connection, char *text){
     printf("HASH COMMAND [%s]\n", text);
 
 /***************************************************************************************************/
-
     if(strcmp(hash_command, "#IL")==0) {
         //printf("#IL\n");
         return HASH_CMD_UNSUPPORTED;
@@ -119,7 +119,7 @@ int process_hash_commands(int connection, char *text){
         send_motd_file(connection);
         return HASH_CMD_EXECUTED;
     }
-
+/***************************************************************************************************/
     else if(strcmp(hash_command, "#BEAM_ME")==0){
 
         if(command_parts!=1){
@@ -134,7 +134,7 @@ int process_hash_commands(int connection, char *text){
 
         return HASH_CMD_EXECUTED;
     }
-
+/***************************************************************************************************/
     else if(strcmp(hash_command, "#BEAM")==0){
 
         if(command_parts!=2){
@@ -155,20 +155,17 @@ int process_hash_commands(int connection, char *text){
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
-
     else if(strcmp(hash_command, "#SAVE")==0){
         //printf("#SAVE\n");
         save_data(connection);
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
-
     else if(strcmp(hash_command, "#EXPIRE")==0){
         //printf("#EXPIRE\n");
         return HASH_CMD_UNSUPPORTED;
     }
 /***************************************************************************************************/
-
     else if(strcmp(hash_command, "#NAME_CHANGE")==0){
 
         //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by a space)
@@ -203,9 +200,7 @@ int process_hash_commands(int connection, char *text){
 
         return HASH_CMD_EXECUTED;
     }
-
 /***************************************************************************************************/
-
     else if(strcmp(hash_command, "#DETAILS")==0){
 
         //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by a space)
@@ -263,10 +258,8 @@ int process_hash_commands(int connection, char *text){
         send_server_text(sock, CHAT_SERVER, text_out);
 
         return HASH_CMD_EXECUTED;
-
     }
 /***************************************************************************************************/
-
     else if(strcmp(hash_command, "#GM")==0){
 
         switch(process_guild_chat(connection, text)){
@@ -307,7 +300,6 @@ int process_hash_commands(int connection, char *text){
         return HASH_CMD_FAILED;
      }
 /***************************************************************************************************/
-
     else if(strcmp(hash_command, "#IG")==0){
 
         switch(process_inter_guild_chat(connection, text)){
@@ -351,9 +343,7 @@ int process_hash_commands(int connection, char *text){
 
         return HASH_CMD_FAILED;
     }
-
 /***************************************************************************************************/
-
     else if(strcmp(hash_command, "#JC")==0){
 
         //check that #JC command is properly formed (should have 2 parts delimited by a space)
@@ -432,7 +422,6 @@ int process_hash_commands(int connection, char *text){
         return HASH_CMD_FAILED;
     }
 /***************************************************************************************************/
-
     else if(strcmp(hash_command, "#LC")==0){
 
         //check that #LC command is properly formed (should have 2 parts delimited by a space)
@@ -481,14 +470,12 @@ int process_hash_commands(int connection, char *text){
         return HASH_CMD_FAILED;
     }
 /***************************************************************************************************/
+    else if (strcmp(hash_command, "#TEST")==0){
+        here_your_stats(connection);
 
-    /*
-        else if (strcmp(hash_command, "#SHUT_DOWN")==0){
-            sprintf(text_out, "%cSHUTTING DOWN", c_red3+127);
-        broadcast_raw_text_packet(connection, 0, CHAT_SERVER, text_out, clients, characters, maps, messages, guilds);
-    }*/
+        return HASH_CMD_EXECUTED;
+    }
 /***************************************************************************************************/
-
     else if (strcmp(hash_command, "#LCD")==0){
 
         sprintf(text_out, "\n%cNo   Channel    Description", c_blue1+127);
@@ -505,7 +492,6 @@ int process_hash_commands(int connection, char *text){
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
-
     else if (strcmp(hash_command, "#LCC")==0){
 
         channel_number=characters.character[char_id]->chan[characters.character[char_id]->active_chan];
@@ -515,11 +501,7 @@ int process_hash_commands(int connection, char *text){
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
-
-    sprintf(text_out, "Unknown #command [%s] by char [%s]", text, characters.character[char_id]->char_name);
-    log_event(EVENT_SESSION, text_out);
-
-    return HASH_CMD_UNKNOWN;
-}
+     return HASH_CMD_UNKNOWN;
+ }
 
 

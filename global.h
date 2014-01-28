@@ -7,8 +7,6 @@
 #define MAX_GUILDS 10
 #define MAX_CLIENTS 20
 
-#define MOVE_BUFFER_MAX 100 //maximum buffered MOVE_TO's
-#define PATH_QUEUE_MAX 50000 //maximum tiles that can be queued whilst exploring a path
 #define PATH_MAX 100 //longest permitted path
 #define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
 
@@ -19,7 +17,7 @@
 
 #define TILE_MAP_MAX 50000
 #define HEIGHT_MAP_MAX 150000
-#define TWOD_OBJECT_MAP_MAX 1 //not yet used
+#define TWOD_OBJECT_MAP_MAX 800000 //not yet used
 #define THREED_OBJECT_MAP_MAX 800000 //not yet used
 
 #define START_MAP_ID 1 //1=Isla Prima
@@ -34,9 +32,69 @@
 #define MOTD_FILE "motd.msg"
 #define SERVER_WELCOME_MSG "\nWELCOME TO THE UNOFF SERVER\n------------------------------------------------------------"
 
-enum { //return values from add_char_to_map / remove_char_from_map
-    LEGAL_MAP=0,
-    ILLEGAL_MAP=-1
+
+enum {//stats codes
+    //0 1 physique
+    //1 3 coordination
+    //4 5 reasoning
+    //6 7 will
+    //8 9 instinct
+    //10 11 vitality
+    //12 13 human
+    //14 15 animal
+    //16 17 vegetal
+    //18 19 inorganic
+    //20 21 artificial
+    //22 23 magic
+
+    //24 25 manufacturing
+    HARVEST_LVL=26,
+    HARVEST_MAX_LVL=27,
+
+     //26 27 harvest
+    //28 29 alchemy
+    //30 31 overall
+    //32 33 defence
+    //34 35 attack
+    //36 37 magic
+    //38 39 potion
+
+    //40 41 ?????
+    //42 43 material points
+    //44 45 ethereal points
+    //46 food level
+    //47 ????
+    //48 ????
+
+    //49 50 manufacturing
+    HARVEST_EXP=51,
+    HARVEST_MAX_EXP=52,
+
+     //53 54 alchemy
+    //55 56 overall
+    //57 58 defence
+    //59 60 attack
+    //61 62 magic
+    //63 64 potion
+
+    //65 66 ????
+    //67 68 summoning (R)
+    //69 70 summoning (L)
+    //71 72 crafting (R)
+    //73 74 crafting (L)
+    //75 76 engineering (R)
+    //77 78 engineering (L)
+    //79 80 ranging (R)
+    //81 82 ranging (L)
+    //83 84 tailoring (R)
+    //85 86 tailoring (L)
+
+    //87 88 action points
+    //89 ?????
+};
+
+enum{// harv item code
+     Chrysanthemums=1112,
 };
 
 enum {// actor movement vectors
@@ -54,104 +112,17 @@ int vector_x[8];
 int vector_y[8];
 unsigned char movement_cmd[8];
 
-enum{//tile bounds returned from check_tile_bounds function
-    TILE_OUTSIDE_BOUNDS=-2,
-    TILE_NON_TRAVERSABLE=-1,
-    TILE_TRAVERSABLE=0
-};
-
-enum {// return values for is_map_tile_occupied
-    TILE_OCCUPIED,
-    TILE_UNOCCUPIED
-};
-
-enum { //return values from is_char_concurrent
-    CHAR_NON_CONCURRENT=0,
-    CHAR_CONCURRENT=-1
-};
-
-enum { // transport types
-    LOGIN_MAP,
-    CHANGE_MAP
-};
-
-enum { // return values for find_free_connection_slot
-    NO_FREE_SLOTS=-1
-};
-
-enum { //return values for rename_char
-    CHAR_RENAME_FAILED_DUPLICATE=-1,
-    CHAR_RENAME_SUCCESS=0,
-    CANNOT_CREATE_TEMP_FILE=-2
-};
-
-enum { // return values for process_chat function
-    CHAR_NOT_IN_CHAN=-1,
-    CHAN_CHAT_SENT=0
+enum{ // general boolean values
+    FALSE,
+    TRUE
 };
 
 enum { //log events
     EVENT_NEW_CHAR,
     EVENT_ERROR,
     EVENT_SESSION,
-    EVENT_CHAT
-};
-
-enum { //return values for validate_password function
-    PASSWORD_CORRECT=0,
-    PASSWORD_INCORRECT=-1
-};
-
-enum { //return values for get_char_id
-    CHAR_NOT_FOUND =-1,
-};
-
-enum { //return values for file loading
-    FILE_FOUND=0,
-    FILE_NOT_FOUND=-1
-};
-
-enum { //return values for get_direct_path and get_indirect_path
-    PATH_TOO_LONG=-4,
-    PATH_ILLEGAL_DESTINATION=-3,
-    PATH_UNREACHABLE=-2,
-    PATH_BLOCKED=-1,
-    PATH_OPEN=0
-};
-
-enum { //return values for leave channel and join_channel
-    CHANNEL_UNKNOWN,
-    CHANNEL_INVALID,
-    CHANNEL_SYSTEM,
-    CHANNEL_NOT_OPEN,
-    NOT_IN_CHANNEL,
-    CHANNEL_BARRED,
-    NO_FREE_CHANNEL_SLOTS,
-    CHANNEL_JOINED,
-    CHANNEL_LEFT
-};
-
-enum { //return values from process_guild_chat
-    GM_INVALID,
-    GM_NO_GUILD,
-    GM_NO_PERMISSION,
-    GM_SENT
-};
-
-enum { //return values from process_inter_guild_chat
-    IG_NOT_AVAILABLE,
-    IG_NO_PERMISSION,
-    IG_INVALID_GUILD,
-    IG_SENT,
-    IG_MALFORMED
-};
-
-enum{ //return values from process_hash_command
-    HASH_CMD_UNSUPPORTED,
-    HASH_CMD_UNKNOWN,
-    HASH_CMD_EXECUTED,
-    HASH_CMD_FAILED,
-    HASH_CMD_ABORTED
+    EVENT_CHAT,
+    EVENT_MOVE_ERROR
 };
 
 enum {
@@ -185,20 +156,7 @@ enum {
     c_grey4,
 };
 
-enum { /* channel types */
-    CHAT_LOCAL,
-    CHAT_PERSONAL,
-    CHAT_GM,
-    CHAT_SERVER,
-    CHAT_MOD,
-    CHAT_CHANNEL1,
-    CHAT_CHANNEL2,
-    CHAT_CHANNEL3,
-    CHAT_MODPM,
-    CHAT_SERVER_PM,
-};
-
-enum{ //actor type
+enum{ // actor type
     HUMAN_FEMALE=0,
     HUMAN_MALE=1,
     ELF_FEMALE=2,
@@ -213,7 +171,7 @@ enum{ //actor type
     DRAEGONI_MALE=42
 };
 
-enum{ //race
+enum{ // race
     HUMAN,
     ELF,
     DWARF,
@@ -222,37 +180,37 @@ enum{ //race
     DRAEGONI
 };
 
-enum{ //gender
+enum{ // gender
     FEMALE,
     MALE
 };
 
-enum { /* skin type */
+enum { // skin type
     SKIN_BROWN,
     SKIN_NORMAL,
 };
 
-enum { /* hair type */
+enum { // hair type
     HAIR_BLACK,
     HAIR_BLOND,
 };
 
-enum { /* shirt type */
+enum { // shirt type
     SHIRT_BLACK,
     SHIRT_BLUE,
 };
 
-enum { /* pants type */
+enum { // pants type
     PANTS_BLACK,
     PANTS_BLUE,
 };
 
-enum { /* boots type */
+enum { // boots type
     BOOTS_BLACK,
     BOOTS_BROWN,
 };
 
-enum { /* head type */
+enum { // head type
     HEAD_1,
     HEAD_2,
     HEAD_3,
@@ -277,7 +235,7 @@ enum { // weapon type
     SWORD_1=1,
 };
 
-enum { /* cape type */
+enum { // cape type
     CAPE_BLACK,
     CAPE_BLUE,
     CAPE_BLUEGRAY,
@@ -311,7 +269,7 @@ enum { /* cape type */
     CAPE_NONE,
 };
 
-enum { /* helmet type */
+enum { // helmet type
     HELMET_IRON,
     HELMET_FUR,
     HELMET_LEATHER,
@@ -335,7 +293,7 @@ enum { /* helmet type */
     HELMET_NONE,
 };
 
-enum { /* neck type */
+enum { // neck type
     NECK_0,
     NECK_1,
     NECK_2,
@@ -345,7 +303,7 @@ enum { /* neck type */
     NECK_7,
 };
 
-// create the char struct
+/** CHARACTERS */
 struct character_node_type{
     char char_name[1024];
     char password[1024];
@@ -377,6 +335,79 @@ struct character_node_type{
     time_t last_in_game; // date char was last in-game
     time_t char_created; // date char was created
     time_t joined_guild; // date joined guild
+
+    int harvest_exp;
+
+    int physique;
+    int max_physique;
+    int coordination;
+    int max_coordination;
+    int reasoning;
+    int max_reasoning;
+    int will;
+    int max_will;
+    int instinct;
+    int max_instinct;
+    int vitality;
+    int max_vitality;
+
+    int human;
+    int max_human;
+    int animal;
+    int max_animal;
+    int vegetal;
+    int max_vegetal;
+    int inorganic;
+    int max_inorganic;
+    int artificial;
+    int max_artificial;
+    int magic;
+    int max_magic;
+
+    int manufacturing_lvl;
+    int max_manufacturing_lvl;
+    int harvest_lvl;
+    int max_harvest_lvl;
+    int alchemy_lvl;
+    int max_alchemy_lvl;
+    int overall_lvl;
+    int max_overall_lvl;
+    int attack_lvl;
+    int max_attack_lvl;
+    int defence_lvl;
+    int max_defence_lvl;
+    int magic_lvl;
+    int max_magic_lvl;
+    int potion_lvl;
+    int max_potion_lvl;
+
+    int material_pts;
+    int max_material_pts;
+    int ethereal_pts;
+    int max_ethereal_pts;
+
+    int food_lvl;
+
+    int manufacture_exp;
+    int max_manufacture_exp;
+    //int harvest_exp;
+    int max_harvest_exp;
+    int alchemy_exp;
+    int max_alchemy_exp;
+    int overall_exp;
+    int max_overall_exp;
+    int attack_exp;
+    int max_attack_exp;
+    int defence_exp;
+    int max_defence_exp;
+    int magic_exp;
+    int max_magic_exp;
+    int potion_exp;
+    int max_potion_exp;
+
+    int book_id;
+    int max_book_time;
+    int elapsed_book_time;
 };
 
 struct character_list_type {
@@ -385,7 +416,10 @@ struct character_list_type {
     struct character_node_type **character;
 };
 
-/* create the maps struct */
+struct character_list_type characters;
+
+
+/** MAPS */
 struct map_node_type{
     char map_name[1024];    // eg Isla Prima
     char elm_filename[1024];// eg startmap.elm
@@ -408,7 +442,10 @@ struct map_list_type {
     struct map_node_type **map;
 };
 
-/* create the guilds struct */
+struct map_list_type maps;
+
+
+/** GUILDS */
 struct guild_node_type{
     char guild_name[1024];
     char guild_tag[1024];
@@ -425,20 +462,23 @@ struct guild_list_type {
     struct guild_node_type **guild;
 };
 
-/* create the clients struct */
+struct guild_list_type guilds;
+
+
+/** CLIENTS */
 struct client_node_type{
     enum {LOGGED_IN, CONNECTED, LOGGED_OUT} status;
-    //int sock;
     int packet_buffer[1024];
     int packet_buffer_length;
     int character_id;
-    int path[25];
+    int path[PATH_MAX];
     int path_max;
     int path_count;
-    int move_buffer[MOVE_BUFFER_MAX];
-    int move_buffer_size;
     time_t time_of_last_move;
     time_t time_of_last_heartbeat;
+    time_t time_of_last_harvest;
+    int harvest_flag;
+    int harvest_item;
     unsigned char cmd_buffer[10][1024];
     int cmd_buffer_end;
     char ip_address[16];
@@ -450,6 +490,10 @@ struct client_list_type {
     struct client_node_type **client;
 };
 
+struct client_list_type clients;
+
+
+/** CHANNELS */
 struct channel_node_type{
     enum {CHAN_SYSTEM, CHAN_PERMANENT, CHAN_GUILD, CHAN_CHAT, CHAN_VACANT} chan_type;
     char channel_name[1024];
@@ -468,16 +512,23 @@ struct channel_list_type {
     struct channel_node_type **channel;
 };
 
-//Declare structs as global to make passing them to functions more practical
-struct guild_list_type guilds;
-struct character_list_type characters;
-struct map_list_type maps;
-struct client_list_type clients;
 struct channel_list_type channels;
 
-//other structs
-struct timeval time_check;
 
+/** HARVESTABLES */
+struct harvestables_type{
+    int exp;
+    int emu;
+    int nexus;
+    char name[20];
+    int interval;
+};
+
+struct harvestables_type harvestables[2000];
+
+
+/** OTHERS */
+struct timeval time_check;
 time_t server_start_time;
 
 #endif // GLOBAL_H_INCLUDED

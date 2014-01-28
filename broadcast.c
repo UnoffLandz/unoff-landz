@@ -6,6 +6,7 @@
 #include "global.h"
 #include "character_movement.h"
 #include "protocol.h"
+#include "chat.h"
 
 int get_proximity(int tile1, int tile2, int map_axis){
 
