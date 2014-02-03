@@ -211,7 +211,7 @@ void add_new_enhanced_actor_packet(int char_id, unsigned char *packet, int *pack
 	packet[i++]=characters.character[char_id]->weapon_type;          // 0 weapon type
 	packet[i++]=characters.character[char_id]->cape_type;            // 30 cape type
 	packet[i++]=characters.character[char_id]->helmet_type;          // 0 helmet type
-	packet[i++]=characters.character[char_id]->neck_type;            // 7 neck type (THIS COULD ALSO BE FRAME TYPE
+	packet[i++]=characters.character[char_id]->frame;                //frame type
 	packet[i++]=characters.character[char_id]->max_health % 256;     // max health lsb
 	packet[i++]=characters.character[char_id]->max_health / 256;     // max health msb
 	packet[i++]=characters.character[char_id]->current_health % 256; // current health lsb

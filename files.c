@@ -9,17 +9,20 @@
 #include "numeric_functions.h"
 #include "datetime_functions.h"
 
-
 void save_character(char *char_name, int id){
 
     FILE *file;
     char file_name[1024]="";
+    char text_out[1024]="";
 
     sprintf(file_name, "%s.ply", char_name);
 
     if((file=fopen(file_name, "w"))==NULL) {
-        printf("file [%s]\n", file_name);
-        perror("file not found in function save_character");
+
+        sprintf(text_out, "unable to save char [%s] to file [%s] in function save_character (fopen)", char_name, file_name);
+        log_event(EVENT_ERROR, text_out);
+
+        perror(text_out);
         exit(EXIT_FAILURE);
     }
 
@@ -48,7 +51,7 @@ void save_character(char *char_name, int id){
             characters.character[id]->weapon_type,  //22
             characters.character[id]->cape_type,    //23
             characters.character[id]->helmet_type,  //24
-            characters.character[id]->neck_type,    //25
+            characters.character[id]->frame,         //25
             characters.character[id]->max_health,   //26
             characters.character[id]->current_health,//27
             characters.character[id]->visual_proximity,     //28
@@ -58,12 +61,14 @@ void save_character(char *char_name, int id){
             characters.character[id]->joined_guild,          //32
             characters.character[id]->harvest_exp            //33
         )){
-        printf("character file %s\n", file_name);
-        perror("problem saving data to file in function save_character");
+
+        sprintf(text_out, "unable to save char [%s] to file [%s]in function save_character (fprintf)", char_name, file_name);
+        log_event(EVENT_ERROR, text_out);
+
+        perror(text_out);
         exit(EXIT_FAILURE);
     }
 
-    //printf("save character [%s]\n", characters.character[id]->char_name);
     fclose(file);
 }
 
@@ -204,7 +209,7 @@ int load_character(char *file_name, int i){
         &characters.character[i]->weapon_type,  //22
         &characters.character[i]->cape_type,    //23
         &characters.character[i]->helmet_type,  //24
-        &characters.character[i]->neck_type,    //25
+        &characters.character[i]->frame,        //25
         &characters.character[i]->max_health,   //26
         &characters.character[i]->current_health,//27
         &characters.character[i]->visual_proximity, //28

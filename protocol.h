@@ -6,6 +6,7 @@ enum { // client to server protocol
     MOVE_TO=1,
     SEND_PM=2,
     GET_PLAYER_INFO=5,
+    SIT_DOWN=7,
     SEND_ME_MY_ACTORS=8,
     SEND_OPENING_SCREEN=9,
     SEND_VERSION=10,
@@ -22,29 +23,14 @@ enum { // client to server protocol
     SERVER_STATS=232
 };
 
-enum { // server to client protocol
-    CHANGE_MAP=7,
-    HERE_YOUR_STATS=18
-};
-
-enum { //return values from is_char_concurrent
-    CHAR_NON_CONCURRENT=0,
-    CHAR_CONCURRENT=-1
-};
-
-enum { //return values for validate_password function
-    PASSWORD_CORRECT=0,
-    PASSWORD_INCORRECT=-1
-};
-
-enum { //return values for get_char_id
-    CHAR_FOUND=0,
-    CHAR_NOT_FOUND =-1,
-};
-
 enum { // return values for find_free_connection_slot
     NO_FREE_SLOTS=-1,
-    FREE_SLOTES=0
+    FREE_SLOTS=0
+};
+
+enum { // sit down command instruction
+    CHAR_SIT_DOWN=0,
+    CHAR_STAND_UP=1
 };
 
 /** RESULT  : processes a data packet received from the client
@@ -70,17 +56,6 @@ void process_packet(int connection, unsigned char *packet); //, struct client_li
     USAGE   : lots
 */
 void send_server_text(int sock, int channel, char *text);
-
-
-/** RESULT  : determines character id from character name
-
-    RETURNS : character id
-
-    PURPOSE : various
-
-    USAGE   : chat.c send_pm, hash_command.c rename_char
-*/
-int get_char_id(char *char_name);
 
 
 /** RESULT  : instructs client to change map
@@ -115,6 +90,15 @@ void send_actors_to_client(int connection);
 */
 void send_partial_stats(int connection, int attribute_type, int attribute_level);
 
-void here_your_stats(int connection);
+
+/** RESULT  : sends char stats
+
+    RETURNS : void
+
+    PURPOSE : send all char stats at log in
+
+    USAGE   :  protocol.c process_packet
+*/
+void send_here_your_stats(int connection);
 
 #endif // PROTOCOL_H_INCLUDED

@@ -7,11 +7,14 @@
 
 void initialise_harvestables(){
 
-    harvestables[Chrysanthemums].exp=10;
-    harvestables[Chrysanthemums].emu=1;
-    harvestables[Chrysanthemums].nexus=0;
-    strcpy(harvestables[Chrysanthemums].name, "Chrysanthemums");
-    harvestables[Chrysanthemums].interval=1;
+    harvestables[chrysanthemums].exp=10;
+    harvestables[chrysanthemums].emu=1;
+    harvestables[chrysanthemums].nexus=0;
+    strcpy(harvestables[chrysanthemums].name, "Chrysanthemums");
+    harvestables[chrysanthemums].interval=1;
+    harvestables[chrysanthemums].image_id=28;
+    harvestables[chrysanthemums].food_value=0;
+    harvestables[chrysanthemums].food_cool_down=0;
 }
 
 void initialise_movement_vectors(){

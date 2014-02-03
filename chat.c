@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "files.h"
 #include "chat.h"
+#include "log_in.h"
 
 void send_get_active_channels(int connection){
 
@@ -93,7 +94,11 @@ void remove_client_from_channel(int connection, int chan){
     }
 
     if(found==0) {
-        perror("unable to find character in function remove_char_from_map");
+
+        sprintf(text_out, "unable to find char id [%i] in function remove_client_from_channel", char_id);
+        log_event(EVENT_ERROR, text_out);
+
+        perror(text_out);
         exit(EXIT_FAILURE);
     }
 

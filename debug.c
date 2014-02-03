@@ -146,7 +146,7 @@ void debug_char_struct(int connection){
     printf("weapon %i\n",characters.character[char_id]->weapon_type);
     printf("cape %i\n",characters.character[char_id]->cape_type);
     printf("helmet %i\n",characters.character[char_id]->helmet_type);
-    printf("neck %i\n",characters.character[char_id]->neck_type);
+    printf("frame %i\n",characters.character[char_id]->frame);
     printf("max health %i\n",characters.character[char_id]->max_health);
     printf("current health %i\n",characters.character[char_id]->current_health);
     printf("visual proximity %i\n",characters.character[char_id]->visual_proximity);

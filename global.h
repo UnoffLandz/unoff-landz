@@ -23,15 +23,17 @@
 #define START_MAP_ID 1 //1=Isla Prima
 //#define START_MAP_START_TILE 4236
 #define START_MAP_START_TILE 27225
-#define BEAM_ME_MAP 1
-#define BEAM_ME_TILE 27225
 
 #define MIN_MAP_AXIS 10 //used to bounds check maps
 
 #define TEMP_FILE "temp.tmp"
-#define MOTD_FILE "motd.msg"
-#define SERVER_WELCOME_MSG "\nWELCOME TO THE UNOFF SERVER\n------------------------------------------------------------"
 
+enum { // server to client protocol
+    CHANGE_MAP=7,
+    HERE_YOUR_STATS=18,
+    HERE_YOUR_INVENTORY=19,
+    GET_NEW_INVENTORY_ITEM=21
+};
 
 enum {//stats codes
     //0 1 physique
@@ -94,7 +96,13 @@ enum {//stats codes
 };
 
 enum{// harv item code
-     Chrysanthemums=1112,
+     chrysanthemums=1112,
+};
+
+enum {// frame type
+    nothing=0,
+    stand_up=13,
+    sit_down=14,
 };
 
 enum {// actor movement vectors
@@ -125,7 +133,7 @@ enum { //log events
     EVENT_MOVE_ERROR
 };
 
-enum {
+enum {// colours
     c_red1,
     c_orange1,
     c_yellow1,
@@ -327,7 +335,7 @@ struct character_node_type{
     int weapon_type;
     int cape_type;
     int helmet_type;
-    int neck_type;
+    int frame;
     int max_health;
     int current_health;
     int visual_proximity; // proximity for display of other actors/creatures
@@ -408,6 +416,8 @@ struct character_node_type{
     int book_id;
     int max_book_time;
     int elapsed_book_time;
+    unsigned char inventory[1024];
+    int inventory_size;
 };
 
 struct character_list_type {
@@ -482,6 +492,7 @@ struct client_node_type{
     unsigned char cmd_buffer[10][1024];
     int cmd_buffer_end;
     char ip_address[16];
+    int sit_down;
  };
 
 struct client_list_type {
@@ -522,6 +533,9 @@ struct harvestables_type{
     int nexus;
     char name[20];
     int interval;
+    int image_id;
+    int food_value;
+    int food_cool_down;
 };
 
 struct harvestables_type harvestables[2000];

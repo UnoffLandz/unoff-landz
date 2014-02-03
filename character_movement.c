@@ -11,11 +11,6 @@
 #include "protocol.h"
 #include "pathfinding.h"
 
-enum {// return values from function dequeue_step
-    DEQUEUE_STEP_ABORT,
-    DEQUEUE_STEP_COMPLETE
-};
-
 int get_move_command_vector(int cmd, int tile_pos, int map_axis){
 
     //returns the new tile position after a move_cmd from tile_pos
@@ -36,6 +31,7 @@ int get_move_command(int tile_pos, int tile_dest, int map_axis){
     int i=0;
     int move=0;
     int move_x=0, move_y=0;
+    char text_out[1024]="";
 
     move=tile_dest-tile_pos;
 
@@ -86,41 +82,14 @@ int get_move_command(int tile_pos, int tile_dest, int map_axis){
         }
     }
 
-    perror("illegal move in function get_move_command");
+    sprintf(text_out, "illegal move in function get_move_command tile_pos[%i] tile_dest[%i] move[%i]", tile_pos, tile_dest, move);
+    log_event(EVENT_ERROR, text_out);
+
+    perror(text_out);
     exit(EXIT_FAILURE);
 
     return 0; //we should never get here
 }
-/*
-void enqueue_move_to(int connection, int tile_dest){
-
-    printf("\nENQUEUE_MOVE_TO %i\n", tile_dest);
-
-    char text_out[1024]="";
-
-    if(clients.client[connection]->path[0]==tile_dest){
-        printf("new move_to %i ignored as it duplicates current destination\n", tile_dest);
-        return;
-    }
-
-    if(clients.client[connection]->move_buffer[clients.client[connection]->move_buffer_size-1]==tile_dest){
-        printf("new move_to %i ignored as it duplicates next destination\n", tile_dest);
-        return;
-    }
-
-    //ignore moves if buffer size will be exceeded
-    if(clients.client[connection]->move_buffer_size+1>MOVE_BUFFER_MAX){
-        sprintf( text_out, "new move_to %i ignored as move_buffer (%i) is full\n", tile_dest, clients.client[connection]->move_buffer_size);
-        perror(text_out);
-        log_event(EVENT_ERROR, text_out);
-        return;
-    }
-
-    // add new move to the end of the move buffer
-    clients.client[connection]->move_buffer_size++;
-    clients.client[connection]->move_buffer[clients.client[connection]->move_buffer_size-1]=tile_dest;
-}
-*/
 
 void process_char_move(int connection, time_t current_utime){
 
@@ -165,99 +134,6 @@ void process_char_move(int connection, time_t current_utime){
         }
     }
 }
-
-/*
-void process_char_move(int connection, time_t current_utime){
-
-    int i=0;
-    int char_id=clients.client[connection]->character_id;
-    int map_id=characters.character[char_id]->map_id;
-    int map_axis=maps.map[map_id]->map_axis;
-    int current_tile=characters.character[clients.client[connection]->character_id]->map_tile;
-    int destination_tile=0;
-    int next_tile=0;
-    int move_cmd=0;
-    char text_out[1024];
-    int result=0;
-
-    //if we've reached our destination check to see if there are any more
-    if(clients.client[connection]->move_buffer_size>0 && clients.client[connection]->path_count==0){
-
-        //dequeue the next destination
-        destination_tile=clients.client[connection]->move_buffer[0];
-
-        clients.client[connection]->move_buffer_size--;
-
-        for(i=0; i<clients.client[connection]->move_buffer_size-1; i++){
-            clients.client[connection]->move_buffer[i]=clients.client[connection]->move_buffer[i+1];
-        }
-        clients.client[connection]->move_buffer[i+1]=0;
-
-        //calculate path to new destination
-       result=get_astar_path(connection, current_tile, destination_tile);
-
-        if(result==ASTAR_UNREACHABLE) {
-            sprintf(text_out, "%cThe tile you clicked on is unreachable. Try another", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        if(result==ASTAR_ABORT) {
-            sprintf(text_out, "%cThe tile you clicked on is too far away. Try another", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        if(result==ASTAR_UNKNOWN) {
-            sprintf(text_out, "%cThe tile you clicked on caused an error. Please notify the game administrator", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        printf("got new path\n");
-        for(i=0; i<clients.client[connection]->path_count; i++){
-            printf("%i %i\n", i, clients.client[connection]->path[i]);
-        }
-
-        //reset time of last move to zero so the movement is processed without delay
-        clients.client[connection]->time_of_last_move=0;
-    }
-
-    // move actor one step along the path
-    if(clients.client[connection]->path_count>0){
-
-        //adjust timer to compensate for wrap-around>
-        if(clients.client[connection]->time_of_last_move>current_utime) current_utime+=1000000;
-
-        // check for time of next movement
-        if(current_utime>clients.client[connection]->time_of_last_move+290000) {
-
-            //get destination tile from the path queue
-            next_tile=clients.client[connection]->path[clients.client[connection]->path_count-1];
-
-            clients.client[connection]->path_count--;
-
-            // filter out moves where position and destination are the same
-            if(current_tile!=next_tile){
-
-                printf("move from %i to %i\n", current_tile, next_tile);
-
-                //update the time of move
-                gettimeofday(&time_check, NULL);
-                clients.client[connection]->time_of_last_move=time_check.tv_usec;
-
-                //calculate the move_cmd and broadcase to clients
-                move_cmd=get_move_command(current_tile, next_tile, map_axis);
-                broadcast_actor_packet(connection, move_cmd, next_tile);
-
-                //update char current position and save
-                characters.character[clients.client[connection]->character_id]->map_tile=next_tile;
-                save_character(characters.character[char_id]->char_name, char_id);
-            }
-        }
-    }
-}
-*/
 
 int remove_char_from_map(int connection){
 

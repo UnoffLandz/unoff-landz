@@ -13,6 +13,7 @@
 #include "character_movement.h"
 #include "motd.h"
 #include "hash_commands.h"
+#include "log_in.h"
 
 int char_type[12]={HUMAN_FEMALE, HUMAN_MALE, ELF_FEMALE, ELF_MALE, DWARF_FEMALE, DWARF_MALE, GNOME_FEMALE, GNOME_MALE, ORCHAN_FEMALE, ORCHAN_MALE, DRAEGONI_FEMALE, DRAEGONI_MALE};
 int char_race[12]={HUMAN, HUMAN, ELF, ELF, DWARF, DWARF, GNOME, GNOME, ORCHAN, ORCHAN, DRAEGONI, DRAEGONI};
@@ -123,14 +124,18 @@ int process_hash_commands(int connection, char *text, int text_len){
     else if(strcmp(hash_command, "#BEAM_ME")==0){
 
         if(command_parts!=1){
-            sprintf(text_out, "%cyou need to use the format #BEAM_ME", c_red3+127);
+            sprintf(text_out, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
             send_server_text(sock, CHAT_SERVER, text_out);
             return HASH_CMD_ABORTED;
         }
 
-        new_map_tile=get_nearest_unoccupied_tile(BEAM_ME_MAP, BEAM_ME_TILE);
+        //if char is moving when protocol arrives, cancel rest of path
+        clients.client[connection]->path_count=0;
 
-        move_char_between_maps(connection, BEAM_ME_MAP, new_map_tile);
+        //ensure char doesn't beam on top of another char
+        new_map_tile=get_nearest_unoccupied_tile(START_MAP_ID, START_MAP_START_TILE);
+
+        move_char_between_maps(connection, START_MAP_ID, new_map_tile);
 
         return HASH_CMD_EXECUTED;
     }
@@ -148,9 +153,13 @@ int process_hash_commands(int connection, char *text, int text_len){
 
         if(strcmp(hash_command_tail, "ME")!=0) return HASH_CMD_ABORTED;
 
-        new_map_tile=get_nearest_unoccupied_tile(BEAM_ME_MAP, BEAM_ME_TILE);
+        //if char is moving when protocol arrives, cancel rest of path
+        clients.client[connection]->path_count=0;
 
-        move_char_between_maps(connection, BEAM_ME_MAP, new_map_tile);
+        //ensure char doesn't beam on top of another char
+        new_map_tile=get_nearest_unoccupied_tile(START_MAP_ID, START_MAP_START_TILE);
+
+        move_char_between_maps(connection, START_MAP_ID, new_map_tile);
 
         return HASH_CMD_EXECUTED;
     }
@@ -168,7 +177,7 @@ int process_hash_commands(int connection, char *text, int text_len){
 /***************************************************************************************************/
     else if(strcmp(hash_command, "#NAME_CHANGE")==0){
 
-        //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by a space)
+        //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by an underline).
         if(command_parts!=2) {
             sprintf(text_out, "%cyou need to use the format #NAME_CHANGE [new name]", c_red3+127);
             send_server_text(sock, CHAT_SERVER, text_out);
@@ -471,7 +480,7 @@ int process_hash_commands(int connection, char *text, int text_len){
     }
 /***************************************************************************************************/
     else if (strcmp(hash_command, "#TEST")==0){
-        here_your_stats(connection);
+        //send_here_your_stats(connection);
 
         return HASH_CMD_EXECUTED;
     }
