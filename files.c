@@ -980,6 +980,10 @@ void load_all_channels(char *file_name){
 
 void load_all_characters(char *file_name) {
 
+
+
+
+
     FILE *file;
     char character_file_name[1024];
     int i=1;// set to 1 (rather than 0) otherwise it won't be possible to detect concurrent logins
@@ -1182,6 +1186,8 @@ void log_to_file(char *file_name, char *text) {
 
     FILE *file;
 
+    printf("%s\n", text);// print message to console
+
     //check we have an existing list file and, if not, then create one
     if((file=fopen(file_name, "a"))==NULL) {
 
@@ -1194,10 +1200,11 @@ void log_to_file(char *file_name, char *text) {
     }
 
     if(!fprintf(file, "%s\n", text)){
-        printf("log file %s\n", file_name);
         perror("can't save data to file in function log_to_file");
         exit(EXIT_FAILURE);
     }
+
+    fflush(file);
 
     fclose(file);
 }
@@ -1227,7 +1234,7 @@ void log_event(int event_type, char *text_in){
 
         case EVENT_SESSION:
             strcpy(file_name, "session.log");
-            sprintf(text_out, "[%s][%s] Character - %s", date_stamp_str, time_stamp_str, text_in);
+            sprintf(text_out, "[%s][%s] %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_CHAT:

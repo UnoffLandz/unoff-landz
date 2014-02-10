@@ -23,6 +23,7 @@
 #include "maps.h"
 #include "motd.h"
 #include "harvesting.h"
+#include "database.h"
 
 /* credit for the underlying libev socket code goes to Pierce <jqug123321@gmail.com>, details of which can be
 found @ http://jqug.blogspot.co.uk/2013/02/libev-socket.html */
@@ -66,12 +67,20 @@ void close_connection_slot(int connection){
 
     }
 
+    sprintf(text_out, "client [%i]  char [%s] logged out", connection, characters.character[connection]->char_name);
+    log_event(EVENT_SESSION, text_out);
+
     clients.client[connection]->status=LOGGED_OUT;
     clients.client[connection]->character_id=0;
+
+    //zero the client path otherwise a subsequent client may use any remaining path and cause the server to hang
+    clients.client[connection]->path_count=0;
     clients.count--;
 }
 
 void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
+
+    (void)(revents);//removes unused parameter warning
 
     unsigned char buffer[1024];
     unsigned char packet[1024];
@@ -89,10 +98,9 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
         if(errno==104){
 
             //client has terminated prematurely (probably due to not having a required map file)
-            printf("read error in function recv_data (probably due to bad map change) connection %i\n", watcher->fd);
             close_connection_slot(watcher->fd);
 
-            sprintf(text_out, "client [%i]  char [%s] was terminated by the server in function recv_data\n", watcher->fd, characters.character[clients.client[watcher->fd]->character_id]->char_name);
+            sprintf(text_out, "client [%i]  char [%s] was terminated by the server in function recv_data", watcher->fd, characters.character[clients.client[watcher->fd]->character_id]->char_name);
             log_event(EVENT_ERROR, text_out);
 
             ev_io_stop(loop, watcher);
@@ -101,19 +109,21 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
             return;
         }
         else {
-            //unknown read error
-            perror("read error in function recv_data");
+
+            //client has terminated prematurely (probably due to closing client whilst char was moving)
             sprintf(text_out, "client [%i]  char [%s] read error [%i]in function recv_data", watcher->fd, characters.character[clients.client[watcher->fd]->character_id]->char_name, errno);
             log_event(EVENT_ERROR, text_out);
-            exit(EXIT_FAILURE);
 
+            ev_io_stop(loop, watcher);
+            free(watcher);
+
+            return;
         }
     }
 
     //client disconnect
     else if (read == 0) {
 
-        printf("Closed Sock (client logged off) %i\n", watcher->fd);
         close_connection_slot(watcher->fd);
 
         sprintf(text_out, "client [%i]  char [%s]logged off\n", watcher->fd, characters.character[clients.client[watcher->fd]->character_id]->char_name);
@@ -170,6 +180,8 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
 
 void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
 
+    (void)(revents);//removes unused parameter warning
+
     struct sockaddr_in client_address;
     size_t client_len = sizeof(client_address);
     int client_sockfd;
@@ -180,18 +192,17 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
 
     //accept client error
     if(client_sockfd < 0){
-        perror("accept ");
+        sprintf(text_out, "client [%i] error in accept_client", client_sockfd);
+        log_event(EVENT_ERROR, text_out);
         return;
     }
+
+    sprintf(text_out, "New connection from address %s on socket %d", inet_ntoa(client_address.sin_addr), client_sockfd);
+    log_event(EVENT_SESSION, text_out);
 
     //add watcher to connect client fd
     ev_io_init(w_client, recv_data, client_sockfd, EV_READ);
     ev_io_start(loop, w_client);
-
-    printf("New connection from %s on socket %d\n", inet_ntoa(client_address.sin_addr), client_sockfd);
-
-    sprintf(text_out, "New connection from %s on socket %d", inet_ntoa(client_address.sin_addr), client_sockfd);
-    log_event(EVENT_SESSION, text_out);
 
     clients.client[client_sockfd]->status=CONNECTED;
     clients.client[client_sockfd]->packet_buffer_length=0;
@@ -206,6 +217,9 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
 }
 
 static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
+
+    (void)(timer);//removes unused parameter warning
+    (void)(revents);//removes unused parameter warning
 
     int i=0;
     time_t current_utime;
@@ -223,9 +237,7 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
         if(clients.client[i]->status==LOGGED_IN && clients.client[i]->time_of_last_heartbeat+26<time_check.tv_sec){
 
-            printf("Closed Sock (client lagged out) %i %s\n", i, characters.character[clients.client[i]->character_id]->char_name);
-
-            sprintf(text_out, "client [%i]  char [%s]lagged out\n", i, characters.character[clients.client[i]->character_id]->char_name);
+            sprintf(text_out, "client [%i]  char [%s]lagged out", i, characters.character[clients.client[i]->character_id]->char_name);
             log_event(EVENT_SESSION, text_out);
 
             close_connection_slot(i);
@@ -252,6 +264,8 @@ int main(void) {
     //set server start time for motd
     server_start_time=time(NULL);
 
+    //initialise_sqlite_db();
+
     //initialise data structs
     initialise_channel_list(MAX_CHANNELS);
     load_all_channels(CHANNEL_LIST_FILE);
@@ -263,6 +277,11 @@ int main(void) {
     load_all_guilds(GUILD_LIST_FILE);
 
     initialise_character_list(MAX_CHARACTERS);
+
+    //sql = "SELECT * from CHARACTER_TABLE WHERE ID='16';" ;
+    //execute_sql_query(sql);
+    //exit(1);
+
     load_all_characters(CHARACTER_LIST_FILE);
 
     initialise_client_list(MAX_CLIENTS);
@@ -317,3 +336,5 @@ int main(void) {
 
     return 0;
 }
+
+

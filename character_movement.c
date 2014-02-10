@@ -82,13 +82,13 @@ int get_move_command(int tile_pos, int tile_dest, int map_axis){
         }
     }
 
-    sprintf(text_out, "illegal move in function get_move_command tile_pos[%i] tile_dest[%i] move[%i]", tile_pos, tile_dest, move);
+    sprintf(text_out, "illegal move in function get_move_command position[%i] destination[%i] move[%i]", tile_pos, tile_dest, move);
     log_event(EVENT_ERROR, text_out);
 
     perror(text_out);
     exit(EXIT_FAILURE);
 
-    return 0; //we should never get here
+    return 0;
 }
 
 void process_char_move(int connection, time_t current_utime){

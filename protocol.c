@@ -21,6 +21,7 @@
 #include "pathfinding.h"
 #include "chat.h"
 #include "log_in.h"
+#include "database.h"
 
 void send_here_your_inventory(int connection){
 
@@ -774,6 +775,9 @@ void process_packet(int connection, unsigned char *packet){
 
         // save the character data to file
         save_new_character(characters.character[char_id]->char_name, char_id);
+
+        //add char to database
+        add_char_to_database(char_id);
 
         sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
         send_server_text(sock, CHAT_SERVER, text_out);
