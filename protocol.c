@@ -705,7 +705,8 @@ void process_packet(int connection, unsigned char *packet){
         get_str_island(text, char_name, 1);
         get_str_island(text, password, 2);
 
-        if(get_char_id(char_name)!=CHAR_NOT_FOUND) {
+        //check if char name is already used
+        if(get_char_id(char_name)==1) {
 
             send_create_char_not_ok(sock);
 
@@ -714,6 +715,7 @@ void process_packet(int connection, unsigned char *packet){
 
             sprintf(text_out, "Attempt to create new char with existing char name [%s]\n", char_name);
             log_event(EVENT_SESSION, text_out);
+
             return;
         }
 
@@ -728,62 +730,38 @@ void process_packet(int connection, unsigned char *packet){
             return;
         }
 
-        char_id=characters.count; // count of chars runs from 1 whereas char_id's run from 0, hence
-        characters.count++;  // we don't increase the count until the char record has been set up
-                             // otherwise the char_id will be wrong
+        //create new character id
+        char_id=get_max_char_id();
+        if(char_id==0) char_id=1; else char_id++;
 
         clients.client[connection]->character_id=char_id;
         clients.client[connection]->status=LOGGED_IN;
 
-        strcpy(characters.character[char_id]->char_name, char_name);
-        strcpy(characters.character[char_id]->password, password);   //1
-        characters.character[char_id]->time_played=0;                //2
-        characters.character[char_id]->char_status=CHAR_ALIVE;       //3
-        characters.character[char_id]->active_chan=0;                //4 automatically set chan nub
-        characters.character[char_id]->chan[0]=1; // chan 0          //5 automatically set chan nub
-        characters.character[char_id]->chan[1]=0; // chan 1          //6
-        characters.character[char_id]->chan[2]=0; // chan 2          //7
-        characters.character[char_id]->chan[3]=0; // chan 3 (reserved)   //8
-        characters.character[char_id]->gm_permission=0;              //9
-        characters.character[char_id]->ig_permission=0;              //10
-        characters.character[char_id]->map_id=START_MAP_ID;                     //11
-        characters.character[char_id]->map_tile=START_MAP_START_TILE;//12
-        characters.character[char_id]->guild_id=0;                   //13
+        //copy data to the struct which will be passed to the database
+        new_character.char_id=char_id;
+        strcpy(new_character.char_name, char_name);
+        strcpy(new_character.password, password);
 
         i=strlen(char_name)+strlen(password)+2;
+        new_character.skin_type=data[i++];
+        new_character.hair_type=data[i++];
+        new_character.shirt_type=data[i++];
+        new_character.pants_type=data[i++];
+        new_character.boots_type=data[i++];
+        new_character.char_type=data[i++];
+        new_character.head_type=data[i++];
 
-        characters.character[char_id]->skin_type=data[i++];          //14
-        characters.character[char_id]->hair_type=data[i++];          //15
-        characters.character[char_id]->shirt_type=data[i++];         //16
-        characters.character[char_id]->pants_type=data[i++];         //17
-        characters.character[char_id]->boots_type=data[i++];         //18
-        characters.character[char_id]->char_type=data[i++];          //19
-        characters.character[char_id]->head_type=data[i++];
-                 //20
-        characters.character[char_id]->shield_type=SHIELD_NONE;      //21
-        characters.character[char_id]->weapon_type=WEAPON_NONE;      //22
-        characters.character[char_id]->cape_type=CAPE_NONE;          //23
-        characters.character[char_id]->helmet_type=HELMET_NONE;      //24
-        characters.character[char_id]->frame=nothing;                      //25
-        characters.character[char_id]->max_health=0;                 //26
-        characters.character[char_id]->current_health=0;             //27
-        characters.character[char_id]->visual_proximity=15;          //28
-        characters.character[char_id]->local_text_proximity=12;      //29
-        //characters.character[char_id]->last_in_game=NULL;          //30
-        characters.character[char_id]->char_created=time(NULL);       //31
-        //characters.character[char_id]->joined_guild=NULL;            //32
+        new_character.visual_proximity=15;
+        new_character.local_text_proximity=12;
+        new_character.char_created=time(NULL);
 
-        // save the character data to file
-        save_new_character(characters.character[char_id]->char_name, char_id);
-
-        //add char to database
-        add_char_to_database(char_id);
+        add_char(new_character);
 
         sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
         send_server_text(sock, CHAT_SERVER, text_out);
         send_create_char_ok(sock);
 
-        sprintf(text_out, "New character created name [%s] password [%s]\n", char_name, password);
+        sprintf(text_out, "[%s] password [%s]\n", char_name, password);
         log_event(EVENT_NEW_CHAR, text_out);
 
         break;

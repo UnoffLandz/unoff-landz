@@ -980,10 +980,6 @@ void load_all_channels(char *file_name){
 
 void load_all_characters(char *file_name) {
 
-
-
-
-
     FILE *file;
     char character_file_name[1024];
     int i=1;// set to 1 (rather than 0) otherwise it won't be possible to detect concurrent logins

@@ -264,8 +264,6 @@ int main(void) {
     //set server start time for motd
     server_start_time=time(NULL);
 
-    //initialise_sqlite_db();
-
     //initialise data structs
     initialise_channel_list(MAX_CHANNELS);
     load_all_channels(CHANNEL_LIST_FILE);
@@ -277,17 +275,21 @@ int main(void) {
     load_all_guilds(GUILD_LIST_FILE);
 
     initialise_character_list(MAX_CHARACTERS);
-
-    //sql = "SELECT * from CHARACTER_TABLE WHERE ID='16';" ;
-    //execute_sql_query(sql);
-    //exit(1);
-
-    load_all_characters(CHARACTER_LIST_FILE);
+    //load_all_characters(CHARACTER_LIST_FILE);
 
     initialise_client_list(MAX_CLIENTS);
 
+    open_database(DATABASE_FILE);
+    if(get_table_count()==0) create_tables();
+
     initialise_movement_vectors();
     initialise_harvestables();
+
+    printf("validate 1 pickle %i\n", validate_char_password(1, "pickle"));
+    printf("validate 2 pickle %i\n", validate_char_password(2, "pickle"));
+    printf("validate 1 xxx %i\n", validate_char_password(1, "xxx"));
+   exit(1);
+
 
     printf("\n");
 

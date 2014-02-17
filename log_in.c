@@ -13,20 +13,7 @@
 #include "files.h"
 #include "chat.h"
 #include "broadcast.h"
-
-int get_char_id(char *char_name){
-
-    int i=0;
-
-    // loop through character list
-    for(i=0; i<characters.count; i++){
-
-        // match char_name with an existing char
-        if(strcmp(char_name, characters.character[i]->char_name)==0) return i;
-     }
-
-    return CHAR_NOT_FOUND;
-}
+#include "database.h"
 
 int is_char_concurrent(int connection){
 
@@ -125,15 +112,12 @@ void process_log_in(int connection, char *text) {
         printf("login not ok\n");
 
         sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
-        //send_raw_text_packet(sock, CHAT_SERVER, text_out);
         send_server_text(connection, CHAT_SERVER, text_out);
 
         send_login_not_ok(connection);
 
         sprintf(text_out, "malformed login attempt for existing char name [%s] password [%s]\n", char_name, password);
         log_event(EVENT_ERROR, text_out);
-
-        perror(text_out);
         return;
     }
 
@@ -145,11 +129,7 @@ void process_log_in(int connection, char *text) {
     //now we have the char name, get the char id
     char_id=get_char_id(char_name);
 
-    //now we have the char id, get the map id for the char
-    map_id=characters.character[char_id]->map_id;
-
-    //check that our char exists
-    if(char_id==CHAR_NOT_FOUND) {
+    if(char_id==0) {
 
         send_you_dont_exist(connection);
 
@@ -159,7 +139,7 @@ void process_log_in(int connection, char *text) {
     }
 
     //check we have the correct password for our char
-    if(validate_password(char_id, password)==PASSWORD_INCORRECT){
+    if(validate_char_password(char_id, password)==0){
 
         send_login_not_ok(connection);
 
@@ -167,6 +147,19 @@ void process_log_in(int connection, char *text) {
         log_event(EVENT_SESSION, text_out);
         return;
     }
+
+
+    //need to transfer char data from database into client struct
+
+
+
+
+
+
+
+
+
+
 
 
     //prevent login of dead chars
@@ -188,6 +181,9 @@ void process_log_in(int connection, char *text) {
         log_event(EVENT_SESSION, text_out);
         return;
     }
+
+//now we have the char id, get the map id for the char
+    map_id=characters.character[char_id]->map_id;
 
     //link char to client (do it here as it is needed for the is_char_concurrent function)
     clients.client[connection]->character_id=char_id;

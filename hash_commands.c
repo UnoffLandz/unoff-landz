@@ -14,6 +14,7 @@
 #include "motd.h"
 #include "hash_commands.h"
 #include "log_in.h"
+#include "database.h"
 
 int char_type[12]={HUMAN_FEMALE, HUMAN_MALE, ELF_FEMALE, ELF_MALE, DWARF_FEMALE, DWARF_MALE, GNOME_FEMALE, GNOME_MALE, ORCHAN_FEMALE, ORCHAN_MALE, DRAEGONI_FEMALE, DRAEGONI_MALE};
 int char_race[12]={HUMAN, HUMAN, ELF, ELF, DWARF, DWARF, GNOME, GNOME, ORCHAN, ORCHAN, DRAEGONI, DRAEGONI};
@@ -133,7 +134,7 @@ int process_hash_commands(int connection, char *text, int text_len){
         clients.client[connection]->path_count=0;
 
         //ensure char doesn't beam on top of another char
-        new_map_tile=get_nearest_unoccupied_tile(START_MAP_ID, START_MAP_START_TILE);
+        new_map_tile=get_nearest_unoccupied_tile(START_MAP_ID, START_MAP_TILE);
 
         move_char_between_maps(connection, START_MAP_ID, new_map_tile);
 
@@ -157,7 +158,7 @@ int process_hash_commands(int connection, char *text, int text_len){
         clients.client[connection]->path_count=0;
 
         //ensure char doesn't beam on top of another char
-        new_map_tile=get_nearest_unoccupied_tile(START_MAP_ID, START_MAP_START_TILE);
+        new_map_tile=get_nearest_unoccupied_tile(START_MAP_ID, START_MAP_TILE);
 
         move_char_between_maps(connection, START_MAP_ID, new_map_tile);
 

@@ -11,6 +11,7 @@
 #include "files.h"
 #include "chat.h"
 #include "log_in.h"
+#include "database.h"
 
 void send_get_active_channels(int connection){
 

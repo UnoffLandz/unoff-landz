@@ -2,12 +2,19 @@
 #define DATABASE_H_INCLUDED
 
 #define DATABASE_FILE "unoff.db"
-#define MAX_CHARACTER_TABLE_FIELDS 20
 
-void add_char_to_database(int char_id);
+void open_database(char *database_name);
 
-void initialise_sqlite_db(void);
+int get_char_id(char *char_name);
 
-void execute_sql_query(char *sql);
+int get_max_char_id();
+
+int get_table_count();
+
+void create_tables();
+
+void add_char(struct new_character_type new_character);
+
+int validate_char_password(int char_id, char *password_attempt);
 
 #endif // DATABASE_H_INCLUDED

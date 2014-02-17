@@ -11,12 +11,13 @@ enum { //return values for validate_password function
     PASSWORD_INCORRECT=-1
 };
 
+/*
 enum { //return values for get_char_id function
     CHAR_FOUND=0,
     CHAR_NOT_FOUND =-1,
 };
-
-int get_char_id(char *char_name);
+*/
+//int get_char_id(char *char_name);
 
 int is_char_concurrent(int connection);
 

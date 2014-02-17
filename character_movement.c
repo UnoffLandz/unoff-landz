@@ -301,7 +301,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
         log_event(EVENT_ERROR, text_out);
 
         new_map_id=START_MAP_ID;
-        new_map_tile=START_MAP_START_TILE;
+        new_map_tile=START_MAP_TILE;
     }
 
     //check to see if new map is legal and, if not, return char to old map
