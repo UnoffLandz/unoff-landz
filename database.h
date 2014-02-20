@@ -15,6 +15,6 @@ void create_tables();
 
 void add_char(struct new_character_type new_character);
 
-int validate_char_password(int char_id, char *password_attempt);
+void load_character_from_database(int char_id, int connection);
 
 #endif // DATABASE_H_INCLUDED

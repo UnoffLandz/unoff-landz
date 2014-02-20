@@ -93,10 +93,9 @@ int get_move_command(int tile_pos, int tile_dest, int map_axis){
 
 void process_char_move(int connection, time_t current_utime){
 
-    int char_id=clients.client[connection]->character_id;
-    int map_id=characters.character[char_id]->map_id;
+    int map_id=clients.client[connection]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
-    int current_tile=characters.character[clients.client[connection]->character_id]->map_tile;
+    int current_tile=clients.client[connection]->map_tile;
     int next_tile=0;
     int move_cmd=0;
 
@@ -128,8 +127,8 @@ void process_char_move(int connection, time_t current_utime){
                 broadcast_actor_packet(connection, move_cmd, next_tile);
 
                 //update char current position and save
-                characters.character[clients.client[connection]->character_id]->map_tile=next_tile;
-                save_character(characters.character[char_id]->char_name, char_id);
+                clients.client[connection]->map_tile=next_tile;
+                //save_character(characters.character[char_id]->char_name, char_id);
             }
         }
     }
@@ -242,7 +241,6 @@ int add_char_to_map(int connection, int new_map_id, int map_tile){
 
     /** public function - see header */
 
-    int char_id=clients.client[connection]->character_id;
     char text_out[1024]="";
 
     //check for illegal maps
@@ -252,19 +250,17 @@ int add_char_to_map(int connection, int new_map_id, int map_tile){
         return ILLEGAL_MAP;
     }
 
-    //TODO# bounds check connection and char_id
-
     //if tile is occupied get nearest unoccupied tile
-    characters.character[char_id]->map_tile=get_nearest_unoccupied_tile(new_map_id, map_tile);
+    clients.client[connection]->map_tile=get_nearest_unoccupied_tile(new_map_id, map_tile);
 
     //update map
-    characters.character[char_id]->map_id=new_map_id;
+    clients.client[connection]->map_id=new_map_id;
 
     //send new char map to client
     send_change_map(connection, maps.map[new_map_id]->elm_filename);
 
     //add client to local map list
-    add_client_to_map_list(connection, characters.character[char_id]->map_id);
+    add_client_to_map_list(connection, clients.client[connection]->map_id);
 
     // add in-game chars to this clients
     send_actors_to_client(connection);
@@ -274,12 +270,10 @@ int add_char_to_map(int connection, int new_map_id, int map_tile){
 
     //#TODO log client map move (time / char_id / originating map id)
 
-    save_character(characters.character[char_id]->char_name, char_id);
+    //save_character(characters.character[char_id]->char_name, char_id);
 
-    sprintf(text_out, "char %s added to map %s", characters.character[char_id]->char_name, maps.map[new_map_id]->map_name);
+    sprintf(text_out, "char %s added to map %s", clients.client[connection]->char_name, maps.map[new_map_id]->map_name);
     log_event(EVENT_SESSION, text_out);
-
-    printf("move to map [%i] tile [%i]\n", new_map_id, characters.character[char_id]->map_tile);
 
     return LEGAL_MAP;
 }

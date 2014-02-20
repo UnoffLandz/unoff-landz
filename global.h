@@ -312,11 +312,12 @@ enum { // neck type
 };
 
 /** CHARACTERS */
+/*
 struct character_node_type{
     char char_name[1024];
     char password[1024];
     int time_played;
-    enum {CHAR_ALIVE, CHAR_DEAD, CHAR_BANNED} char_status;
+    //enum {CHAR_ALIVE, CHAR_DEAD, CHAR_BANNED} char_status;
     int active_chan;
     int chan[4];       // chan0, chan1, chan2  (chan3 used for guild chat)
     int gm_permission; // permission to use #GM command (aka mute)
@@ -427,7 +428,7 @@ struct character_list_type {
 };
 
 struct character_list_type characters;
-
+*/
 
 /** MAPS */
 struct map_node_type{
@@ -496,6 +497,7 @@ struct client_node_type{
 
     char char_name[1024];
     char password[1024];
+    int char_status;
     int time_played;
     int active_chan;
     int chan[4];       // chan0, chan1, chan2  (chan3 used for guild chat)
@@ -653,15 +655,11 @@ time_t server_start_time;
 sqlite3 *db;
 
 enum { //return values for get_char_id function
-    CHAR_FOUND=0,
-    CHAR_NOT_FOUND =-1,
+    CHAR_FOUND=-1,
+    CHAR_NOT_FOUND =0
 };
 
-enum { //char status
-    CCHAR_ALIVE,
-    CCHAR_DEAD,
-    CCHAR_BANNED
-};
+
 
 //struct used to pass to database on character creation
 struct new_character_type{

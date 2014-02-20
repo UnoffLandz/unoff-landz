@@ -133,7 +133,7 @@ void process_harvesting(int connection, time_t current_time){
             }
 
             //save updated exp to char record
-            save_character(characters.character[char_id]->char_name, char_id);
+            //save_character(characters.character[char_id]->char_name, char_id);
 
             packet[0]=GET_NEW_INVENTORY_ITEM;
 

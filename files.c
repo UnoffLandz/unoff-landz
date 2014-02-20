@@ -8,7 +8,7 @@
 #include "string_functions.h"
 #include "numeric_functions.h"
 #include "datetime_functions.h"
-
+/*
 void save_character(char *char_name, int id){
 
     FILE *file;
@@ -71,6 +71,7 @@ void save_character(char *char_name, int id){
 
     fclose(file);
 }
+*/
 
 void save_guild(char *guild_name, int id){
 
@@ -157,11 +158,12 @@ void save_map(char *map_name, int id){
     fclose(file);
 }
 
+/*
 void save_new_character(char *char_name, int id){
 
     FILE *file;
 
-    save_character(char_name, id);
+    //save_character(char_name, id);
 
     if((file=fopen(CHARACTER_LIST_FILE, "a"))==NULL) {
         printf("file [%s]\n", CHARACTER_LIST_FILE);
@@ -177,7 +179,8 @@ void save_new_character(char *char_name, int id){
 
     fclose(file);
 }
-
+*/
+/*
 int load_character(char *file_name, int i){
 
     FILE *file;
@@ -229,6 +232,7 @@ int load_character(char *file_name, int i){
     return FILE_FOUND;
 
 }
+*/
 
 int load_channel(char *file_name, int i){
 
@@ -978,6 +982,7 @@ void load_all_channels(char *file_name){
     fclose(file);
 }
 
+/*
 void load_all_characters(char *file_name) {
 
     FILE *file;
@@ -1026,6 +1031,7 @@ void load_all_characters(char *file_name) {
 
     fclose(file);
 }
+*/
 
 void load_all_guilds(char *file_name){
 

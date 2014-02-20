@@ -5,6 +5,7 @@
 
 #include "global.h"
 #include "database.h"
+#include "log_in.h"
 
 void open_database(char *database_name){
 
@@ -115,7 +116,7 @@ void add_char(struct new_character_type new_character){
         new_character.char_id,
         new_character.char_name,
         new_character.password,
-        CCHAR_ALIVE,
+        CHAR_ALIVE,
         0,   //active chan
         0,   //chan 0
         0,   //chan 1
@@ -137,8 +138,8 @@ void add_char(struct new_character_type new_character){
         HELMET_NONE,
         0,  //max health
         0,  //current health
-        0,  //visual proximity
-        0,  //local text proximity
+        new_character.visual_proximity,
+        new_character.local_text_proximity,
         new_character.char_created
         );
 
@@ -197,29 +198,7 @@ int get_char_id(char *name){
     return id;
 }
 
-int validate_char_password(int char_id, char *password_attempt){
 
-    int rc;
-    sqlite3_stmt *stmt;
-
-    char password[1024]="";
-    char sql[1024]="";
-
-    sprintf(sql, "SELECT PASSWORD FROM CHARACTER_TABLE WHERE CHAR_ID=%i;", char_id);
-    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    sqlite3_bind_int(stmt, 1, 16);
-
-    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-        strcpy(password, (char*) sqlite3_column_text(stmt, 0));
-    }
-
-    sqlite3_finalize(stmt);
-
-    if(strcmp(password, password_attempt)==0) return 1;
-
-    return 0;
-}
 
 void execute_sql(char *sql){
 
@@ -281,57 +260,53 @@ void create_tables(){
     execute_sql(sql);
 }
 
-void load_character_from_database(int char_id){
+void load_character_from_database(int char_id, int connection){
 
     int rc;
     sqlite3_stmt *stmt;
-
-    int id=0;
     char sql[1024]="";
 
-    sprintf(sql, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_IDE=%i;", char_id);
+    sprintf(sql, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_ID=%i;", char_id);
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_int(stmt, 1, 16);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        id=sqlite3_column_int(stmt, 0);
-
-        strcpy(characters.character[id]->char_name, (char*) sqlite3_column_text(stmt, 1));
-        strcpy(characters.character[id]->password, (char*) sqlite3_column_text(stmt, 2));
-        characters.character[id]->time_played=sqlite3_column_int(stmt, 3);
-        characters.character[id]->char_status=sqlite3_column_int(stmt, 4);
-        characters.character[id]->active_chan=sqlite3_column_int(stmt, 5);
-        characters.character[id]->chan[0]=sqlite3_column_int(stmt, 6);
-        characters.character[id]->chan[1]=sqlite3_column_int(stmt, 7);
-        characters.character[id]->chan[2]=sqlite3_column_int(stmt, 8);
-        characters.character[id]->gm_permission=sqlite3_column_int(stmt, 9);
-        characters.character[id]->ig_permission=sqlite3_column_int(stmt, 10);
-        characters.character[id]->map_id=sqlite3_column_int(stmt, 11);
-        characters.character[id]->map_tile=sqlite3_column_int(stmt, 12);
-        characters.character[id]->guild_id=sqlite3_column_int(stmt, 13);
-        characters.character[id]->char_type=sqlite3_column_int(stmt, 14);
-        characters.character[id]->skin_type=sqlite3_column_int(stmt, 15);
-        characters.character[id]->hair_type=sqlite3_column_int(stmt, 16);
-        characters.character[id]->shirt_type=sqlite3_column_int(stmt, 17);
-        characters.character[id]->pants_type=sqlite3_column_int(stmt, 18);
-        characters.character[id]->boots_type=sqlite3_column_int(stmt, 19);
-        characters.character[id]->head_type=sqlite3_column_int(stmt, 20);
-        characters.character[id]->shield_type=sqlite3_column_int(stmt, 21);
-        characters.character[id]->weapon_type=sqlite3_column_int(stmt, 22);
-        characters.character[id]->cape_type=sqlite3_column_int(stmt, 23);
-        characters.character[id]->helmet_type=sqlite3_column_int(stmt, 24);
-        characters.character[id]->frame=sqlite3_column_int(stmt, 25);
-        characters.character[id]->max_health=sqlite3_column_int(stmt, 26);
-        characters.character[id]->current_health=sqlite3_column_int(stmt, 27);
-        characters.character[id]->visual_proximity=sqlite3_column_int(stmt, 28);
-        characters.character[id]->local_text_proximity=sqlite3_column_int(stmt, 29);
-        characters.character[id]->last_in_game=sqlite3_column_int(stmt, 30);
-        characters.character[id]->char_created=sqlite3_column_int(stmt, 31);
-        characters.character[id]->joined_guild=sqlite3_column_int(stmt, 32);
-        characters.character[id]->overall_exp=sqlite3_column_int(stmt, 33);
-        characters.character[id]->harvest_exp=sqlite3_column_int(stmt, 34);
+        clients.client[connection]->character_id=sqlite3_column_int(stmt, 0);
+        strcpy(clients.client[connection]->char_name, (char*) sqlite3_column_text(stmt, 1));
+        strcpy(clients.client[connection]->password, (char*) sqlite3_column_text(stmt, 2));
+        clients.client[connection]->char_status=sqlite3_column_int(stmt, 3);
+        clients.client[connection]->active_chan=sqlite3_column_int(stmt, 4);
+        clients.client[connection]->chan[0]=sqlite3_column_int(stmt, 5);
+        clients.client[connection]->chan[1]=sqlite3_column_int(stmt, 6);
+        clients.client[connection]->chan[2]=sqlite3_column_int(stmt, 7);
+        clients.client[connection]->gm_permission=sqlite3_column_int(stmt, 8);
+        clients.client[connection]->ig_permission=sqlite3_column_int(stmt, 9);
+        clients.client[connection]->map_id=sqlite3_column_int(stmt, 10);
+        clients.client[connection]->map_tile=sqlite3_column_int(stmt, 11);
+        clients.client[connection]->guild_id=sqlite3_column_int(stmt, 12);
+        clients.client[connection]->char_type=sqlite3_column_int(stmt, 13);
+        clients.client[connection]->skin_type=sqlite3_column_int(stmt, 14);
+        clients.client[connection]->hair_type=sqlite3_column_int(stmt, 15);
+        clients.client[connection]->shirt_type=sqlite3_column_int(stmt, 16);
+        clients.client[connection]->pants_type=sqlite3_column_int(stmt, 17);
+        clients.client[connection]->boots_type=sqlite3_column_int(stmt, 18);
+        clients.client[connection]->head_type=sqlite3_column_int(stmt, 19);
+        clients.client[connection]->shield_type=sqlite3_column_int(stmt, 20);
+        clients.client[connection]->weapon_type=sqlite3_column_int(stmt, 21);
+        clients.client[connection]->cape_type=sqlite3_column_int(stmt, 22);
+        clients.client[connection]->helmet_type=sqlite3_column_int(stmt, 23);
+        clients.client[connection]->frame=sqlite3_column_int(stmt, 24);
+        clients.client[connection]->max_health=sqlite3_column_int(stmt, 25);
+        clients.client[connection]->current_health=sqlite3_column_int(stmt, 26);
+        clients.client[connection]->visual_proximity=sqlite3_column_int(stmt, 27);
+        clients.client[connection]->local_text_proximity=sqlite3_column_int(stmt, 28);
+        clients.client[connection]->last_in_game=sqlite3_column_int(stmt, 29);
+        clients.client[connection]->char_created=sqlite3_column_int(stmt, 30);
+        clients.client[connection]->joined_guild=sqlite3_column_int(stmt, 31);
+        clients.client[connection]->overall_exp=sqlite3_column_int(stmt, 32);
+        clients.client[connection]->harvest_exp=sqlite3_column_int(stmt, 33);
     }
 
     sqlite3_finalize(stmt);

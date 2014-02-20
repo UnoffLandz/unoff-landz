@@ -67,15 +67,13 @@ void broadcast_local_chat(int sender_connection, char *text_in){
 
     int i=0;
 
-    int char_id=clients.client[sender_connection]->character_id;
-    int sender_char_tile=characters.character[char_id]->map_tile;
-    int map_id=characters.character[char_id]->map_id;
+    int sender_char_tile=clients.client[sender_connection]->map_tile;
+    int map_id=clients.client[sender_connection]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
 
     int receiver_local_text_proximity=0;
     int receiver_char_tile=0;
     int receiver_connection=0;
-    int receiver_char_id=0;
 
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
@@ -83,10 +81,8 @@ void broadcast_local_chat(int sender_connection, char *text_in){
 
         if(receiver_connection!=sender_connection){
 
-            receiver_char_id=clients.client[receiver_connection]->character_id;
-
-            receiver_local_text_proximity=characters.character[receiver_char_id]->local_text_proximity;
-            receiver_char_tile=characters.character[receiver_char_id]->map_tile;
+            receiver_local_text_proximity=clients.client[receiver_connection]->local_text_proximity;
+            receiver_char_tile=clients.client[receiver_connection]->map_tile;
 
             //broadcast only to chars in local text proximity
             if(get_proximity(sender_char_tile, receiver_char_tile, map_axis)<receiver_local_text_proximity){
@@ -104,10 +100,8 @@ void broadcast_channel_chat(int chan, int sender_connection, char *text_in){
 
     int i=0;
     int receiver_connection=0;
-    int receiver_char_id=0;
     int receiver_active_chan=0;
     char text_out[1024]="";
-    int sender_char_id=clients.client[sender_connection]->character_id;
 
     //send to channel
     for(i=0; i<channels.channel[chan]->client_list_count; i++){
@@ -116,15 +110,14 @@ void broadcast_channel_chat(int chan, int sender_connection, char *text_in){
 
         if(receiver_connection!=sender_connection){
 
-            receiver_char_id=clients.client[receiver_connection]->character_id;
-            receiver_active_chan=characters.character[receiver_char_id]->active_chan;
+            receiver_active_chan=clients.client[receiver_connection]->active_chan;
 
             //show non-active chan in darker grey
-            if(characters.character[receiver_char_id]->chan[receiver_active_chan-1]==chan){
-                sprintf(text_out, "%c[%s @ %i(%s)] %s", c_grey1+127, characters.character[sender_char_id]->char_name, chan, channels.channel[chan]->channel_name, text_in);
+            if(clients.client[receiver_connection]->chan[receiver_active_chan-1]==chan){
+                sprintf(text_out, "%c[%s @ %i(%s)] %s", c_grey1+127, clients.client[sender_connection]->char_name, chan, channels.channel[chan]->channel_name, text_in);
             }
             else {
-                sprintf(text_out, "%c[%s @ %i(%s)] %s", c_grey1+127, characters.character[sender_char_id]->char_name, chan, channels.channel[chan]->channel_name, text_in);
+                sprintf(text_out, "%c[%s @ %i(%s)] %s", c_grey1+127, clients.client[sender_connection]->char_name, chan, channels.channel[chan]->channel_name, text_in);
             }
 
             send_raw_text_packet(receiver_connection, CHAT_SERVER, text_out);
@@ -155,8 +148,7 @@ void broadcast_channel_event(int chan, int sender_connection, char *text_in){
 void broadcast_guild_channel_chat(int sender_connection, char *text_in){
 
     int i=0;
-    int char_id=clients.client[sender_connection]->character_id;
-    int guild_id=characters.character[char_id]->guild_id;
+    int guild_id=clients.client[sender_connection]->guild_id;
     int chan=guilds.guild[guild_id]->guild_chan_number;
     int receiver_connection=0;
 
@@ -175,22 +167,22 @@ void broadcast_guild_channel_chat(int sender_connection, char *text_in){
     }
 }
 
-void add_new_enhanced_actor_packet(int char_id, unsigned char *packet, int *packet_length){
+void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *packet_length){
 
     int i=0,j=0;
     int data_length=0;
-    int guild_id=characters.character[char_id]->guild_id;
+    int guild_id=clients.client[connection]->guild_id;
 
-    int map_id=characters.character[char_id]->map_id;
+    int map_id=clients.client[connection]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
-    int x=characters.character[char_id]->map_tile % map_axis;
-    int y=characters.character[char_id]->map_tile / map_axis;
+    int x=clients.client[connection]->map_tile % map_axis;
+    int y=clients.client[connection]->map_tile / map_axis;
 
     packet[i++]=51;                                                   // protocol
     packet[i++]=0;                                                    // dummy the lsb (we'll put the proper value in later
     packet[i++]=0;                                                    // dummy the msb (we'll put the proper value in later
-    packet[i++]=char_id % 256;                                        // char_id lsb
-    packet[i++]=char_id / 256;                                        // char_id msb
+    packet[i++]=connection % 256;                                     // char_id lsb
+    packet[i++]=connection / 256;                                     // char_id msb
     packet[i++]=x % 256;                                              // x axis lsb
     packet[i++]=x / 256;                                              // x axis msb
     packet[i++]=y % 256;                                              // y axis lsb
@@ -199,28 +191,28 @@ void add_new_enhanced_actor_packet(int char_id, unsigned char *packet, int *pack
     packet[i++]=0;                                                    // z axis msb
     packet[i++]=45;                                                   // rotation lsb
 	packet[i++]=0;                                                    // rotation msb
-	packet[i++]=characters.character[char_id]->char_type;            // char type
+	packet[i++]=clients.client[connection]->char_type;
     packet[i++]=0;                                                    // unknown
-	packet[i++]=characters.character[char_id]->skin_type;            // 1 skin type
-	packet[i++]=characters.character[char_id]->hair_type;            // 1 hair type
-	packet[i++]=characters.character[char_id]->shirt_type;           // 1 shirt type
-	packet[i++]=characters.character[char_id]->pants_type;           // 1 pants type
-	packet[i++]=characters.character[char_id]->boots_type;           // 1 boots type
-	packet[i++]=characters.character[char_id]->head_type;            // 1 head type
-	packet[i++]=characters.character[char_id]->shield_type;          // 11 shield type
-	packet[i++]=characters.character[char_id]->weapon_type;          // 0 weapon type
-	packet[i++]=characters.character[char_id]->cape_type;            // 30 cape type
-	packet[i++]=characters.character[char_id]->helmet_type;          // 0 helmet type
-	packet[i++]=characters.character[char_id]->frame;                //frame type
-	packet[i++]=characters.character[char_id]->max_health % 256;     // max health lsb
-	packet[i++]=characters.character[char_id]->max_health / 256;     // max health msb
-	packet[i++]=characters.character[char_id]->current_health % 256; // current health lsb
-	packet[i++]=characters.character[char_id]->current_health / 256; // current health msb
+	packet[i++]=clients.client[connection]->skin_type;
+	packet[i++]=clients.client[connection]->hair_type;
+	packet[i++]=clients.client[connection]->shirt_type;
+	packet[i++]=clients.client[connection]->pants_type;
+	packet[i++]=clients.client[connection]->boots_type;
+	packet[i++]=clients.client[connection]->head_type;
+	packet[i++]=clients.client[connection]->shield_type;
+	packet[i++]=clients.client[connection]->weapon_type;
+	packet[i++]=clients.client[connection]->cape_type;
+	packet[i++]=clients.client[connection]->helmet_type;
+	packet[i++]=clients.client[connection]->frame;                    //ie sitting/standing
+	packet[i++]=clients.client[connection]->max_health % 256;         // max health lsb
+	packet[i++]=clients.client[connection]->max_health / 256;         // max health msb
+	packet[i++]=clients.client[connection]->current_health % 256;     // current health lsb
+	packet[i++]=clients.client[connection]->current_health / 256;     // current health msb
 	packet[i++]=1;                                                    // special char type HUMAN / NPC
 
     // add char name to packet
-	for(j=0;j< (int)strlen(characters.character[char_id]->char_name); j++){
-            packet[i++]=characters.character[char_id]->char_name[j];
+	for(j=0;j< (int)strlen(clients.client[connection]->char_name); j++){
+            packet[i++]=clients.client[connection]->char_name[j];
 	}
 
     // add guild name
@@ -251,35 +243,30 @@ void add_new_enhanced_actor_packet(int char_id, unsigned char *packet, int *pack
     packet[2]=data_length / 256;
 }
 
-void broadcast_add_new_enhanced_actor_packet(int sender_connection){
+void broadcast_add_new_enhanced_actor_packet(int connection){
 
     //broadcasts a single char to all connected clients
 
     int i=0;
-    //int j=0;
     unsigned char packet[1024];
     int packet_length=0;
 
-    int receiving_char_id=0;
     int receiving_char_tile=0;
     int receiving_char_visual_proximity=0;
     int receiver_connection=0;
 
-    int char_id=clients.client[sender_connection]->character_id;
-    int map_id=characters.character[char_id]->map_id;
-    int char_tile=characters.character[char_id]->map_tile;
+    int map_id=clients.client[connection]->map_id;
+    int char_tile=clients.client[connection]->map_tile;
     int map_axis=maps.map[map_id]->map_axis;
 
     // create the packet to be broadcast
-    add_new_enhanced_actor_packet(char_id, packet, &packet_length);
+    add_new_enhanced_actor_packet(connection, packet, &packet_length);
 
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
         receiver_connection=maps.map[map_id]->client_list[i];
-
-        receiving_char_id=clients.client[receiver_connection]->character_id;
-        receiving_char_tile=characters.character[receiving_char_id]->map_tile;
-        receiving_char_visual_proximity=characters.character[receiving_char_id]->visual_proximity;
+        receiving_char_tile=clients.client[receiver_connection]->map_tile;
+        receiving_char_visual_proximity=clients.client[receiver_connection]->visual_proximity;
 
         //restrict to characters within visual proximity
         if(get_proximity(char_tile, receiving_char_tile, map_axis)<receiving_char_visual_proximity){
@@ -291,7 +278,7 @@ void broadcast_add_new_enhanced_actor_packet(int sender_connection){
     }
 }
 
-void remove_actor_packet(int char_id, unsigned char *packet, int *packet_length){
+void remove_actor_packet(int connection, unsigned char *packet, int *packet_length){
 
     int i;
     int data_length=0;
@@ -300,8 +287,8 @@ void remove_actor_packet(int char_id, unsigned char *packet, int *packet_length)
     packet[i++]=6;             /* protocol       */
     packet[i++]=0;             /* dummy the lsb (we'll put the proper value in later  */
     packet[i++]=0;             /* dummy the msb (we'll put the proper value in later  */
-    packet[i++]=char_id % 256;      /* char_id lsb    */
-    packet[i++]=char_id / 256;      /* char_id msb    */
+    packet[i++]=connection % 256;      /* char_id lsb    */
+    packet[i++]=connection / 256;      /* char_id msb    */
 
     *packet_length=i;
 
@@ -320,25 +307,22 @@ void broadcast_remove_actor_packet(int sender_connection) {
     unsigned char packet[1024];
     int packet_length=0;
 
-    int char_id=clients.client[sender_connection]->character_id;
-    int map_id=characters.character[char_id]->map_id;
-    int char_tile=characters.character[char_id]->map_tile;
+    int map_id=clients.client[sender_connection]->map_id;
+    int char_tile=clients.client[sender_connection]->map_tile;
     int map_axis=maps.map[map_id]->map_axis;
 
     int receiver_connection=0;
-    int receiver_char_id=0;
     int receiver_char_tile=0;
     int receiver_char_visual_proximity=0;
 
-    remove_actor_packet(char_id, packet, &packet_length);
+    remove_actor_packet(sender_connection, packet, &packet_length);
 
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
         receiver_connection=maps.map[map_id]->client_list[i];
 
-        receiver_char_id=clients.client[receiver_connection]->character_id;
-        receiver_char_tile=characters.character[receiver_char_id]->map_tile;
-        receiver_char_visual_proximity=characters.character[receiver_char_id]->visual_proximity;
+        receiver_char_tile=clients.client[receiver_connection]->map_tile;
+        receiver_char_visual_proximity=clients.client[receiver_connection]->visual_proximity;
 
         //filter for receiving char visual proximity
         if(get_proximity(char_tile, receiver_char_tile, map_axis)<=receiver_char_visual_proximity){
@@ -388,33 +372,30 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
     unsigned char packet3[1024];// receiving char remove_actor packet
     int packet3_length=0;
 
-    int sender_char_id=clients.client[sender_connection]->character_id;
-    int sender_current_tile=characters.character[sender_char_id]->map_tile;
-    int map_id=characters.character[sender_char_id]->map_id;
+    int sender_current_tile=clients.client[sender_connection]->map_tile;
+    int map_id=clients.client[sender_connection]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
-    int sender_visual_proximity=characters.character[sender_char_id]->visual_proximity;
+    int sender_visual_proximity=clients.client[sender_connection]->visual_proximity;
 
     int proximity_before_move=0;
     int proximity_after_move=0;
 
     int receiver_connection=0;
-    int receiver_char_id=0;
     int receiver_char_tile=0;
     int receiver_char_visual_proximity=0;
 
     // pre-create packets that will be sent more than once in order to save time
-    add_actor_packet(sender_char_id, move, packet1, &packet1_length);
-    add_new_enhanced_actor_packet(sender_char_id, packet2, &packet2_length);
-    remove_actor_packet(sender_char_id, packet3, &packet3_length);
+    add_actor_packet(sender_connection, move, packet1, &packet1_length);
+    add_new_enhanced_actor_packet(sender_connection, packet2, &packet2_length);
+    remove_actor_packet(sender_connection, packet3, &packet3_length);
 
     // broadcast sender char move to all receiver clients
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
         receiver_connection=maps.map[map_id]->client_list[i];
 
-        receiver_char_id=clients.client[receiver_connection]->character_id;
-        receiver_char_tile=characters.character[receiver_char_id]->map_tile;
-        receiver_char_visual_proximity=characters.character[receiver_char_id]->visual_proximity;
+        receiver_char_tile=clients.client[receiver_connection]->map_tile;
+        receiver_char_visual_proximity=clients.client[receiver_connection]->visual_proximity;
 
         proximity_before_move=get_proximity(sender_current_tile, receiver_char_tile, map_axis);
         proximity_after_move=get_proximity(sender_destination_tile, receiver_char_tile, map_axis);

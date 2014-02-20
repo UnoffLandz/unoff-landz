@@ -8,8 +8,6 @@ void add_client_to_map_list(int connection, int map_id){
 
     int map_client_count=maps.map[map_id]->client_list_count;
 
-    printf("add client %i to map %i\n", connection, map_id);
-
     maps.map[map_id]->client_list[map_client_count]=connection;
     maps.map[map_id]->client_list_count++;
 }

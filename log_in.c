@@ -41,13 +41,6 @@ int is_char_concurrent(int connection){
     return CHAR_NON_CONCURRENT;
 }
 
-int validate_password(int char_id, char *password){
-
-    if(strcmp(password, characters.character[char_id]->password)==0) return PASSWORD_CORRECT;
-
-    return PASSWORD_INCORRECT;
-}
-
 void send_login_ok(int connection){
 
     unsigned char packet[3];
@@ -81,11 +74,11 @@ void send_you_dont_exist(int connection){
     send(connection, packet, 3, 0);
 }
 
-void send_you_are(int connection, int id){
+void send_you_are(int connection){
 
     unsigned char packet[5];
-    int id_msb=id / 256;
-    int id_lsb=id % 256;
+    int id_msb=connection / 256;
+    int id_lsb=connection % 256;
 
     packet[0]=3;
     packet[1]=3;
@@ -124,71 +117,50 @@ void process_log_in(int connection, char *text) {
     get_str_island(text, char_name, 1);
     get_str_island(text, password, 2);
 
-    printf("character_name[%s] password[%s]\n", char_name, password);
+    sprintf(text_out, "login char name [%s] password [%s]\n", char_name, password);
+    log_event(EVENT_SESSION, text_out);
 
     //now we have the char name, get the char id
     char_id=get_char_id(char_name);
 
-    if(char_id==0) {
+    if(char_id==CHAR_NOT_FOUND) {
 
         send_you_dont_exist(connection);
-
-        sprintf(text_out, "login attempt with unknown char name [%s] password [%s]\n", char_name, password);
-        log_event(EVENT_SESSION, text_out);
+        log_event(EVENT_SESSION, "login rejected - unknown char name\n");
         return;
     }
+
+    //load char from database into connection array
+    load_character_from_database(char_id, connection);
 
     //check we have the correct password for our char
-    if(validate_char_password(char_id, password)==0){
+    if(strcmp(password, clients.client[connection]->password)==PASSWORD_INCORRECT){
 
         send_login_not_ok(connection);
-
-        sprintf(text_out, "login attempt with incorrect password char name [%s] password [%s]\n", char_name, password);
-        log_event(EVENT_SESSION, text_out);
+        log_event(EVENT_SESSION, "login rejected - incorrect password\n");
         return;
     }
 
+    //prevent login of dead/banned chars
+    if(clients.client[connection]->char_status!=CHAR_ALIVE){
 
-    //need to transfer char data from database into client struct
+        switch(clients.client[connection]->char_status){
 
+            case CHAR_DEAD:
+            log_event(EVENT_SESSION, "login rejected - dead char\n");
+            break;
 
-
-
-
-
-
-
-
-
-
-
-    //prevent login of dead chars
-    if(characters.character[char_id]->char_status==CHAR_DEAD) {
+            case CHAR_BANNED:
+            log_event(EVENT_SESSION, "login rejected - banned char\n");
+            break;
+        }
 
         send_login_not_ok(connection);
-
-        sprintf(text_out, "login attempt for dead char [%s]\n", char_name);
-        log_event(EVENT_SESSION, text_out);
         return;
     }
-
-    //prevent login of banned chars
-    if(characters.character[char_id]->char_status==CHAR_BANNED) {
-
-        send_login_not_ok(connection);
-
-        sprintf(text_out, "login attempt for locked char [%s]\n", char_name);
-        log_event(EVENT_SESSION, text_out);
-        return;
-    }
-
-//now we have the char id, get the map id for the char
-    map_id=characters.character[char_id]->map_id;
-
-    //link char to client (do it here as it is needed for the is_char_concurrent function)
-    clients.client[connection]->character_id=char_id;
 
     //prevent concurrent login on same char
+    /*
     if(is_char_concurrent(connection)==CHAR_CONCURRENT){
 
         printf("char concurrent\n");
@@ -198,38 +170,42 @@ void process_log_in(int connection, char *text) {
         log_event(EVENT_SESSION, text_out);
         return;
     }
+    */
 
     clients.client[connection]->status=LOGGED_IN;
 
     //add char to local channel lists
     for(i=0; i<3; i++){
-        if(characters.character[char_id]->chan[i]>0) add_client_to_channel(connection, characters.character[char_id]->chan[i]);
+        if(clients.client[connection]->chan[i]>0) add_client_to_channel(connection, clients.client[connection]->chan[i]);
     }
 
     // notify guild that char has logged on
-    guild_id=characters.character[char_id]->guild_id;
+/*
+    guild_id=clients.client[connection]->guild_id;
 
     if(guild_id>0) {
+
         chan_colour=guilds.guild[guild_id]->log_on_notification_colour;
-        sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, characters.character[char_id]->char_name);
+        sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, clients.client[connection]->char_name);
         broadcast_guild_channel_chat(guild_id, text_out);
     }
+*/
 
     //add char to local map list
-    if(add_char_to_map(connection, map_id, characters.character[char_id]->map_tile)==ILLEGAL_MAP){
+    map_id=clients.client[connection]->map_id;
+
+    if(add_char_to_map(connection, map_id, clients.client[connection]->map_tile)==ILLEGAL_MAP){
 
         sprintf(text_out, "cannot add char [%s] to map [%s] in function process_packet", char_name, maps.map[map_id]->map_name);
         log_event(EVENT_ERROR, text_out);
 
-        perror(text_out);
         exit(EXIT_FAILURE);
     }
 
-    //confirm login to client
     send_login_ok(connection);
-    send_you_are(connection, clients.client[connection]->character_id);
+    send_you_are(connection);
     send_get_active_channels(connection);
-    send_here_your_stats(connection);
+    //send_here_your_stats(connection);
     //send_here_your_inventory(connection);
 
     sprintf(text_out, "login succesful char [%s]\n", char_name);

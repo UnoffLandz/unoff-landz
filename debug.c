@@ -113,49 +113,6 @@ void debug_new_char_packet(unsigned char packet[1024]){
     printf("\n");
 }
 
-void debug_char_struct(int connection){
-
-    int char_id=clients.client[connection]->character_id;
-
-    printf("\nDEBUG CHAR STRUCT\n");
-    printf("-------------------\n");
-
-    printf("char_id %i\n",char_id);
-    printf("name %s\n",characters.character[char_id]->char_name);
-    printf("password %s\n",characters.character[char_id]->password);
-    printf("time played %i\n",characters.character[char_id]->time_played);
-    printf("char status %i\n",characters.character[char_id]->char_status);
-    printf("active chan %i\n",characters.character[char_id]->active_chan);
-    printf("chan 1 %i\n",characters.character[char_id]->chan[0]);
-    printf("chan 2 %i\n",characters.character[char_id]->chan[1]);
-    printf("chan 3 %i\n",characters.character[char_id]->chan[2]);
-    printf("chan 4 %i\n",characters.character[char_id]->chan[3]);
-    printf("gm permission %i\n",characters.character[char_id]->gm_permission);
-    printf("ig permission %i\n",characters.character[char_id]->ig_permission);
-    printf("map id %i\n",characters.character[char_id]->map_id);
-    printf("map tile %i\n",characters.character[char_id]->map_tile);
-    printf("guild id %i\n",characters.character[char_id]->guild_id);
-    printf("skin %i\n",characters.character[char_id]->skin_type);
-    printf("hair %i\n",characters.character[char_id]->hair_type);
-    printf("shirt %i\n",characters.character[char_id]->shirt_type);
-    printf("pants %i\n",characters.character[char_id]->pants_type);
-    printf("boots %i\n",characters.character[char_id]->boots_type);
-    printf("char type %i\n",characters.character[char_id]->char_type);
-    printf("heads %i\n",characters.character[char_id]->head_type);
-    printf("shield %i\n",characters.character[char_id]->shield_type);
-    printf("weapon %i\n",characters.character[char_id]->weapon_type);
-    printf("cape %i\n",characters.character[char_id]->cape_type);
-    printf("helmet %i\n",characters.character[char_id]->helmet_type);
-    printf("frame %i\n",characters.character[char_id]->frame);
-    printf("max health %i\n",characters.character[char_id]->max_health);
-    printf("current health %i\n",characters.character[char_id]->current_health);
-    printf("visual proximity %i\n",characters.character[char_id]->visual_proximity);
-    printf("local_text_proximity %i\n",characters.character[char_id]->local_text_proximity);
-    //printf("last in game %d\n",characters.character[char_id]->last_in_game);
-    //printf("char created %d\n",characters.character[char_id]->char_created);
-    //printf("joined guild %d\n",characters.character[char_id]->joined_guild);
-}
-
 void debug_map_client_list(int map_id){
 
     int i=0;

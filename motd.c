@@ -74,11 +74,11 @@ void send_motd_header(int connection){
     sprintf(text_out, "%cCharacters created to date : %i", c_blue2+127, chars_created_count);
 
     send_server_text(connection, CHAT_SERVER, text_out);
-
+/*
     //prepare and send last character created
-    for(i=0; i<characters.count; i++){
+    for(i=0; i<clients.max; i++){
 
-        if(characters.character[i]->char_created>last_char_creation_date){
+        if(clients.client[i]->char_created>last_char_creation_date){
             last_char_creation_date=characters.character[i]->char_created;
             last_char_created_id=i;
         }
@@ -86,10 +86,10 @@ void send_motd_header(int connection){
 
     get_time_stamp_str(last_char_creation_date, time_stamp_str);
     get_verbose_date_str(last_char_creation_date, verbose_date_stamp_str);
-
     sprintf(text_out, "%cLast character created     : %s at %s %s", c_blue2+127, characters.character[last_char_created_id]->char_name, time_stamp_str, verbose_date_stamp_str);
 
     send_server_text(connection, CHAT_SERVER, text_out);
+*/
 
     //prepare and send time and date of this connection
     get_time_stamp_str(time(NULL), time_stamp_str);
@@ -114,6 +114,8 @@ int send_motd_file(int connection){
     char line_in[1024]="";
 
     if((file=fopen(MOTD_FILE, "r"))==NULL) return FILE_NOT_FOUND;
+
+
 
     while( fgets(line_in, 80, file) != NULL){
         str_trim_right(line_in);

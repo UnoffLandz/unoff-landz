@@ -92,9 +92,6 @@ void send_create_char_not_ok(int sock){
     send(sock, packet, 3, 0);
 }
 
-
-
-
 void send_change_map(int connection, char *elm_filename){
 
     unsigned char packet[1024];
@@ -111,7 +108,7 @@ void send_change_map(int connection, char *elm_filename){
     int packet_length=filename_length+3;
 
     // construct packet header
-    packet[0]=7;
+    packet[0]=CHANGE_MAP;
     packet[1]=lsb;
     packet[2]=msb;
 
@@ -350,30 +347,26 @@ void send_actors_to_client(int connection){
     int i;
     unsigned char packet[1024];
     int packet_length;
-    int char_id=clients.client[connection]->character_id;
-    int map_id=characters.character[char_id]->map_id;
-    int char_tile=characters.character[char_id]->map_tile;
+    int map_id=clients.client[connection]->map_id;
+    int char_tile=clients.client[connection]->map_tile;
     int map_axis=maps.map[map_id]->map_axis;
-    int char_visual_proximity=characters.character[char_id]->visual_proximity;
+    int char_visual_proximity=clients.client[connection]->visual_proximity;
 
-    int client_id=0;
-    int other_char_id=0;
-    int other_char_tile=0;
+    int other_client_id;
+    int other_char_tile;
 
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
-        client_id=maps.map[map_id]->client_list[i];
-        other_char_id=clients.client[client_id]->character_id;
-        other_char_tile=characters.character[other_char_id]->map_tile;
+        other_client_id=maps.map[map_id]->client_list[i];
+        other_char_tile=clients.client[other_client_id]->map_tile;
 
         // restrict to characters other than self
-        if(connection!=client_id){
+        if(connection!=other_client_id){
 
             //restrict to characters within visual proximity
             if(get_proximity(char_tile, other_char_tile, map_axis)<char_visual_proximity){
 
-                add_new_enhanced_actor_packet(clients.client[client_id]->character_id, packet, &packet_length);//0
-
+                add_new_enhanced_actor_packet(clients.client[connection]->character_id, packet, &packet_length);//0
                 send(connection, packet, packet_length, 0);
             }
         }
@@ -387,22 +380,19 @@ void process_packet(int connection, unsigned char *packet){
     unsigned char data[1024];
     char text[1024]="";
 
-    //char text_in[1024]="";
     char text_out[1024]="";
 
     char char_name[1024]="";
     char password[1024]="";
 
-    //int chan=0;
-    int char_id=clients.client[connection]->character_id;
-    int current_tile=characters.character[char_id]->map_tile;
-    int other_char_id=0;
-    int map_id=characters.character[char_id]->map_id;
-    //int guild_id=characters.character[char_id]->guild_id;
-    int sock=connection;
+    int char_id;
+    int current_tile=clients.client[connection]->map_tile;
+    int other_connection;
+    int map_id=clients.client[connection]->map_id;
+    int guild_id=clients.client[connection]->guild_id;
     int protocol=packet[0];
-    int lsb=packet[1];// not working
-    int msb=packet[2];// not working
+    int lsb=packet[1];
+    int msb=packet[2];
     int data_length=lsb+(msb*256)-1;
     int x_dest=0, y_dest=0, tile_dest=0;
     int map_object_id=0;
@@ -413,7 +403,7 @@ void process_packet(int connection, unsigned char *packet){
     // extract data from packet
     for(i=0; i<data_length; i++){
         data[i]=packet[i+3]; // unsigned char array for bit manipulation
-         text[i]=packet[i+3]; // signed char array for text manipulation
+        text[i]=packet[i+3]; // signed char array for text manipulation
     }
 
     text[data_length]='\0';
@@ -421,6 +411,7 @@ void process_packet(int connection, unsigned char *packet){
 
     switch(protocol){
 
+/*
         case RAW_TEXT:
 
             printf("RAW_TEXT [%s]\n", text);
@@ -487,10 +478,10 @@ void process_packet(int connection, unsigned char *packet){
                 break;
 
                 default://local chat
-                    sprintf(text_out, "%c%s: %s", c_grey1+127, characters.character[char_id]->char_name, text);
+                    sprintf(text_out, "%c%s: %s", c_grey1+127, clients.client[connection]->char_name, text);
 
                     //echo to sender
-                    send_raw_text_packet(sock, CHAT_LOCAL, text_out);
+                    send_raw_text_packet(connection, CHAT_LOCAL, text_out);
 
                     //broadcast to receivers
                     broadcast_local_chat(connection, text_out);
@@ -499,35 +490,35 @@ void process_packet(int connection, unsigned char *packet){
             }
 
         break;
-
+*/
         case MOVE_TO:
 
         //if char is harvesting then stop
         if(clients.client[connection]->harvest_flag==TRUE){
 
             sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, harvestables[item].name);
-            send_server_text(sock, CHAT_SERVER, text_out);
+            send_server_text(connection, CHAT_SERVER, text_out);
 
             clients.client[connection]->harvest_flag=FALSE;
             break;
         }
 
         //if char is sitting then stand before moving
-        if(characters.character[char_id]->frame==13){
-            characters.character[char_id]->frame=14;
-            broadcast_actor_packet(connection, characters.character[char_id]->frame, characters.character[char_id]->map_tile);
+        if(clients.client[connection]->frame==13){
+            clients.client[connection]->frame=14;
+            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
         }
 
         //calculate destination
         x_dest=Uint16_to_dec(data[0], data[1]);
         y_dest=Uint16_to_dec(data[2], data[3]);
-        tile_dest=x_dest+(y_dest*maps.map[characters.character[char_id]->map_id]->map_axis);
+        tile_dest=x_dest+(y_dest*maps.map[clients.client[connection]->map_id]->map_axis);
 
         printf("MOVE_TO position x[%i] y[%i] tile[%i]\n", x_dest, y_dest, tile_dest);
 
         if(maps.map[map_id]->height_map[tile_dest]<MIN_TRAVERSABLE_VALUE){
             sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
-            send_server_text(sock, CHAT_SERVER, text_out);
+            send_server_text(connection, CHAT_SERVER, text_out);
             break;
         }
 
@@ -575,25 +566,25 @@ void process_packet(int connection, unsigned char *packet){
         if(data[0]==0) {
             printf("stand\n");
             //stand
-            characters.character[char_id]->frame=14;
-            broadcast_actor_packet(connection, characters.character[char_id]->frame, characters.character[char_id]->map_tile);
+            clients.client[connection]->frame=14;
+            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
         }
 
         if(data[0]==1) {
             printf("sit\n");
             //sit
-            characters.character[char_id]->frame=13;
-            broadcast_actor_packet(connection, characters.character[char_id]->frame, characters.character[char_id]->map_tile);
+            clients.client[connection]->frame=13;
+            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
         }
 
-        save_character(characters.character[char_id]->char_name, char_id);
+        //save_character(characters.character[char_id]->char_name, char_id);
 
         break;
 
         case GET_PLAYER_INFO:
         printf("GET_PLAYER_INFO %i %i\n", lsb, msb);
-        other_char_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
-        sprintf(text_out, "You see %s", characters.character[other_char_id]->char_name);
+        other_connection=Uint32_to_dec(data[0], data[1], data[2], data[3]);
+        sprintf(text_out, "You see %s", clients.client[other_connection]->char_name);
         send_server_text(connection, CHAT_SERVER, text_out);
         break;
 
@@ -629,13 +620,13 @@ void process_packet(int connection, unsigned char *packet){
         clients.client[connection]->path_count=0;
 
         //travel from IP to Ravens Isle
-        if(map_object_id==520 && characters.character[char_id]->map_id==1) move_char_between_maps(connection, 2, 64946);
+        if(map_object_id==520 && clients.client[connection]->map_id==1) move_char_between_maps(connection, 2, 64946);
 
         //travel from Ravens Isle to IP
-        if(map_object_id==5416 && characters.character[char_id]->map_id==2) move_char_between_maps(connection, 1, 4053);
+        if(map_object_id==5416 && clients.client[connection]->map_id==2) move_char_between_maps(connection, 1, 4053);
 
         //travel from Ravens Isle to neiva
-        if(map_object_id==4986 && characters.character[char_id]->map_id==2 && characters.character[char_id]->map_tile==108627){
+        if(map_object_id==4986 && clients.client[connection]->map_id==2 && clients.client[connection]->map_tile==108627){
             move_char_between_maps(connection, 3, 3000);
         }
         break;
@@ -648,14 +639,14 @@ void process_packet(int connection, unsigned char *packet){
 
         if(harvestables[item].exp==0){
             sprintf(text_out, "%cYou tried to harvest an unknown item", c_red3+127);
-            send_server_text(sock, CHAT_SERVER, text_out);
+            send_server_text(connection, CHAT_SERVER, text_out);
             break;
         }
 
         if(clients.client[connection]->harvest_flag==TRUE){
 
             sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, harvestables[item].name);
-            send_server_text(sock, CHAT_SERVER, text_out);
+            send_server_text(connection, CHAT_SERVER, text_out);
 
             clients.client[connection]->harvest_flag=FALSE;
             break;
@@ -665,7 +656,7 @@ void process_packet(int connection, unsigned char *packet){
         clients.client[connection]->harvest_flag=TRUE;
 
         sprintf(text_out, "%cYou started to harvest %s", c_green3+127, harvestables[item].name);
-        send_server_text(sock, CHAT_SERVER, text_out);
+        send_server_text(connection, CHAT_SERVER, text_out);
 
         break;
 
@@ -675,7 +666,7 @@ void process_packet(int connection, unsigned char *packet){
 
         case SET_ACTIVE_CHANNEL:
         printf("SET_ACTIVE_CHANNEL %i %i\n", lsb, msb);
-        characters.character[char_id]->active_chan=data[0]-32;
+        clients.client[connection]->active_chan=data[0]-32;
         break;
 
         case LOG_IN:
@@ -689,12 +680,12 @@ void process_packet(int connection, unsigned char *packet){
 
         if(count_str_island(text)!=2){
 
-            send_create_char_not_ok(sock);
+            send_create_char_not_ok(connection);
 
             printf("create char not ok\n");
 
             sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
-            send_raw_text_packet(sock, CHAT_SERVER, text_out);
+            send_raw_text_packet(connection, CHAT_SERVER, text_out);
 
             sprintf(text_out, "malformed login attempt for new char name [%s] password [%s]\n", char_name, password);
             log_event(EVENT_ERROR, text_out);
@@ -708,28 +699,28 @@ void process_packet(int connection, unsigned char *packet){
         //check if char name is already used
         if(get_char_id(char_name)==1) {
 
-            send_create_char_not_ok(sock);
+            send_create_char_not_ok(connection);
 
             sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
-            send_raw_text_packet(sock, CHAT_SERVER, text_out);
+            send_raw_text_packet(connection, CHAT_SERVER, text_out);
 
             sprintf(text_out, "Attempt to create new char with existing char name [%s]\n", char_name);
             log_event(EVENT_SESSION, text_out);
 
             return;
         }
-
+/*
         // check if we'll exceed maximum number of characters
         if(characters.count+1==characters.max){
-            send_create_char_not_ok(sock);
+            send_create_char_not_ok(connection);
             sprintf(text_out, "%cSorry, but the maximum number of characters on the server has been reached", c_red1+127);
-            send_raw_text_packet(sock, CHAT_SERVER, text_out);
+            send_raw_text_packet(connection, CHAT_SERVER, text_out);
 
             sprintf(text_out, "maximum number of characters on server has been reached\n");
             log_event(EVENT_ERROR, text_out);
             return;
         }
-
+*/
         //create new character id
         char_id=get_max_char_id();
         if(char_id==0) char_id=1; else char_id++;
@@ -758,8 +749,8 @@ void process_packet(int connection, unsigned char *packet){
         add_char(new_character);
 
         sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
-        send_server_text(sock, CHAT_SERVER, text_out);
-        send_create_char_ok(sock);
+        send_server_text(connection, CHAT_SERVER, text_out);
+        send_create_char_ok(connection);
 
         sprintf(text_out, "[%s] password [%s]\n", char_name, password);
         log_event(EVENT_NEW_CHAR, text_out);

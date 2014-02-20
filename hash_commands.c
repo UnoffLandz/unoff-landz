@@ -32,7 +32,7 @@ void save_data(int connection){
 
     if(clients.client[connection]->status==LOGGED_IN){
 
-        save_character(characters.character[char_id]->char_name, char_id);
+        //save_character(characters.character[char_id]->char_name, char_id);
 
         sprintf(text_out, "%cyour character data was saved", c_green3+127);
         send_server_text(sock, CHAT_SERVER, text_out);
@@ -101,8 +101,8 @@ int process_hash_commands(int connection, char *text, int text_len){
     int channel_number=0;
     int new_map_tile=0;
     char old_char_name[80]="";
-    char time_stamp_str[9]="";
-    char date_stamp_str[11]="";
+    //char time_stamp_str[9]="";
+    //char date_stamp_str[11]="";
 
     int command_parts=count_str_island(text);
 
@@ -211,6 +211,7 @@ int process_hash_commands(int connection, char *text, int text_len){
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
+/*
     else if(strcmp(hash_command, "#DETAILS")==0){
 
         //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by a space)
@@ -269,6 +270,7 @@ int process_hash_commands(int connection, char *text, int text_len){
 
         return HASH_CMD_EXECUTED;
     }
+*/
 /***************************************************************************************************/
     else if(strcmp(hash_command, "#GM")==0){
 

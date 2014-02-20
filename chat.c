@@ -18,22 +18,20 @@ void send_get_active_channels(int connection){
     unsigned char packet[1024];
     int i=0, j=0;
 
-    int char_id=clients.client[connection]->character_id;
-
     packet[0]=71;
     packet[1]=14;
     packet[2]=0;
-    packet[3]=characters.character[char_id]->active_chan;
+    packet[3]=clients.client[connection]->active_chan;
 
 
     for(i=0; i<3; i++){
 
         j=i*4;
 
-        packet[j+4]=characters.character[char_id]->chan[i] % 256;
-        packet[j+5]=characters.character[char_id]->chan[i]/256 % 256;
-        packet[j+6]=characters.character[char_id]->chan[i]/256/256 % 256;
-        packet[j+7]=characters.character[char_id]->chan[i]/256/256/256 % 256;
+        packet[j+4]=clients.client[connection]->chan[i] % 256;
+        packet[j+5]=clients.client[connection]->chan[i]/256 % 256;
+        packet[j+6]=clients.client[connection]->chan[i]/256/256 % 256;
+        packet[j+7]=clients.client[connection]->chan[i]/256/256/256 % 256;
     }
 
     send(connection, packet, 16, 0);
