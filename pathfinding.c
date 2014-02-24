@@ -156,7 +156,8 @@ int is_tile_adjacent(int tile, int test_tile, int map_id){
 
     for(i=0; i<8; i++){
 
-        adj_tile=tile+vector_x[i]+(map_axis*vector_y[i]);
+        //adj_tile=tile+vector_x[i]+(map_axis*vector_y[i]);
+        adj_tile=tile+vector[i].x+(map_axis*vector[i].y);
 
         if(adj_tile==test_tile && is_tile_in_lateral_bounds(tile, adj_tile, map_id)==TRUE) return TRUE;
     }
@@ -182,7 +183,8 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
 
     for(i=0; i<8; i++){
 
-        adj_tile=target_tile+vector_x[i]+(map_axis*vector_y[i]);
+        //adj_tile=target_tile+vector_x[i]+(map_axis*vector_y[i]);
+        adj_tile=target_tile+vector[i].x+(map_axis*vector[i].y);
 
         //ensure adjacent tile is within lateral bounds
         if(is_tile_in_lateral_bounds(target_tile, adj_tile, map_id)==TRUE){
@@ -300,8 +302,7 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
 
     int lowest_value=0;
     int next_tile=0;
-    int char_id=clients.client[connection]->character_id;
-    int map_id=characters.character[char_id]->map_id;
+    int map_id=clients.client[connection]->map_id;
     char text_out[1024]="";
     int result=0;
     int found=FALSE;

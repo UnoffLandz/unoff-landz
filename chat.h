@@ -48,7 +48,7 @@ enum { // return values for process_chat function
 
 void list_clients_in_chan(int connection, int chan_number);
 
-int get_chan_slot(int char_id, int channel_number);
+int get_chan_slot(int connection, int channel_number);
 
 int get_free_chan_slot(int char_id);
 

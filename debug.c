@@ -137,12 +137,3 @@ void debug_channel_client_list(int chan){
     }
 }
 
-void debug_channels(int char_id){
-
-    printf("\nChannels for char [%s]...\n", characters.character[char_id]->char_name);
-    printf("slot 1 - [%i] [%s]\n", characters.character[char_id]->chan[0], channels.channel[characters.character[char_id]->chan[0]]->channel_name);
-    printf("slot 2 - [%i] [%s]\n", characters.character[char_id]->chan[1], channels.channel[characters.character[char_id]->chan[1]]->channel_name);
-    printf("slot 3 - [%i] [%s]\n", characters.character[char_id]->chan[2], channels.channel[characters.character[char_id]->chan[2]]->channel_name);
-    printf("active channel [%i]\n", characters.character[char_id]->active_chan);
-    printf("\n");
-}

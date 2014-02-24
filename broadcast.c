@@ -183,16 +183,16 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     packet[i++]=0;                                                    // dummy the msb (we'll put the proper value in later
     packet[i++]=connection % 256;                                     // char_id lsb
     packet[i++]=connection / 256;                                     // char_id msb
-    packet[i++]=x % 256;                                              // x axis lsb
-    packet[i++]=x / 256;                                              // x axis msb
-    packet[i++]=y % 256;                                              // y axis lsb
-    packet[i++]=y / 256;                                              // y axis msb
-    packet[i++]=0;                                                    // z axis lsb
-    packet[i++]=0;                                                    // z axis msb
-    packet[i++]=45;                                                   // rotation lsb
-	packet[i++]=0;                                                    // rotation msb
-	packet[i++]=clients.client[connection]->char_type;
-    packet[i++]=0;                                                    // unknown
+    packet[i++]=x % 256;                                              // x axis lsb  2
+    packet[i++]=x / 256;                                              // x axis msb  3
+    packet[i++]=y % 256;                                              // y axis lsb  4
+    packet[i++]=y / 256;                                              // y axis msb  5
+    packet[i++]=0;                                                    // z axis lsb  6
+    packet[i++]=0;                                                    // z axis msb  7
+    packet[i++]=45;                                                   // rotation lsb 8
+	packet[i++]=0;                                                    // rotation msb 9
+	packet[i++]=clients.client[connection]->char_type;                //              10
+    packet[i++]=0;                                                    // frame (doesn't work);
 	packet[i++]=clients.client[connection]->skin_type;
 	packet[i++]=clients.client[connection]->hair_type;
 	packet[i++]=clients.client[connection]->shirt_type;
@@ -203,7 +203,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
 	packet[i++]=clients.client[connection]->weapon_type;
 	packet[i++]=clients.client[connection]->cape_type;
 	packet[i++]=clients.client[connection]->helmet_type;
-	packet[i++]=clients.client[connection]->frame;                    //ie sitting/standing
+	packet[i++]=0;                                                    // unknown
 	packet[i++]=clients.client[connection]->max_health % 256;         // max health lsb
 	packet[i++]=clients.client[connection]->max_health / 256;         // max health msb
 	packet[i++]=clients.client[connection]->current_health % 256;     // current health lsb
@@ -406,54 +406,52 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
             if(proximity_before_move>receiver_char_visual_proximity && proximity_after_move<=receiver_char_visual_proximity){
 
                 //sending char moves into visual proximity of receiving char
-
-                //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet2, packet2_length);
-                //clients.client[receiver_connection]->cmd_buffer_end++;
+                printf("1\n");
                 send(receiver_connection, packet2, packet2_length, 0);
             }
             else if(proximity_before_move<=receiver_char_visual_proximity && proximity_after_move>receiver_char_visual_proximity){
 
                 //sending char moves out of visual proximity of receiving char
-
-                //memcpy(clients.client[sender_connection]->cmd_buffer[clients.client[sender_connection]->cmd_buffer_end], packet3, packet3_length);
-                //clients.client[sender_connection]->cmd_buffer_end++;
+                printf("2\n");
                 send(receiver_connection, packet3, packet3_length, 0);
             }
             else if(proximity_before_move<=receiver_char_visual_proximity && proximity_after_move<=receiver_char_visual_proximity){
 
                 //sending char moving within visual proximity of receiving char
-
-                //memcpy(clients.client[sender_connection]->cmd_buffer[clients.client[sender_connection]->cmd_buffer_end], packet1, packet1_length);
-                //clients.client[sender_connection]->cmd_buffer_end++;
+                printf("3\n");
                 send(receiver_connection, packet1, packet1_length, 0);
             }
 
         }
 
         //this block deals with sending char vision
-
         if(proximity_before_move>sender_visual_proximity && proximity_after_move<=sender_visual_proximity){
 
             //sending char moves into visual proximity of receiving char
-            add_new_enhanced_actor_packet(clients.client[receiver_connection]->character_id, packet, &packet_length);
+            printf("4\n");
+            add_new_enhanced_actor_packet(receiver_connection, packet, &packet_length);
             send(sender_connection, packet, packet_length, 0);
         }
         else if(proximity_before_move<=sender_visual_proximity && proximity_after_move>sender_visual_proximity){
 
             //sending char moves out of visual proximity of receiving char
-            remove_actor_packet(clients.client[receiver_connection]->character_id, packet, &packet_length);
+            printf("5\n");
+            remove_actor_packet(receiver_connection, packet, &packet_length);
             send(sender_connection, packet, packet_length, 0);
         }
         else if(proximity_before_move<=sender_visual_proximity && proximity_after_move<=sender_visual_proximity){
 
             //sending char moves within visual proximity of receiving char
             if(receiver_connection==sender_connection) {
+
                 // only move our actor
-                add_actor_packet(clients.client[receiver_connection]->character_id, move, packet, &packet_length);
+                printf("6\n");
+                add_actor_packet(receiver_connection, move, packet, &packet_length);
             }
             else{
                 // other actors remain stationary
-                add_actor_packet(clients.client[receiver_connection]->character_id, 0, packet, &packet_length);
+                printf("7\n");
+                add_actor_packet(receiver_connection, 0, packet, &packet_length);
             }
 
             send(sender_connection, packet, packet_length, 0);

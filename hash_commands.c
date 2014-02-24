@@ -27,12 +27,11 @@ char char_status_type[3][10]={"ALIVE", "DEAD", "BANNED"};
 void save_data(int connection){
 
     int sock=connection;
-    int char_id=clients.client[connection]->character_id;
     char text_out[1024]="";
 
     if(clients.client[connection]->status==LOGGED_IN){
 
-        //save_character(characters.character[char_id]->char_name, char_id);
+        //save_character(clients.client[connection]->char_name, char_id);
 
         sprintf(text_out, "%cyour character data was saved", c_green3+127);
         send_server_text(sock, CHAT_SERVER, text_out);
@@ -41,47 +40,12 @@ void save_data(int connection){
 
 int rename_char(int connection, char *new_char_name){
 
-    int i=0;
-
-    char old_file_name[80]="";
-    char new_file_name[80]="";
-    int char_id=clients.client[connection]->character_id;
-    FILE *file;
-
     //check that no existing char has the new name
-    if(get_char_id(new_char_name)!=CHAR_NOT_FOUND) return CHAR_RENAME_FAILED_DUPLICATE;
+    if(get_char_data(new_char_name)!=CHAR_NOT_FOUND) return CHAR_RENAME_FAILED_DUPLICATE;
 
-    //rename the ply file name
-    sprintf(old_file_name, "%s.ply", characters.character[char_id]->char_name);
-    sprintf(new_file_name, "%s.ply", new_char_name);
-
-    rename(old_file_name, new_file_name); // *** need to test result to check for errors
-
-    //change name
-    strcpy(characters.character[char_id]->char_name, new_char_name);
-
-    //create a temp character.lst file
-    if((file=fopen(TEMP_FILE, "w"))==NULL){
-        perror("unable to open temp file in function rename_char");
-        exit(EXIT_FAILURE);
-    }
-
-    for(i=0; i<characters.max; i++){
-
-        if(!fprintf(file, "%s\n", characters.character[i]->char_name)){
-            printf("error adding to temp character list\n");
-            perror("rename_char");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    fclose(file);
-
-    //delete old character list file
-    remove(CHARACTER_LIST_FILE); // *** TO DO test result for error
-
-    //rename the temp character.lst file
-    rename(TEMP_FILE, CHARACTER_LIST_FILE); // *** TO DO need to test result to check for errors
+    //update char name and save
+    strcpy(clients.client[connection]->char_name, new_char_name);
+    update_db_char_name(connection);
 
     // add this char to each connected client
     broadcast_add_new_enhanced_actor_packet(connection);
@@ -96,13 +60,12 @@ int process_hash_commands(int connection, char *text, int text_len){
     char hash_command_tail[1024]="";
     char text_out[1024]="";
     int sock=connection;
-    int char_id=clients.client[connection]->character_id;
-    int guild_id=characters.character[char_id]->guild_id;
+    int guild_id=clients.client[connection]->guild_id;
     int channel_number=0;
     int new_map_tile=0;
     char old_char_name[80]="";
-    //char time_stamp_str[9]="";
-    //char date_stamp_str[11]="";
+    char time_stamp_str[9]="";
+    char date_stamp_str[11]="";
 
     int command_parts=count_str_island(text);
 
@@ -176,6 +139,7 @@ int process_hash_commands(int connection, char *text, int text_len){
         return HASH_CMD_UNSUPPORTED;
     }
 /***************************************************************************************************/
+
     else if(strcmp(hash_command, "#NAME_CHANGE")==0){
 
         //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by an underline).
@@ -187,9 +151,9 @@ int process_hash_commands(int connection, char *text, int text_len){
 
         get_str_island(text, hash_command_tail, 2);
 
-        strcpy(old_char_name, characters.character[char_id]->char_name);
+        strcpy(old_char_name, clients.client[connection]->char_name);
 
-        if(rename_char(char_id, hash_command_tail)==CHAR_RENAME_FAILED_DUPLICATE){
+        if(rename_char(connection, hash_command_tail)==CHAR_RENAME_FAILED_DUPLICATE){
             sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
             send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
@@ -202,16 +166,17 @@ int process_hash_commands(int connection, char *text, int text_len){
         sprintf(text_out, "%cIn the future you'll need to purchase a name change token to do this", c_yellow1+127);
         send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "%cGratz. You just changed your character name to %s", c_green1+127, characters.character[char_id]->char_name);
+        sprintf(text_out, "%cGratz. You just changed your character name to %s", c_green1+127, clients.client[connection]->char_name);
         send_raw_text_packet(sock, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "name change for char[%s] to [%s]\n", old_char_name, characters.character[char_id]->char_name);
+        sprintf(text_out, "name change for char[%s] to [%s]\n", old_char_name, clients.client[connection]->char_name);
         log_event(EVENT_SESSION, text_out);
 
         return HASH_CMD_EXECUTED;
     }
+
 /***************************************************************************************************/
-/*
+
     else if(strcmp(hash_command, "#DETAILS")==0){
 
         //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by a space)
@@ -225,7 +190,7 @@ int process_hash_commands(int connection, char *text, int text_len){
         get_str_island(text, hash_command_tail, 2);
 
         //check that the char exists
-        i=get_char_id(hash_command_tail);
+        i=get_char_data(hash_command_tail);
 
         if(i==CHAR_NOT_FOUND) {
             sprintf(text_out, "%cthat character does not exist", c_red3+127);
@@ -238,31 +203,34 @@ int process_hash_commands(int connection, char *text, int text_len){
         sprintf(text_out, "\n");
         send_server_text(sock, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "%cCharacter    :%s", c_green3+127, characters.character[i]->char_name);
+        sprintf(text_out, "%cCharacter    :%s", c_green3+127, character.char_name);
         send_server_text(sock, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "%cRace         :%s", c_green3+127, race_type[char_race[characters.character[i]->char_type]]);
+        sprintf(text_out, "%cRace         :%s", c_green3+127, race_type[char_race[character.char_type]]);
         send_server_text(sock, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "%cGender       :%s", c_green3+127, gender_type[char_gender[characters.character[i]->char_type]]);
+        sprintf(text_out, "%cGender       :%s", c_green3+127, gender_type[char_gender[character.char_type]]);
         send_server_text(sock, CHAT_SERVER, text_out);
 
-        get_time_stamp_str(characters.character[i]->char_created, time_stamp_str);
-        get_date_stamp_str(characters.character[i]->char_created, date_stamp_str);
+        get_time_stamp_str(character.char_created, time_stamp_str);
+        get_date_stamp_str(character.char_created, date_stamp_str);
         sprintf(text_out, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
         send_server_text(sock, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "%cStatus       :%s", c_green3+127, char_status_type[characters.character[i]->char_status]);
+        sprintf(text_out, "%cStatus       :%s", c_green3+127, char_status_type[character.char_status]);
         send_server_text(sock, CHAT_SERVER, text_out);
 
-        get_time_stamp_str(characters.character[i]->last_in_game, time_stamp_str);
-        get_date_stamp_str(characters.character[i]->last_in_game, date_stamp_str);
+        get_time_stamp_str(character.last_in_game, time_stamp_str);
+        get_date_stamp_str(character.last_in_game, date_stamp_str);
         sprintf(text_out, "%cLast in-game :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
         send_server_text(sock, CHAT_SERVER, text_out);
 
-        get_time_stamp_str(characters.character[i]->joined_guild, time_stamp_str);
-        get_date_stamp_str(characters.character[i]->joined_guild, date_stamp_str);
-        sprintf(text_out, "%cGuild        :%s joined %s %s", c_green3+127, guilds.guild[characters.character[i]->guild_id]->guild_name, date_stamp_str, time_stamp_str);
+        sprintf(text_out, "%cGuild        :%s", c_green3+127, guilds.guild[character.guild_id]->guild_name);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        get_time_stamp_str(character.joined_guild, time_stamp_str);
+        get_date_stamp_str(character.joined_guild, date_stamp_str);
+        sprintf(text_out, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
         send_server_text(sock, CHAT_SERVER, text_out);
 
         sprintf(text_out, "\n");
@@ -270,7 +238,7 @@ int process_hash_commands(int connection, char *text, int text_len){
 
         return HASH_CMD_EXECUTED;
     }
-*/
+
 /***************************************************************************************************/
     else if(strcmp(hash_command, "#GM")==0){
 
@@ -301,12 +269,12 @@ int process_hash_commands(int connection, char *text, int text_len){
              break;
 
             case GM_SENT:
-                printf("#GM sent from %s to guild %s: %s\n", characters.character[char_id]->char_name, guilds.guild[guild_id]->guild_tag, text);
+                printf("#GM sent from %s to guild %s: %s\n", clients.client[connection]->char_name, guilds.guild[guild_id]->guild_tag, text);
                 return HASH_CMD_EXECUTED;
             break;
         }
 
-        sprintf(text_out, "#JC [%s] failed. Unknown result from function process_guild_chat by char [%s]", text, characters.character[char_id]->char_name);
+        sprintf(text_out, "#JC [%s] failed. Unknown result from function process_guild_chat by char [%s]", text, clients.client[connection]->char_name);
         log_event(EVENT_ERROR, text_out);
 
         return HASH_CMD_FAILED;
@@ -345,12 +313,12 @@ int process_hash_commands(int connection, char *text, int text_len){
             break;
 
             case IG_SENT:
-                printf("#IG sent from %s of %s to guild %s: %s\n", characters.character[char_id]->char_name, guilds.guild[guild_id]->guild_tag, guilds.guild[i]->guild_tag, hash_command_tail);
+                printf("#IG sent from %s of %s to guild %s: %s\n", clients.client[connection]->char_name, guilds.guild[guild_id]->guild_tag, guilds.guild[i]->guild_tag, hash_command_tail);
                 return HASH_CMD_EXECUTED;
             break;
         }
 
-        sprintf(text_out, "#IG [%s] failed. Unknown result from function process_inter_guild_chat by char [%s]", text, characters.character[char_id]->char_name);
+        sprintf(text_out, "#IG [%s] failed. Unknown result from function process_inter_guild_chat by char [%s]", text, clients.client[connection]->char_name);
         log_event(EVENT_ERROR, text_out);
 
         return HASH_CMD_FAILED;
@@ -428,7 +396,7 @@ int process_hash_commands(int connection, char *text, int text_len){
             break;
         }
 
-        sprintf(text_out, "#JC [%s] failed. Unknown result from function join_channel by char [%s]", text, characters.character[char_id]->char_name);
+        sprintf(text_out, "#JC [%s] failed. Unknown result from function join_channel by char [%s]", text, clients.client[connection]->char_name);
         log_event(EVENT_ERROR, text_out);
 
         return HASH_CMD_FAILED;
@@ -476,7 +444,7 @@ int process_hash_commands(int connection, char *text, int text_len){
             break;
         }
 
-        sprintf(text_out, "#LC [%s] failed. Unknown result from function leave_channel by char [%s]", text, characters.character[char_id]->char_name);
+        sprintf(text_out, "#LC [%s] failed. Unknown result from function leave_channel by char [%s]", text, clients.client[connection]->char_name);
         log_event(EVENT_ERROR, text_out);
 
         return HASH_CMD_FAILED;
@@ -506,7 +474,7 @@ int process_hash_commands(int connection, char *text, int text_len){
 /***************************************************************************************************/
     else if (strcmp(hash_command, "#LCC")==0){
 
-        channel_number=characters.character[char_id]->chan[characters.character[char_id]->active_chan];
+        channel_number=clients.client[connection]->chan[clients.client[connection]->active_chan];
 
         list_clients_in_chan(connection, channel_number);
 

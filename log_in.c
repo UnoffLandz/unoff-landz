@@ -121,7 +121,7 @@ void process_log_in(int connection, char *text) {
     log_event(EVENT_SESSION, text_out);
 
     //now we have the char name, get the char id
-    char_id=get_char_id(char_name);
+    char_id=get_char_data(char_name);
 
     if(char_id==CHAR_NOT_FOUND) {
 
@@ -130,7 +130,10 @@ void process_log_in(int connection, char *text) {
         return;
     }
 
-    //load char from database into connection array
+    //load char from database into the client struct array
+    /***could replace this with a transfer from the character struct as the get_char_data function
+    will already have loaded the char data to the character struct and this would save having to query
+    the db twice */
     load_character_from_database(char_id, connection);
 
     //check we have the correct password for our char
@@ -180,7 +183,6 @@ void process_log_in(int connection, char *text) {
     }
 
     // notify guild that char has logged on
-/*
     guild_id=clients.client[connection]->guild_id;
 
     if(guild_id>0) {
@@ -189,7 +191,6 @@ void process_log_in(int connection, char *text) {
         sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, clients.client[connection]->char_name);
         broadcast_guild_channel_chat(guild_id, text_out);
     }
-*/
 
     //add char to local map list
     map_id=clients.client[connection]->map_id;

@@ -27,8 +27,7 @@ void send_here_your_inventory(int connection){
 
     int i=0;
     unsigned char packet[12];
-    int char_id=clients.client[connection]->character_id;
-    int inventory_count=characters.character[char_id]->inventory[0];
+    int inventory_count=clients.client[connection]->inventory[0];
 
     int data_length=1+(8*inventory_count);
 
@@ -37,7 +36,7 @@ void send_here_your_inventory(int connection){
     packet[2]=(data_length+1) / 256;
 
     for(i=0; i<data_length; i++){
-        packet[3+i]=characters.character[char_id]->inventory[i];
+        packet[3+i]=clients.client[connection]->inventory[i];
     }
 
     send(connection, packet, data_length+2,0);
@@ -123,7 +122,6 @@ void send_change_map(int connection, char *elm_filename){
 void send_here_your_stats(int connection){
 
     unsigned char packet[1024];
-    int char_id=clients.client[connection]->character_id;
 
     int i=0;
 
@@ -135,181 +133,181 @@ void send_here_your_stats(int connection){
         packet[i]=0;
     }
 
-    packet[3]=characters.character[char_id]->physique % 256;
-    packet[4]=characters.character[char_id]->physique / 256;
-    packet[5]=characters.character[char_id]->max_physique % 256;
-    packet[6]=characters.character[char_id]->max_physique / 256;
-    packet[7]=characters.character[char_id]->coordination % 256;
-    packet[8]=characters.character[char_id]->coordination / 256;
-    packet[9]=characters.character[char_id]->max_coordination % 256;
-    packet[10]=characters.character[char_id]->max_coordination / 256;
-    packet[11]=characters.character[char_id]->reasoning % 256;
-    packet[12]=characters.character[char_id]->reasoning / 256;
-    packet[13]=characters.character[char_id]->max_reasoning % 256;
-    packet[14]=characters.character[char_id]->max_reasoning / 256;
-    packet[15]=characters.character[char_id]->will % 256;
-    packet[16]=characters.character[char_id]->will / 256;
-    packet[17]=characters.character[char_id]->max_will % 256;
-    packet[18]=characters.character[char_id]->max_will / 256;
-    packet[19]=characters.character[char_id]->instinct % 256;
-    packet[20]=characters.character[char_id]->instinct / 256;
-    packet[21]=characters.character[char_id]->max_instinct % 256;
-    packet[22]=characters.character[char_id]->max_instinct / 256;
-    packet[23]=characters.character[char_id]->vitality % 256;
-    packet[24]=characters.character[char_id]->vitality / 256;
-    packet[25]=characters.character[char_id]->max_vitality % 256;
-    packet[26]=characters.character[char_id]->max_vitality / 256;
+    packet[3]=clients.client[connection]->physique % 256;
+    packet[4]=clients.client[connection]->physique / 256;
+    packet[5]=clients.client[connection]->max_physique % 256;
+    packet[6]=clients.client[connection]->max_physique / 256;
+    packet[7]=clients.client[connection]->coordination % 256;
+    packet[8]=clients.client[connection]->coordination / 256;
+    packet[9]=clients.client[connection]->max_coordination % 256;
+    packet[10]=clients.client[connection]->max_coordination / 256;
+    packet[11]=clients.client[connection]->reasoning % 256;
+    packet[12]=clients.client[connection]->reasoning / 256;
+    packet[13]=clients.client[connection]->max_reasoning % 256;
+    packet[14]=clients.client[connection]->max_reasoning / 256;
+    packet[15]=clients.client[connection]->will % 256;
+    packet[16]=clients.client[connection]->will / 256;
+    packet[17]=clients.client[connection]->max_will % 256;
+    packet[18]=clients.client[connection]->max_will / 256;
+    packet[19]=clients.client[connection]->instinct % 256;
+    packet[20]=clients.client[connection]->instinct / 256;
+    packet[21]=clients.client[connection]->max_instinct % 256;
+    packet[22]=clients.client[connection]->max_instinct / 256;
+    packet[23]=clients.client[connection]->vitality % 256;
+    packet[24]=clients.client[connection]->vitality / 256;
+    packet[25]=clients.client[connection]->max_vitality % 256;
+    packet[26]=clients.client[connection]->max_vitality / 256;
 
-    packet[27]=characters.character[char_id]->human % 256;
-    packet[28]=characters.character[char_id]->human / 256;
-    packet[29]=characters.character[char_id]->max_human % 256;
-    packet[30]=characters.character[char_id]->max_human / 256;
-    packet[31]=characters.character[char_id]->animal % 256;
-    packet[32]=characters.character[char_id]->animal / 256;
-    packet[33]=characters.character[char_id]->max_animal % 256;
-    packet[34]=characters.character[char_id]->max_animal / 256;
-    packet[35]=characters.character[char_id]->vegetal % 256;
-    packet[36]=characters.character[char_id]->vegetal / 256;
-    packet[37]=characters.character[char_id]->max_vegetal % 256;
-    packet[38]=characters.character[char_id]->max_vegetal / 256;
-    packet[39]=characters.character[char_id]->inorganic % 256;
-    packet[40]=characters.character[char_id]->inorganic / 256;
-    packet[41]=characters.character[char_id]->max_inorganic % 256;
-    packet[42]=characters.character[char_id]->max_inorganic / 256;
-    packet[43]=characters.character[char_id]->artificial % 256;
-    packet[44]=characters.character[char_id]->artificial / 256;
-    packet[45]=characters.character[char_id]->max_artificial % 256;
-    packet[46]=characters.character[char_id]->max_artificial / 256;
-    packet[47]=characters.character[char_id]->magic % 256;
-    packet[48]=characters.character[char_id]->magic / 256;
-    packet[49]=characters.character[char_id]->max_magic % 256;
-    packet[50]=characters.character[char_id]->max_magic / 256;
+    packet[27]=clients.client[connection]->human % 256;
+    packet[28]=clients.client[connection]->human / 256;
+    packet[29]=clients.client[connection]->max_human % 256;
+    packet[30]=clients.client[connection]->max_human / 256;
+    packet[31]=clients.client[connection]->animal % 256;
+    packet[32]=clients.client[connection]->animal / 256;
+    packet[33]=clients.client[connection]->max_animal % 256;
+    packet[34]=clients.client[connection]->max_animal / 256;
+    packet[35]=clients.client[connection]->vegetal % 256;
+    packet[36]=clients.client[connection]->vegetal / 256;
+    packet[37]=clients.client[connection]->max_vegetal % 256;
+    packet[38]=clients.client[connection]->max_vegetal / 256;
+    packet[39]=clients.client[connection]->inorganic % 256;
+    packet[40]=clients.client[connection]->inorganic / 256;
+    packet[41]=clients.client[connection]->max_inorganic % 256;
+    packet[42]=clients.client[connection]->max_inorganic / 256;
+    packet[43]=clients.client[connection]->artificial % 256;
+    packet[44]=clients.client[connection]->artificial / 256;
+    packet[45]=clients.client[connection]->max_artificial % 256;
+    packet[46]=clients.client[connection]->max_artificial / 256;
+    packet[47]=clients.client[connection]->magic % 256;
+    packet[48]=clients.client[connection]->magic / 256;
+    packet[49]=clients.client[connection]->max_magic % 256;
+    packet[50]=clients.client[connection]->max_magic / 256;
 
-    packet[51]=characters.character[char_id]->manufacturing_lvl % 256;
-    packet[52]=characters.character[char_id]->manufacturing_lvl / 256;
-    packet[53]=characters.character[char_id]->max_manufacturing_lvl % 256;
-    packet[54]=characters.character[char_id]->max_manufacturing_lvl / 256;
-    packet[55]=characters.character[char_id]->harvest_lvl % 256;
-    packet[56]=characters.character[char_id]->harvest_lvl / 256;
-    packet[57]=characters.character[char_id]->max_harvest_lvl % 256;
-    packet[58]=characters.character[char_id]->max_harvest_lvl / 256;
-    packet[59]=characters.character[char_id]->alchemy_lvl % 256;
-    packet[60]=characters.character[char_id]->alchemy_lvl / 256;
-    packet[61]=characters.character[char_id]->max_alchemy_lvl % 256;
-    packet[62]=characters.character[char_id]->max_alchemy_lvl / 256;
-    packet[63]=characters.character[char_id]->overall_lvl % 256;
-    packet[64]=characters.character[char_id]->overall_lvl / 256;
-    packet[65]=characters.character[char_id]->max_overall_lvl % 256;
-    packet[66]=characters.character[char_id]->max_overall_lvl / 256;
-    packet[67]=characters.character[char_id]->attack_lvl % 256;
-    packet[68]=characters.character[char_id]->attack_lvl / 256;
-    packet[69]=characters.character[char_id]->max_attack_lvl % 256;
-    packet[70]=characters.character[char_id]->max_attack_lvl / 256;
-    packet[71]=characters.character[char_id]->defence_lvl % 256;
-    packet[72]=characters.character[char_id]->defence_lvl / 256;
-    packet[73]=characters.character[char_id]->max_defence_lvl % 256;
-    packet[74]=characters.character[char_id]->max_defence_lvl / 256;
-    packet[75]=characters.character[char_id]->magic_lvl % 256;
-    packet[76]=characters.character[char_id]->magic_lvl / 256;
-    packet[77]=characters.character[char_id]->max_magic_lvl % 256;
-    packet[78]=characters.character[char_id]->max_magic_lvl / 256;
-    packet[79]=characters.character[char_id]->potion_lvl % 256;
-    packet[80]=characters.character[char_id]->potion_lvl / 256;
-    packet[81]=characters.character[char_id]->max_potion_lvl % 256;
-    packet[82]=characters.character[char_id]->max_potion_lvl / 256;
+    packet[51]=clients.client[connection]->manufacturing_lvl % 256;
+    packet[52]=clients.client[connection]->manufacturing_lvl / 256;
+    packet[53]=clients.client[connection]->max_manufacturing_lvl % 256;
+    packet[54]=clients.client[connection]->max_manufacturing_lvl / 256;
+    packet[55]=clients.client[connection]->harvest_lvl % 256;
+    packet[56]=clients.client[connection]->harvest_lvl / 256;
+    packet[57]=clients.client[connection]->max_harvest_lvl % 256;
+    packet[58]=clients.client[connection]->max_harvest_lvl / 256;
+    packet[59]=clients.client[connection]->alchemy_lvl % 256;
+    packet[60]=clients.client[connection]->alchemy_lvl / 256;
+    packet[61]=clients.client[connection]->max_alchemy_lvl % 256;
+    packet[62]=clients.client[connection]->max_alchemy_lvl / 256;
+    packet[63]=clients.client[connection]->overall_lvl % 256;
+    packet[64]=clients.client[connection]->overall_lvl / 256;
+    packet[65]=clients.client[connection]->max_overall_lvl % 256;
+    packet[66]=clients.client[connection]->max_overall_lvl / 256;
+    packet[67]=clients.client[connection]->attack_lvl % 256;
+    packet[68]=clients.client[connection]->attack_lvl / 256;
+    packet[69]=clients.client[connection]->max_attack_lvl % 256;
+    packet[70]=clients.client[connection]->max_attack_lvl / 256;
+    packet[71]=clients.client[connection]->defence_lvl % 256;
+    packet[72]=clients.client[connection]->defence_lvl / 256;
+    packet[73]=clients.client[connection]->max_defence_lvl % 256;
+    packet[74]=clients.client[connection]->max_defence_lvl / 256;
+    packet[75]=clients.client[connection]->magic_lvl % 256;
+    packet[76]=clients.client[connection]->magic_lvl / 256;
+    packet[77]=clients.client[connection]->max_magic_lvl % 256;
+    packet[78]=clients.client[connection]->max_magic_lvl / 256;
+    packet[79]=clients.client[connection]->potion_lvl % 256;
+    packet[80]=clients.client[connection]->potion_lvl / 256;
+    packet[81]=clients.client[connection]->max_potion_lvl % 256;
+    packet[82]=clients.client[connection]->max_potion_lvl / 256;
 
     //packet[83]=; Unused
     //packet[84]=; Unused
     //packet[85]=; Unused
     //packet[86]=; Unused
 
-    packet[87]=characters.character[char_id]->material_pts % 256;
-    packet[88]=characters.character[char_id]->material_pts / 256;
-    packet[89]=characters.character[char_id]->max_material_pts % 256;
-    packet[90]=characters.character[char_id]->max_material_pts / 256;
+    packet[87]=clients.client[connection]->material_pts % 256;
+    packet[88]=clients.client[connection]->material_pts / 256;
+    packet[89]=clients.client[connection]->max_material_pts % 256;
+    packet[90]=clients.client[connection]->max_material_pts / 256;
 
-    packet[91]=characters.character[char_id]->ethereal_pts % 256;
-    packet[92]=characters.character[char_id]->ethereal_pts / 256;
-    packet[93]=characters.character[char_id]->max_ethereal_pts % 256;
-    packet[94]=characters.character[char_id]->max_ethereal_pts / 256;
+    packet[91]=clients.client[connection]->ethereal_pts % 256;
+    packet[92]=clients.client[connection]->ethereal_pts / 256;
+    packet[93]=clients.client[connection]->max_ethereal_pts % 256;
+    packet[94]=clients.client[connection]->max_ethereal_pts / 256;
 
-    packet[95]=characters.character[char_id]->food_lvl % 256;
-    packet[96]=characters.character[char_id]->food_lvl / 256;
-    packet[97]=characters.character[char_id]->elapsed_book_time % 256;
-    packet[98]=characters.character[char_id]->elapsed_book_time / 256;
+    packet[95]=clients.client[connection]->food_lvl % 256;
+    packet[96]=clients.client[connection]->food_lvl / 256;
+    packet[97]=clients.client[connection]->elapsed_book_time % 256;
+    packet[98]=clients.client[connection]->elapsed_book_time / 256;
 
     //packet[99]=; Unused
     //packet[100]=; Unused
 
-    packet[101]=characters.character[char_id]->manufacture_exp % 256;
-    packet[102]=characters.character[char_id]->manufacture_exp / 256 % 256;
-    packet[103]=characters.character[char_id]->manufacture_exp / 256 / 256 % 256;
-    packet[104]=characters.character[char_id]->manufacture_exp / 256 / 256 / 256 % 256;
-    packet[105]=characters.character[char_id]->max_manufacture_exp % 256;
-    packet[106]=characters.character[char_id]->max_manufacture_exp / 256 % 256;
-    packet[107]=characters.character[char_id]->max_manufacture_exp / 256 / 256 % 256;
-    packet[108]=characters.character[char_id]->max_manufacture_exp / 256 / 256 / 256 % 256;
-    packet[109]=characters.character[char_id]->harvest_exp % 256;
-    packet[110]=characters.character[char_id]->harvest_exp / 256 % 256;
-    packet[111]=characters.character[char_id]->harvest_exp / 256 / 256 % 256;
-    packet[112]=characters.character[char_id]->harvest_exp / 256 / 256 / 256 % 256 ;
-    packet[113]=characters.character[char_id]->max_harvest_exp % 256;
-    packet[114]=characters.character[char_id]->max_harvest_exp / 256 % 256;
-    packet[115]=characters.character[char_id]->max_harvest_exp / 256 / 256 % 256;
-    packet[116]=characters.character[char_id]->max_harvest_exp / 256 / 256 / 256 % 256;
-    packet[117]=characters.character[char_id]->alchemy_exp % 256;
-    packet[118]=characters.character[char_id]->alchemy_exp / 256 % 256;
-    packet[119]=characters.character[char_id]->alchemy_exp / 256 / 256 % 256;
-    packet[120]=characters.character[char_id]->alchemy_exp / 256 / 256 / 256 % 256;
-    packet[121]=characters.character[char_id]->max_alchemy_exp % 256;
-    packet[122]=characters.character[char_id]->max_alchemy_exp / 256 % 256;
-    packet[123]=characters.character[char_id]->max_alchemy_exp / 256 / 256 % 256;
-    packet[124]=characters.character[char_id]->max_alchemy_exp / 256 / 256 / 256 % 256;
-    packet[125]=characters.character[char_id]->overall_exp % 256;
-    packet[126]=characters.character[char_id]->overall_exp / 256 % 256;
-    packet[127]=characters.character[char_id]->overall_exp / 256 / 256 % 256;
-    packet[128]=characters.character[char_id]->overall_exp / 256 / 256 / 256 % 256;
-    packet[129]=characters.character[char_id]->max_overall_exp % 256;
-    packet[130]=characters.character[char_id]->max_overall_exp / 256 % 256;
-    packet[131]=characters.character[char_id]->max_overall_exp / 256 / 256 % 256;
-    packet[132]=characters.character[char_id]->max_overall_exp / 256 / 256 / 256 % 256;
-    packet[133]=characters.character[char_id]->attack_exp % 256;
-    packet[134]=characters.character[char_id]->attack_exp / 256 % 256;
-    packet[135]=characters.character[char_id]->attack_exp / 256 / 256 % 256;
-    packet[136]=characters.character[char_id]->attack_exp / 256 / 256 / 256 % 256;
-    packet[137]=characters.character[char_id]->max_attack_exp % 256;
-    packet[138]=characters.character[char_id]->max_attack_exp / 256 % 256;
-    packet[139]=characters.character[char_id]->max_attack_exp / 256 / 256 % 256;
-    packet[140]=characters.character[char_id]->max_attack_exp / 256 / 256 / 256 % 256;
-    packet[141]=characters.character[char_id]->defence_exp % 256;
-    packet[142]=characters.character[char_id]->defence_exp / 256 % 256;
-    packet[143]=characters.character[char_id]->defence_exp / 256 / 256 % 256;
-    packet[144]=characters.character[char_id]->defence_exp / 256 / 256 / 256 % 256;
-    packet[145]=characters.character[char_id]->max_defence_exp % 256;
-    packet[146]=characters.character[char_id]->max_defence_exp / 256 % 256;
-    packet[147]=characters.character[char_id]->max_defence_exp / 256 / 256 % 256;
-    packet[148]=characters.character[char_id]->max_defence_exp / 256 / 256 / 256 % 256;
-    packet[149]=characters.character[char_id]->magic_exp % 256;
-    packet[150]=characters.character[char_id]->magic_exp / 256 % 256;
-    packet[151]=characters.character[char_id]->magic_exp / 256 / 256 % 256;
-    packet[152]=characters.character[char_id]->magic_exp / 256 / 256 / 256 % 256;
-    packet[153]=characters.character[char_id]->max_magic_exp % 256;
-    packet[154]=characters.character[char_id]->max_magic_exp / 256 % 256;
-    packet[155]=characters.character[char_id]->max_magic_exp / 256 / 256 % 256;
-    packet[156]=characters.character[char_id]->max_magic_exp / 256 / 256 / 256 % 256;
-    packet[157]=characters.character[char_id]->potion_exp % 256;
-    packet[158]=characters.character[char_id]->potion_exp / 256 % 256;
-    packet[159]=characters.character[char_id]->potion_exp / 256 / 256 % 256;
-    packet[160]=characters.character[char_id]->potion_exp / 256 / 256 / 256 % 256;
-    packet[161]=characters.character[char_id]->max_potion_exp % 256;
-    packet[162]=characters.character[char_id]->max_potion_exp / 256 % 256;
-    packet[163]=characters.character[char_id]->max_potion_exp / 256 / 256 % 256;
-    packet[164]=characters.character[char_id]->max_potion_exp / 256 / 256 / 256 % 256;
+    packet[101]=clients.client[connection]->manufacture_exp % 256;
+    packet[102]=clients.client[connection]->manufacture_exp / 256 % 256;
+    packet[103]=clients.client[connection]->manufacture_exp / 256 / 256 % 256;
+    packet[104]=clients.client[connection]->manufacture_exp / 256 / 256 / 256 % 256;
+    packet[105]=clients.client[connection]->max_manufacture_exp % 256;
+    packet[106]=clients.client[connection]->max_manufacture_exp / 256 % 256;
+    packet[107]=clients.client[connection]->max_manufacture_exp / 256 / 256 % 256;
+    packet[108]=clients.client[connection]->max_manufacture_exp / 256 / 256 / 256 % 256;
+    packet[109]=clients.client[connection]->harvest_exp % 256;
+    packet[110]=clients.client[connection]->harvest_exp / 256 % 256;
+    packet[111]=clients.client[connection]->harvest_exp / 256 / 256 % 256;
+    packet[112]=clients.client[connection]->harvest_exp / 256 / 256 / 256 % 256 ;
+    packet[113]=clients.client[connection]->max_harvest_exp % 256;
+    packet[114]=clients.client[connection]->max_harvest_exp / 256 % 256;
+    packet[115]=clients.client[connection]->max_harvest_exp / 256 / 256 % 256;
+    packet[116]=clients.client[connection]->max_harvest_exp / 256 / 256 / 256 % 256;
+    packet[117]=clients.client[connection]->alchemy_exp % 256;
+    packet[118]=clients.client[connection]->alchemy_exp / 256 % 256;
+    packet[119]=clients.client[connection]->alchemy_exp / 256 / 256 % 256;
+    packet[120]=clients.client[connection]->alchemy_exp / 256 / 256 / 256 % 256;
+    packet[121]=clients.client[connection]->max_alchemy_exp % 256;
+    packet[122]=clients.client[connection]->max_alchemy_exp / 256 % 256;
+    packet[123]=clients.client[connection]->max_alchemy_exp / 256 / 256 % 256;
+    packet[124]=clients.client[connection]->max_alchemy_exp / 256 / 256 / 256 % 256;
+    packet[125]=clients.client[connection]->overall_exp % 256;
+    packet[126]=clients.client[connection]->overall_exp / 256 % 256;
+    packet[127]=clients.client[connection]->overall_exp / 256 / 256 % 256;
+    packet[128]=clients.client[connection]->overall_exp / 256 / 256 / 256 % 256;
+    packet[129]=clients.client[connection]->max_overall_exp % 256;
+    packet[130]=clients.client[connection]->max_overall_exp / 256 % 256;
+    packet[131]=clients.client[connection]->max_overall_exp / 256 / 256 % 256;
+    packet[132]=clients.client[connection]->max_overall_exp / 256 / 256 / 256 % 256;
+    packet[133]=clients.client[connection]->attack_exp % 256;
+    packet[134]=clients.client[connection]->attack_exp / 256 % 256;
+    packet[135]=clients.client[connection]->attack_exp / 256 / 256 % 256;
+    packet[136]=clients.client[connection]->attack_exp / 256 / 256 / 256 % 256;
+    packet[137]=clients.client[connection]->max_attack_exp % 256;
+    packet[138]=clients.client[connection]->max_attack_exp / 256 % 256;
+    packet[139]=clients.client[connection]->max_attack_exp / 256 / 256 % 256;
+    packet[140]=clients.client[connection]->max_attack_exp / 256 / 256 / 256 % 256;
+    packet[141]=clients.client[connection]->defence_exp % 256;
+    packet[142]=clients.client[connection]->defence_exp / 256 % 256;
+    packet[143]=clients.client[connection]->defence_exp / 256 / 256 % 256;
+    packet[144]=clients.client[connection]->defence_exp / 256 / 256 / 256 % 256;
+    packet[145]=clients.client[connection]->max_defence_exp % 256;
+    packet[146]=clients.client[connection]->max_defence_exp / 256 % 256;
+    packet[147]=clients.client[connection]->max_defence_exp / 256 / 256 % 256;
+    packet[148]=clients.client[connection]->max_defence_exp / 256 / 256 / 256 % 256;
+    packet[149]=clients.client[connection]->magic_exp % 256;
+    packet[150]=clients.client[connection]->magic_exp / 256 % 256;
+    packet[151]=clients.client[connection]->magic_exp / 256 / 256 % 256;
+    packet[152]=clients.client[connection]->magic_exp / 256 / 256 / 256 % 256;
+    packet[153]=clients.client[connection]->max_magic_exp % 256;
+    packet[154]=clients.client[connection]->max_magic_exp / 256 % 256;
+    packet[155]=clients.client[connection]->max_magic_exp / 256 / 256 % 256;
+    packet[156]=clients.client[connection]->max_magic_exp / 256 / 256 / 256 % 256;
+    packet[157]=clients.client[connection]->potion_exp % 256;
+    packet[158]=clients.client[connection]->potion_exp / 256 % 256;
+    packet[159]=clients.client[connection]->potion_exp / 256 / 256 % 256;
+    packet[160]=clients.client[connection]->potion_exp / 256 / 256 / 256 % 256;
+    packet[161]=clients.client[connection]->max_potion_exp % 256;
+    packet[162]=clients.client[connection]->max_potion_exp / 256 % 256;
+    packet[163]=clients.client[connection]->max_potion_exp / 256 / 256 % 256;
+    packet[164]=clients.client[connection]->max_potion_exp / 256 / 256 / 256 % 256;
 
-    packet[165]=characters.character[char_id]->book_id % 256;
-    packet[166]=characters.character[char_id]->book_id / 256;
-    packet[167]=characters.character[char_id]->max_book_time % 256;
-    packet[168]=characters.character[char_id]->max_book_time / 256;
+    packet[165]=clients.client[connection]->book_id % 256;
+    packet[166]=clients.client[connection]->book_id / 256;
+    packet[167]=clients.client[connection]->max_book_time % 256;
+    packet[168]=clients.client[connection]->max_book_time / 256;
 
    //packet[169]=10; summoning lvl
 
@@ -335,7 +333,7 @@ void send_partial_stats(int connection, int attribute_type, int attribute_level)
 
 void send_actors_to_client(int connection){
 
-    /** RESULT  : make other actors in proximity visible to this actor
+    /** RESULT  : make other actors visible to this actor
 
        RETURNS : void
 
@@ -389,7 +387,7 @@ void process_packet(int connection, unsigned char *packet){
     int current_tile=clients.client[connection]->map_tile;
     int other_connection;
     int map_id=clients.client[connection]->map_id;
-    int guild_id=clients.client[connection]->guild_id;
+    //int guild_id=clients.client[connection]->guild_id;
     int protocol=packet[0];
     int lsb=packet[1];
     int msb=packet[2];
@@ -411,7 +409,6 @@ void process_packet(int connection, unsigned char *packet){
 
     switch(protocol){
 
-/*
         case RAW_TEXT:
 
             printf("RAW_TEXT [%s]\n", text);
@@ -490,7 +487,7 @@ void process_packet(int connection, unsigned char *packet){
             }
 
         break;
-*/
+
         case MOVE_TO:
 
         //if char is harvesting then stop
@@ -563,21 +560,20 @@ void process_packet(int connection, unsigned char *packet){
         case SIT_DOWN:
         printf("SIT_DOWN %i\n", data[0]);
 
-        if(data[0]==0) {
-            printf("stand\n");
-            //stand
-            clients.client[connection]->frame=14;
-            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
-        }
+        printf("frame=%i data=%i\n", clients.client[connection]->frame, data[0]);
 
         if(data[0]==1) {
-            printf("sit\n");
-            //sit
-            clients.client[connection]->frame=13;
+            clients.client[connection]->frame=sit_down;
             broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
         }
 
-        //save_character(characters.character[char_id]->char_name, char_id);
+        if(data[0]==0) {
+            clients.client[connection]->frame=stand_up;
+            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
+        }
+
+        //save frame to database
+        update_db_char_frame(connection);
 
         break;
 
@@ -602,9 +598,10 @@ void process_packet(int connection, unsigned char *packet){
 
         case HEARTBEAT:
         printf("HEARTBEAT %i %i \n", lsb, msb);
+        //dont need to do anything on this message as the receipt of any data automatically updates the heartbeat
 
-        gettimeofday(&time_check, NULL);
-        clients.client[i]->time_of_last_heartbeat=time_check.tv_sec;
+        //gettimeofday(&time_check, NULL);
+        //clients.client[connection]->time_of_last_heartbeat=time_check.tv_sec;
         //save_data(connection);//needs to be on a separate timer
         break;
 
@@ -697,7 +694,7 @@ void process_packet(int connection, unsigned char *packet){
         get_str_island(text, password, 2);
 
         //check if char name is already used
-        if(get_char_id(char_name)==1) {
+        if(get_char_data(char_name)!=CHAR_NOT_FOUND){
 
             send_create_char_not_ok(connection);
 
@@ -709,18 +706,7 @@ void process_packet(int connection, unsigned char *packet){
 
             return;
         }
-/*
-        // check if we'll exceed maximum number of characters
-        if(characters.count+1==characters.max){
-            send_create_char_not_ok(connection);
-            sprintf(text_out, "%cSorry, but the maximum number of characters on the server has been reached", c_red1+127);
-            send_raw_text_packet(connection, CHAT_SERVER, text_out);
 
-            sprintf(text_out, "maximum number of characters on server has been reached\n");
-            log_event(EVENT_ERROR, text_out);
-            return;
-        }
-*/
         //create new character id
         char_id=get_max_char_id();
         if(char_id==0) char_id=1; else char_id++;
@@ -729,24 +715,24 @@ void process_packet(int connection, unsigned char *packet){
         clients.client[connection]->status=LOGGED_IN;
 
         //copy data to the struct which will be passed to the database
-        new_character.char_id=char_id;
-        strcpy(new_character.char_name, char_name);
-        strcpy(new_character.password, password);
+        character.char_id=char_id;
+        strcpy(character.char_name, char_name);
+        strcpy(character.password, password);
 
         i=strlen(char_name)+strlen(password)+2;
-        new_character.skin_type=data[i++];
-        new_character.hair_type=data[i++];
-        new_character.shirt_type=data[i++];
-        new_character.pants_type=data[i++];
-        new_character.boots_type=data[i++];
-        new_character.char_type=data[i++];
-        new_character.head_type=data[i++];
+        character.skin_type=data[i++];
+        character.hair_type=data[i++];
+        character.shirt_type=data[i++];
+        character.pants_type=data[i++];
+        character.boots_type=data[i++];
+        character.char_type=data[i++];
+        character.head_type=data[i++];
 
-        new_character.visual_proximity=15;
-        new_character.local_text_proximity=12;
-        new_character.char_created=time(NULL);
+        character.visual_proximity=15;
+        character.local_text_proximity=12;
+        character.char_created=time(NULL);
 
-        add_char(new_character);
+        add_char(character);
 
         sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
         send_server_text(connection, CHAT_SERVER, text_out);

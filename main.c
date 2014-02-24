@@ -10,6 +10,7 @@
 #include <sys/time.h> //required for timer
 #include <time.h>
 #include <ev.h>
+#include <pthread.h>
 
 #include "global.h"
 #include "initialisation.h"
@@ -25,12 +26,17 @@
 #include "harvesting.h"
 #include "database.h"
 
+#define PORT 5555
+#define HEARTBEAT_INTERVAL 26
+
 /** credit for the underlying libev socket code goes to Pierce <jqug123321@gmail.com>, details of which can be
 found @ http://jqug.blogspot.co.uk/2013/02/libev-socket.html **/
 
 ev_timer timeout_watcher;
 
 void close_connection_slot(int connection){
+
+    //this function is called from the accept and timeout callbacks
 
     int j=0;
     int guild_id=clients.client[connection]->guild_id;
@@ -66,13 +72,7 @@ void close_connection_slot(int connection){
 
     }
 
-    sprintf(text_out, "client [%i]  char [%s] logged out", connection, clients.client[connection]->char_name);
-    log_event(EVENT_SESSION, text_out);
-
     clients.client[connection]->status=LOGGED_OUT;
-
-    //zero the client path otherwise a subsequent client may use any remaining path and cause the server to hang
-    clients.client[connection]->path_count=0;
 }
 
 void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
@@ -121,10 +121,10 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
     //client disconnect
     else if (read == 0) {
 
-        close_connection_slot(watcher->fd);
-
-        sprintf(text_out, "client [%i]  char [%s]logged off\n", watcher->fd, clients.client[watcher->fd]->char_name);
+        sprintf(text_out, "client [%i] char [%s] disconnected\n", watcher->fd, clients.client[watcher->fd]->char_name);
         log_event(EVENT_SESSION, text_out);
+
+        close_connection_slot(watcher->fd);
 
         ev_io_stop(loop, watcher);
         free(watcher);
@@ -139,8 +139,6 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
         clients.client[watcher->fd]->packet_buffer[clients.client[watcher->fd]->packet_buffer_length]=buffer[j];
         clients.client[watcher->fd]->packet_buffer_length++;
     }
-
-
 
     // check if any data in buffer
     if(clients.client[watcher->fd]->packet_buffer_length>0) {
@@ -211,8 +209,6 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     send_motd(client_sockfd);
 
     send_server_text(client_sockfd, CHAT_SERVER, "\nHit any key to continue...\n");
-
-    //clients.count++;
 }
 
 static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
@@ -229,22 +225,27 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     current_utime=time_check.tv_usec;
     current_time=time_check.tv_sec;
 
+    //at each timeout check through each connect client and process pending actions
     for(i=0; i<clients.max; i++){
 
-        //process_char_move(i, current_utime);
+        process_char_move(i, current_utime);
 
         process_harvesting(i, current_time);
 
-        if(clients.client[i]->status==LOGGED_IN && clients.client[i]->time_of_last_heartbeat+26<time_check.tv_sec){
+        //check for lagged connection
+        if(clients.client[i]->status==LOGGED_IN || clients.client[i]->status==CONNECTED) {
 
-            sprintf(text_out, "client [%i]  char [%s]lagged out", i, characters.character[clients.client[i]->character_id]->char_name);
-            log_event(EVENT_SESSION, text_out);
+            if(clients.client[i]->time_of_last_heartbeat+HEARTBEAT_INTERVAL< time_check.tv_sec){
 
-            close_connection_slot(i);
+                sprintf(text_out, "client [%i]  char [%s]lagged out", i, clients.client[i]->char_name);
+                log_event(EVENT_SESSION, text_out);
 
-            //ev_io_stop(loop, watcher);
-            //free(watcher);
-            close(i);
+                close_connection_slot(i);
+
+                //ev_io_stop(loop, watcher);
+                //free(watcher);
+                close(i);
+            }
         }
     }
 
@@ -274,16 +275,20 @@ int main(void) {
     initialise_guild_list(MAX_GUILDS);
     load_all_guilds(GUILD_LIST_FILE);
 
-    //initialise_character_list(MAX_CHARACTERS);
-    //load_all_characters(CHARACTER_LIST_FILE);
-
     initialise_client_list(MAX_CLIENTS);
-
-    open_database(DATABASE_FILE);
-    if(get_table_count()==0) create_tables();
 
     initialise_movement_vectors();
     initialise_harvestables();
+
+    //initialise_queue(DB_QUEUE_MAX_NODES, &db_buffer_queue);
+
+    //initialise database
+    open_database(DATABASE_FILE);
+    if(get_table_count()==0) create_tables();
+
+    //set global data
+    game_data.char_count=get_chars_created_count();
+    get_last_char_created();
 
     printf("\n");
 
@@ -295,7 +300,7 @@ int main(void) {
 
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_address.sin_port = htons(5555);
+    server_address.sin_port = htons(PORT);
     server_len = sizeof(server_address);
 
     //no wait time to reuse the socket

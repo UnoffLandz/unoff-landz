@@ -1,7 +1,6 @@
 #ifndef GLOBAL_H_INCLUDED
 #define GLOBAL_H_INCLUDED
 
-#define MAX_CHARACTERS 20
 #define MAX_CHANNELS 10
 #define MAX_MAPS 10
 #define MAX_GUILDS 10
@@ -13,7 +12,6 @@
 #define CHANNEL_LIST_FILE "channels.lst"
 #define MAP_LIST_FILE "maps.lst"
 #define GUILD_LIST_FILE "guild.lst"
-#define CHARACTER_LIST_FILE "character.lst"
 
 #define TILE_MAP_MAX 50000
 #define HEIGHT_MAP_MAX 150000
@@ -53,7 +51,7 @@ enum {//stats codes
     HARVEST_LVL=26,
     HARVEST_MAX_LVL=27,
 
-     //26 27 harvest
+    //26 27 harvest
     //28 29 alchemy
     //30 31 overall
     //32 33 defence
@@ -101,8 +99,8 @@ enum{// harv item code
 
 enum {// frame type
     nothing=0,
-    stand_up=13,
-    sit_down=14,
+    stand_up=14,
+    sit_down=13,
 };
 
 enum {// actor movement vectors
@@ -116,9 +114,17 @@ enum {// actor movement vectors
     NORTH_WEST,
 };
 
-int vector_x[8];
-int vector_y[8];
-unsigned char movement_cmd[8];
+//int vector_x[8];
+//int vector_y[8];
+//unsigned char movement_cmd[8];
+
+struct vector_type{
+    int x;
+    int y;
+    unsigned char move_cmd;
+};
+
+struct vector_type vector[8];
 
 enum{ // general boolean values
     FALSE,
@@ -311,124 +317,6 @@ enum { // neck type
     NECK_7,
 };
 
-/** CHARACTERS */
-/*
-struct character_node_type{
-    char char_name[1024];
-    char password[1024];
-    int time_played;
-    //enum {CHAR_ALIVE, CHAR_DEAD, CHAR_BANNED} char_status;
-    int active_chan;
-    int chan[4];       // chan0, chan1, chan2  (chan3 used for guild chat)
-    int gm_permission; // permission to use #GM command (aka mute)
-    int ig_permission; // permission to use #IG command
-    int map_id;
-    int map_tile;
-    int guild_id;
-    int char_type;
-    int skin_type;
-    int hair_type;
-    int shirt_type;
-    int pants_type;
-    int boots_type;
-    int head_type;
-    int shield_type;
-    int weapon_type;
-    int cape_type;
-    int helmet_type;
-    int frame;
-    int max_health;
-    int current_health;
-    int visual_proximity; // proximity for display of other actors/creatures
-    int local_text_proximity; //  proximity for local messages from other actors
-    time_t last_in_game; // date char was last in-game
-    time_t char_created; // date char was created
-    time_t joined_guild; // date joined guild
-
-    int harvest_exp;
-
-    int physique;
-    int max_physique;
-    int coordination;
-    int max_coordination;
-    int reasoning;
-    int max_reasoning;
-    int will;
-    int max_will;
-    int instinct;
-    int max_instinct;
-    int vitality;
-    int max_vitality;
-
-    int human;
-    int max_human;
-    int animal;
-    int max_animal;
-    int vegetal;
-    int max_vegetal;
-    int inorganic;
-    int max_inorganic;
-    int artificial;
-    int max_artificial;
-    int magic;
-    int max_magic;
-
-    int manufacturing_lvl;
-    int max_manufacturing_lvl;
-    int harvest_lvl;
-    int max_harvest_lvl;
-    int alchemy_lvl;
-    int max_alchemy_lvl;
-    int overall_lvl;
-    int max_overall_lvl;
-    int attack_lvl;
-    int max_attack_lvl;
-    int defence_lvl;
-    int max_defence_lvl;
-    int magic_lvl;
-    int max_magic_lvl;
-    int potion_lvl;
-    int max_potion_lvl;
-
-    int material_pts;
-    int max_material_pts;
-    int ethereal_pts;
-    int max_ethereal_pts;
-
-    int food_lvl;
-
-    int manufacture_exp;
-    int max_manufacture_exp;
-    //int harvest_exp;
-    int max_harvest_exp;
-    int alchemy_exp;
-    int max_alchemy_exp;
-    int overall_exp;
-    int max_overall_exp;
-    int attack_exp;
-    int max_attack_exp;
-    int defence_exp;
-    int max_defence_exp;
-    int magic_exp;
-    int max_magic_exp;
-    int potion_exp;
-    int max_potion_exp;
-
-    int book_id;
-    int max_book_time;
-    int elapsed_book_time;
-    unsigned char inventory[1024];
-    int inventory_size;
-};
-
-struct character_list_type {
-    int count;
-    int max;
-    struct character_node_type **character;
-};
-
-struct character_list_type characters;
-*/
 
 /** MAPS */
 struct map_node_type{
@@ -659,13 +547,16 @@ enum { //return values for get_char_id function
     CHAR_NOT_FOUND =0
 };
 
-
-
-//struct used to pass to database on character creation
-struct new_character_type{
+//struct used to pass to database on character creation and get_char_id function
+struct character_type{
     int char_id;
     char char_name[1024];
     char password[1024];
+    int char_status;
+    int active_chan;
+    int chan[3];
+    int gm_permission;
+    int ig_permission;
     int map_id;
     int map_tile;
     int char_type;
@@ -679,13 +570,42 @@ struct new_character_type{
     int weapon_type;
     int cape_type;
     int helmet_type;
+    int frame;
     int max_health;
     int current_health;
     int visual_proximity; // proximity for display of other actors/creatures
     int local_text_proximity; //  proximity for local messages from other actors
-    int char_created; // date char was created
+    int char_created;
+    time_t last_in_game;
+    time_t joined_guild;
+    int guild_id;
+    int overall_exp;
+    int harvest_exp;
 };
 
-struct new_character_type new_character;
+struct character_type character;
+
+/*
+// the database buffer queue template
+struct queue_type {
+    int start;       // the node where the queue starts
+    int end;         // the node where the queue ends
+    int count;       // the number of used nodes in queue
+    int max_nodes;   // the maximum number of nodes in queue
+    char **text_str; // the node array
+};
+
+//create database buffer from template
+struct queue_type db_buffer_queue;
+*/
+
+//struct to carry global data
+struct game_data_type {
+    int char_count;
+    char name_last_char_created[1024];
+    time_t date_last_char_created;
+};
+
+struct game_data_type game_data;
 
 #endif // GLOBAL_H_INCLUDED

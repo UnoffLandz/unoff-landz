@@ -43,7 +43,46 @@ int get_table_count(){
     return table_count;
 }
 
-void add_char(struct new_character_type new_character){
+int get_chars_created_count(){
+
+    int rc;
+    sqlite3_stmt *stmt;
+
+    int char_count=0;
+
+    char sql[1024]="SELECT count(CHAR_ID) FROM CHARACTER_TABLE;";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, 16);
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        char_count=sqlite3_column_int(stmt, 0);
+    }
+
+    sqlite3_finalize(stmt);
+
+    return char_count;
+}
+
+void get_last_char_created(){
+
+    int rc;
+    sqlite3_stmt *stmt;
+
+    char sql[1024]="SELECT CHAR_NAME, CHAR_CREATED FROM CHARACTER_TABLE ORDER BY CHAR_CREATED LIMIT 1;";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, 16);
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        strcpy(game_data.name_last_char_created, (char*)sqlite3_column_text(stmt, 0));
+        game_data.date_last_char_created=sqlite3_column_int(stmt,1);
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+void add_char(struct character_type character){
 
     int rc;
     sqlite3_stmt *stmt;
@@ -113,9 +152,9 @@ void add_char(struct new_character_type new_character){
 
         ");", \
 
-        new_character.char_id,
-        new_character.char_name,
-        new_character.password,
+        character.char_id,
+        character.char_name,
+        character.password,
         CHAR_ALIVE,
         0,   //active chan
         0,   //chan 0
@@ -125,22 +164,22 @@ void add_char(struct new_character_type new_character){
         0,   //ig permission
         START_MAP_ID,
         START_MAP_TILE,
-        new_character.char_type,
-        new_character.skin_type,
-        new_character.hair_type,
-        new_character.shirt_type,
-        new_character.pants_type,
-        new_character.boots_type,
-        new_character.head_type,
+        character.char_type,
+        character.skin_type,
+        character.hair_type,
+        character.shirt_type,
+        character.pants_type,
+        character.boots_type,
+        character.head_type,
         SHIELD_NONE,
         WEAPON_NONE,
         CAPE_NONE,
         HELMET_NONE,
         0,  //max health
         0,  //current health
-        new_character.visual_proximity,
-        new_character.local_text_proximity,
-        new_character.char_created
+        character.visual_proximity,
+        character.local_text_proximity,
+        character.char_created
         );
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -148,7 +187,7 @@ void add_char(struct new_character_type new_character){
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
+        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
         exit(1);
     }
 
@@ -176,29 +215,63 @@ int get_max_char_id(){
     return max_id;
 }
 
-int get_char_id(char *name){
+int get_char_data(char *name){
+
+    //loads character data from the db to the char struct
 
     int rc;
     sqlite3_stmt *stmt;
-
-    int id=0;
     char sql[1024]="";
 
-    sprintf(sql, "SELECT CHAR_ID FROM CHARACTER_TABLE WHERE CHAR_NAME='%s';", name);
+    character.char_id=CHAR_NOT_FOUND;
+
+    sprintf(sql, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_NAME='%s';", name);
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_int(stmt, 1, 16);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-        id=sqlite3_column_int(stmt, 0);
+
+        character.char_id=sqlite3_column_int(stmt, 0);
+        strcpy(character.char_name, (char*) sqlite3_column_text(stmt, 1));
+        strcpy(character.password, (char*) sqlite3_column_text(stmt,2));
+        character.char_status=sqlite3_column_int(stmt, 3);
+        character.active_chan=sqlite3_column_int(stmt, 4);
+        character.chan[0]=sqlite3_column_int(stmt, 5);
+        character.chan[1]=sqlite3_column_int(stmt, 6);
+        character.chan[2]=sqlite3_column_int(stmt, 7);
+        character.gm_permission=sqlite3_column_int(stmt, 8);
+        character.ig_permission=sqlite3_column_int(stmt, 9);
+        character.map_id=sqlite3_column_int(stmt, 10);
+        character.map_tile=sqlite3_column_int(stmt, 11);
+        character.guild_id=sqlite3_column_int(stmt, 12);
+        character.char_type=sqlite3_column_int(stmt, 13);
+        character.skin_type=sqlite3_column_int(stmt, 14);
+        character.hair_type=sqlite3_column_int(stmt, 15);
+        character.shirt_type=sqlite3_column_int(stmt, 16);
+        character.pants_type=sqlite3_column_int(stmt, 17);
+        character.boots_type=sqlite3_column_int(stmt, 18);
+        character.head_type=sqlite3_column_int(stmt, 19);
+        character.shield_type=sqlite3_column_int(stmt, 20);
+        character.weapon_type=sqlite3_column_int(stmt, 21);
+        character.cape_type=sqlite3_column_int(stmt, 22);
+        character.helmet_type=sqlite3_column_int(stmt, 23);
+        character.frame=sqlite3_column_int(stmt, 24);
+        character.max_health=sqlite3_column_int(stmt, 25);
+        character.current_health=sqlite3_column_int(stmt, 26);
+        character.visual_proximity=sqlite3_column_int(stmt, 27);
+        character.local_text_proximity=sqlite3_column_int(stmt, 28);
+        character.last_in_game=sqlite3_column_int(stmt,  29);
+        character.char_created=sqlite3_column_int(stmt, 30);
+        character.joined_guild=sqlite3_column_int(stmt, 31);
+        character.overall_exp=sqlite3_column_int(stmt, 32);
+        character.harvest_exp=sqlite3_column_int(stmt, 33);
     }
 
     sqlite3_finalize(stmt);
 
-    return id;
+    return character.char_id;
 }
-
-
 
 void execute_sql(char *sql){
 
@@ -262,6 +335,8 @@ void create_tables(){
 
 void load_character_from_database(int char_id, int connection){
 
+    //loads character data from the db to the client struct
+
     int rc;
     sqlite3_stmt *stmt;
     char sql[1024]="";
@@ -307,8 +382,128 @@ void load_character_from_database(int char_id, int connection){
         clients.client[connection]->joined_guild=sqlite3_column_int(stmt, 31);
         clients.client[connection]->overall_exp=sqlite3_column_int(stmt, 32);
         clients.client[connection]->harvest_exp=sqlite3_column_int(stmt, 33);
+
+        clients.client[connection]->path_count=0;//otherwise a new char can inherit a logged-out chars data
     }
 
     sqlite3_finalize(stmt);
 }
 
+void update_db_char_position(int connection){
+
+    char sql[1024]="";
+
+    sprintf(sql, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i WHERE CHAR_ID=%i;", clients.client[connection]->map_tile, clients.client[connection]->character_id );
+    execute_sql(sql);
+}
+
+void update_db_char_name(int connection){
+
+    char sql[1024]="";
+
+    sprintf(sql, "UPDATE CHARACTER_TABLE SET CHAR_NAME='%s' WHERE CHAR_ID=%i;", clients.client[connection]->char_name, clients.client[connection]->character_id );
+    execute_sql(sql);
+}
+
+void update_db_char_frame(int connection){
+
+    char sql[1024]="";
+
+    sprintf(sql, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i;", clients.client[connection]->frame, clients.client[connection]->character_id );
+    execute_sql(sql);
+}
+
+/*
+int initialise_queue(int max_nodes, struct queue_type *this_queue){
+
+    int i;
+
+    enum { // enumerate function return values
+        INITIALISE_SUCCESS,
+        INITIALISE_FAIL,
+    };
+
+    // zero our struct data
+    this_queue->count=0;
+    this_queue->start=0;
+    this_queue->end=0;
+    this_queue->max_nodes=max_nodes;
+
+    // allocate memory to hold the array of pointers
+    if(!(this_queue->text_str=malloc(this_queue->max_nodes * sizeof(char*)))) return INITIALISE_FAIL;
+
+    // zero the array of pointers
+    for(i=0;i<this_queue->max_nodes-1; i++){
+        this_queue->text_str[i]=NULL;
+    }
+
+    return INITIALISE_SUCCESS;
+}
+
+int check_queue(char *str_out, struct queue_type *this_queue){
+
+    if(this_queue->count==0) {
+        strcpy(str_out, "");
+        return QUEUE_EMPTY;
+    }
+
+    strcpy(str_out, this_queue->text_str[this_queue->start]);
+    return QUEUE_HAS_DATA;
+
+}
+
+int enqueue_string(char *text_in, size_t text_len, struct queue_type *this_queue){
+
+    enum { // enumerate function return values
+        ENQUEUE_SUCCESS,
+        ENQUEUE_FAIL_NOMEMORY,
+        ENQUEUE_FAIL_NONODES,
+    };
+
+    // test to see if the queue size will be exceeded
+    if(this_queue->count>this_queue->max_nodes-1) return ENQUEUE_FAIL_NONODES;
+
+    // if queue size is within bounds, increment the count of entries
+    this_queue->count++;
+
+    // allocate sufficient memory to hold the command string and save it to the array
+    if( !(this_queue->text_str[this_queue->end]=malloc(strlen(text_in)+1))) return ENQUEUE_FAIL_NOMEMORY;
+    strncpy(this_queue->text_str[this_queue->end],text_in, text_len);
+
+    this_queue->text_str[this_queue->end][text_len]='\0';
+
+    // increment the queue end position and wrap if necessary so that the queue is circular
+    this_queue->end++;
+    if(this_queue->end==this_queue->max_nodes) this_queue->end=0;
+
+    return ENQUEUE_SUCCESS;
+
+}
+
+int dequeue_string(char *text_out, struct queue_type *this_queue){
+
+    enum { // enumerate function return values
+        DEQUEUE_SUCCESS,
+        DEQUEUE_FAIL,
+    };
+
+    // test to see if there are any items remaining in the queue
+    if(this_queue->count==0) return DEQUEUE_FAIL;
+
+    // if there are items decrement the count of entries
+    this_queue->count--;
+
+    // return the first item on the queue
+    strcpy(text_out, this_queue->text_str[this_queue->start]);
+
+    // free the memory and null the item
+    free(this_queue->text_str[this_queue->start]);
+    this_queue->text_str[this_queue->start]=NULL;
+
+    // increment the queue start position and wrap if necessary so that the queue is circular
+    this_queue->start++;
+    if(this_queue->start==this_queue->max_nodes) this_queue->start=0;
+
+    return DEQUEUE_SUCCESS;
+}
+*/

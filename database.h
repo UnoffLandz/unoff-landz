@@ -2,10 +2,19 @@
 #define DATABASE_H_INCLUDED
 
 #define DATABASE_FILE "unoff.db"
+#define DB_QUEUE_ELEMENT_SIZE 1024
+#define DB_QUEUE_MAX_ELEMENTS 10
+
+#define DB_QUEUE_MAX_NODES 10
+
+enum { // return value for function check_queue in module database.c
+    QUEUE_EMPTY,
+    QUEUE_HAS_DATA,
+};
 
 void open_database(char *database_name);
 
-int get_char_id(char *char_name);
+int get_char_data(char *char_name);
 
 int get_max_char_id();
 
@@ -13,8 +22,27 @@ int get_table_count();
 
 void create_tables();
 
-void add_char(struct new_character_type new_character);
+void add_char(struct character_type character);
 
 void load_character_from_database(int char_id, int connection);
 
+//int initialise_queue(int max_nodes, struct queue_type *this_queue);
+
+//int enqueue_string(char *text_in, size_t text_len, struct queue_type *this_queue);
+
+//int dequeue_string(char *text_out, struct queue_type *this_queue);
+
+//int check_queue(char *str_out, struct queue_type *this_queue);
+
+void execute_sql(char *sql);
+
+int get_chars_created_count();
+
+void get_last_char_created();
+
+void update_db_char_position(int connection);
+
+void update_db_char_name(int connection);
+
+void update_db_char_frame(int connection);
 #endif // DATABASE_H_INCLUDED

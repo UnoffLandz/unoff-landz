@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h> //needed for usec time
+#include <string.h>
+
+#include <sqlite3.h>
 
 #include "global.h"
 #include "broadcast.h"
@@ -10,6 +13,7 @@
 #include "maps.h"
 #include "protocol.h"
 #include "pathfinding.h"
+#include "database.h"
 
 int get_move_command_vector(int cmd, int tile_pos, int map_axis){
 
@@ -18,7 +22,8 @@ int get_move_command_vector(int cmd, int tile_pos, int map_axis){
     int i=0;
 
     for(i=0; i<8; i++){
-        if(cmd==movement_cmd[i]) return tile_pos+vector_x[i] + (vector_y[i]*map_axis);
+         if(cmd==vector[i].move_cmd) return tile_pos+vector[i].x + (vector[i].y*map_axis);
+        //if(cmd==movement_cmd[i]) return tile_pos+vector_x[i] + (vector_y[i]*map_axis);
     }
 
     return 0;
@@ -77,8 +82,10 @@ int get_move_command(int tile_pos, int tile_dest, int map_axis){
 
     for(i=0; i<8; i++){
 
-        if(vector_x[i]==move_x && vector_y[i]==move_y){
-            return movement_cmd[i];
+        if(vector[i].x==move_x && vector[i].y==move_y){
+        //if(vector_x[i]==move_x && vector_y[i]==move_y){
+            //return movement_cmd[i];
+            return vector[i].move_cmd;
         }
     }
 
@@ -122,14 +129,15 @@ void process_char_move(int connection, time_t current_utime){
                 gettimeofday(&time_check, NULL);
                 clients.client[connection]->time_of_last_move=time_check.tv_usec;
 
-                //calculate the move_cmd and broadcase to clients
+                //calculate the move_cmd and broadcast to clients
                 move_cmd=get_move_command(current_tile, next_tile, map_axis);
+
                 broadcast_actor_packet(connection, move_cmd, next_tile);
 
                 //update char current position and save
                 clients.client[connection]->map_tile=next_tile;
-                //save_character(characters.character[char_id]->char_name, char_id);
-            }
+                update_db_char_position(connection);
+             }
         }
     }
 }
@@ -146,8 +154,7 @@ int remove_char_from_map(int connection){
         USAGE   : protocol.c process_packet
     */
 
-    int char_id=clients.client[connection]->character_id;
-    int map_id=characters.character[char_id]->map_id;
+    int map_id=clients.client[connection]->map_id;
     char text_out[1024]="";
 
     //check for illegal map
@@ -157,9 +164,9 @@ int remove_char_from_map(int connection){
     broadcast_remove_actor_packet(connection);
 
     //remove from local map list
-    remove_client_from_map_list(connection, characters.character[char_id]->map_id);
+    remove_client_from_map_list(connection, map_id);
 
-    sprintf(text_out, "char %s removed from map %s", characters.character[char_id]->char_name, maps.map[map_id]->map_name);
+    sprintf(text_out, "char %s removed from map %s", clients.client[connection]->char_name, maps.map[map_id]->map_name);
     log_event(EVENT_SESSION, text_out);
 
     return LEGAL_MAP;
@@ -178,7 +185,6 @@ int is_map_tile_occupied(int map_id, int map_tile){
 
     int i=0;
     int client_id=0;
-    int char_id=0;
 
     // return if tile is not traversable
     if(maps.map[map_id]->height_map[map_tile]<MIN_TRAVERSABLE_VALUE) {
@@ -189,9 +195,8 @@ int is_map_tile_occupied(int map_id, int map_tile){
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
         client_id=maps.map[map_id]->client_list[i];
-        char_id=clients.client[client_id]->character_id;
 
-        if(characters.character[char_id]->map_tile==map_tile) return TILE_OCCUPIED;
+        if(clients.client[client_id]->map_tile==map_tile) return TILE_OCCUPIED;
     }
 
     return TILE_UNOCCUPIED;
@@ -214,7 +219,8 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile){
         //examine all adjacent tiles
         for(i=0; i<8; i++){
 
-            next_tile=map_tile+vector_x[i]+(vector_y[i]*map_axis*j);
+            //next_tile=map_tile+vector_x[i]+(vector_y[i]*map_axis*j);
+            next_tile=map_tile+vector[i].x+(vector[i].y*map_axis*j);
 
             // keep with bounds of map
             if(next_tile>0 && next_tile<maps.map[map_id]->height_map_size) {
@@ -282,8 +288,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
 
     /** public function - see header */
 
-    int char_id=clients.client[connection]->character_id;
-    int old_map_id=characters.character[char_id]->map_id;
+    int old_map_id=clients.client[connection]->map_id;
     char text_out[1024]="";
 
     //check to see if old map is legal and, if not, transport char to Isla Prima
@@ -306,7 +311,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
         sprintf(text_out, "attempt to join illegal map (id[%i] map name [%s]) in function remove_char_from_map", new_map_id, maps.map[new_map_id]->map_name);
         log_event(EVENT_ERROR, text_out);
 
-        if(add_char_to_map(connection, old_map_id, characters.character[char_id]->map_tile)==ILLEGAL_MAP){
+        if(add_char_to_map(connection, old_map_id, clients.client[connection]->map_tile)==ILLEGAL_MAP){
 
             //if old map and new map are illegal, close down the server
             log_event(EVENT_ERROR, "severe map error in function move_char_between_maps - shutting down server");

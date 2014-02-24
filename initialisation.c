@@ -5,9 +5,6 @@
 
 #include "global.h"
 
-
-
-
 void initialise_harvestables(){
 
     harvestables[chrysanthemums].exp=10;
@@ -21,7 +18,7 @@ void initialise_harvestables(){
 }
 
 void initialise_movement_vectors(){
-
+/*
     vector_x[0]=0; vector_y[0]=1; movement_cmd[0]=20;
     vector_x[1]=1; vector_y[1]=1; movement_cmd[1]=21;
     vector_x[2]=1; vector_y[2]=0; movement_cmd[2]=22;
@@ -30,6 +27,15 @@ void initialise_movement_vectors(){
     vector_x[5]=-1; vector_y[5]=-1; movement_cmd[5]=25;
     vector_x[6]=-1; vector_y[6]=0; movement_cmd[6]=26;
     vector_x[7]=-1; vector_y[7]=1; movement_cmd[7]=27;
+*/
+    vector[0].x=0; vector[0].y=1; vector[0].move_cmd=20;
+    vector[1].x=1; vector[1].y=1; vector[1].move_cmd=21;
+    vector[2].x=1; vector[2].y=0; vector[2].move_cmd=22;
+    vector[3].x=1; vector[3].y=-1; vector[3].move_cmd=23;
+    vector[4].x=0; vector[4].y=-1; vector[4].move_cmd=24;
+    vector[5].x=-1; vector[5].y=-1; vector[5].move_cmd=25;
+    vector[6].x=-1; vector[6].y=0; vector[6].move_cmd=26;
+    vector[7].x=-1; vector[7].y=1; vector[7].move_cmd=27;
 }
 
 void initialise_client_list(int max_nodes){
@@ -115,22 +121,22 @@ void initialise_guild_list(int max_nodes){
         }
     }
 }
-
+/*
 void initialise_character_list(int max_nodes){
 
     int i;
 
-    /* zero our struct data */
+    // zero our struct data
     characters.count=0;
     characters.max=max_nodes;
 
-    /* allocate memory for our struct */
+    // allocate memory for our struct
     if( !(characters.character=malloc(sizeof(struct character_node_type*)*max_nodes))){
         perror ("unable to allocate suffient memory for character struct");
         exit (EXIT_FAILURE);
     }
 
-    /* allocate memory for our struct nodes */
+    // allocate memory for our struct nodes
     for(i=0; i<max_nodes; i++){
 
         if( !(characters.character[i]=malloc(sizeof(struct character_node_type)))) {
@@ -139,6 +145,7 @@ void initialise_character_list(int max_nodes){
         }
     }
 }
+*/
 
 void initialise_channel_list(int max_nodes){
 
