@@ -114,10 +114,6 @@ enum {// actor movement vectors
     NORTH_WEST,
 };
 
-//int vector_x[8];
-//int vector_y[8];
-//unsigned char movement_cmd[8];
-
 struct vector_type{
     int x;
     int y;
@@ -607,5 +603,7 @@ struct game_data_type {
 };
 
 struct game_data_type game_data;
+
+
 
 #endif // GLOBAL_H_INCLUDED

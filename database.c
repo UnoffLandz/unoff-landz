@@ -333,6 +333,7 @@ void create_tables(){
     execute_sql(sql);
 }
 
+/*
 void load_character_from_database(int char_id, int connection){
 
     //loads character data from the db to the client struct
@@ -388,12 +389,20 @@ void load_character_from_database(int char_id, int connection){
 
     sqlite3_finalize(stmt);
 }
+*/
 
 void update_db_char_position(int connection){
 
     char sql[1024]="";
 
-    sprintf(sql, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i WHERE CHAR_ID=%i;", clients.client[connection]->map_tile, clients.client[connection]->character_id );
+    sprintf(sql, "UPDATE CHARACTER_TABLE SET " \
+        "MAP_TILE=%i, " \
+        "MAP_ID=%i "
+        "WHERE CHAR_ID=%i;",
+        clients.client[connection]->map_tile,
+        clients.client[connection]->map_id,
+        clients.client[connection]->character_id );
+
     execute_sql(sql);
 }
 
@@ -413,97 +422,30 @@ void update_db_char_frame(int connection){
     execute_sql(sql);
 }
 
-/*
-int initialise_queue(int max_nodes, struct queue_type *this_queue){
+void update_db_char_stats(int connection){
 
-    int i;
+    char sql[1024]="";
 
-    enum { // enumerate function return values
-        INITIALISE_SUCCESS,
-        INITIALISE_FAIL,
-    };
+    sprintf(sql, "UPDATE CHARACTER_TABLE SET " \
+        "OVERALL_EXP=%i, " \
+        "HARVEST_EXP=%i "  \
+        "WHERE CHAR_ID=%i;",
+        clients.client[connection]->overall_exp,
+        clients.client[connection]->harvest_exp,
+        clients.client[connection]->character_id );
 
-    // zero our struct data
-    this_queue->count=0;
-    this_queue->start=0;
-    this_queue->end=0;
-    this_queue->max_nodes=max_nodes;
-
-    // allocate memory to hold the array of pointers
-    if(!(this_queue->text_str=malloc(this_queue->max_nodes * sizeof(char*)))) return INITIALISE_FAIL;
-
-    // zero the array of pointers
-    for(i=0;i<this_queue->max_nodes-1; i++){
-        this_queue->text_str[i]=NULL;
-    }
-
-    return INITIALISE_SUCCESS;
+    execute_sql(sql);
 }
 
-int check_queue(char *str_out, struct queue_type *this_queue){
+void update_db_char_last_in_game(int connection){
 
-    if(this_queue->count==0) {
-        strcpy(str_out, "");
-        return QUEUE_EMPTY;
-    }
+    char sql[1024]="";
 
-    strcpy(str_out, this_queue->text_str[this_queue->start]);
-    return QUEUE_HAS_DATA;
+    sprintf(sql, "UPDATE CHARACTER_TABLE SET " \
+        "LAST_IN_GAME=%i " \
+        "WHERE CHAR_ID=%i;",
+        (int) clients.client[connection]->last_in_game,
+        clients.client[connection]->character_id );
 
+    execute_sql(sql);
 }
-
-int enqueue_string(char *text_in, size_t text_len, struct queue_type *this_queue){
-
-    enum { // enumerate function return values
-        ENQUEUE_SUCCESS,
-        ENQUEUE_FAIL_NOMEMORY,
-        ENQUEUE_FAIL_NONODES,
-    };
-
-    // test to see if the queue size will be exceeded
-    if(this_queue->count>this_queue->max_nodes-1) return ENQUEUE_FAIL_NONODES;
-
-    // if queue size is within bounds, increment the count of entries
-    this_queue->count++;
-
-    // allocate sufficient memory to hold the command string and save it to the array
-    if( !(this_queue->text_str[this_queue->end]=malloc(strlen(text_in)+1))) return ENQUEUE_FAIL_NOMEMORY;
-    strncpy(this_queue->text_str[this_queue->end],text_in, text_len);
-
-    this_queue->text_str[this_queue->end][text_len]='\0';
-
-    // increment the queue end position and wrap if necessary so that the queue is circular
-    this_queue->end++;
-    if(this_queue->end==this_queue->max_nodes) this_queue->end=0;
-
-    return ENQUEUE_SUCCESS;
-
-}
-
-int dequeue_string(char *text_out, struct queue_type *this_queue){
-
-    enum { // enumerate function return values
-        DEQUEUE_SUCCESS,
-        DEQUEUE_FAIL,
-    };
-
-    // test to see if there are any items remaining in the queue
-    if(this_queue->count==0) return DEQUEUE_FAIL;
-
-    // if there are items decrement the count of entries
-    this_queue->count--;
-
-    // return the first item on the queue
-    strcpy(text_out, this_queue->text_str[this_queue->start]);
-
-    // free the memory and null the item
-    free(this_queue->text_str[this_queue->start]);
-    this_queue->text_str[this_queue->start]=NULL;
-
-    // increment the queue start position and wrap if necessary so that the queue is circular
-    this_queue->start++;
-    if(this_queue->start==this_queue->max_nodes) this_queue->start=0;
-
-    return DEQUEUE_SUCCESS;
-}
-*/

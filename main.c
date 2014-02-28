@@ -10,7 +10,7 @@
 #include <sys/time.h> //required for timer
 #include <time.h>
 #include <ev.h>
-#include <pthread.h>
+//#include <pthread.h>
 
 #include "global.h"
 #include "initialisation.h"
@@ -32,6 +32,14 @@
 /** credit for the underlying libev socket code goes to Pierce <jqug123321@gmail.com>, details of which can be
 found @ http://jqug.blogspot.co.uk/2013/02/libev-socket.html **/
 
+/*
+struct ev_timer_type{
+    ev_timer connection_timer;
+    int connectionfd;
+};
+*/
+
+//struct ev_timer_type timeout_watcher;
 ev_timer timeout_watcher;
 
 void close_connection_slot(int connection){
@@ -73,6 +81,7 @@ void close_connection_slot(int connection){
     }
 
     clients.client[connection]->status=LOGGED_OUT;
+    update_db_char_last_in_game(connection);
 }
 
 void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
@@ -211,6 +220,7 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     send_server_text(client_sockfd, CHAT_SERVER, "\nHit any key to continue...\n");
 }
 
+//static void timeout_cb(EV_P_ struct ev_timer_type* timeout_watcher, int revents){
 static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
     (void)(timer);//removes unused parameter warning
@@ -251,6 +261,7 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
     // repeat
     ev_timer_again(loop, &timeout_watcher);
+    //ev_timer_again(loop, &timeout_watcher->connection_timer);
 }
 
 int main(void) {
@@ -279,8 +290,6 @@ int main(void) {
 
     initialise_movement_vectors();
     initialise_harvestables();
-
-    //initialise_queue(DB_QUEUE_MAX_NODES, &db_buffer_queue);
 
     //initialise database
     open_database(DATABASE_FILE);
@@ -322,7 +331,9 @@ int main(void) {
     }
 
     // initialize a timer watcher
+    //ev_timer_init(&timeout_watcher.connection_timer, timeout_cb, 0.05, 0.05);
     ev_timer_init(&timeout_watcher, timeout_cb, 0.05, 0.05);
+    //ev_timer_start(loop, &timeout_watcher.connection_timer);
     ev_timer_start(loop, &timeout_watcher);
 
     //create watcher to accept connection

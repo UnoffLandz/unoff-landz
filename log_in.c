@@ -15,32 +15,6 @@
 #include "broadcast.h"
 #include "database.h"
 
-int is_char_concurrent(int connection){
-
-     /** RESULT  : checks is a char is concurrently logged to the server
-
-        RETURNS : 0=non-concurrent / -1=concurrent
-
-        PURPOSE : prevent concurrent logins on the same char
-
-        USAGE   : protocol.c process_packet
-    */
-
-    int i=0;
-    int char_id=clients.client[connection]->character_id;
-    int char_count=0;
-
-    for(i=0; i<clients.max; i++){
-
-        if(clients.client[i]->character_id==char_id && i!=connection){
-            char_count++;
-            if(char_count>0) return CHAR_CONCURRENT;
-        }
-    }
-
-    return CHAR_NON_CONCURRENT;
-}
-
 void send_login_ok(int connection){
 
     unsigned char packet[3];
@@ -89,6 +63,44 @@ void send_you_are(int connection){
     send(connection, packet, 5, 0);
 }
 
+void load_char_data_into_connection(int connection){
+
+    clients.client[connection]->character_id=character.char_id;
+    strcpy(clients.client[connection]->char_name, character.char_name);
+    strcpy(clients.client[connection]->password, character.password);
+    clients.client[connection]->char_status=character.char_status;
+    clients.client[connection]->active_chan=character.active_chan;
+    clients.client[connection]->chan[0]=character.chan[0];
+    clients.client[connection]->chan[1]=character.chan[1];
+    clients.client[connection]->chan[2]=character.chan[2];
+    clients.client[connection]->gm_permission=character.gm_permission;
+    clients.client[connection]->ig_permission=character.ig_permission;
+    clients.client[connection]->map_id=character.map_id;
+    clients.client[connection]->map_tile=character.map_tile;
+    clients.client[connection]->guild_id=character.guild_id;
+    clients.client[connection]->char_type=character.char_type;
+    clients.client[connection]->skin_type=character.skin_type;
+    clients.client[connection]->hair_type=character.hair_type;
+    clients.client[connection]->shirt_type=character.shirt_type;
+    clients.client[connection]->pants_type=character.pants_type;
+    clients.client[connection]->boots_type=character.boots_type;
+    clients.client[connection]->head_type=character.head_type;
+    clients.client[connection]->shield_type=character.shield_type;
+    clients.client[connection]->weapon_type=character.weapon_type;
+    clients.client[connection]->cape_type=character.cape_type;
+    clients.client[connection]->helmet_type=character.helmet_type;
+    clients.client[connection]->frame=character.frame;
+    clients.client[connection]->max_health=character.max_health;
+    clients.client[connection]->current_health=character.current_health;
+    clients.client[connection]->visual_proximity=character.visual_proximity;
+    clients.client[connection]->local_text_proximity=character.local_text_proximity;
+    clients.client[connection]->last_in_game=character.last_in_game;
+    clients.client[connection]->char_created=character.char_created;
+    clients.client[connection]->joined_guild=character.joined_guild;
+    clients.client[connection]->overall_exp=character.overall_exp;
+    clients.client[connection]->harvest_exp=character.harvest_exp;
+}
+
 void process_log_in(int connection, char *text) {
 
     char char_name[1024]="";
@@ -131,10 +143,8 @@ void process_log_in(int connection, char *text) {
     }
 
     //load char from database into the client struct array
-    /***could replace this with a transfer from the character struct as the get_char_data function
-    will already have loaded the char data to the character struct and this would save having to query
-    the db twice */
-    load_character_from_database(char_id, connection);
+    load_char_data_into_connection(connection);
+    //load_character_from_database(char_id, connection);
 
     //check we have the correct password for our char
     if(strcmp(password, clients.client[connection]->password)==PASSWORD_INCORRECT){
@@ -163,17 +173,17 @@ void process_log_in(int connection, char *text) {
     }
 
     //prevent concurrent login on same char
-    /*
-    if(is_char_concurrent(connection)==CHAR_CONCURRENT){
+    for(i=1; i<clients.max; i++){
 
-        printf("char concurrent\n");
-        send_login_not_ok(connection);
+        if(clients.client[connection]->character_id==clients.client[i]->character_id && i!=connection){
 
-        sprintf(text_out, "concurrent login attempt for char [%s]\n", char_name);
-        log_event(EVENT_SESSION, text_out);
-        return;
+            send_login_not_ok(connection);
+
+            sprintf(text_out, "concurrent login attempt for char [%s]\n", char_name);
+            log_event(EVENT_SESSION, text_out);
+            return;
+        }
     }
-    */
 
     clients.client[connection]->status=LOGGED_IN;
 
@@ -203,10 +213,15 @@ void process_log_in(int connection, char *text) {
         exit(EXIT_FAILURE);
     }
 
+    /** We require this line as we've not worked out how to pass a sit/stand frame through the
+    add_new_enhanced_actor packet thats sent from the add_char_to_map function. **/
+    //tell char to sit/stand
+    broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
+
     send_login_ok(connection);
     send_you_are(connection);
     send_get_active_channels(connection);
-    //send_here_your_stats(connection);
+    send_here_your_stats(connection);
     //send_here_your_inventory(connection);
 
     sprintf(text_out, "login succesful char [%s]\n", char_name);

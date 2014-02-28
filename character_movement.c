@@ -2,8 +2,7 @@
 #include <stdlib.h>
 #include <sys/time.h> //needed for usec time
 #include <string.h>
-
-#include <sqlite3.h>
+#include <sys/socket.h> //needed for send function
 
 #include "global.h"
 #include "broadcast.h"
@@ -14,6 +13,33 @@
 #include "protocol.h"
 #include "pathfinding.h"
 #include "database.h"
+
+void send_change_map(int connection, char *elm_filename){
+
+    unsigned char packet[1024];
+
+    int i;
+
+    int filename_length=strlen(elm_filename)+1; // +1 to include null terminator
+    int msb=(filename_length) / 256;
+    int lsb=(filename_length) % 256;
+    lsb++; // +1 as required by EL protocol
+
+    // calculate packet length
+    int packet_length=filename_length+3;
+
+    // construct packet header
+    packet[0]=CHANGE_MAP;
+    packet[1]=lsb;
+    packet[2]=msb;
+
+    // TODO (derekl#2#): convert loop to memcpy    // add packet content
+    for(i=3; i<3+filename_length; i++){
+        packet[i]=elm_filename[i-3];
+    }
+
+    send(connection, packet, packet_length, 0);
+}
 
 int get_move_command_vector(int cmd, int tile_pos, int map_axis){
 
@@ -321,5 +347,6 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
 
     }
 
+    //save char map id and position
+    update_db_char_position(connection);
 }
-

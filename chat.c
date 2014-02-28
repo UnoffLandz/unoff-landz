@@ -37,33 +37,6 @@ void send_get_active_channels(int connection){
     send(connection, packet, 16, 0);
 }
 
-int get_char_connection(char char_id){
-
-    /** RESULT  : finds the character id from a character name
-
-        RETURNS : character id
-
-        PURPOSE : allows private messages to be vectored by char name
-
-        USAGE   : send_pm
-    */
-
-    int i=0;
-
-    /* loop through client list */
-    for(i=0; i<clients.count; i++){
-
-        /* match username with an existing user */
-        if(char_id==clients.client[i]->character_id){
-            return i;
-        }
-
-    }
-
-    /* return -1 to show when char is not in-game */
-    return -1;
-}
-
 void add_client_to_channel(int connection, int chan){
 
     char text_out[1024]="";
@@ -405,58 +378,58 @@ void send_pm(int connection, char *text) {
 
     char msg[1024]="";
     char text_out[1024]="";
-    int receiver_id=0;
-    int receiver_connection=0;
+    int recipient_char_id=0;
+    int recipient_connection=0;
     char sender_name[1024]="";
-    char receiver_name[1024]="";
+    char recipient_name[1024]="";
+    int i;
 
     if(count_str_island(text)>=2) {
 
-        get_str_island(text, receiver_name, 1);
+        get_str_island(text, recipient_name, 1);
         get_str_island(text, msg, 2);
 
         strcpy(sender_name, clients.client[connection]->char_name);
 
-        printf("PM from [%s] to [%s]: %s\n", receiver_name, sender_name, msg);
+        printf("PM from [%s] to [%s]: %s\n", recipient_name, sender_name, msg);
 
         // echo message back to sender
-        sprintf(text_out, "%c[PM to %s: %s]", c_orange1+127, receiver_name, msg);
-        send_server_text(receiver_connection, CHAT_PERSONAL, text_out);
+        sprintf(text_out, "%c[PM to %s: %s]", c_orange1+127, recipient_name, msg);
+        send_server_text(connection, CHAT_PERSONAL, text_out);
 
-        // determine id of the receiver char
-        receiver_id=get_char_data(receiver_name);
+        // determine char id of the recipient
+        get_char_data(sender_name);
+        recipient_char_id=character.char_id;
 
-        if(receiver_id!=CHAR_NOT_FOUND) {
-
-            // determine if the receiver char exists by seeing if it has a connection
-            receiver_connection=get_char_connection(receiver_id);
-
-            if(receiver_connection!=-1) {
-
-                // receiver char is in-game
-                sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, sender_name, msg);
-                send_server_text(connection, CHAT_PERSONAL, text_out);
-            }
-            else {
-                // receiver char is not in-game
-                sprintf(text_out, "%ccharacter is not currently logged on. To send a letter use #LETTER [name] [message]", c_red2+127);
-                send_server_text(connection, CHAT_PERSONAL, text_out);
-                printf("SEND_PM from [%s] to [%s] message [%s] - receiver not in-game\n", sender_name, receiver_name, msg);
-            }
-        }
-        else {
-
-            // receiver char does not exist
+        //check that message recipient exits
+        if(recipient_char_id==CHAR_NOT_FOUND) {
             sprintf(text_out, "%ccharacter does not exist\n", c_red1+127);
             send_server_text(connection, CHAT_PERSONAL, text_out);
-            printf("SEND_PM from [%s] to [%s] message [%s] - receiver does not exist\n", sender_name, receiver_name, msg);
+            printf("SEND_PM from [%s] to [%s] message [%s] - recipient does not exist\n", sender_name, recipient_name, msg);
+            return;
         }
-    }
-    else {
-        // tried to send a zero length message
-        sprintf(text_out, "%cno text in message", c_red1+127);
+
+        //check if message recipient is in game
+        for(i=0; i<clients.max; i++){
+
+            //if message recipient in game then send message
+            if(clients.client[i]->character_id==recipient_char_id && clients.client[i]->char_status==LOGGED_IN){
+                sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, sender_name, msg);
+                send_server_text(recipient_connection, CHAT_PERSONAL, text_out); //send to recipient
+                send_server_text(connection, CHAT_PERSONAL, text_out); // echo to sender
+                return;
+            }
+        }
+
+        //message recipient not in-game
+        sprintf(text_out, "%ccharacter is not currently logged on. To send a letter use #LETTER [name] [message]", c_red2+127);
         send_server_text(connection, CHAT_PERSONAL, text_out);
-        printf("SEND_PM from [%s] to [%s] - zero length message\n", sender_name, receiver_name);
+        printf("SEND_PM from [%s] to [%s] message [%s] - recipient not in-game\n", sender_name, recipient_name, msg);
+        return;
     }
 
+    // tried to send a zero length message
+    sprintf(text_out, "%cno text in message", c_red1+127);
+    send_server_text(connection, CHAT_PERSONAL, text_out);
+    printf("SEND_PM from [%s] to [%s] - zero length message\n", sender_name, recipient_name);
 }

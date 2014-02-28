@@ -41,4 +41,15 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile);
 */
 int add_char_to_map(int connection, int new_map_id, int map_tile);
 
+/** RESULT  : instructs client to change map
+
+    RETURNS : void
+
+    PURPOSE : allows characters to change maps
+
+    USAGE   : character_movement.c add_char_to_map
+*/
+//void send_change_map(int connection, char *elm_filename);
+
+
 #endif // CHARACTER_MOVEMENT_H_INCLUDED

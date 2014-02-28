@@ -57,18 +57,6 @@ void process_packet(int connection, unsigned char *packet); //, struct client_li
 */
 void send_server_text(int sock, int channel, char *text);
 
-
-/** RESULT  : instructs client to change map
-
-    RETURNS : void
-
-    PURPOSE : allows characters to change maps
-
-    USAGE   : character_movement.c add_char_to_map
-*/
-void send_change_map(int connection, char *elm_filename);
-
-
 /** RESULT  : make other actors in proximity visible to this actor
 
     RETURNS : void

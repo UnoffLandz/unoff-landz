@@ -91,33 +91,6 @@ void send_create_char_not_ok(int sock){
     send(sock, packet, 3, 0);
 }
 
-void send_change_map(int connection, char *elm_filename){
-
-    unsigned char packet[1024];
-
-    int i;
-
-    /* calculate msb/lsb */
-    int filename_length=strlen(elm_filename)+1; // +1 to include null terminator
-    int msb=(filename_length) / 256;
-    int lsb=(filename_length) % 256;
-    lsb++; // +1 as required by EL protocol
-
-    // calculate packet length
-    int packet_length=filename_length+3;
-
-    // construct packet header
-    packet[0]=CHANGE_MAP;
-    packet[1]=lsb;
-    packet[2]=msb;
-
-    // TODO (derekl#2#): convert loop to memcpy    // add packet content
-    for(i=3; i<3+filename_length; i++){
-        packet[i]=elm_filename[i-3];
-    }
-
-    send(connection, packet, packet_length, 0);
-}
 
 void send_here_your_stats(int connection){
 

@@ -24,15 +24,7 @@ void create_tables();
 
 void add_char(struct character_type character);
 
-void load_character_from_database(int char_id, int connection);
-
-//int initialise_queue(int max_nodes, struct queue_type *this_queue);
-
-//int enqueue_string(char *text_in, size_t text_len, struct queue_type *this_queue);
-
-//int dequeue_string(char *text_out, struct queue_type *this_queue);
-
-//int check_queue(char *str_out, struct queue_type *this_queue);
+//void load_character_from_database(int char_id, int connection);
 
 void execute_sql(char *sql);
 
@@ -45,4 +37,9 @@ void update_db_char_position(int connection);
 void update_db_char_name(int connection);
 
 void update_db_char_frame(int connection);
+
+void update_db_char_stats(int connection);
+
+void update_db_char_last_in_game(int connection);
+
 #endif // DATABASE_H_INCLUDED
