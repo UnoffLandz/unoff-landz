@@ -20,11 +20,13 @@ int get_max_char_id();
 
 int get_table_count();
 
-void create_tables();
+void create_character_table();
+
+void create_item_table();
+
+int get_item_data(int item_id);
 
 void add_char(struct character_type character);
-
-//void load_character_from_database(int char_id, int connection);
 
 void execute_sql(char *sql);
 
@@ -41,5 +43,8 @@ void update_db_char_frame(int connection);
 void update_db_char_stats(int connection);
 
 void update_db_char_last_in_game(int connection);
+
+void update_db_char_channels(int connection);
+
 
 #endif // DATABASE_H_INCLUDED

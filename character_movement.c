@@ -302,8 +302,6 @@ int add_char_to_map(int connection, int new_map_id, int map_tile){
 
     //#TODO log client map move (time / char_id / originating map id)
 
-    //save_character(characters.character[char_id]->char_name, char_id);
-
     sprintf(text_out, "char %s added to map %s", clients.client[connection]->char_name, maps.map[new_map_id]->map_name);
     log_event(EVENT_SESSION, text_out);
 

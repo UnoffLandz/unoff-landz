@@ -93,10 +93,6 @@ enum {//stats codes
     //89 ?????
 };
 
-enum{// harv item code
-     chrysanthemums=1112,
-};
-
 enum {// frame type
     nothing=0,
     stand_up=14,
@@ -369,13 +365,20 @@ struct client_node_type{
     int path[PATH_MAX];
     int path_max;
     int path_count;
+
     time_t time_of_last_move;
     time_t time_of_last_heartbeat;
     time_t time_of_last_harvest;
+
     int harvest_flag;
     int harvest_item;
-    unsigned char cmd_buffer[10][1024];
-    int cmd_buffer_end;
+    char harvest_item_name[1024];
+    int harvest_item_interval;
+    int harvest_item_exp;
+    int image_id;
+
+    //unsigned char cmd_buffer[10][1024];
+    //int cmd_buffer_end;
     char ip_address[16];
     int sit_down;
 
@@ -515,21 +518,23 @@ struct channel_list_type {
 
 struct channel_list_type channels;
 
-
-/** HARVESTABLES */
-struct harvestables_type{
-    int exp;
-    int emu;
-    int nexus;
-    char name[20];
-    int interval;
+/** ITEMS **/
+//struct used to pass to database on item creation
+struct item_type{
+    int item_id;
     int image_id;
+    char item_name[1024];
+    int harvestable; //flag that item is harvestable
+    int emu;
+    int interval;
+    int exp;
     int food_value;
-    int food_cool_down;
+    int food_cooldown;
+    int organic_nexus;
+    int vegetal_nexus;
 };
 
-struct harvestables_type harvestables[2000];
-
+struct item_type item;
 
 /** OTHERS */
 struct timeval time_check;
@@ -581,20 +586,6 @@ struct character_type{
 
 struct character_type character;
 
-/*
-// the database buffer queue template
-struct queue_type {
-    int start;       // the node where the queue starts
-    int end;         // the node where the queue ends
-    int count;       // the number of used nodes in queue
-    int max_nodes;   // the maximum number of nodes in queue
-    char **text_str; // the node array
-};
-
-//create database buffer from template
-struct queue_type db_buffer_queue;
-*/
-
 //struct to carry global data
 struct game_data_type {
     int char_count;
@@ -603,7 +594,5 @@ struct game_data_type {
 };
 
 struct game_data_type game_data;
-
-
 
 #endif // GLOBAL_H_INCLUDED

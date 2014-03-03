@@ -194,6 +194,68 @@ void add_char(struct character_type character){
     sqlite3_finalize(stmt);
 }
 
+void add_item(struct item_type item){
+
+    //function not used
+
+    int rc;
+    sqlite3_stmt *stmt;
+
+    char sql[1024] ="";
+
+    sprintf(sql, "INSERT INTO ITEM_TABLE("  \
+
+        "ITEM_ID," \
+        "IMAGE_ID,"  \
+        "ITEM_NAME," \
+        "HARVESTABLE,"  \
+        "EMU," \
+        "INTERVAL," \
+        "EXP," \
+        "FOOD_VALUE," \
+        "FOOD_COOLDOWN," \
+        "ORGANIC_NEXUS," \
+        "VEGETAL_NEXUS"
+        ") VALUES(" \
+
+        "%i," \
+        "%i," \
+        "'%s'," \
+        "%i," \
+        "%i," \
+        "%i," \
+        "%i," \
+        "%i," \
+        "%i," \
+        "%i," \
+        "%i" \
+        ");",
+
+        item.item_id,
+        item.image_id,
+        item.item_name,
+        item.harvestable,
+        item.emu,
+        item.interval,
+        item.exp,
+        item.food_value,
+        item.food_cooldown,
+        item.organic_nexus,
+        item.vegetal_nexus
+        );
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
+        exit(1);
+    }
+
+    sqlite3_finalize(stmt);
+}
+
 int get_max_char_id(){
 
     int rc;
@@ -273,6 +335,41 @@ int get_char_data(char *name){
     return character.char_id;
 }
 
+int get_item_data(int item_id){
+
+    //loads item data from the db to the item struct
+
+    int rc;
+    sqlite3_stmt *stmt;
+    char sql[1024]="";
+
+    item.item_id=-1;
+
+    sprintf(sql, "SELECT * FROM ITEM_TABLE WHERE ITEM_ID=%i;", item_id);
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, 16);
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        item.item_id=sqlite3_column_int(stmt,0);
+        item.image_id=sqlite3_column_int(stmt,1);
+        strcpy(item.item_name, (char*) sqlite3_column_text(stmt,2));
+        item.harvestable=sqlite3_column_int(stmt,3);
+        item.emu=sqlite3_column_int(stmt,4);
+        item.interval=sqlite3_column_int(stmt,5);
+        item.exp=sqlite3_column_int(stmt,6);
+        item.food_value=sqlite3_column_int(stmt,7);
+        item.food_cooldown=sqlite3_column_int(stmt,8);
+        item.organic_nexus=sqlite3_column_int(stmt,9);
+        item.vegetal_nexus=sqlite3_column_int(stmt,10);
+    }
+
+    sqlite3_finalize(stmt);
+
+    return item.item_id;
+}
+
 void execute_sql(char *sql){
 
     sqlite3_stmt *stmt;
@@ -290,14 +387,14 @@ void execute_sql(char *sql){
     sqlite3_finalize(stmt);
 }
 
-void create_tables(){
+void create_character_table(){
 
     printf("Create CHARACTER_TABLE\n");
 
     char sql[1024] = "CREATE TABLE CHARACTER_TABLE("  \
-        "CHAR_ID INT PRIMARY KEY     NOT NULL," \
-        "CHAR_NAME           TEXT    NOT NULL," \
-        "PASSWORD            TEXT    NOT NULL," \
+        "CHAR_ID             INT PRIMARY KEY NOT NULL," \
+        "CHAR_NAME           TEXT            NOT NULL," \
+        "PASSWORD            TEXT            NOT NULL," \
         "CHAR_STATUS         INT," \
         "ACTIVE_CHAN         INT," \
         "CHAN_0              INT," \
@@ -333,63 +430,25 @@ void create_tables(){
     execute_sql(sql);
 }
 
-/*
-void load_character_from_database(int char_id, int connection){
+void create_item_table(){
 
-    //loads character data from the db to the client struct
+    printf("Create ITEM_TABLE\n");
 
-    int rc;
-    sqlite3_stmt *stmt;
-    char sql[1024]="";
+    char sql[1024] = "CREATE TABLE ITEM_TABLE("  \
+        "ITEM_ID             INT PRIMARY KEY     NOT NULL," \
+        "IMAGE_ID            INT,"  \
+        "ITEM_NAME           TEXT," \
+        "HARVESTABLE         INT,"  \
+        "EMU                 INT," \
+        "INTERVAL            INT," \
+        "EXP                 INT," \
+        "FOOD_VALUE          INT," \
+        "FOOD_COOLDOWN       INT," \
+        "ORGANIC_NEXUS       INT," \
+        "VEGETAL             INT );";
 
-    sprintf(sql, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_ID=%i;", char_id);
-    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    sqlite3_bind_int(stmt, 1, 16);
-
-    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-
-        clients.client[connection]->character_id=sqlite3_column_int(stmt, 0);
-        strcpy(clients.client[connection]->char_name, (char*) sqlite3_column_text(stmt, 1));
-        strcpy(clients.client[connection]->password, (char*) sqlite3_column_text(stmt, 2));
-        clients.client[connection]->char_status=sqlite3_column_int(stmt, 3);
-        clients.client[connection]->active_chan=sqlite3_column_int(stmt, 4);
-        clients.client[connection]->chan[0]=sqlite3_column_int(stmt, 5);
-        clients.client[connection]->chan[1]=sqlite3_column_int(stmt, 6);
-        clients.client[connection]->chan[2]=sqlite3_column_int(stmt, 7);
-        clients.client[connection]->gm_permission=sqlite3_column_int(stmt, 8);
-        clients.client[connection]->ig_permission=sqlite3_column_int(stmt, 9);
-        clients.client[connection]->map_id=sqlite3_column_int(stmt, 10);
-        clients.client[connection]->map_tile=sqlite3_column_int(stmt, 11);
-        clients.client[connection]->guild_id=sqlite3_column_int(stmt, 12);
-        clients.client[connection]->char_type=sqlite3_column_int(stmt, 13);
-        clients.client[connection]->skin_type=sqlite3_column_int(stmt, 14);
-        clients.client[connection]->hair_type=sqlite3_column_int(stmt, 15);
-        clients.client[connection]->shirt_type=sqlite3_column_int(stmt, 16);
-        clients.client[connection]->pants_type=sqlite3_column_int(stmt, 17);
-        clients.client[connection]->boots_type=sqlite3_column_int(stmt, 18);
-        clients.client[connection]->head_type=sqlite3_column_int(stmt, 19);
-        clients.client[connection]->shield_type=sqlite3_column_int(stmt, 20);
-        clients.client[connection]->weapon_type=sqlite3_column_int(stmt, 21);
-        clients.client[connection]->cape_type=sqlite3_column_int(stmt, 22);
-        clients.client[connection]->helmet_type=sqlite3_column_int(stmt, 23);
-        clients.client[connection]->frame=sqlite3_column_int(stmt, 24);
-        clients.client[connection]->max_health=sqlite3_column_int(stmt, 25);
-        clients.client[connection]->current_health=sqlite3_column_int(stmt, 26);
-        clients.client[connection]->visual_proximity=sqlite3_column_int(stmt, 27);
-        clients.client[connection]->local_text_proximity=sqlite3_column_int(stmt, 28);
-        clients.client[connection]->last_in_game=sqlite3_column_int(stmt, 29);
-        clients.client[connection]->char_created=sqlite3_column_int(stmt, 30);
-        clients.client[connection]->joined_guild=sqlite3_column_int(stmt, 31);
-        clients.client[connection]->overall_exp=sqlite3_column_int(stmt, 32);
-        clients.client[connection]->harvest_exp=sqlite3_column_int(stmt, 33);
-
-        clients.client[connection]->path_count=0;//otherwise a new char can inherit a logged-out chars data
-    }
-
-    sqlite3_finalize(stmt);
+    execute_sql(sql);
 }
-*/
 
 void update_db_char_position(int connection){
 
@@ -449,3 +508,23 @@ void update_db_char_last_in_game(int connection){
 
     execute_sql(sql);
 }
+
+void update_db_char_channels(int connection){
+
+    char sql[1024]="";
+
+    sprintf(sql, "UPDATE CHARACTER_TABLE SET " \
+        "ACTIVE_CHAN=%i, " \
+        "CHAN_0=%i, " \
+        "CHAN_1=%i, " \
+        "CHAN_2=%i " \
+        "WHERE CHAR_ID=%i;",
+        clients.client[connection]->active_chan,
+        clients.client[connection]->chan[0],
+        clients.client[connection]->chan[1],
+        clients.client[connection]->chan[2],
+        clients.client[connection]->character_id );
+
+    execute_sql(sql);
+}
+

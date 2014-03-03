@@ -238,10 +238,6 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     //at each timeout check through each connect client and process pending actions
     for(i=0; i<clients.max; i++){
 
-        process_char_move(i, current_utime);
-
-        process_harvesting(i, current_time);
-
         //check for lagged connection
         if(clients.client[i]->status==LOGGED_IN || clients.client[i]->status==CONNECTED) {
 
@@ -257,6 +253,10 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                 close(i);
             }
         }
+
+        process_char_move(i, current_utime);
+
+        process_harvesting(i, current_time);
     }
 
     // repeat
@@ -289,11 +289,29 @@ int main(void) {
     initialise_client_list(MAX_CLIENTS);
 
     initialise_movement_vectors();
-    initialise_harvestables();
 
     //initialise database
     open_database(DATABASE_FILE);
-    if(get_table_count()==0) create_tables();
+    if(get_table_count()==0) {
+        create_character_table();
+        create_item_table();
+    }
+
+/*
+        item.item_id=1112;
+        item.image_id=28;
+        strcpy(item.name, "Chrysanthemum");
+        item.harvestable=1;
+        item.emu=1;
+        item.interval=1;
+        item.exp=1;
+        item.food_value=0;
+        item.food_cooldown=0;
+        item.organic_nexus=0;
+        item.vegetal_nexus=0;
+
+        add_item(item);
+*/
 
     //set global data
     game_data.char_count=get_chars_created_count();

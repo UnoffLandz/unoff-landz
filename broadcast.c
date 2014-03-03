@@ -192,7 +192,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     packet[i++]=45;                                                   // rotation lsb 8
 	packet[i++]=0;                                                    // rotation msb 9
 	packet[i++]=clients.client[connection]->char_type;                //              10
-    packet[i++]=0;                                                    // frame (doesn't work);
+    packet[i++]=0;                                                    // unknown
 	packet[i++]=clients.client[connection]->skin_type;
 	packet[i++]=clients.client[connection]->hair_type;
 	packet[i++]=clients.client[connection]->shirt_type;
@@ -203,7 +203,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
 	packet[i++]=clients.client[connection]->weapon_type;
 	packet[i++]=clients.client[connection]->cape_type;
 	packet[i++]=clients.client[connection]->helmet_type;
-	packet[i++]=0;                                                    // unknown
+	packet[i++]=0;                                                    // Frame
 	packet[i++]=clients.client[connection]->max_health % 256;         // max health lsb
 	packet[i++]=clients.client[connection]->max_health / 256;         // max health msb
 	packet[i++]=clients.client[connection]->current_health % 256;     // current health lsb

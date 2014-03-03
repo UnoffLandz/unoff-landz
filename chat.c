@@ -187,13 +187,8 @@ int join_channel(int connection, int chan){
 
     send_get_active_channels(connection);
 
-/*
-    send_get_active_channels(clients.client[connection]->sock,
-        characters.character[char_id]->active_chan,
-        characters.character[char_id]->chan[0],
-        characters.character[char_id]->chan[1],
-        characters.character[char_id]->chan[2]);
-*/
+    update_db_char_channels(connection);
+
     return CHANNEL_JOINED;
 }
 
@@ -230,13 +225,8 @@ int leave_channel(int connection, int chan){
 
     send_get_active_channels(connection);
 
-/*
-    send_get_active_channels(clients.client[connection]->sock,
-        characters.character[char_id]->active_chan,
-        characters.character[char_id]->chan[0],
-        characters.character[char_id]->chan[1],
-        characters.character[char_id]->chan[2]);
-*/
+    update_db_char_channels(connection);
+
     return CHANNEL_LEFT;
 }
 
@@ -417,6 +407,9 @@ void send_pm(int connection, char *text) {
                 sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, sender_name, msg);
                 send_server_text(recipient_connection, CHAT_PERSONAL, text_out); //send to recipient
                 send_server_text(connection, CHAT_PERSONAL, text_out); // echo to sender
+
+                //log pm chat
+                log_event(EVENT_CHAT, text_out);
                 return;
             }
         }

@@ -7,8 +7,6 @@ int get_heading(int tile_pos, int tile_dest, int map_axis);
 
 void process_char_move(int connection, time_t current_time);
 
-void enqueue_move_to(int connection, int tile_dest);
-
 /** RESULT  : Move a char between maps
 
     RETURNS : void
@@ -40,16 +38,5 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile);
     USAGE   : protocol.c process_packet
 */
 int add_char_to_map(int connection, int new_map_id, int map_tile);
-
-/** RESULT  : instructs client to change map
-
-    RETURNS : void
-
-    PURPOSE : allows characters to change maps
-
-    USAGE   : character_movement.c add_char_to_map
-*/
-//void send_change_map(int connection, char *elm_filename);
-
 
 #endif // CHARACTER_MOVEMENT_H_INCLUDED

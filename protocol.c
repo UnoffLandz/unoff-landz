@@ -344,6 +344,14 @@ void send_actors_to_client(int connection){
     }
 }
 
+void load_item_data_into_connection(int connection){
+
+    clients.client[connection]->harvest_item=item.item_id;
+    strcpy(clients.client[connection]->harvest_item_name, item.item_name);
+    clients.client[connection]->harvest_item_interval=item.interval;
+    clients.client[connection]->harvest_item_exp=item.exp;
+}
+
 void process_packet(int connection, unsigned char *packet){
 
     int i=0;
@@ -456,6 +464,7 @@ void process_packet(int connection, unsigned char *packet){
                     //broadcast to receivers
                     broadcast_local_chat(connection, text_out);
                     return;
+
                 break;
             }
 
@@ -465,10 +474,8 @@ void process_packet(int connection, unsigned char *packet){
 
         //if char is harvesting then stop
         if(clients.client[connection]->harvest_flag==TRUE){
-
-            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, harvestables[item].name);
+            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, clients.client[connection]->harvest_item_name);
             send_server_text(connection, CHAT_SERVER, text_out);
-
             clients.client[connection]->harvest_flag=FALSE;
             break;
         }
@@ -533,17 +540,12 @@ void process_packet(int connection, unsigned char *packet){
         case SIT_DOWN:
         printf("SIT_DOWN %i\n", data[0]);
 
-        printf("frame=%i data=%i\n", clients.client[connection]->frame, data[0]);
-
-        if(data[0]==1) {
+        if(data[0]==1){
             clients.client[connection]->frame=sit_down;
-            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
         }
+        else clients.client[connection]->frame=stand_up;
 
-        if(data[0]==0) {
-            clients.client[connection]->frame=stand_up;
-            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
-        }
+        broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
 
         //save frame to database
         update_db_char_frame(connection);
@@ -571,15 +573,11 @@ void process_packet(int connection, unsigned char *packet){
 
         case HEARTBEAT:
         printf("HEARTBEAT %i %i \n", lsb, msb);
-        //dont need to do anything on this message as the receipt of any data automatically updates the heartbeat
-
-        //gettimeofday(&time_check, NULL);
-        //clients.client[connection]->time_of_last_heartbeat=time_check.tv_sec;
-        //save_data(connection);//needs to be on a separate timer
+        /* dont need to do anything on this message as the receipt of any data automatically updates the heartbeat
+        via the recv_data function in main.c */
         break;
 
         case USE_OBJECT:
-
         printf("USE_OBJECT %i %i \n", lsb, msb);
 
         map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
@@ -607,25 +605,25 @@ void process_packet(int connection, unsigned char *packet){
 
         printf("HARVEST item %i\n", item);
 
-        if(harvestables[item].exp==0){
+        //see if item exists and load to item struct
+        if(get_item_data(item)==-1){
             sprintf(text_out, "%cYou tried to harvest an unknown item", c_red3+127);
             send_server_text(connection, CHAT_SERVER, text_out);
             break;
         }
 
+        //if already harvesting then stop
         if(clients.client[connection]->harvest_flag==TRUE){
-
-            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, harvestables[item].name);
+            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, clients.client[connection]->harvest_item_name);
             send_server_text(connection, CHAT_SERVER, text_out);
-
             clients.client[connection]->harvest_flag=FALSE;
             break;
         }
 
-        clients.client[connection]->harvest_item=item;
+        load_item_data_into_connection(connection);
         clients.client[connection]->harvest_flag=TRUE;
 
-        sprintf(text_out, "%cYou started to harvest %s", c_green3+127, harvestables[item].name);
+        sprintf(text_out, "%cYou started to harvest %s", c_green3+127, clients.client[connection]->harvest_item_name);
         send_server_text(connection, CHAT_SERVER, text_out);
 
         break;
@@ -637,6 +635,7 @@ void process_packet(int connection, unsigned char *packet){
         case SET_ACTIVE_CHANNEL:
         printf("SET_ACTIVE_CHANNEL %i %i\n", lsb, msb);
         clients.client[connection]->active_chan=data[0]-32;
+        update_db_char_channels(connection);
         break;
 
         case LOG_IN:

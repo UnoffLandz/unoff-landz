@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h> //needed for send function
-#include <sys/time.h> //needed for gettimeofday function
+#include <sys/time.h>   //needed for gettimeofday function
 
 #include "global.h"
 #include "protocol.h"
 #include "files.h"
 #include "numeric_functions.h"
+#include "database.h"
 
 int get_inventory_item_str_pos(int connection, int find_item){
 
@@ -79,15 +80,9 @@ void update_inventory_item_amount(int connection, int str_pos, int amount){
     clients.client[connection]->inventory[6+(str_pos*8)]=amount / 256 / 256 / 256 % 256;
 }
 
-int test;
-
 void process_harvesting(int connection, time_t current_time){
 
     unsigned char packet[1024];
-
-    int item=clients.client[connection]->harvest_item;
-    int image_id=harvestables[item].image_id;
-    int interval=harvestables[item].interval;
     int amount=0;
     int str_pos=0;
 
@@ -97,17 +92,20 @@ void process_harvesting(int connection, time_t current_time){
         if(clients.client[connection]->time_of_last_harvest>current_time) current_time+=60;
 
         // check for time of next harvest
-        if(current_time>clients.client[connection]->time_of_last_harvest+interval) {
+        if(current_time>clients.client[connection]->time_of_last_harvest+clients.client[connection]->harvest_item_interval) {
 
             //update the time of harvest
             gettimeofday(&time_check, NULL);
             clients.client[connection]->time_of_last_harvest=time_check.tv_sec;
 
-            //update stats
-            clients.client[connection]->harvest_exp+=harvestables[item].exp;
+            //update stats and send to client
+            clients.client[connection]->harvest_exp+=clients.client[connection]->harvest_item_exp;
             send_partial_stats(connection, HARVEST_EXP, clients.client[connection]->harvest_exp);
 
-            str_pos=get_inventory_item_str_pos(connection, image_id);
+            //save updated stats to database
+            update_db_char_stats(connection);
+
+            str_pos=get_inventory_item_str_pos(connection, clients.client[connection]->image_id);
 
             if(str_pos>0){
                 //existing slot
@@ -118,21 +116,18 @@ void process_harvesting(int connection, time_t current_time){
             else {
                 //new slot
                 amount=1;
-                new_inventory_item(connection, image_id, amount);
+                new_inventory_item(connection, clients.client[connection]->image_id, amount);
                 clients.client[connection]->inventory[0]++;
                 str_pos=clients.client[connection]->inventory[0];
             }
-
-            //save updated exp to char record
-            //save_character(clients.client[connection]->char_name, char_id);
 
             packet[0]=GET_NEW_INVENTORY_ITEM;
 
             packet[1]=9;
             packet[2]=0;
 
-            packet[3]=image_id % 256;
-            packet[4]=image_id / 256;
+            packet[3]=clients.client[connection]->image_id % 256;
+            packet[4]=clients.client[connection]->image_id / 256;
 
             packet[5]=amount % 256;//quantity
             packet[6]=amount / 256 % 256;

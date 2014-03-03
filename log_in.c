@@ -215,8 +215,10 @@ void process_log_in(int connection, char *text) {
 
     /** We require this line as we've not worked out how to pass a sit/stand frame through the
     add_new_enhanced_actor packet thats sent from the add_char_to_map function. **/
-    //tell char to sit/stand
-    broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
+    //tell char to sit if the frame is set to sit
+        if(clients.client[connection]->frame==sit_down) {
+        broadcast_actor_packet(connection, sit_down, clients.client[connection]->map_tile);
+    }
 
     send_login_ok(connection);
     send_you_are(connection);

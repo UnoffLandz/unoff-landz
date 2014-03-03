@@ -1,33 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sqlite3.h>
+//#include <sqlite3.h>
 
 #include "global.h"
 
-void initialise_harvestables(){
-
-    harvestables[chrysanthemums].exp=10;
-    harvestables[chrysanthemums].emu=1;
-    harvestables[chrysanthemums].nexus=0;
-    strcpy(harvestables[chrysanthemums].name, "Chrysanthemums");
-    harvestables[chrysanthemums].interval=1;
-    harvestables[chrysanthemums].image_id=28;
-    harvestables[chrysanthemums].food_value=0;
-    harvestables[chrysanthemums].food_cool_down=0;
-}
-
 void initialise_movement_vectors(){
-/*
-    vector_x[0]=0; vector_y[0]=1; movement_cmd[0]=20;
-    vector_x[1]=1; vector_y[1]=1; movement_cmd[1]=21;
-    vector_x[2]=1; vector_y[2]=0; movement_cmd[2]=22;
-    vector_x[3]=1; vector_y[3]=-1; movement_cmd[3]=23;
-    vector_x[4]=0; vector_y[4]=-1; movement_cmd[4]=24;
-    vector_x[5]=-1; vector_y[5]=-1; movement_cmd[5]=25;
-    vector_x[6]=-1; vector_y[6]=0; movement_cmd[6]=26;
-    vector_x[7]=-1; vector_y[7]=1; movement_cmd[7]=27;
-*/
+
     vector[0].x=0; vector[0].y=1; vector[0].move_cmd=20;
     vector[1].x=1; vector[1].y=1; vector[1].move_cmd=21;
     vector[2].x=1; vector[2].y=0; vector[2].move_cmd=22;
@@ -62,7 +41,7 @@ void initialise_client_list(int max_nodes){
 
         clients.client[i]->status=LOGGED_OUT;
         clients.client[i]->path_count=0;
-        clients.client[i]->cmd_buffer_end=0;
+        //clients.client[i]->cmd_buffer_end=0;
 
      }
 }
@@ -121,31 +100,6 @@ void initialise_guild_list(int max_nodes){
         }
     }
 }
-/*
-void initialise_character_list(int max_nodes){
-
-    int i;
-
-    // zero our struct data
-    characters.count=0;
-    characters.max=max_nodes;
-
-    // allocate memory for our struct
-    if( !(characters.character=malloc(sizeof(struct character_node_type*)*max_nodes))){
-        perror ("unable to allocate suffient memory for character struct");
-        exit (EXIT_FAILURE);
-    }
-
-    // allocate memory for our struct nodes
-    for(i=0; i<max_nodes; i++){
-
-        if( !(characters.character[i]=malloc(sizeof(struct character_node_type)))) {
-            perror ("unable to allocate suffient memory for character node struct");
-            exit (EXIT_FAILURE);
-        }
-    }
-}
-*/
 
 void initialise_channel_list(int max_nodes){
 
