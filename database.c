@@ -32,7 +32,7 @@ int get_table_count(){
     char sql[1024]="SELECT count(*) FROM sqlite_master WHERE type='table';";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, 16);
+    //sqlite3_bind_int(stmt, 1, 16);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         table_count=sqlite3_column_int(stmt, 0);
@@ -53,7 +53,7 @@ int get_chars_created_count(){
     char sql[1024]="SELECT count(CHAR_ID) FROM CHARACTER_TABLE;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, 16);
+    //sqlite3_bind_int(stmt, 1, 16);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         char_count=sqlite3_column_int(stmt, 0);
@@ -72,7 +72,7 @@ void get_last_char_created(){
     char sql[1024]="SELECT CHAR_NAME, CHAR_CREATED FROM CHARACTER_TABLE ORDER BY CHAR_CREATED LIMIT 1;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, 16);
+    //sqlite3_bind_int(stmt, 1, 16);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         strcpy(game_data.name_last_char_created, (char*)sqlite3_column_text(stmt, 0));
@@ -266,7 +266,7 @@ int get_max_char_id(){
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, 16);
+    //sqlite3_bind_int(stmt, 1, 16);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         max_id=sqlite3_column_int(stmt, 0);
@@ -287,10 +287,10 @@ int get_char_data(char *name){
 
     character.char_id=CHAR_NOT_FOUND;
 
-    sprintf(sql, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_NAME='%s';", name);
+    sprintf(sql, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_NAME='%s'", name);
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, 16);
+    //sqlite3_bind_int(stmt, 1, 16);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -326,8 +326,12 @@ int get_char_data(char *name){
         character.last_in_game=sqlite3_column_int(stmt,  29);
         character.char_created=sqlite3_column_int(stmt, 30);
         character.joined_guild=sqlite3_column_int(stmt, 31);
-        character.overall_exp=sqlite3_column_int(stmt, 32);
-        character.harvest_exp=sqlite3_column_int(stmt, 33);
+
+        character.inventory_length=sqlite3_column_int(stmt, 32);
+        memcpy(character.inventory, sqlite3_column_blob(stmt, 33), character.inventory_length);
+
+        character.overall_exp=sqlite3_column_int(stmt, 34);
+        character.harvest_exp=sqlite3_column_int(stmt, 35);
     }
 
     sqlite3_finalize(stmt);
@@ -348,7 +352,7 @@ int get_item_data(int item_id){
     sprintf(sql, "SELECT * FROM ITEM_TABLE WHERE ITEM_ID=%i;", item_id);
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, 16);
+    //sqlite3_bind_int(stmt, 1, 16);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -424,6 +428,8 @@ void create_character_table(){
         "LAST_IN_GAME        INT," \
         "CHAR_CREATED        INT," \
         "JOINED_GUILD        INT," \
+        "INVENTORY_LENGTH    INT," \
+        "INVENTORY           BLOB," \
         "OVERALL_EXP         INT," \
         "HARVEST_EXP         INT );";
 
@@ -528,3 +534,24 @@ void update_db_char_channels(int connection){
     execute_sql(sql);
 }
 
+void update_db_char_inventory(int connection){
+
+    int rc;
+    sqlite3_stmt *stmt;
+    char sql[1024]="";
+
+    sprintf(sql, "UPDATE CHARACTER_TABLE SET INVENTORY=?, INVENTORY_LENGTH=? WHERE CHAR_ID=%i;", clients.client[connection]->character_id );
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_blob(stmt, 1, clients.client[connection]->inventory, clients.client[connection]->inventory_length, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
+        exit(1);
+    }
+
+    sqlite3_finalize(stmt);
+}

@@ -97,6 +97,10 @@ void load_char_data_into_connection(int connection){
     clients.client[connection]->last_in_game=character.last_in_game;
     clients.client[connection]->char_created=character.char_created;
     clients.client[connection]->joined_guild=character.joined_guild;
+
+    clients.client[connection]->inventory_length=character.inventory_length;
+    memcpy(clients.client[connection]->inventory, character.inventory, character.inventory_length);
+
     clients.client[connection]->overall_exp=character.overall_exp;
     clients.client[connection]->harvest_exp=character.harvest_exp;
 }

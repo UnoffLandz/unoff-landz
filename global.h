@@ -377,8 +377,6 @@ struct client_node_type{
     int harvest_item_exp;
     int image_id;
 
-    //unsigned char cmd_buffer[10][1024];
-    //int cmd_buffer_end;
     char ip_address[16];
     int sit_down;
 
@@ -412,6 +410,9 @@ struct client_node_type{
     time_t last_in_game; // date char was last in-game
     time_t char_created; // date char was created
     time_t joined_guild; // date joined guild
+
+    unsigned char inventory[1024];
+    int inventory_length;
 
     int physique;
     int max_physique;
@@ -484,8 +485,7 @@ struct client_node_type{
     int max_book_time;
     int elapsed_book_time;
 
-    unsigned char inventory[1024];
-    int inventory_size;
+
 };
 
 struct client_list_type {
@@ -580,6 +580,8 @@ struct character_type{
     time_t last_in_game;
     time_t joined_guild;
     int guild_id;
+    unsigned char inventory[1024];
+    int inventory_length;
     int overall_exp;
     int harvest_exp;
 };
