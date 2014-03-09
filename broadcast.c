@@ -332,7 +332,7 @@ void broadcast_remove_actor_packet(int sender_connection) {
     }
 }
 
-void add_actor_packet(int char_id, unsigned char move, unsigned char *packet, int *packet_length){
+void add_actor_packet(int connection, unsigned char move, unsigned char *packet, int *packet_length){
 
     int i=0;
     int data_length=0;
@@ -340,23 +340,38 @@ void add_actor_packet(int char_id, unsigned char move, unsigned char *packet, in
     packet[i++]=2;               // protocol
     packet[i++]=0;               // dummy the lsb (we'll put the proper value in later
     packet[i++]=0;               // dummy the msb (we'll put the proper value in later
-    packet[i++]= char_id % 256;  // char_id lsb
-    packet[i++]= char_id / 256;  // char_id msb
+    packet[i++]= connection % 256;  // char_id lsb
+    packet[i++]= connection / 256;  // char_id msb
     packet[i++]=move;            // actor command
 
     *packet_length=i;
 
-    /* now we know the packet length we can calculate the data length by subtracting 2 */
+    // now we know the packet length, we can calculate the data length by subtracting 2
     data_length=i-2;
 
-    /* now we know our data length we can will in the proper values for our lsb/msb */
+    // now we know our data length, we can will in the proper values for our lsb/msb
     packet[1]=data_length % 256;
     packet[2]=data_length / 256;
 }
 
+/*
+void broadcast_actor_packet(int connection, unsigned char move, int dummy){
+
+    printf("TEMPORARY BROADCAST FUNCTION  connection[%i]\n", connection);
+
+    unsigned char packet[1024];
+    int packet_length;
+
+    add_actor_packet(connection, move, packet, &packet_length);
+
+    send(connection, packet, packet_length, 0);
+}
+*/
+
+
 void broadcast_actor_packet(int sender_connection, unsigned char move, int sender_destination_tile){
 
-    //broadcasts a specific char's movement to all connected clients
+    //broadcast the specified char movement to all connected clients
 
     int i=0;
 
@@ -406,19 +421,16 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
             if(proximity_before_move>receiver_char_visual_proximity && proximity_after_move<=receiver_char_visual_proximity){
 
                 //sending char moves into visual proximity of receiving char
-                printf("1\n");
                 send(receiver_connection, packet2, packet2_length, 0);
             }
             else if(proximity_before_move<=receiver_char_visual_proximity && proximity_after_move>receiver_char_visual_proximity){
 
                 //sending char moves out of visual proximity of receiving char
-                printf("2\n");
                 send(receiver_connection, packet3, packet3_length, 0);
             }
             else if(proximity_before_move<=receiver_char_visual_proximity && proximity_after_move<=receiver_char_visual_proximity){
 
                 //sending char moving within visual proximity of receiving char
-                printf("3\n");
                 send(receiver_connection, packet1, packet1_length, 0);
             }
 
@@ -428,14 +440,12 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
         if(proximity_before_move>sender_visual_proximity && proximity_after_move<=sender_visual_proximity){
 
             //sending char moves into visual proximity of receiving char
-            printf("4\n");
             add_new_enhanced_actor_packet(receiver_connection, packet, &packet_length);
             send(sender_connection, packet, packet_length, 0);
         }
         else if(proximity_before_move<=sender_visual_proximity && proximity_after_move>sender_visual_proximity){
 
             //sending char moves out of visual proximity of receiving char
-            printf("5\n");
             remove_actor_packet(receiver_connection, packet, &packet_length);
             send(sender_connection, packet, packet_length, 0);
         }
@@ -445,12 +455,10 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
             if(receiver_connection==sender_connection) {
 
                 // only move our actor
-                printf("6\n");
                 add_actor_packet(receiver_connection, move, packet, &packet_length);
             }
             else{
                 // other actors remain stationary
-                printf("7\n");
                 add_actor_packet(receiver_connection, 0, packet, &packet_length);
             }
 
@@ -458,3 +466,4 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
         }
     }
 }
+

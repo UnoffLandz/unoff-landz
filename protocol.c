@@ -13,7 +13,7 @@
 #include "hash_commands.h"
 #include "broadcast.h"
 #include "files.h"
-#include "character_movement.h" //needed for get_move_command_vector
+#include "character_movement.h"
 #include "chat.h"
 #include "debug.h"
 #include "maps.h"
@@ -22,24 +22,69 @@
 #include "chat.h"
 #include "log_in.h"
 #include "database.h"
+#include "harvesting.h"
+
+void send_get_new_inventory_item(int connection, int item_image_id, int amount, int slot){
+
+    unsigned char packet[11];
+
+    packet[0]=GET_NEW_INVENTORY_ITEM;
+
+    packet[1]=9;
+    packet[2]=0;
+
+    packet[3]=item_image_id % 256;
+    packet[4]=item_image_id / 256;
+
+    packet[5]=amount % 256;//quantity
+    packet[6]=amount / 256 % 256;
+    packet[7]=amount / 256 / 256 % 256;
+    packet[8]=amount / 256 / 256 / 256 % 256;
+
+    packet[9]=slot;
+
+    packet[10]=0;//flags
+
+    //printf("inv slot %i image %i amount %i\n",slot, packet[3], packet[5]);
+
+    send(connection, packet, 11, 0);
+}
 
 void send_here_your_inventory(int connection){
 
     int i=0;
-    unsigned char packet[12];
-    int inventory_count=clients.client[connection]->inventory[0];
+    unsigned char packet[(MAX_INVENTORY_SLOTS*8)+4];
 
-    int data_length=1+(8*inventory_count);
+    int data_length=1+(MAX_INVENTORY_SLOTS*8);
+    int j;
 
     packet[0]=HERE_YOUR_INVENTORY;
     packet[1]=(data_length+1) % 256;
     packet[2]=(data_length+1) / 256;
 
-    for(i=0; i<data_length; i++){
-        packet[3+i]=clients.client[connection]->inventory[i];
+    packet[3]=MAX_INVENTORY_SLOTS; //inv count
+
+    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
+
+        j=4+(i*8);
+
+        packet[j]=clients.client[connection]->inventory[1+(8*i)]; //image_id of item
+        packet[j+1]=clients.client[connection]->inventory[2+(8*i)];
+
+        packet[j+2]=clients.client[connection]->inventory[3+(8*i)]; //amount (when zero nothing is shown in inventory)
+        packet[j+3]=clients.client[connection]->inventory[4+(8*i)];
+        packet[j+4]=clients.client[connection]->inventory[5+(8*i)];
+        packet[j+5]=clients.client[connection]->inventory[6+(8*i)];
+
+        packet[j+6]=i; //inventory pos (starts at 0)
+
+        packet[j+7]=0; //flags
+
+        //printf("inv slot %i image %i amount %i\n",i, packet[j], packet[j+2]);
+
     }
 
-    send(connection, packet, data_length+2,0);
+    send(connection, packet, (MAX_INVENTORY_SLOTS*8)+4, 0);
 }
 
 void send_server_text(int sock, int channel, char *text){
@@ -291,7 +336,6 @@ void send_partial_stats(int connection, int attribute_type, int attribute_level)
 
     unsigned char packet[1024];
 
-    // construct packet header
     packet[0]=SEND_PARTIAL_STATS;
     packet[1]=6;
     packet[2]=0;
@@ -346,10 +390,14 @@ void send_actors_to_client(int connection){
 
 void load_item_data_into_connection(int connection){
 
-    clients.client[connection]->harvest_item=item.item_id;
-    strcpy(clients.client[connection]->harvest_item_name, item.item_name);
-    clients.client[connection]->harvest_item_interval=item.interval;
-    clients.client[connection]->harvest_item_exp=item.exp;
+        clients.client[connection]->harvest_item_id=item.item_id;
+        clients.client[connection]->harvest_item_image_id=item.image_id;
+        strcpy(clients.client[connection]->harvest_item_name, item.item_name);
+        clients.client[connection]->harvest_item_interval=item.interval;
+        clients.client[connection]->harvest_item_exp=item.exp;
+        clients.client[connection]->harvest_item_emu=item.emu;
+        clients.client[connection]->harvest_item_cycle_amount=item.cycle_amount;
+
 }
 
 void process_packet(int connection, unsigned char *packet){
@@ -377,7 +425,8 @@ void process_packet(int connection, unsigned char *packet){
     int map_object_id=0;
     int use_with_position=0;
     int result=0;
-    int item=0;
+    int item_id;
+    int item_image_id;
 
     // extract data from packet
     for(i=0; i<data_length; i++){
@@ -601,16 +650,9 @@ void process_packet(int connection, unsigned char *packet){
 
         case HARVEST:
 
-        item=Uint16_to_dec(data[0], data[1]);
+        item_id=Uint16_to_dec(data[0], data[1]);
 
-        printf("HARVEST item %i\n", item);
-
-        //see if item exists and load to item struct
-        if(get_item_data(item)==-1){
-            sprintf(text_out, "%cYou tried to harvest an unknown item", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            break;
-        }
+        printf("HARVEST item %i\n", item_id);
 
         //if already harvesting then stop
         if(clients.client[connection]->harvest_flag==TRUE){
@@ -620,7 +662,32 @@ void process_packet(int connection, unsigned char *packet){
             break;
         }
 
+        //see if item exists
+        if(get_item_data(item_id)==NOT_FOUND){
+            sprintf(text_out, "%cYou tried to harvest an unknown item", c_red3+127);
+            send_server_text(connection, CHAT_SERVER, text_out);
+            break;
+        }
+
+        item_image_id=item.image_id;
+
+        printf("found image_id [%i] for item[%i]\n", item_image_id, item_id);
+
         load_item_data_into_connection(connection);
+
+        //if there's not an existing inventory slot for the harvested item, create one
+        if(find_inventory_item(connection, item_image_id)==NOT_FOUND){
+
+            new_inventory_item(connection, item_image_id);
+            printf("created new slot\n");
+        }
+        else {
+            printf("found existing slot\n");
+        }
+
+        //set the inventory slot to to be used for the harvested item
+        clients.client[connection]->inventory_slot=inventory.slot;
+
         clients.client[connection]->harvest_flag=TRUE;
 
         sprintf(text_out, "%cYou started to harvest %s", c_green3+127, clients.client[connection]->harvest_item_name);
@@ -666,7 +733,7 @@ void process_packet(int connection, unsigned char *packet){
         get_str_island(text, password, 2);
 
         //check if char name is already used
-        if(get_char_data(char_name)!=CHAR_NOT_FOUND){
+        if(get_char_data(char_name)!=NOT_FOUND){
 
             send_create_char_not_ok(connection);
 
@@ -703,6 +770,8 @@ void process_packet(int connection, unsigned char *packet){
         character.visual_proximity=15;
         character.local_text_proximity=12;
         character.char_created=time(NULL);
+        character.inventory[0]=0;
+        character.inventory_length=1;
 
         add_char(character);
 

@@ -123,6 +123,11 @@ enum{ // general boolean values
     TRUE
 };
 
+enum{
+    FOUND=0,
+    NOT_FOUND=-1
+};
+
 enum { //log events
     EVENT_NEW_CHAR,
     EVENT_ERROR,
@@ -371,11 +376,14 @@ struct client_node_type{
     time_t time_of_last_harvest;
 
     int harvest_flag;
-    int harvest_item;
+    int harvest_item_id;
     char harvest_item_name[1024];
     int harvest_item_interval;
     int harvest_item_exp;
-    int image_id;
+    int harvest_item_image_id;
+    int harvest_item_emu;
+    int harvest_item_cycle_amount;
+    int inventory_slot;
 
     char ip_address[16];
     int sit_down;
@@ -410,6 +418,7 @@ struct client_node_type{
     time_t last_in_game; // date char was last in-game
     time_t char_created; // date char was created
     time_t joined_guild; // date joined guild
+
 
     unsigned char inventory[1024];
     int inventory_length;
@@ -525,6 +534,7 @@ struct item_type{
     int image_id;
     char item_name[1024];
     int harvestable; //flag that item is harvestable
+    int cycle_amount;
     int emu;
     int interval;
     int exp;
@@ -542,11 +552,6 @@ time_t server_start_time;
 
 #include <sqlite3.h>
 sqlite3 *db;
-
-enum { //return values for get_char_id function
-    CHAR_FOUND=-1,
-    CHAR_NOT_FOUND =0
-};
 
 //struct used to pass to database on character creation and get_char_id function
 struct character_type{

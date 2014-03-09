@@ -6,6 +6,7 @@
 #include "global.h"
 #include "database.h"
 #include "log_in.h"
+#include "harvesting.h"
 
 void open_database(char *database_name){
 
@@ -86,10 +87,11 @@ void add_char(struct character_type character){
 
     int rc;
     sqlite3_stmt *stmt;
+    unsigned char inventory[MAX_INVENTORY_SLOTS];
 
-    char sql[1024] ="";
+    inventory[0]=0;
 
-    sprintf(sql, "INSERT INTO CHARACTER_TABLE("  \
+    char sql[1024] ="INSERT INTO CHARACTER_TABLE(" \
         "CHAR_ID," \
         "CHAR_NAME," \
         "PASSWORD," \
@@ -117,72 +119,55 @@ void add_char(struct character_type character){
         "CURRENT_HEALTH," \
         "VISUAL_PROXIMITY," \
         "LOCAL_TEXT_PROXIMITY," \
-        "CHAR_CREATED" \
+        "CHAR_CREATED," \
+        "INVENTORY_LENGTH," \
+        "INVENTORY" \
 
-        ") VALUES(" \
-
-        "%i," \
-        "'%s'," \
-        "'%s'," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i," \
-        "%i" \
-
-        ");", \
-
-        character.char_id,
-        character.char_name,
-        character.password,
-        CHAR_ALIVE,
-        0,   //active chan
-        0,   //chan 0
-        0,   //chan 1
-        0,   //chan 2
-        0,   //gm permission
-        0,   //ig permission
-        START_MAP_ID,
-        START_MAP_TILE,
-        character.char_type,
-        character.skin_type,
-        character.hair_type,
-        character.shirt_type,
-        character.pants_type,
-        character.boots_type,
-        character.head_type,
-        SHIELD_NONE,
-        WEAPON_NONE,
-        CAPE_NONE,
-        HELMET_NONE,
-        0,  //max health
-        0,  //current health
-        character.visual_proximity,
-        character.local_text_proximity,
-        character.char_created
-        );
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, character.char_id);
+
+    sqlite3_bind_text(stmt, 2, character.char_name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, character.password, -1, SQLITE_STATIC);
+
+    sqlite3_bind_int(stmt, 4, CHAR_ALIVE); // char status
+
+    sqlite3_bind_int(stmt, 5, 0); // active_chan
+    sqlite3_bind_int(stmt, 6, 0); // chan 0
+    sqlite3_bind_int(stmt, 7, 0); // chan 1
+    sqlite3_bind_int(stmt, 8, 0); // chan 2
+
+    sqlite3_bind_int(stmt, 9, 0); // gm permission
+    sqlite3_bind_int(stmt, 10, 0); // ig permission
+
+    sqlite3_bind_int(stmt, 11, START_MAP_ID); // map id
+    sqlite3_bind_int(stmt, 12, START_MAP_TILE); // map tile
+
+    sqlite3_bind_int(stmt, 13, character.char_type);
+    sqlite3_bind_int(stmt, 14, character.skin_type);
+    sqlite3_bind_int(stmt, 15, character.hair_type);
+    sqlite3_bind_int(stmt, 16, character.shirt_type);
+    sqlite3_bind_int(stmt, 17, character.pants_type);
+    sqlite3_bind_int(stmt, 18, character.boots_type);
+    sqlite3_bind_int(stmt, 19, character.head_type);
+
+    sqlite3_bind_int(stmt, 20, SHIELD_NONE);
+    sqlite3_bind_int(stmt, 21, WEAPON_NONE);
+    sqlite3_bind_int(stmt, 22, CAPE_NONE);
+    sqlite3_bind_int(stmt, 23, HELMET_NONE);
+
+    sqlite3_bind_int(stmt, 24, 0); // max health
+    sqlite3_bind_int(stmt, 25, 0); // current health
+
+    sqlite3_bind_int(stmt, 26, character.visual_proximity);
+    sqlite3_bind_int(stmt, 27, character.local_text_proximity);
+
+    sqlite3_bind_int(stmt, 28, character.char_created);
+
+    sqlite3_bind_int(stmt, 29, 0); //inventory length
+    sqlite3_bind_blob(stmt, 30, inventory, MAX_INVENTORY_SLOTS, SQLITE_STATIC); // inventory
 
     rc = sqlite3_step(stmt);
 
@@ -209,18 +194,20 @@ void add_item(struct item_type item){
         "IMAGE_ID,"  \
         "ITEM_NAME," \
         "HARVESTABLE,"  \
+        "CYCLE_AMOUNT," \
         "EMU," \
         "INTERVAL," \
         "EXP," \
         "FOOD_VALUE," \
         "FOOD_COOLDOWN," \
         "ORGANIC_NEXUS," \
-        "VEGETAL_NEXUS"
+        "VEGETAL_NEXUS " \
         ") VALUES(" \
 
         "%i," \
         "%i," \
         "'%s'," \
+        "%i," \
         "%i," \
         "%i," \
         "%i," \
@@ -235,6 +222,7 @@ void add_item(struct item_type item){
         item.image_id,
         item.item_name,
         item.harvestable,
+        item.cycle_amount,
         item.emu,
         item.interval,
         item.exp,
@@ -254,6 +242,26 @@ void add_item(struct item_type item){
     }
 
     sqlite3_finalize(stmt);
+}
+
+void initialise_item_data(){
+
+    item.item_id=1112;
+    strcpy(item.item_name, "Chrysanthemum");
+    item.image_id=28;
+    item.exp=1;
+    item.harvestable=0;
+    item.cycle_amount=1;
+    item.emu=0;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
 }
 
 int get_max_char_id(){
@@ -285,7 +293,7 @@ int get_char_data(char *name){
     sqlite3_stmt *stmt;
     char sql[1024]="";
 
-    character.char_id=CHAR_NOT_FOUND;
+    character.char_id=NOT_FOUND;
 
     sprintf(sql, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_NAME='%s'", name);
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -347,12 +355,10 @@ int get_item_data(int item_id){
     sqlite3_stmt *stmt;
     char sql[1024]="";
 
-    item.item_id=-1;
+    item.item_id=NOT_FOUND;
 
     sprintf(sql, "SELECT * FROM ITEM_TABLE WHERE ITEM_ID=%i;", item_id);
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    //sqlite3_bind_int(stmt, 1, 16);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -360,13 +366,14 @@ int get_item_data(int item_id){
         item.image_id=sqlite3_column_int(stmt,1);
         strcpy(item.item_name, (char*) sqlite3_column_text(stmt,2));
         item.harvestable=sqlite3_column_int(stmt,3);
-        item.emu=sqlite3_column_int(stmt,4);
-        item.interval=sqlite3_column_int(stmt,5);
-        item.exp=sqlite3_column_int(stmt,6);
-        item.food_value=sqlite3_column_int(stmt,7);
-        item.food_cooldown=sqlite3_column_int(stmt,8);
-        item.organic_nexus=sqlite3_column_int(stmt,9);
-        item.vegetal_nexus=sqlite3_column_int(stmt,10);
+        item.cycle_amount=sqlite3_column_int(stmt,4);
+        item.emu=sqlite3_column_int(stmt,5);
+        item.interval=sqlite3_column_int(stmt,6);
+        item.exp=sqlite3_column_int(stmt,7);
+        item.food_value=sqlite3_column_int(stmt,8);
+        item.food_cooldown=sqlite3_column_int(stmt,9);
+        item.organic_nexus=sqlite3_column_int(stmt,10);
+        item.vegetal_nexus=sqlite3_column_int(stmt,11);
     }
 
     sqlite3_finalize(stmt);
@@ -445,13 +452,14 @@ void create_item_table(){
         "IMAGE_ID            INT,"  \
         "ITEM_NAME           TEXT," \
         "HARVESTABLE         INT,"  \
+        "CYCLE_AMOUNT        INT," \
         "EMU                 INT," \
         "INTERVAL            INT," \
         "EXP                 INT," \
         "FOOD_VALUE          INT," \
         "FOOD_COOLDOWN       INT," \
         "ORGANIC_NEXUS       INT," \
-        "VEGETAL             INT );";
+        "VEGETAL_NEXUS       INT );";
 
     execute_sql(sql);
 }

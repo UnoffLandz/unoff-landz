@@ -41,7 +41,7 @@ void save_data(int connection){
 int rename_char(int connection, char *new_char_name){
 
     //check that no existing char has the new name
-    if(get_char_data(new_char_name)!=CHAR_NOT_FOUND) return CHAR_RENAME_FAILED_DUPLICATE;
+    if(get_char_data(new_char_name)!=NOT_FOUND) return CHAR_RENAME_FAILED_DUPLICATE;
 
     //update char name and save
     strcpy(clients.client[connection]->char_name, new_char_name);
@@ -192,7 +192,7 @@ int process_hash_commands(int connection, char *text, int text_len){
         //check that the char exists
         i=get_char_data(hash_command_tail);
 
-        if(i==CHAR_NOT_FOUND) {
+        if(i==NOT_FOUND) {
             sprintf(text_out, "%cthat character does not exist", c_red3+127);
             send_server_text(sock, CHAT_SERVER, text_out);
 

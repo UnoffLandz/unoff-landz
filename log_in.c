@@ -139,16 +139,17 @@ void process_log_in(int connection, char *text) {
     //now we have the char name, get the char id
     char_id=get_char_data(char_name);
 
-    if(char_id==CHAR_NOT_FOUND) {
+    if(char_id==NOT_FOUND) {
 
         send_you_dont_exist(connection);
         log_event(EVENT_SESSION, "login rejected - unknown char name\n");
+        send_server_text(connection, CHAT_SERVER, "unknown character name");
         return;
     }
 
-    //load char from database into the client struct array
+    //the get_char_data function loads the char data into a temporary struct, so now we use the load_char_data function
+    //to transfer that data into the connection struct
     load_char_data_into_connection(connection);
-    //load_character_from_database(char_id, connection);
 
     //check we have the correct password for our char
     if(strcmp(password, clients.client[connection]->password)==PASSWORD_INCORRECT){
@@ -217,10 +218,8 @@ void process_log_in(int connection, char *text) {
         exit(EXIT_FAILURE);
     }
 
-    /** We require this line as we've not worked out how to pass a sit/stand frame through the
-    add_new_enhanced_actor packet thats sent from the add_char_to_map function. **/
     //tell char to sit if the frame is set to sit
-        if(clients.client[connection]->frame==sit_down) {
+    if(clients.client[connection]->frame==sit_down) {
         broadcast_actor_packet(connection, sit_down, clients.client[connection]->map_tile);
     }
 
@@ -228,7 +227,7 @@ void process_log_in(int connection, char *text) {
     send_you_are(connection);
     send_get_active_channels(connection);
     send_here_your_stats(connection);
-    //send_here_your_inventory(connection);
+    send_here_your_inventory(connection);
 
     sprintf(text_out, "login succesful char [%s]\n", char_name);
     log_event(EVENT_SESSION, text_out);

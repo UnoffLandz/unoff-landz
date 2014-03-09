@@ -149,7 +149,7 @@ void process_char_move(int connection, time_t current_utime){
             // filter out moves where position and destination are the same
             if(current_tile!=next_tile){
 
-                printf("move from %i to %i\n", current_tile, next_tile);
+                printf("move char [%s] from tile [%i] to tile [%i]\n", clients.client[connection]->char_name, current_tile, next_tile);
 
                 //update the time of move
                 gettimeofday(&time_check, NULL);
@@ -157,7 +157,6 @@ void process_char_move(int connection, time_t current_utime){
 
                 //calculate the move_cmd and broadcast to clients
                 move_cmd=get_move_command(current_tile, next_tile, map_axis);
-
                 broadcast_actor_packet(connection, move_cmd, next_tile);
 
                 //update char current position and save
@@ -300,9 +299,7 @@ int add_char_to_map(int connection, int new_map_id, int map_tile){
     // add this char to each connected client
     broadcast_add_new_enhanced_actor_packet(connection);
 
-    //#TODO log client map move (time / char_id / originating map id)
-
-    sprintf(text_out, "char %s added to map %s", clients.client[connection]->char_name, maps.map[new_map_id]->map_name);
+    sprintf(text_out, "char [%s] added to map [%s]", clients.client[connection]->char_name, maps.map[new_map_id]->map_name);
     log_event(EVENT_SESSION, text_out);
 
     return LEGAL_MAP;

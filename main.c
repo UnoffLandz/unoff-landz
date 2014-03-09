@@ -133,6 +133,7 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
         sprintf(text_out, "client [%i] char [%s] disconnected\n", watcher->fd, clients.client[watcher->fd]->char_name);
         log_event(EVENT_SESSION, text_out);
 
+        clients.client[watcher->fd]->status=LOGGED_OUT;
         close_connection_slot(watcher->fd);
 
         ev_io_stop(loop, watcher);
@@ -210,13 +211,17 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     ev_io_init(w_client, recv_data, client_sockfd, EV_READ);
     ev_io_start(loop, w_client);
 
+    //set up connection data entry in client struct
     clients.client[client_sockfd]->status=CONNECTED;
     clients.client[client_sockfd]->packet_buffer_length=0;
     strcpy(clients.client[client_sockfd]->ip_address, inet_ntoa(client_address.sin_addr));
 
+    gettimeofday(&time_check, NULL);
+    clients.client[client_sockfd]->time_of_last_heartbeat=time_check.tv_sec;
+
+    //send welcome message and motd to client
     send_server_text(client_sockfd, CHAT_SERVER, SERVER_WELCOME_MSG);
     send_motd(client_sockfd);
-
     send_server_text(client_sockfd, CHAT_SERVER, "\nHit any key to continue...\n");
 }
 
@@ -238,10 +243,13 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     //at each timeout check through each connect client and process pending actions
     for(i=0; i<clients.max; i++){
 
-        //check for lagged connection
         if(clients.client[i]->status==LOGGED_IN || clients.client[i]->status==CONNECTED) {
 
+            //check for lagged connection
             if(clients.client[i]->time_of_last_heartbeat+HEARTBEAT_INTERVAL< time_check.tv_sec){
+
+                //temporary printf for bug tracing
+                printf("time of last heartbeat %li time_check.tv_sec %li\n", clients.client[i]->time_of_last_heartbeat+HEARTBEAT_INTERVAL, (long int)time_check.tv_sec);
 
                 sprintf(text_out, "client [%i]  char [%s]lagged out", i, clients.client[i]->char_name);
                 log_event(EVENT_SESSION, text_out);
@@ -252,11 +260,14 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                 //free(watcher);
                 close(i);
             }
+
+            //process timed actions
+            if(clients.client[i]->status==LOGGED_IN) {
+
+                process_char_move(i, current_utime);
+                process_harvesting(i, current_time);
+            }
         }
-
-        process_char_move(i, current_utime);
-
-        process_harvesting(i, current_time);
     }
 
     // repeat
@@ -292,26 +303,13 @@ int main(void) {
 
     //initialise database
     open_database(DATABASE_FILE);
+
     if(get_table_count()==0) {
+        printf("\nNew database. Creating...\n");
         create_character_table();
         create_item_table();
+        initialise_item_data();
     }
-
-/*
-        item.item_id=1112;
-        item.image_id=28;
-        strcpy(item.name, "Chrysanthemum");
-        item.harvestable=1;
-        item.emu=1;
-        item.interval=1;
-        item.exp=1;
-        item.food_value=0;
-        item.food_cooldown=0;
-        item.organic_nexus=0;
-        item.vegetal_nexus=0;
-
-        add_item(item);
-*/
 
     //set global data
     game_data.char_count=get_chars_created_count();

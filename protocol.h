@@ -89,4 +89,26 @@ void send_partial_stats(int connection, int attribute_type, int attribute_level)
 */
 void send_here_your_stats(int connection);
 
+
+/** RESULT  : sends entire char inventory
+
+    RETURNS : void
+
+    PURPOSE : send char inventory at log in
+
+    USAGE   : protocol.c process_packet
+*/
+void send_here_your_inventory(int connection);
+
+
+/** RESULT  : updates a specific slot in the char inventory
+
+    RETURNS : void
+
+    PURPOSE : send char inventory at log in
+
+    USAGE   : harvesting.c
+*/
+void send_get_new_inventory_item(int connection, int item_image_id, int amount, int slot);
+
 #endif // PROTOCOL_H_INCLUDED

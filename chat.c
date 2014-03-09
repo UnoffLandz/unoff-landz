@@ -392,7 +392,7 @@ void send_pm(int connection, char *text) {
         recipient_char_id=character.char_id;
 
         //check that message recipient exits
-        if(recipient_char_id==CHAR_NOT_FOUND) {
+        if(recipient_char_id==NOT_FOUND) {
             sprintf(text_out, "%ccharacter does not exist\n", c_red1+127);
             send_server_text(connection, CHAT_PERSONAL, text_out);
             printf("SEND_PM from [%s] to [%s] message [%s] - recipient does not exist\n", sender_name, recipient_name, msg);

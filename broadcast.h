@@ -20,6 +20,7 @@ int get_proximity(int tile1, int tile2, int map_axis);
 void broadcast_local_chat(int connection, char *text);
 
 void broadcast_channel_chat(int channel, int sender_connection, char *text);
+
 void broadcast_channel_event(int chan, int sender_connection, char *text_in);
 
 void broadcast_guild_channel_chat(int guild_id, char *text);

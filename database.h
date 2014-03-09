@@ -46,5 +46,9 @@ void update_db_char_last_in_game(int connection);
 
 void update_db_char_channels(int connection);
 
+void update_db_char_inventory(int connection);
+
+void initialise_item_data();
+
 
 #endif // DATABASE_H_INCLUDED
