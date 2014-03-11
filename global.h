@@ -530,7 +530,7 @@ struct channel_list_type channels;
 /** ITEMS **/
 //struct used to pass to database on item creation
 struct item_type{
-    int item_id;
+    //int item_id;
     int image_id;
     char item_name[1024];
     int harvestable; //flag that item is harvestable

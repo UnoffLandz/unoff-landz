@@ -190,7 +190,6 @@ void add_item(struct item_type item){
 
     sprintf(sql, "INSERT INTO ITEM_TABLE("  \
 
-        "ITEM_ID," \
         "IMAGE_ID,"  \
         "ITEM_NAME," \
         "HARVESTABLE,"  \
@@ -205,7 +204,6 @@ void add_item(struct item_type item){
         ") VALUES(" \
 
         "%i," \
-        "%i," \
         "'%s'," \
         "%i," \
         "%i," \
@@ -218,7 +216,6 @@ void add_item(struct item_type item){
         "%i" \
         ");",
 
-        item.item_id,
         item.image_id,
         item.item_name,
         item.harvestable,
@@ -246,11 +243,10 @@ void add_item(struct item_type item){
 
 void initialise_item_data(){
 
-    item.item_id=1112;
     strcpy(item.item_name, "Chrysanthemum");
     item.image_id=28;
     item.exp=1;
-    item.harvestable=0;
+    //item.harvestable=1;
     item.cycle_amount=1;
     item.emu=0;
     item.interval=1;
@@ -262,6 +258,225 @@ void initialise_item_data(){
 
     add_item(item);
     printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Sticks");
+    item.image_id=140;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=4;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Asiatic White Lily");
+    item.image_id=33;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=1;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Tiger Lily");
+    item.image_id=29;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=1;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Snapdragon");
+    item.image_id=35;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=1;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Lilac");
+    item.image_id=36;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=1;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Logs");
+    item.image_id=214;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=10;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Blue Star Flower");
+    item.image_id=26;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=1;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Impatiens");
+    item.image_id=27;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=1;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Tomato");
+    item.image_id=407;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=1;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=1;
+    item.food_cooldown=1;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Cabbage");
+    item.image_id=405;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=1;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=1;
+    item.food_cooldown=1;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+    strcpy(item.item_name, "Carrot");
+    item.image_id=408;
+    item.exp=1;
+    //item.harvestable=1;
+    item.cycle_amount=1;
+    item.emu=1;
+    item.interval=1;
+    item.exp=1;
+    item.food_value=0;
+    item.food_cooldown=0;
+    item.organic_nexus=0;
+    item.vegetal_nexus=0;
+
+    add_item(item);
+    printf("Added %s to item table\n", item.item_name);
+
+}
+
+
+void add_threed_object(int id, char *filename, int image_id){
+
+    int rc;
+    sqlite3_stmt *stmt;
+
+    char sql[1024] ="";
+
+    sprintf(sql, "INSERT INTO THREED_OBJECT_TABLE("  \
+
+        "OBJECT_ID," \
+        "FILE_NAME,"  \
+        "IMAGE_ID " \
+        ") VALUES(" \
+
+        "%i," \
+        "'%s'," \
+        "%i" \
+        ");",
+
+        id,
+        filename,
+        image_id
+        );
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
+        exit(1);
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+void initialise_threed_object_data(){
+
+    add_threed_object(1, "flowerpink1.e3d", 28);
 }
 
 int get_max_char_id(){
@@ -347,40 +562,6 @@ int get_char_data(char *name){
     return character.char_id;
 }
 
-int get_item_data(int item_id){
-
-    //loads item data from the db to the item struct
-
-    int rc;
-    sqlite3_stmt *stmt;
-    char sql[1024]="";
-
-    item.item_id=NOT_FOUND;
-
-    sprintf(sql, "SELECT * FROM ITEM_TABLE WHERE ITEM_ID=%i;", item_id);
-    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-
-        item.item_id=sqlite3_column_int(stmt,0);
-        item.image_id=sqlite3_column_int(stmt,1);
-        strcpy(item.item_name, (char*) sqlite3_column_text(stmt,2));
-        item.harvestable=sqlite3_column_int(stmt,3);
-        item.cycle_amount=sqlite3_column_int(stmt,4);
-        item.emu=sqlite3_column_int(stmt,5);
-        item.interval=sqlite3_column_int(stmt,6);
-        item.exp=sqlite3_column_int(stmt,7);
-        item.food_value=sqlite3_column_int(stmt,8);
-        item.food_cooldown=sqlite3_column_int(stmt,9);
-        item.organic_nexus=sqlite3_column_int(stmt,10);
-        item.vegetal_nexus=sqlite3_column_int(stmt,11);
-    }
-
-    sqlite3_finalize(stmt);
-
-    return item.item_id;
-}
-
 void execute_sql(char *sql){
 
     sqlite3_stmt *stmt;
@@ -448,10 +629,8 @@ void create_item_table(){
     printf("Create ITEM_TABLE\n");
 
     char sql[1024] = "CREATE TABLE ITEM_TABLE("  \
-        "ITEM_ID             INT PRIMARY KEY     NOT NULL," \
-        "IMAGE_ID            INT,"  \
+        "IMAGE_ID           INT PRIMARY KEY     NOT NULL," \
         "ITEM_NAME           TEXT," \
-        "HARVESTABLE         INT,"  \
         "CYCLE_AMOUNT        INT," \
         "EMU                 INT," \
         "INTERVAL            INT," \
@@ -460,6 +639,18 @@ void create_item_table(){
         "FOOD_COOLDOWN       INT," \
         "ORGANIC_NEXUS       INT," \
         "VEGETAL_NEXUS       INT );";
+
+    execute_sql(sql);
+}
+
+void create_3d_object_table(){
+
+    printf("Create THREED_OBJECT TABLE\n");
+
+    char sql[1024] = "CREATE TABLE THREED_OBJECT_TABLE("  \
+        "OBJECT_ID           INT PRIMARY KEY     NOT NULL," \
+        "FILE_NAME           TEXT,"  \
+        "IMAGE_ID            INT);";
 
     execute_sql(sql);
 }

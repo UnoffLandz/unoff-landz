@@ -390,14 +390,12 @@ void send_actors_to_client(int connection){
 
 void load_item_data_into_connection(int connection){
 
-        clients.client[connection]->harvest_item_id=item.item_id;
         clients.client[connection]->harvest_item_image_id=item.image_id;
         strcpy(clients.client[connection]->harvest_item_name, item.item_name);
         clients.client[connection]->harvest_item_interval=item.interval;
         clients.client[connection]->harvest_item_exp=item.exp;
         clients.client[connection]->harvest_item_emu=item.emu;
         clients.client[connection]->harvest_item_cycle_amount=item.cycle_amount;
-
 }
 
 void process_packet(int connection, unsigned char *packet){
@@ -425,7 +423,7 @@ void process_packet(int connection, unsigned char *packet){
     int map_object_id=0;
     int use_with_position=0;
     int result=0;
-    int item_id;
+    int threed_object_id=0;
     int item_image_id;
 
     // extract data from packet
@@ -650,9 +648,9 @@ void process_packet(int connection, unsigned char *packet){
 
         case HARVEST:
 
-        item_id=Uint16_to_dec(data[0], data[1]);
+        threed_object_id=Uint16_to_dec(data[0], data[1]);
 
-        printf("HARVEST item %i\n", item_id);
+        printf("HARVEST object_id %i\n", threed_object_id);
 
         //if already harvesting then stop
         if(clients.client[connection]->harvest_flag==TRUE){
@@ -661,17 +659,17 @@ void process_packet(int connection, unsigned char *packet){
             clients.client[connection]->harvest_flag=FALSE;
             break;
         }
-
+/*
         //see if item exists
         if(get_item_data(item_id)==NOT_FOUND){
             sprintf(text_out, "%cYou tried to harvest an unknown item", c_red3+127);
             send_server_text(connection, CHAT_SERVER, text_out);
             break;
         }
-
+*/
         item_image_id=item.image_id;
 
-        printf("found image_id [%i] for item[%i]\n", item_image_id, item_id);
+        printf("found image_id [%i] for threed_object_id [%i]\n", item_image_id, threed_object_id);
 
         load_item_data_into_connection(connection);
 
