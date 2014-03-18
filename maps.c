@@ -72,11 +72,13 @@ int get_map_object(int object_id, int map_id){
 
     //find the corresponding inventory image id for this object
     do{
-        if(strcmp(threed_object[j].file_name, obj_file)==0) return threed_object[j].inventory_image_id;
+        if(strcmp(threed_object[j].file_name, obj_file)==0) {
+            return threed_object[j].inventory_image_id;
+        }
 
         j++;
 
-    }while(i<MAX_THREED_OBJECTS);
+    }while(j<MAX_THREED_OBJECTS);
 
     return NOT_FOUND;
 }

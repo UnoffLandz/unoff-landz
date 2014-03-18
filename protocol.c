@@ -36,7 +36,7 @@ void send_get_new_inventory_item(int connection, int item_image_id, int amount, 
     packet[3]=item_image_id % 256;
     packet[4]=item_image_id / 256;
 
-    packet[5]=amount % 256;//quantity
+    packet[5]=amount % 256;
     packet[6]=amount / 256 % 256;
     packet[7]=amount / 256 / 256 % 256;
     packet[8]=amount / 256 / 256 / 256 % 256;
@@ -45,30 +45,30 @@ void send_get_new_inventory_item(int connection, int item_image_id, int amount, 
 
     packet[10]=0;//flags
 
-    //printf("inv slot %i image %i amount %i\n",slot, packet[3], packet[5]);
-
     send(connection, packet, 11, 0);
 }
 
 void send_here_your_inventory(int connection){
 
     int i=0;
+
     unsigned char packet[(MAX_INVENTORY_SLOTS*8)+4];
 
-    int data_length=1+(MAX_INVENTORY_SLOTS*8);
+    int data_length=2+(MAX_INVENTORY_SLOTS*8);
     int j;
 
     packet[0]=HERE_YOUR_INVENTORY;
-    packet[1]=(data_length+1) % 256;
-    packet[2]=(data_length+1) / 256;
+    packet[1]=data_length % 256;
+    packet[2]=data_length / 256;
 
-    packet[3]=MAX_INVENTORY_SLOTS; //inv count
+    packet[3]=MAX_INVENTORY_SLOTS;
+
 
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
 
         j=4+(i*8);
 
-        packet[j]=clients.client[connection]->inventory[1+(8*i)]; //image_id of item
+        packet[j+0]=clients.client[connection]->inventory[1+(8*i)]; //image_id of item
         packet[j+1]=clients.client[connection]->inventory[2+(8*i)];
 
         packet[j+2]=clients.client[connection]->inventory[3+(8*i)]; //amount (when zero nothing is shown in inventory)
@@ -77,12 +77,38 @@ void send_here_your_inventory(int connection){
         packet[j+5]=clients.client[connection]->inventory[6+(8*i)];
 
         packet[j+6]=i; //inventory pos (starts at 0)
-
         packet[j+7]=0; //flags
 
-        //printf("inv slot %i image %i amount %i\n",i, packet[j], packet[j+2]);
-
     }
+
+/*
+    packet[0]=HERE_YOUR_INVENTORY;
+
+    packet[1]=18; //packet count -1
+    packet[2]=0;
+
+    packet[3]=2;
+
+    packet[4]=28;
+    packet[5]=0;
+    packet[6]=10;
+    packet[7]=0;
+    packet[8]=0;
+    packet[9]=0;
+    packet[10]=0;
+    packet[11]=0;
+
+    packet[12]=28;
+    packet[13]=0;
+    packet[14]=10;
+    packet[15]=0;
+    packet[16]=0;
+    packet[17]=0;
+    packet[18]=1;
+    packet[19]=0;
+
+    send(connection, packet, 20, 0);//packet count+1
+*/
 
     send(connection, packet, (MAX_INVENTORY_SLOTS*8)+4, 0);
 }
@@ -135,7 +161,6 @@ void send_create_char_not_ok(int sock){
 
     send(sock, packet, 3, 0);
 }
-
 
 void send_here_your_stats(int connection){
 

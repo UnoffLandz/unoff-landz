@@ -40,17 +40,29 @@ int get_inventory_slot_amount(int connection, int inventory_slot){
 
     int j=1+(inventory_slot*8);
 
-    return Uint32_to_dec(clients.client[connection]->inventory[j+3], clients.client[connection]->inventory[j+4], clients.client[connection]->inventory[j+5], clients.client[connection]->inventory[j+6]);
+    return Uint32_to_dec(clients.client[connection]->inventory[j+2], clients.client[connection]->inventory[j+3], clients.client[connection]->inventory[j+4], clients.client[connection]->inventory[j+5]);
 }
 
 void put_inventory_slot_amount(int connection, int inventory_slot, int amount){
 
     int j=1+(inventory_slot*8);
 
-    clients.client[connection]->inventory[j+3]=amount % 256;
-    clients.client[connection]->inventory[j+4]=amount / 256 % 256;
-    clients.client[connection]->inventory[j+5]=amount / 256 / 256 % 256;
-    clients.client[connection]->inventory[j+6]=amount / 256 / 256 / 256 % 256;
+    clients.client[connection]->inventory[j+2]=amount % 256;
+    clients.client[connection]->inventory[j+3]=amount / 256 % 256;
+    clients.client[connection]->inventory[j+4]=amount / 256 / 256 % 256;
+    clients.client[connection]->inventory[j+5]=amount / 256 / 256 / 256 % 256;
+/*
+    printf("ADD TO INVENTORY\n");
+    printf("number of items %i\n", clients.client[connection]->inventory[0]);
+    printf("item id lsb     %i\n", clients.client[connection]->inventory[1]);
+    printf("item id msb     %i\n", clients.client[connection]->inventory[2]);
+    printf("item quantity   %i\n", clients.client[connection]->inventory[3]);
+    printf("item quantity   %i\n", clients.client[connection]->inventory[4]);
+    printf("item quantity   %i\n", clients.client[connection]->inventory[5]);
+    printf("item quantity   %i\n", clients.client[connection]->inventory[6]);
+    printf("pos in inventory%i\n", clients.client[connection]->inventory[7]);
+    printf("flags           %i\n", clients.client[connection]->inventory[8]);
+*/
 }
 
 void new_inventory_item(int connection, int item_image_id){
