@@ -116,9 +116,8 @@ void process_log_in(int connection, char *text) {
     int chan_colour=0;
     int i=0;
 
+    //check that the login packet is correct
     if(count_str_island(text)!=2){
-
-        printf("login not ok\n");
 
         sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
         send_server_text(connection, CHAT_SERVER, text_out);
@@ -130,13 +129,14 @@ void process_log_in(int connection, char *text) {
         return;
     }
 
+    //Extract the char name and password from the login packet
     get_str_island(text, char_name, 1);
     get_str_island(text, password, 2);
 
     sprintf(text_out, "login char name [%s] password [%s]\n", char_name, password);
     log_event(EVENT_SESSION, text_out);
 
-    //now we have the char name, get the char id
+    //get the char_id corresponding to the char name
     char_id=get_char_data(char_name);
 
     if(char_id==NOT_FOUND) {
@@ -180,7 +180,9 @@ void process_log_in(int connection, char *text) {
     //prevent concurrent login on same char
     for(i=1; i<clients.max; i++){
 
-        if(clients.client[connection]->character_id==clients.client[i]->character_id && i!=connection){
+        if(clients.client[connection]->character_id==clients.client[i]->character_id \
+           && clients.client[connection]->status==LOGGED_IN \
+           && i!=connection){
 
             send_login_not_ok(connection);
 
@@ -211,10 +213,8 @@ void process_log_in(int connection, char *text) {
     map_id=clients.client[connection]->map_id;
 
     if(add_char_to_map(connection, map_id, clients.client[connection]->map_tile)==ILLEGAL_MAP){
-
         sprintf(text_out, "cannot add char [%s] to map [%s] in function process_packet", char_name, maps.map[map_id]->map_name);
         log_event(EVENT_ERROR, text_out);
-
         exit(EXIT_FAILURE);
     }
 

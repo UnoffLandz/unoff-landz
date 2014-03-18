@@ -82,6 +82,133 @@ void close_connection_slot(int connection){
 
     clients.client[connection]->status=LOGGED_OUT;
     update_db_char_last_in_game(connection);
+
+    //clients.client[connection]->packet_buffer[1024]=
+    clients.client[connection]->packet_buffer_length=0;
+
+    clients.client[connection]->character_id=0;
+
+    //clients.client[connection]->path[PATH_MAX]=;
+    clients.client[connection]->path_max=0;
+    clients.client[connection]->path_count=0;
+
+    clients.client[connection]->time_of_last_move=0;
+    clients.client[connection]->time_of_last_heartbeat=0;
+    clients.client[connection]->time_of_last_harvest=0;
+
+    clients.client[connection]->harvest_flag=0;
+    clients.client[connection]->inventory_image_id=0;
+    clients.client[connection]->inventory_slot=0;
+/*
+    char ip_address[16];
+    int sit_down;
+
+    char char_name[1024];
+    char password[1024];
+    int char_status;
+    int time_played;
+    int active_chan;
+    int chan[4];       // chan0, chan1, chan2  (chan3 used for guild chat)
+    int gm_permission; // permission to use #GM command (aka mute)
+    int ig_permission; // permission to use #IG command
+    int map_id;
+    int map_tile;
+    int guild_id;
+    int char_type;
+    int skin_type;
+    int hair_type;
+    int shirt_type;
+    int pants_type;
+    int boots_type;
+    int head_type;
+    int shield_type;
+    int weapon_type;
+    int cape_type;
+    int helmet_type;
+    int frame;
+    int max_health;
+    int current_health;
+    int visual_proximity; // proximity for display of other actors/creatures
+    int local_text_proximity; //  proximity for local messages from other actors
+    time_t last_in_game; // date char was last in-game
+    time_t char_created; // date char was created
+    time_t joined_guild; // date joined guild
+
+
+    unsigned char inventory[1024];
+    int inventory_length;
+
+    int physique;
+    int max_physique;
+    int coordination;
+    int max_coordination;
+    int reasoning;
+    int max_reasoning;
+    int will;
+    int max_will;
+    int instinct;
+    int max_instinct;
+    int vitality;
+    int max_vitality;
+
+    int human;
+    int max_human;
+    int animal;
+    int max_animal;
+    int vegetal;
+    int max_vegetal;
+    int inorganic;
+    int max_inorganic;
+    int artificial;
+    int max_artificial;
+    int magic;
+    int max_magic;
+
+    int manufacturing_lvl;
+    int max_manufacturing_lvl;
+    int harvest_lvl;
+    int max_harvest_lvl;
+    int alchemy_lvl;
+    int max_alchemy_lvl;
+    int overall_lvl;
+    int max_overall_lvl;
+    int attack_lvl;
+    int max_attack_lvl;
+    int defence_lvl;
+    int max_defence_lvl;
+    int magic_lvl;
+    int max_magic_lvl;
+    int potion_lvl;
+    int max_potion_lvl;
+
+    int material_pts;
+    int max_material_pts;
+    int ethereal_pts;
+    int max_ethereal_pts;
+
+    int food_lvl;
+
+    int manufacture_exp;
+    int max_manufacture_exp;
+    int harvest_exp;
+    int max_harvest_exp;
+    int alchemy_exp;
+    int max_alchemy_exp;
+    int overall_exp;
+    int max_overall_exp;
+    int attack_exp;
+    int max_attack_exp;
+    int defence_exp;
+    int max_defence_exp;
+    int magic_exp;
+    int max_magic_exp;
+    int potion_exp;
+    int max_potion_exp;
+
+    int book_id;
+    int max_book_time;
+    int elapsed_book_time;
+ */
 }
 
 void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
@@ -248,9 +375,6 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             //check for lagged connection
             if(clients.client[i]->time_of_last_heartbeat+HEARTBEAT_INTERVAL< time_check.tv_sec){
 
-                //temporary printf for bug tracing
-                printf("time of last heartbeat %li time_check.tv_sec %li\n", clients.client[i]->time_of_last_heartbeat+HEARTBEAT_INTERVAL, (long int)time_check.tv_sec);
-
                 sprintf(text_out, "client [%i]  char [%s]lagged out", i, clients.client[i]->char_name);
                 log_event(EVENT_SESSION, text_out);
 
@@ -287,6 +411,22 @@ int main(void) {
     //set server start time
     server_start_time=time(NULL);
 
+    //open an existing database file or create a new one
+    open_database(DATABASE_FILE);
+
+    //if no tables in the database, a new database file has been created
+    if(get_table_count()==0) {
+
+        //create and populate database table
+        printf("\nNew database. Creating...\n");
+        create_character_table();
+        create_item_table();
+        create_3d_object_table();
+
+        initialise_item_data();
+        initialise_threed_object_data();
+    }
+
     //initialise data structs
     initialise_channel_list(MAX_CHANNELS);
     load_all_channels(CHANNEL_LIST_FILE);
@@ -299,17 +439,11 @@ int main(void) {
 
     initialise_client_list(MAX_CLIENTS);
 
+    //load data into lookup structs
     initialise_movement_vectors();
 
-    //initialise database
-    open_database(DATABASE_FILE);
-
-    if(get_table_count()==0) {
-        printf("\nNew database. Creating...\n");
-        create_character_table();
-        create_item_table();
-        initialise_item_data();
-    }
+    initialise_3d_objects();
+    initialise_items();
 
     //set global data
     game_data.char_count=get_chars_created_count();

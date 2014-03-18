@@ -24,7 +24,7 @@ void create_character_table();
 
 void create_item_table();
 
-int get_item_data(int item_id);
+void create_3d_object_table();
 
 void add_char(struct character_type character);
 
@@ -50,5 +50,10 @@ void update_db_char_inventory(int connection);
 
 void initialise_item_data();
 
+void initialise_threed_object_data();
+
+void load_3d_objects();
+
+void load_items();
 
 #endif // DATABASE_H_INCLUDED

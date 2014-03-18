@@ -15,22 +15,26 @@
 
 #define TILE_MAP_MAX 50000
 #define HEIGHT_MAP_MAX 150000
-#define TWOD_OBJECT_MAP_MAX 800000 //not yet used
-#define THREED_OBJECT_MAP_MAX 800000 //not yet used
+#define TWOD_OBJECT_MAP_MAX 800000
+#define THREED_OBJECT_MAP_MAX 800000
 
-#define START_MAP_ID 1 //1=Isla Prima
-//#define START_MAP_TILE 4236
-#define START_MAP_TILE 27225
+#define MAX_THREED_OBJECTS 100 // maximum number of e3d files that can be held in the threed_object array
+#define MAX_ITEMS 1500 //maximum number of mixable/harvestable items that can be held in the item array
+
+#define START_MAP_ID 1 // map_id of the map on which characters are created (1=Isla Prima)
+#define START_MAP_TILE 27225 // tile_pos at which characters are created
 
 #define MIN_MAP_AXIS 10 //used to bounds check maps
 
-#define TEMP_FILE "temp.tmp"
+#define ASCII_BACKSLASH 47 //used to separate file names from path
+#define ASCII_SPACE 32
 
 enum { // server to client protocol
     CHANGE_MAP=7,
     HERE_YOUR_STATS=18,
     HERE_YOUR_INVENTORY=19,
-    GET_NEW_INVENTORY_ITEM=21
+    GET_NEW_INVENTORY_ITEM=21,
+    ADD_NEW_ENHANCED_ACTOR=51
 };
 
 enum {//stats codes
@@ -326,6 +330,8 @@ struct map_node_type{
     int height_map_size;
     unsigned char threed_object_map[THREED_OBJECT_MAP_MAX];
     int threed_object_map_size;
+    int threed_object_structure_len;
+    int threed_object_count;
     unsigned char twod_object_map[TWOD_OBJECT_MAP_MAX];
     int twod_object_map_size;
     int client_list[MAX_CLIENTS];
@@ -366,7 +372,7 @@ struct client_node_type{
     enum {LOGGED_IN, CONNECTED, LOGGED_OUT} status;
     int packet_buffer[1024];
     int packet_buffer_length;
-    int character_id;
+    int character_id; //database id for char
     int path[PATH_MAX];
     int path_max;
     int path_count;
@@ -376,13 +382,7 @@ struct client_node_type{
     time_t time_of_last_harvest;
 
     int harvest_flag;
-    int harvest_item_id;
-    char harvest_item_name[1024];
-    int harvest_item_interval;
-    int harvest_item_exp;
-    int harvest_item_image_id;
-    int harvest_item_emu;
-    int harvest_item_cycle_amount;
+    int inventory_image_id;
     int inventory_slot;
 
     char ip_address[16];
@@ -418,7 +418,6 @@ struct client_node_type{
     time_t last_in_game; // date char was last in-game
     time_t char_created; // date char was created
     time_t joined_guild; // date joined guild
-
 
     unsigned char inventory[1024];
     int inventory_length;
@@ -493,8 +492,6 @@ struct client_node_type{
     int book_id;
     int max_book_time;
     int elapsed_book_time;
-
-
 };
 
 struct client_list_type {
@@ -502,7 +499,6 @@ struct client_list_type {
     int max;
     struct client_node_type **client;
 };
-
 struct client_list_type clients;
 
 
@@ -524,17 +520,14 @@ struct channel_list_type {
     int spool_size;
     struct channel_node_type **channel;
 };
-
 struct channel_list_type channels;
 
 /** ITEMS **/
-//struct used to pass to database on item creation
+//holds data about each mixable and harvestable item
 struct item_type{
-    //int item_id;
-    int image_id;
     char item_name[1024];
     int harvestable; //flag that item is harvestable
-    int cycle_amount;
+    int cycle_amount;//amount harvested on each harvesting cycle
     int emu;
     int interval;
     int exp;
@@ -543,8 +536,16 @@ struct item_type{
     int organic_nexus;
     int vegetal_nexus;
 };
+struct item_type item[MAX_ITEMS];
 
-struct item_type item;
+/** STATIC OBJECTS **/
+/*holds a list of e3d filenames and their corresponding inventory image id's. This is used so as when an item is
+harvested, the nature of the item can be determined and inked to an inventory image id. */
+struct threed_object_type{
+    char file_name[80];
+    int inventory_image_id;
+};
+struct threed_object_type threed_object[MAX_THREED_OBJECTS];
 
 /** OTHERS */
 struct timeval time_check;

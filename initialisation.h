@@ -19,4 +19,8 @@ void initialise_movement_vectors();
 
 void initialise_harvestables();
 
+void initialise_3d_objects();
+
+void initialise_items();
+
 #endif // INITIALISATION_H_INCLUDED

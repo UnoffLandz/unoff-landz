@@ -178,7 +178,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     int x=clients.client[connection]->map_tile % map_axis;
     int y=clients.client[connection]->map_tile / map_axis;
 
-    packet[i++]=51;                                                   // protocol
+    packet[i++]=ADD_NEW_ENHANCED_ACTOR;                               // protocol
     packet[i++]=0;                                                    // dummy the lsb (we'll put the proper value in later
     packet[i++]=0;                                                    // dummy the msb (we'll put the proper value in later
     packet[i++]=connection % 256;                                     // char_id lsb
@@ -218,7 +218,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     // add guild name
 	if(guild_id>0) {
 
-        packet[i++]=32;
+        packet[i++]=ASCII_SPACE;
         packet[i++]=guilds.guild[guild_id]->tag_colour;
 
         for(j=0; j< (int)strlen(guilds.guild[guild_id]->guild_tag); j++){
@@ -353,21 +353,6 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
     packet[1]=data_length % 256;
     packet[2]=data_length / 256;
 }
-
-/*
-void broadcast_actor_packet(int connection, unsigned char move, int dummy){
-
-    printf("TEMPORARY BROADCAST FUNCTION  connection[%i]\n", connection);
-
-    unsigned char packet[1024];
-    int packet_length;
-
-    add_actor_packet(connection, move, packet, &packet_length);
-
-    send(connection, packet, packet_length, 0);
-}
-*/
-
 
 void broadcast_actor_packet(int sender_connection, unsigned char move, int sender_destination_tile){
 

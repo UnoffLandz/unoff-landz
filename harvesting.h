@@ -11,7 +11,6 @@ struct inventory_type{
     int amount;
     int flags;
 };
-
 struct inventory_type inventory;
 
 void process_harvesting(int connection, time_t current_time);

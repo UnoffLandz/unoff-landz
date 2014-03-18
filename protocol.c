@@ -381,21 +381,11 @@ void send_actors_to_client(int connection){
             //restrict to characters within visual proximity
             if(get_proximity(char_tile, other_char_tile, map_axis)<char_visual_proximity){
 
-                add_new_enhanced_actor_packet(clients.client[connection]->character_id, packet, &packet_length);//0
+                add_new_enhanced_actor_packet(connection, packet, &packet_length);
                 send(connection, packet, packet_length, 0);
             }
         }
     }
-}
-
-void load_item_data_into_connection(int connection){
-
-        clients.client[connection]->harvest_item_image_id=item.image_id;
-        strcpy(clients.client[connection]->harvest_item_name, item.item_name);
-        clients.client[connection]->harvest_item_interval=item.interval;
-        clients.client[connection]->harvest_item_exp=item.exp;
-        clients.client[connection]->harvest_item_emu=item.emu;
-        clients.client[connection]->harvest_item_cycle_amount=item.cycle_amount;
 }
 
 void process_packet(int connection, unsigned char *packet){
@@ -423,8 +413,7 @@ void process_packet(int connection, unsigned char *packet){
     int map_object_id=0;
     int use_with_position=0;
     int result=0;
-    int threed_object_id=0;
-    int item_image_id;
+    int inventory_image_id;
 
     // extract data from packet
     for(i=0; i<data_length; i++){
@@ -521,7 +510,7 @@ void process_packet(int connection, unsigned char *packet){
 
         //if char is harvesting then stop
         if(clients.client[connection]->harvest_flag==TRUE){
-            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, clients.client[connection]->harvest_item_name);
+            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection]->inventory_image_id].item_name);
             send_server_text(connection, CHAT_SERVER, text_out);
             clients.client[connection]->harvest_flag=FALSE;
             break;
@@ -648,47 +637,49 @@ void process_packet(int connection, unsigned char *packet){
 
         case HARVEST:
 
-        threed_object_id=Uint16_to_dec(data[0], data[1]);
+        //HARVEST packet returns a integer corresponding to the id of an object in the map 3d object list
+        map_object_id=Uint16_to_dec(data[0], data[1]);
 
-        printf("HARVEST object_id %i\n", threed_object_id);
+        printf("HARVEST object_id %i\n", map_object_id);
 
         //if already harvesting then stop
         if(clients.client[connection]->harvest_flag==TRUE){
-            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, clients.client[connection]->harvest_item_name);
+            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection]->inventory_image_id].item_name);
             send_server_text(connection, CHAT_SERVER, text_out);
             clients.client[connection]->harvest_flag=FALSE;
             break;
         }
-/*
-        //see if item exists
-        if(get_item_data(item_id)==NOT_FOUND){
-            sprintf(text_out, "%cYou tried to harvest an unknown item", c_red3+127);
+
+        //find the inventory image id for the map object
+        inventory_image_id=get_map_object(map_object_id, map_id);
+
+        //can't find an inventory image id for this map object
+        if(inventory_image_id==NOT_FOUND){
+            log_event(EVENT_ERROR, "inventory image id not found in function process_packet: module protocol.c");
+            sprintf(text_out, "%cSorry. You can't harvest this item.", c_red3+127);
             send_server_text(connection, CHAT_SERVER, text_out);
+            clients.client[connection]->harvest_flag=FALSE;
             break;
-        }
-*/
-        item_image_id=item.image_id;
+         }
 
-        printf("found image_id [%i] for threed_object_id [%i]\n", item_image_id, threed_object_id);
-
-        load_item_data_into_connection(connection);
+        //record the image id of the item being harvested in the connection array
+        clients.client[connection]->inventory_image_id=inventory_image_id;
 
         //if there's not an existing inventory slot for the harvested item, create one
-        if(find_inventory_item(connection, item_image_id)==NOT_FOUND){
+        if(find_inventory_item(connection, inventory_image_id)==NOT_FOUND) {
+            new_inventory_item(connection, inventory_image_id);
+        }
 
-            new_inventory_item(connection, item_image_id);
-            printf("created new slot\n");
-        }
-        else {
-            printf("found existing slot\n");
-        }
+        printf("using slot [%i]\n", inventory.slot);
 
         //set the inventory slot to to be used for the harvested item
         clients.client[connection]->inventory_slot=inventory.slot;
 
+        //set the harvest flag so that harvesting will be continuous
         clients.client[connection]->harvest_flag=TRUE;
 
-        sprintf(text_out, "%cYou started to harvest %s", c_green3+127, clients.client[connection]->harvest_item_name);
+        //send message to client
+        sprintf(text_out, "%cYou started to harvest %s", c_green3+127, item[clients.client[connection]->inventory_image_id].item_name);
         send_server_text(connection, CHAT_SERVER, text_out);
 
         break;

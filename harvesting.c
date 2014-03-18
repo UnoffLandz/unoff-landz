@@ -90,31 +90,32 @@ void new_inventory_item(int connection, int item_image_id){
 void process_harvesting(int connection, time_t current_time){
 
     int slot_amount;
+    int inventory_image_id=clients.client[connection]->inventory_image_id;
 
-    // exit if there's nothing to be harvested
+      // exit if there's nothing to be harvested
     if(clients.client[connection]->harvest_flag==FALSE) return;
 
     //adjust timer to compensate for minute wrap-around>
     if(clients.client[connection]->time_of_last_harvest>current_time) current_time+=60;
 
     // exit if the harvest interval hasn't expired
-    if(current_time<clients.client[connection]->time_of_last_harvest+clients.client[connection]->harvest_item_interval) return;
+    if(current_time<clients.client[connection]->time_of_last_harvest+item[inventory_image_id].interval) return;
 
     //update the time of harvest
     gettimeofday(&time_check, NULL);
     clients.client[connection]->time_of_last_harvest=time_check.tv_sec;
 
     //update stats and send to client
-    clients.client[connection]->harvest_exp+=clients.client[connection]->harvest_item_exp;
-    send_partial_stats(connection, HARVEST_EXP, clients.client[connection]->harvest_exp);
+    clients.client[connection]->harvest_exp+=item[inventory_image_id].exp;
+    send_partial_stats(connection, HARVEST_EXP,  clients.client[connection]->harvest_exp);
     update_db_char_stats(connection);
 
     //calculate the new slot amount
     slot_amount=get_inventory_slot_amount(connection, clients.client[connection]->inventory_slot);
-    slot_amount+=clients.client[connection]->harvest_item_cycle_amount;
+    slot_amount+=item[inventory_image_id].cycle_amount;
 
     //update the inventory string and send to client
     put_inventory_slot_amount(connection, clients.client[connection]->inventory_slot, slot_amount);
     update_db_char_inventory(connection);
-    send_get_new_inventory_item(connection, clients.client[connection]->harvest_item_image_id, slot_amount, clients.client[connection]->inventory_slot);
+    send_get_new_inventory_item(connection, inventory_image_id, slot_amount, clients.client[connection]->inventory_slot);
 }

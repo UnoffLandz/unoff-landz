@@ -8,6 +8,7 @@
 #include "string_functions.h"
 #include "numeric_functions.h"
 #include "datetime_functions.h"
+#include "maps.h"
 
 void save_guild(char *guild_name, int id){
 
@@ -158,17 +159,13 @@ int load_map(char *file_name, int id){
 
     int threed_object_offset=0;
     int threed_object_map_size=0;
-    //int threed_object_structure_len=0;
-    //int threed_object_count=0;
 
     int twod_object_offset=0;
     int twod_object_map_size=0;
-    int twod_object_structure_len=0;
-    int twod_object_count=0;
+    //int twod_object_structure_len=0;
+    //int twod_object_count=0;
 
     int lights_object_offset=0;
-
-    //int j=0;
 
     //open the .map overview file and extract the .elm filename
     if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
@@ -254,7 +251,7 @@ int load_map(char *file_name, int id){
     //printf("tile map offset %i\n", tile_map_offset);
 
     // We assume that tile map offset will always be 124 bytes otherwise our map data will be loaded incorrectly
-    if(tile_map_offset!=124){
+    if(tile_map_offset!=ELM_FILE_HEADER_LEN){
         printf("filename [%s] map header size [%i]\n", elm_filename, tile_map_offset);
         perror ("unexpected map header size (should be 124) in function load_map");
         exit (EXIT_FAILURE);
@@ -277,8 +274,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //threed_object_structure_len=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("3d object structure length %i\n", threed_object_structure_len);
+    maps.map[id]->threed_object_structure_len=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    //printf("3d object structure length %i\n", maps.map[id]->threed_object_structure_len);
 
     //read 3d object count
     if(fread(bytes, 4, 1, file)!=1){
@@ -287,8 +284,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    //threed_object_count=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    //printf("3d object count %i\n", threed_object_count);
+    maps.map[id]->threed_object_count=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    //printf("3d object count %i\n",  maps.map[id]->threed_object_count);
 
     //read 3d object offset
     if(fread(bytes, 4, 1, file)!=1){
@@ -307,8 +304,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    twod_object_structure_len=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    printf("2d object structure len %i\n", twod_object_structure_len);
+    //twod_object_structure_len=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    //printf("2d object structure len %i\n", twod_object_structure_len);
 
     //read 2d object count
     if(fread(bytes, 4, 1, file)!=1){
@@ -317,8 +314,8 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-    twod_object_count=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    printf("2d object count %i\n", twod_object_count);
+    //twod_object_count=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    //printf("2d object count %i\n", twod_object_count);
 
     //read 2d object offset
     if(fread(bytes, 4, 1, file)!=1){
@@ -328,7 +325,7 @@ int load_map(char *file_name, int id){
     }
 
     twod_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    printf("2d object offset %i\n", twod_object_offset);
+    //printf("2d object offset %i\n", twod_object_offset);
 
     //read lights structure length
     if(fread(bytes, 4, 1, file)!=1){
@@ -358,7 +355,7 @@ int load_map(char *file_name, int id){
     }
 
     lights_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
-    printf("lights offset %i\n", lights_object_offset);
+    //printf("lights offset %i\n", lights_object_offset);
 
     //read dungeon flag
     if(fread(bytes, 1, 1, file)!=1){
@@ -585,17 +582,6 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
-/*
-    //TEST TILE MAP
-
-    int j=0;
-
-    for(j=0; j<160; j++){
-        printf("%i %i\n", j, maps.map[id]->tile_map[j]);
-    }
-    exit(1);
-*/
-
     /**read height map
 
     the 3d object offset indicates the end of the height map, hence we use it to calculate
@@ -693,38 +679,6 @@ int load_map(char *file_name, int id){
         }
         printf("#\n");
     }
-  exit(1);
-*/
-
-
-/*
-    //TEST 3D STRUCTURE
-
-    int k=0;
-    j=0;
-    unsigned char byte[4]={0};
-
-    do {
-
-        char obj_file[80]="";
-        memcpy(obj_file, maps.map[id]->threed_object_map+k, 79);
-        str_trim_right(obj_file);
-
-        printf("%i %s\n", j, obj_file);
-
-        byte[0]=maps.map[id]->threed_object_map[(j*144)+80];
-        byte[1]=maps.map[id]->threed_object_map[(j*144)+81];
-        byte[2]=maps.map[id]->threed_object_map[(j*144)+82];
-        byte[3]=maps.map[id]->threed_object_map[(j*144)+83];
-
-
-        printf("x_pos %f\n", Uint32_to_float(byte));
-
-        k=k+144;
-        j++;
-
-    }while(j<521);
-
   exit(1);
 */
 

@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "global.h"
 #include "numeric_functions.h"
+#include "files.h"
+#include "string_functions.h"
+#include "maps.h"
 
 void add_client_to_map_list(int connection, int map_id){
 
@@ -38,28 +42,42 @@ void remove_client_from_map_list(int connection, int map_id){
     maps.map[map_id]->client_list_count--;
 }
 
-/*
-void get_threed_object_pos(int object_id, int map_id, float *x_pos, float *y_pos){
 
-    unsigned char byte[4]={0};
+int get_map_object(int object_id, int map_id){
 
-    //char obj_file[80]="";
-    //memcpy(obj_file, maps.map[id]->threed_object_map+k, 79);
-    //str_trim_right(obj_file);
-    //printf("%i %s\n", j, obj_file);
+    //unsigned char byte[4]={0};
+    int offset=object_id * maps.map[map_id]->threed_object_structure_len;
+    char obj_file[80]="";
+    char text_out[1024]="";
+    int i,j=0;
 
-    byte[0]=maps.map[map_id]->threed_object_map[(object_id*144)+80];
-    byte[1]=maps.map[map_id]->threed_object_map[(object_id*144)+81];
-    byte[2]=maps.map[map_id]->threed_object_map[(object_id*144)+82];
-    byte[3]=maps.map[map_id]->threed_object_map[(object_id*144)+83];
+    //printf("object id %i  offset %i\n", object_id, offset );
 
-    *x_pos=Uint32_to_float(byte);
+    for(i=offset+80; i>offset; i--){
+        if(maps.map[map_id]->threed_object_map[i]==ASCII_BACKSLASH) break;
+    }
 
-    byte[0]=maps.map[map_id]->threed_object_map[(object_id*144)+84];
-    byte[1]=maps.map[map_id]->threed_object_map[(object_id*144)+85];
-    byte[2]=maps.map[map_id]->threed_object_map[(object_id*144)+86];
-    byte[3]=maps.map[map_id]->threed_object_map[(object_id*144)+87];
+    //if no backslash is found the the 3d object entry must be incorrect
+    if(i==offset){
+        sprintf(text_out, "error in function get_threed_object: module maps.c");
+        log_event(EVENT_ERROR, text_out);
+        exit(1);
+    }
 
-    *y_pos=Uint32_to_float(byte);
+    //extract the filename from the path
+    memcpy(obj_file, maps.map[map_id]->threed_object_map+i+1, offset+80-i);
+    str_trim_right(obj_file);
+
+    printf("%s\n", obj_file);
+
+    //find the corresponding inventory image id for this object
+    do{
+        if(strcmp(threed_object[j].file_name, obj_file)==0) return threed_object[j].inventory_image_id;
+
+        j++;
+
+    }while(i<MAX_THREED_OBJECTS);
+
+    return NOT_FOUND;
 }
-*/
+
