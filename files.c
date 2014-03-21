@@ -9,6 +9,7 @@
 #include "numeric_functions.h"
 #include "datetime_functions.h"
 #include "maps.h"
+#include "database.h"
 
 void save_guild(char *guild_name, int id){
 
@@ -1021,3 +1022,97 @@ void log_event(int event_type, char *text_in){
 
     log_to_file(file_name, text_out);
 }
+
+void load_database_item_table_data(char *file_name){
+
+    FILE *file;
+    int j=0;
+    int image_id=0;
+    char item_name[80]="";
+    int harvestable=0;
+    int harvest_cycle=0;
+    int cycle_amount=0;
+    int emu=0;
+    int interval=0;
+    int exp=0;
+    int food_value=0;
+    int food_cooldown=0;
+    int organic_nexus=0;
+    int vegetal_nexus=0;
+    char buf[1024]="";
+
+    //check we have an existing file and, if not, then create one
+    if((file=fopen(file_name, "r"))==NULL) {
+
+        printf("Can't find item file [%s]. Creating new one\n", file_name);
+
+        if((file=fopen(file_name, "w"))==NULL) {
+            perror("unable to create item file in function load_database_item_table");
+            exit(EXIT_FAILURE);
+        }
+
+        //add the guidance line to the text file
+        fprintf(file, "UNOFFLANDZ Item data file\n");
+        fprintf(file, "\n");
+        fprintf(file, "Image Item                          Harvest Cycle                   Food  Food     Organic Vegetal\n");
+        fprintf(file, "ID    Name              Harvestable Cycle   Amount EMU Interval EXP Value Cooldown Nexus   Nexus  \n");
+        fprintf(file, "---------------------------------------------------------------------------------------------------------\n");
+
+        printf("Created new item list table\n");
+
+        //as there's no data to be read, close the file and exit function
+        fclose(file);
+        file=fopen(file_name, "r");
+        return;
+    }
+
+    //load data from the text file
+    printf("\nLoading data to database item_table\n");
+
+    if((file=fopen(file_name, "r"))) {
+
+        //skip 5 lines before reading so we jump past the opening file comments
+        for(j=0; j<5; j++){
+
+            if(fgets(buf, 1024, file)==NULL){
+                printf("Item file [%s] has incorrect format\n", file_name);
+                exit(EXIT_FAILURE);
+            }
+        };
+
+        while (fscanf(file, "%i %s %i %i %i %i %i %i %i %i %i %i\n",
+                       &image_id,
+                       item_name,
+                       &harvestable,
+                       &harvest_cycle,
+                       &cycle_amount,
+                       &emu,
+                       &interval,
+                       &exp,
+                       &food_value,
+                       &food_cooldown,
+                       &organic_nexus,
+                       &vegetal_nexus)!=-1){;
+
+            //add item to database item_table
+            add_item(image_id, item_name, harvestable, cycle_amount, emu, interval, exp, food_value, food_cooldown, organic_nexus, vegetal_nexus);
+
+            image_id=0;
+            strcpy(item_name, "");
+            harvestable=0;
+            harvest_cycle=0;
+            cycle_amount=0;
+            emu=0;
+            interval=0;
+            exp=0;
+            food_value=0;
+            food_cooldown=0;
+            organic_nexus=0;
+            vegetal_nexus=0;
+        }
+    }
+
+    fclose(file);
+}
+
+

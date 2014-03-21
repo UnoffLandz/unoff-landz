@@ -29,4 +29,7 @@ int get_file_size(char *file_name);
 
 void log_event(int event_type, char *text_in);
 
+void load_database_item_table_data(char *file_name);
+
+
 #endif // FILES_H_INCLUDED

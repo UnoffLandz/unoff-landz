@@ -212,9 +212,10 @@ void add_item(int image_id, char *item_name, int harvestable, int cycle_amount, 
 
     rc = sqlite3_step(stmt);
 
+
     if (rc != SQLITE_DONE) {
         printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        //exit(1);
     }
 
     sqlite3_finalize(stmt);
@@ -367,17 +368,7 @@ int get_char_data(char *name){
 
         character.inventory_length=sqlite3_column_int(stmt, 32);
         memcpy(character.inventory, sqlite3_column_blob(stmt, 33), (MAX_INVENTORY_SLOTS*8)+1);
-/*
-        printf("number of items %i\n", character.inventory[0]);
-        printf("item id lsb     %i\n", character.inventory[1]);
-        printf("item id msb     %i\n", character.inventory[2]);
-        printf("item quantity   %i\n", character.inventory[3]);
-        printf("item quantity   %i\n", character.inventory[4]);
-        printf("item quantity   %i\n", character.inventory[5]);
-        printf("item quantity   %i\n", character.inventory[6]);
-        printf("pos in inventory%i\n", character.inventory[7]);
-        printf("flags           %i\n", character.inventory[8]);
-*/
+
         character.overall_exp=sqlite3_column_int(stmt, 34);
         character.harvest_exp=sqlite3_column_int(stmt, 35);
     }
@@ -387,24 +378,10 @@ int get_char_data(char *name){
     return character.char_id;
 }
 
-void execute_sql(char *sql){
-
-    sqlite3_stmt *stmt;
-    int  rc;
-
-    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    rc = sqlite3_step(stmt);
-
-    if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
-        exit(1);
-    }
-
-    sqlite3_finalize(stmt);
-}
-
 void create_character_table(){
+
+    int rc;
+    sqlite3_stmt *stmt;
 
     printf("Create CHARACTER_TABLE\n");
 
@@ -446,10 +423,22 @@ void create_character_table(){
         "OVERALL_EXP         INT," \
         "HARVEST_EXP         INT );";
 
-    execute_sql(sql);
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
+        exit(1);
+    }
+
+    sqlite3_finalize(stmt);
 }
 
 void create_item_table(){
+
+    int rc;
+    sqlite3_stmt *stmt;
 
     printf("Create ITEM_TABLE\n");
 
@@ -466,10 +455,22 @@ void create_item_table(){
         "ORGANIC_NEXUS       INT," \
         "VEGETAL_NEXUS       INT );";
 
-    execute_sql(sql);
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
+        exit(1);
+    }
+
+    sqlite3_finalize(stmt);
 }
 
 void create_3d_object_table(){
+
+    int rc;
+    sqlite3_stmt *stmt;
 
     printf("Create THREED_OBJECT TABLE\n");
 
@@ -478,7 +479,16 @@ void create_3d_object_table(){
         "FILE_NAME           TEXT,"  \
         "INVENTORY_IMAGE_ID  INT);";
 
-    execute_sql(sql);
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
+        exit(1);
+    }
+
+    sqlite3_finalize(stmt);
 }
 
 void load_3d_objects(){
@@ -495,8 +505,6 @@ void load_3d_objects(){
 
         strcpy(threed_object[i].file_name, (char*)sqlite3_column_text(stmt, 1));
         threed_object[i].inventory_image_id=sqlite3_column_int(stmt,2);
-
-        //printf("inventory image id [%i]  filename [%s]\n",threed_object[i].inventory_image_id, threed_object[i].file_name );
 
         i++;
 
@@ -554,8 +562,8 @@ void update_db_char_position(int connection){
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_int(stmt, 1, clients.client[connection]->map_tile);
-    sqlite3_bind_int(stmt, 1, clients.client[connection]->map_id);
-    sqlite3_bind_int(stmt, 1, clients.client[connection]->character_id);
+    sqlite3_bind_int(stmt, 2, clients.client[connection]->map_id);
+    sqlite3_bind_int(stmt, 3, clients.client[connection]->character_id);
 
     rc = sqlite3_step(stmt);
 
@@ -595,6 +603,14 @@ void update_db_char_frame(int connection){
 
     char sql[1024]="UPDATE CHARACTER_TABLE SET FRAME=? WHERE CHAR_ID=?;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+/** DEBUG */
+    if(clients.client[connection]->frame==sit_down){
+        printf("SIT saved to database\n");
+    }
+    else{
+        printf("STAND saved to database\n");
+    }
 
     sqlite3_bind_int(stmt, 1, clients.client[connection]->frame);
     sqlite3_bind_int(stmt, 2, clients.client[connection]->character_id);
@@ -683,19 +699,6 @@ void update_db_char_inventory(int connection){
 
     char sql[1024]="UPDATE CHARACTER_TABLE SET INVENTORY=?, INVENTORY_LENGTH=? WHERE CHAR_ID=?;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-/*
-    printf("SAVING TO INVENTORY\n");
-    printf("number of items %i\n", clients.client[connection]->inventory[0]);
-    printf("item id lsb     %i\n", clients.client[connection]->inventory[1]);
-    printf("item id msb     %i\n", clients.client[connection]->inventory[2]);
-    printf("item quantity   %i\n", clients.client[connection]->inventory[3]);
-    printf("item quantity   %i\n", clients.client[connection]->inventory[4]);
-    printf("item quantity   %i\n", clients.client[connection]->inventory[5]);
-    printf("item quantity   %i\n", clients.client[connection]->inventory[6]);
-    printf("pos in inventory%i\n", clients.client[connection]->inventory[7]);
-    printf("flags           %i\n", clients.client[connection]->inventory[8]);
-*/
 
     sqlite3_bind_blob(stmt, 1, clients.client[connection]->inventory, (MAX_INVENTORY_SLOTS*8)+1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, (MAX_INVENTORY_SLOTS*8)+1);

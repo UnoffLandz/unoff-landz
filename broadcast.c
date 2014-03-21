@@ -203,7 +203,16 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
 	packet[i++]=clients.client[connection]->weapon_type;
 	packet[i++]=clients.client[connection]->cape_type;
 	packet[i++]=clients.client[connection]->helmet_type;
-	packet[i++]=0;                                                    // Frame
+
+	if(clients.client[connection]->frame==stand_up){
+	    printf("STAND taken from database\n");
+        packet[i++]=stand_up;
+	}
+	else {
+        printf("SIT taken from database\n");
+	    packet[i++]=sit_down;
+	}
+
 	packet[i++]=clients.client[connection]->max_health % 256;         // max health lsb
 	packet[i++]=clients.client[connection]->max_health / 256;         // max health msb
 	packet[i++]=clients.client[connection]->current_health % 256;     // current health lsb

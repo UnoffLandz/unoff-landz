@@ -218,9 +218,15 @@ void process_log_in(int connection, char *text) {
         exit(EXIT_FAILURE);
     }
 
+
     //tell char to sit if the frame is set to sit
     if(clients.client[connection]->frame==sit_down) {
+        printf("tell char to sit\n");
         broadcast_actor_packet(connection, sit_down, clients.client[connection]->map_tile);
+    }
+    if(clients.client[connection]->frame==stand_up) {
+        printf("tell char to stand\n");
+        broadcast_actor_packet(connection, stand_up, clients.client[connection]->map_tile);
     }
 
     send_login_ok(connection);

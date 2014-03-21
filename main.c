@@ -423,7 +423,9 @@ int main(void) {
         create_item_table();
         create_3d_object_table();
 
-        initialise_item_data();
+        load_database_item_table_data("test.txt");
+        //initialise_item_data();
+
         initialise_threed_object_data();
     }
 

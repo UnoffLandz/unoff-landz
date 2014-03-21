@@ -2,15 +2,6 @@
 #define DATABASE_H_INCLUDED
 
 #define DATABASE_FILE "unoff.db"
-#define DB_QUEUE_ELEMENT_SIZE 1024
-#define DB_QUEUE_MAX_ELEMENTS 10
-
-#define DB_QUEUE_MAX_NODES 10
-
-enum { // return value for function check_queue in module database.c
-    QUEUE_EMPTY,
-    QUEUE_HAS_DATA,
-};
 
 void open_database(char *database_name);
 
@@ -27,8 +18,6 @@ void create_item_table();
 void create_3d_object_table();
 
 void add_char(struct character_type character);
-
-void execute_sql(char *sql);
 
 int get_chars_created_count();
 
@@ -48,12 +37,18 @@ void update_db_char_channels(int connection);
 
 void update_db_char_inventory(int connection);
 
-void initialise_item_data();
+//void initialise_item_data();
 
 void initialise_threed_object_data();
 
 void load_3d_objects();
 
 void load_items();
+
+void add_item(int image_id, char *item_name, int harvestable, int cycle_amount, int emu, int interval, int exp,
+              int food_value,
+              int food_cooldown,
+              int organic_nexus,
+              int vegetal_nexus);
 
 #endif // DATABASE_H_INCLUDED
