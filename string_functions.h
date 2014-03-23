@@ -1,6 +1,10 @@
 #ifndef STRING_FUNCTIONS_H_INCLUDED
 #define STRING_FUNCTIONS_H_INCLUDED
 
+#define ASCII_BACKSLASH 47 //used to separate file names from path
+#define ASCII_SPACE 32
+#define ASCII_UNDERSCORE 95 // used to remove underscores from item names
+
 // trims space from the right of a string
 void str_trim_right(char *str_in);
 
@@ -21,5 +25,9 @@ void get_str_island(char *str_in, char *str_out, int island_no);
 
 // extracts a file name from an address
 void extract_file_name(char *str_in, char *str_out);
+
+// converts underscores to spaces
+void str_remove_underscores(char *str_in);
+
 
 #endif // STRING_FUNCTIONS_H_INCLUDED

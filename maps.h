@@ -8,6 +8,15 @@ enum { //return values from add_char_to_map / remove_char_from_map
     ILLEGAL_MAP=-1
 };
 
+struct map_object_type{
+    char e3d_filename[80];
+    float x;
+    float y;
+    float z;
+    int image_id;
+};
+struct map_object_type map_object;
+
 void add_client_to_map_list(int client_id, int map_id);
 
 void remove_client_from_map_list(int client_id, int map_id);

@@ -23,4 +23,6 @@ void initialise_3d_objects();
 
 void initialise_items();
 
+void initialise_maps();
+
 #endif // INITIALISATION_H_INCLUDED

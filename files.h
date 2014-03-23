@@ -3,15 +3,21 @@
 
 #include "global.h"
 
-enum { //return values for file loading
-    FILE_FOUND=0,
-    FILE_NOT_FOUND=-1
-};
+#define CHANNEL_LIST_FILE "channels.lst"
+#define GUILD_LIST_FILE "guild.lst"
 
-int load_character(char *file_name, int char_id);
-void load_all_characters(char *file_name);
-void save_character(char *file_name, int char_id);
-void save_new_character(char *char_name, int id);
+#define ITEM_DATA_FILE          "item_data.txt"
+#define THREED_OBJECT_DATA_FILE "threed_object_data.txt"
+#define MAP_DATA_FILE           "map_data.txt"
+#define DATABASE_FILE           "unoff.db"
+
+enum { //log events
+    EVENT_NEW_CHAR,
+    EVENT_ERROR,
+    EVENT_SESSION,
+    EVENT_CHAT,
+    EVENT_MOVE_ERROR
+};
 
 int load_channel(char *file_name, int i);
 void load_all_channels(char *file_name);
@@ -21,9 +27,7 @@ int load_guild(char *file_name, int i);
 void load_all_guilds(char *file_name);
 void save_guild(char *file_name, int id);
 
-int load_map(char *file_name, int i);
-void load_all_maps(char *file_name);
-void save_map(char *file_name, int id);
+int load_map(int map_id);
 
 int get_file_size(char *file_name);
 
@@ -31,5 +35,8 @@ void log_event(int event_type, char *text_in);
 
 void load_database_item_table_data(char *file_name);
 
+void load_database_threed_object_table_data(char *file_name);
+
+void load_database_map_table_data(char *file_name);
 
 #endif // FILES_H_INCLUDED

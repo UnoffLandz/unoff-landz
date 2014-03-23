@@ -71,6 +71,13 @@ void close_connection_slot(int connection){
         //update last in game time for char
         clients.client[connection]->last_in_game=time(NULL);
 
+        //update total time this char has been played
+        clients.client[connection]->time_played+=(int) clients.client[connection]->last_in_game - (int) clients.client[connection]->session_commenced;
+
+        printf("last in game %i\n", (int) clients.client[connection]->last_in_game);
+        printf("session commenced %i\n", (int) clients.client[connection]->session_commenced);
+
+        //check if guild member
         if(guild_id>0) {
 
             // broadcast to guild when char logs out
@@ -80,64 +87,25 @@ void close_connection_slot(int connection){
 
     }
 
+    //set the connection slot to indicate its available for use
     clients.client[connection]->status=LOGGED_OUT;
+
+    //update the database before we zero the struct
+    update_db_char_time_played(connection);
     update_db_char_last_in_game(connection);
 
-    //clients.client[connection]->packet_buffer[1024]=
+    //zero struct data in case this corrupts the next connection to use this slot
     clients.client[connection]->packet_buffer_length=0;
-
     clients.client[connection]->character_id=0;
-
-    //clients.client[connection]->path[PATH_MAX]=;
     clients.client[connection]->path_max=0;
     clients.client[connection]->path_count=0;
-
     clients.client[connection]->time_of_last_move=0;
     clients.client[connection]->time_of_last_heartbeat=0;
     clients.client[connection]->time_of_last_harvest=0;
-
     clients.client[connection]->harvest_flag=0;
     clients.client[connection]->inventory_image_id=0;
     clients.client[connection]->inventory_slot=0;
 /*
-    char ip_address[16];
-    int sit_down;
-
-    char char_name[1024];
-    char password[1024];
-    int char_status;
-    int time_played;
-    int active_chan;
-    int chan[4];       // chan0, chan1, chan2  (chan3 used for guild chat)
-    int gm_permission; // permission to use #GM command (aka mute)
-    int ig_permission; // permission to use #IG command
-    int map_id;
-    int map_tile;
-    int guild_id;
-    int char_type;
-    int skin_type;
-    int hair_type;
-    int shirt_type;
-    int pants_type;
-    int boots_type;
-    int head_type;
-    int shield_type;
-    int weapon_type;
-    int cape_type;
-    int helmet_type;
-    int frame;
-    int max_health;
-    int current_health;
-    int visual_proximity; // proximity for display of other actors/creatures
-    int local_text_proximity; //  proximity for local messages from other actors
-    time_t last_in_game; // date char was last in-game
-    time_t char_created; // date char was created
-    time_t joined_guild; // date joined guild
-
-
-    unsigned char inventory[1024];
-    int inventory_length;
-
     int physique;
     int max_physique;
     int coordination;
@@ -260,7 +228,6 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
         sprintf(text_out, "client [%i] char [%s] disconnected\n", watcher->fd, clients.client[watcher->fd]->char_name);
         log_event(EVENT_SESSION, text_out);
 
-        clients.client[watcher->fd]->status=LOGGED_OUT;
         close_connection_slot(watcher->fd);
 
         ev_io_stop(loop, watcher);
@@ -419,14 +386,15 @@ int main(void) {
 
         //create and populate database table
         printf("\nNew database. Creating...\n");
-        create_character_table();
-        create_item_table();
-        create_3d_object_table();
 
-        load_database_item_table_data("test.txt");
-        //initialise_item_data();
+        create_database_table("CHARACTER_TABLE", CHARACTER_TABLE_SQL);
+        create_database_table("ITEM_TABLE", ITEM_TABLE_SQL);
+        create_database_table("THREED_OBJECT_TABLE", THREED_OBJECT_TABLE_SQL);
+        create_database_table("MAP_TABLE", MAP_TABLE_SQL);
 
-        initialise_threed_object_data();
+        load_database_item_table_data(ITEM_DATA_FILE);
+        load_database_threed_object_table_data(THREED_OBJECT_DATA_FILE);
+        load_database_map_table_data(MAP_DATA_FILE);
     }
 
     //initialise data structs
@@ -434,7 +402,7 @@ int main(void) {
     load_all_channels(CHANNEL_LIST_FILE);
 
     initialise_map_list(MAX_MAPS);
-    load_all_maps(MAP_LIST_FILE);
+    load_maps();
 
     initialise_guild_list(MAX_GUILDS);
     load_all_guilds(GUILD_LIST_FILE);

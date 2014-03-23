@@ -5,6 +5,14 @@
 #include "global.h"
 #include "database.h"
 
+void initialise_maps(){
+
+    /*function ensures that all database related actions are confined to the database.c module. This makes it easier
+    to change from sqlite to mysql at sometime in the future */
+
+    load_maps();
+}
+
 void initialise_3d_objects(){
 
     /*function ensures that all database related actions are confined to the database.c module. This makes it easier

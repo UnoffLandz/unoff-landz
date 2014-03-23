@@ -49,7 +49,6 @@ int get_move_command_vector(int cmd, int tile_pos, int map_axis){
 
     for(i=0; i<8; i++){
          if(cmd==vector[i].move_cmd) return tile_pos+vector[i].x + (vector[i].y*map_axis);
-        //if(cmd==movement_cmd[i]) return tile_pos+vector_x[i] + (vector_y[i]*map_axis);
     }
 
     return 0;
@@ -244,8 +243,7 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile){
         //examine all adjacent tiles
         for(i=0; i<8; i++){
 
-            //next_tile=map_tile+vector_x[i]+(vector_y[i]*map_axis*j);
-            next_tile=map_tile+vector[i].x+(vector[i].y*map_axis*j);
+            next_tile=map_tile+vector[i].x+(vector[i].y * map_axis * j);
 
             // keep with bounds of map
             if(next_tile>0 && next_tile<maps.map[map_id]->height_map_size) {

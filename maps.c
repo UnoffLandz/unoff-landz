@@ -42,38 +42,27 @@ void remove_client_from_map_list(int connection, int map_id){
     maps.map[map_id]->client_list_count--;
 }
 
-
 int get_map_object(int object_id, int map_id){
 
-    //unsigned char byte[4]={0};
     int offset=object_id * maps.map[map_id]->threed_object_structure_len;
     char obj_file[80]="";
-    char text_out[1024]="";
-    int i,j=0;
+    int j=0;
 
-    //printf("object id %i  offset %i\n", object_id, offset );
+    memcpy(obj_file, maps.map[map_id]->threed_object_map+offset, 80);
+    extract_file_name(obj_file, obj_file);
 
-    for(i=offset+80; i>offset; i--){
-        if(maps.map[map_id]->threed_object_map[i]==ASCII_BACKSLASH) break;
-    }
+    map_object.x=Uint32_to_float(maps.map[map_id]->threed_object_map+offset+80) * 2.00f;
+    map_object.y=Uint32_to_float(maps.map[map_id]->threed_object_map+offset+84) * 2.00f;
+    map_object.z=Uint32_to_float(maps.map[map_id]->threed_object_map+offset+88) * 2.00f;
 
-    //if no backslash is found the the 3d object entry must be incorrect
-    if(i==offset){
-        sprintf(text_out, "error in function get_threed_object: module maps.c");
-        log_event(EVENT_ERROR, text_out);
-        exit(1);
-    }
-
-    //extract the filename from the path
-    memcpy(obj_file, maps.map[map_id]->threed_object_map+i+1, offset+80-i);
-    str_trim_right(obj_file);
-
-    printf("%s\n", obj_file);
+    printf("[%s] [%f] [%f] [%f]\n", map_object.e3d_filename, map_object.x, map_object.y, map_object.z);
 
     //find the corresponding inventory image id for this object
     do{
+
         if(strcmp(threed_object[j].file_name, obj_file)==0) {
-            return threed_object[j].inventory_image_id;
+            map_object.image_id=threed_object[j].inventory_image_id;
+            return FOUND;
         }
 
         j++;

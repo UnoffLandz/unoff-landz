@@ -134,6 +134,7 @@ int process_hash_commands(int connection, char *text, int text_len){
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
+
     else if(strcmp(hash_command, "#EXPIRE")==0){
         //printf("#EXPIRE\n");
         return HASH_CMD_UNSUPPORTED;
@@ -223,6 +224,9 @@ int process_hash_commands(int connection, char *text, int text_len){
         get_time_stamp_str(character.last_in_game, time_stamp_str);
         get_date_stamp_str(character.last_in_game, date_stamp_str);
         sprintf(text_out, "%cLast in-game :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+        send_server_text(sock, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "%cCharacter Age:%i", c_green3+127, character.time_played / GAME_YEAR);
         send_server_text(sock, CHAT_SERVER, text_out);
 
         sprintf(text_out, "%cGuild        :%s", c_green3+127, guilds.guild[character.guild_id]->guild_name);
@@ -324,7 +328,7 @@ int process_hash_commands(int connection, char *text, int text_len){
         return HASH_CMD_FAILED;
     }
 /***************************************************************************************************/
-    else if(strcmp(hash_command, "#JC")==0){
+    else if(strcmp(hash_command, "#JC")==0 || strcmp(hash_command, "#JOIN_CHANNEL")==0){
 
         //check that #JC command is properly formed (should have 2 parts delimited by a space)
         if(command_parts!=2) {
@@ -402,7 +406,7 @@ int process_hash_commands(int connection, char *text, int text_len){
         return HASH_CMD_FAILED;
     }
 /***************************************************************************************************/
-    else if(strcmp(hash_command, "#LC")==0){
+    else if(strcmp(hash_command, "#LC")==0 || strcmp(hash_command, "#LEAVE_CHANNEL")==0){
 
         //check that #LC command is properly formed (should have 2 parts delimited by a space)
         if(command_parts!=2) {
@@ -450,13 +454,15 @@ int process_hash_commands(int connection, char *text, int text_len){
         return HASH_CMD_FAILED;
     }
 /***************************************************************************************************/
+
     else if (strcmp(hash_command, "#TEST")==0){
         //send_here_your_stats(connection);
 
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
-    else if (strcmp(hash_command, "#LCD")==0){
+
+    else if (strcmp(hash_command, "#LCD")==0 || strcmp(hash_command, "#LIST_CHANNEL_DATA")==0){
 
         sprintf(text_out, "\n%cNo   Channel    Description", c_blue1+127);
         send_raw_text_packet(sock, CHAT_SERVER, text_out);
@@ -472,7 +478,8 @@ int process_hash_commands(int connection, char *text, int text_len){
         return HASH_CMD_EXECUTED;
     }
 /***************************************************************************************************/
-    else if (strcmp(hash_command, "#LCC")==0){
+
+    else if (strcmp(hash_command, "#LCC")==0 || strcmp(hash_command, "#LIST_CHANNEL_CHARACTERS")==0){
 
         channel_number=clients.client[connection]->chan[clients.client[connection]->active_chan];
 

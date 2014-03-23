@@ -11,20 +11,26 @@
 
 void open_database(char *database_name){
 
+   /** public function - see header */
+
     int rc;
+    char text_out[1024]="";
 
     rc = sqlite3_open(database_name, &db);
 
     if( rc ){
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        exit(0);
-    }
+        sprintf(text_out, "Can't open database [%s]. Error [%s] in function open_database: module database.c", database_name, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
+  }
     else{
-        fprintf(stdout, "Opened database successfully\n");
+        printf("Opened database [%s] successfully\n", database_name);
     }
 }
 
 int get_table_count(){
+
+    /** public function - see header */
 
     int rc;
     sqlite3_stmt *stmt;
@@ -34,9 +40,10 @@ int get_table_count(){
     char sql[1024]="SELECT count(*) FROM sqlite_master WHERE type='table';";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         table_count=sqlite3_column_int(stmt, 0);
     }
+
 
     sqlite3_finalize(stmt);
 
@@ -44,6 +51,8 @@ int get_table_count(){
 }
 
 int get_chars_created_count(){
+
+    /** public function - see header */
 
     int rc;
     sqlite3_stmt *stmt;
@@ -64,6 +73,8 @@ int get_chars_created_count(){
 
 void get_last_char_created(){
 
+    /** public function - see header */
+
     int rc;
     sqlite3_stmt *stmt;
 
@@ -80,9 +91,12 @@ void get_last_char_created(){
 
 void add_char(struct character_type character){
 
+    /** public function - see header */
+
     int rc;
     sqlite3_stmt *stmt;
     unsigned char inventory[MAX_INVENTORY_SLOTS];
+    char text_out[1024]="";
 
     inventory[0]=0;
 
@@ -137,8 +151,8 @@ void add_char(struct character_type character){
     sqlite3_bind_int(stmt, 9, 0); // gm permission
     sqlite3_bind_int(stmt, 10, 0); // ig permission
 
-    sqlite3_bind_int(stmt, 11, START_MAP_ID); // map id
-    sqlite3_bind_int(stmt, 12, START_MAP_TILE); // map tile
+    sqlite3_bind_int(stmt, 11, character.map_id);
+    sqlite3_bind_int(stmt, 12, character.map_tile);
 
     sqlite3_bind_int(stmt, 13, character.char_type);
     sqlite3_bind_int(stmt, 14, character.skin_type);
@@ -167,26 +181,31 @@ void add_char(struct character_type character){
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        sprintf(text_out, "Error %s executing '%s' in function add_char: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);
 }
 
-void add_item(int image_id, char *item_name, int harvestable, int cycle_amount, int emu, int interval, int exp,
+void add_item(int image_id, char *item_name, int harvestable, int harvest_cycle, int cycle_amount, int emu, int interval, int exp,
               int food_value,
               int food_cooldown,
               int organic_nexus,
               int vegetal_nexus){
 
+    /** public function - see header */
+
     int rc;
     sqlite3_stmt *stmt;
+    char text_out[1024]="";
 
     char sql[1024] ="INSERT INTO ITEM_TABLE("  \
         "IMAGE_ID,"  \
         "ITEM_NAME," \
         "HARVESTABLE,"  \
+        "HARVEST_CYCLE," \
         "CYCLE_AMOUNT," \
         "EMU," \
         "INTERVAL," \
@@ -195,27 +214,28 @@ void add_item(int image_id, char *item_name, int harvestable, int cycle_amount, 
         "FOOD_COOLDOWN," \
         "ORGANIC_NEXUS," \
         "VEGETAL_NEXUS " \
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_int(stmt, 1, image_id);
     sqlite3_bind_text(stmt, 2, item_name, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 3, harvestable);
-    sqlite3_bind_int(stmt, 4, cycle_amount);
-    sqlite3_bind_int(stmt, 5, emu);
-    sqlite3_bind_int(stmt, 6, interval);
-    sqlite3_bind_int(stmt, 7, exp);
-    sqlite3_bind_int(stmt, 8, food_value);
-    sqlite3_bind_int(stmt, 9, food_cooldown);
-    sqlite3_bind_int(stmt, 10, organic_nexus);
-    sqlite3_bind_int(stmt, 11, vegetal_nexus);
+    sqlite3_bind_int(stmt, 4, harvest_cycle);
+    sqlite3_bind_int(stmt, 5, cycle_amount);
+    sqlite3_bind_int(stmt, 6, emu);
+    sqlite3_bind_int(stmt, 7, interval);
+    sqlite3_bind_int(stmt, 8, exp);
+    sqlite3_bind_int(stmt, 9, food_value);
+    sqlite3_bind_int(stmt, 10, food_cooldown);
+    sqlite3_bind_int(stmt, 11, organic_nexus);
+    sqlite3_bind_int(stmt, 12, vegetal_nexus);
 
     rc = sqlite3_step(stmt);
 
-
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        //exit(1);
+        sprintf(text_out, "Error %s executing '%s' in function add_item: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);
@@ -225,8 +245,11 @@ void add_item(int image_id, char *item_name, int harvestable, int cycle_amount, 
 
 void add_threed_object(int id, char *filename, int image_id){
 
+    /** public function - see header */
+
     int rc;
     sqlite3_stmt *stmt;
+    char text_out[1024]="";
 
     char sql[1024] ="INSERT INTO THREED_OBJECT_TABLE("  \
         "OBJECT_ID," \
@@ -242,19 +265,56 @@ void add_threed_object(int id, char *filename, int image_id){
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        exit(1);
-    }
+        sprintf(text_out, "Error %s executing '%s' in function add_threed_object: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
+   }
 
     sqlite3_finalize(stmt);
 
     printf("Added 3d object [%s] to THREED_OBJECT_TABLE\n", filename);
 }
 
+void add_map(int map_id, char *map_name, char *elm_file_name){
+
+   /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    char text_out[1024]="";
+
+    char sql[1024] ="INSERT INTO MAP_TABLE("  \
+        "MAP_ID," \
+        "MAP_NAME,"  \
+        "ELM_FILE_NAME" \
+        ") VALUES( ?, ?, ?);";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, map_id);
+    sqlite3_bind_text(stmt, 2, map_name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, elm_file_name, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        sprintf(text_out, "Error %s executing '%s' in function add_map: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
+   }
+
+    sqlite3_finalize(stmt);
+
+    printf("Added map [%s] to MAP_TABLE\n", map_name);
+}
+
+/*
 void initialise_item_data(){
 
-    /**                                               cycle                   food      org   veg
-           id   item name          harvestable amount emu  interval exp value cooldown nexus nexus */
+    //Now replaced by load_database_item_table_data function in module files.c as that avoids hard coding a direct
+    //reference to licensed works and, ensures code remains as generic as possible.
+
+    //                                               cycle                        food   food      org    veg
+    //       id   item name             harvestable  amount   emu  interval exp   value  cooldown  nexus  nexus
     add_item(28,  "Chrysanthemums",     1,           1,       1,   1,        1,   0,     0,        0,     0);
     add_item(140, "Sticks",             1,           1,       4,   1,        1,   0,     0,        0,     0);
     add_item(33,  "Asiatic White Lily", 1,           1,       1,   1,        1,   0,     0,        0,     0);
@@ -271,8 +331,11 @@ void initialise_item_data(){
 
 void initialise_threed_object_data(){
 
-/**                order e3d filename      inventory
-                                           image id */
+    //Now replaced by load_threed_object_data function in module: files.c as that avoids hard coding a direct
+    //reference to licensed works and, ensures code remains as generic as possible.
+
+//                    order e3d filename      inventory
+//                                            image id
     add_threed_object(1,    "flowerpink1.e3d",   28);
     add_threed_object(2,    "branch1.e3d",       140);
     add_threed_object(3,    "branch2.e3d",       140);
@@ -298,8 +361,11 @@ void initialise_threed_object_data(){
     add_threed_object(23,   "food_carrot.e3d", 408);
     add_threed_object(24,   "cabbage.e3d", 405);
 }
+*/
 
 int get_max_char_id(){
+
+    /** public function - see header */
 
     int rc;
     sqlite3_stmt *stmt;
@@ -319,7 +385,7 @@ int get_max_char_id(){
 
 int get_char_data(char *name){
 
-    //loads character data from the db to the char struct
+    /** public function - see header */
 
     int rc;
     sqlite3_stmt *stmt;
@@ -337,40 +403,41 @@ int get_char_data(char *name){
         strcpy(character.char_name, (char*) sqlite3_column_text(stmt, 1));
         strcpy(character.password, (char*) sqlite3_column_text(stmt,2));
         character.char_status=sqlite3_column_int(stmt, 3);
-        character.active_chan=sqlite3_column_int(stmt, 4);
-        character.chan[0]=sqlite3_column_int(stmt, 5);
-        character.chan[1]=sqlite3_column_int(stmt, 6);
-        character.chan[2]=sqlite3_column_int(stmt, 7);
-        character.gm_permission=sqlite3_column_int(stmt, 8);
-        character.ig_permission=sqlite3_column_int(stmt, 9);
-        character.map_id=sqlite3_column_int(stmt, 10);
-        character.map_tile=sqlite3_column_int(stmt, 11);
-        character.guild_id=sqlite3_column_int(stmt, 12);
-        character.char_type=sqlite3_column_int(stmt, 13);
-        character.skin_type=sqlite3_column_int(stmt, 14);
-        character.hair_type=sqlite3_column_int(stmt, 15);
-        character.shirt_type=sqlite3_column_int(stmt, 16);
-        character.pants_type=sqlite3_column_int(stmt, 17);
-        character.boots_type=sqlite3_column_int(stmt, 18);
-        character.head_type=sqlite3_column_int(stmt, 19);
-        character.shield_type=sqlite3_column_int(stmt, 20);
-        character.weapon_type=sqlite3_column_int(stmt, 21);
-        character.cape_type=sqlite3_column_int(stmt, 22);
-        character.helmet_type=sqlite3_column_int(stmt, 23);
-        character.frame=sqlite3_column_int(stmt, 24);
-        character.max_health=sqlite3_column_int(stmt, 25);
-        character.current_health=sqlite3_column_int(stmt, 26);
-        character.visual_proximity=sqlite3_column_int(stmt, 27);
-        character.local_text_proximity=sqlite3_column_int(stmt, 28);
-        character.last_in_game=sqlite3_column_int(stmt,  29);
-        character.char_created=sqlite3_column_int(stmt, 30);
-        character.joined_guild=sqlite3_column_int(stmt, 31);
+        character.time_played=sqlite3_column_int(stmt, 4);
+        character.active_chan=sqlite3_column_int(stmt, 5);
+        character.chan[0]=sqlite3_column_int(stmt, 6);
+        character.chan[1]=sqlite3_column_int(stmt, 7);
+        character.chan[2]=sqlite3_column_int(stmt, 8);
+        character.gm_permission=sqlite3_column_int(stmt, 9);
+        character.ig_permission=sqlite3_column_int(stmt, 10);
+        character.map_id=sqlite3_column_int(stmt, 11);
+        character.map_tile=sqlite3_column_int(stmt, 12);
+        character.guild_id=sqlite3_column_int(stmt, 13);
+        character.char_type=sqlite3_column_int(stmt, 14);
+        character.skin_type=sqlite3_column_int(stmt, 15);
+        character.hair_type=sqlite3_column_int(stmt, 16);
+        character.shirt_type=sqlite3_column_int(stmt, 17);
+        character.pants_type=sqlite3_column_int(stmt, 18);
+        character.boots_type=sqlite3_column_int(stmt, 19);
+        character.head_type=sqlite3_column_int(stmt, 20);
+        character.shield_type=sqlite3_column_int(stmt, 21);
+        character.weapon_type=sqlite3_column_int(stmt, 22);
+        character.cape_type=sqlite3_column_int(stmt, 23);
+        character.helmet_type=sqlite3_column_int(stmt, 24);
+        character.frame=sqlite3_column_int(stmt, 25);
+        character.max_health=sqlite3_column_int(stmt, 26);
+        character.current_health=sqlite3_column_int(stmt, 27);
+        character.visual_proximity=sqlite3_column_int(stmt, 28);
+        character.local_text_proximity=sqlite3_column_int(stmt, 29);
+        character.last_in_game=sqlite3_column_int(stmt,  30);
+        character.char_created=sqlite3_column_int(stmt, 31);
+        character.joined_guild=sqlite3_column_int(stmt, 32);
 
-        character.inventory_length=sqlite3_column_int(stmt, 32);
-        memcpy(character.inventory, sqlite3_column_blob(stmt, 33), (MAX_INVENTORY_SLOTS*8)+1);
+        character.inventory_length=sqlite3_column_int(stmt, 33);
+        memcpy(character.inventory, sqlite3_column_blob(stmt, 34), (MAX_INVENTORY_SLOTS*8)+1);
 
-        character.overall_exp=sqlite3_column_int(stmt, 34);
-        character.harvest_exp=sqlite3_column_int(stmt, 35);
+        character.overall_exp=sqlite3_column_int(stmt, 35);
+        character.harvest_exp=sqlite3_column_int(stmt, 36);
     }
 
     sqlite3_finalize(stmt);
@@ -378,120 +445,30 @@ int get_char_data(char *name){
     return character.char_id;
 }
 
-void create_character_table(){
+void create_database_table(char *table_name, char *sql){
 
     int rc;
     sqlite3_stmt *stmt;
-
-    printf("Create CHARACTER_TABLE\n");
-
-    char sql[1024] = "CREATE TABLE CHARACTER_TABLE("  \
-        "CHAR_ID             INT PRIMARY KEY NOT NULL," \
-        "CHAR_NAME           TEXT            NOT NULL," \
-        "PASSWORD            TEXT            NOT NULL," \
-        "CHAR_STATUS         INT," \
-        "ACTIVE_CHAN         INT," \
-        "CHAN_0              INT," \
-        "CHAN_1              INT," \
-        "CHAN_2              INT," \
-        "GM_PERMISSION       INT," \
-        "IG_PERMISSION       INT," \
-        "MAP_ID              INT," \
-        "MAP_TILE            INT," \
-        "GUILD_ID            INT," \
-        "CHAR_TYPE           INT," \
-        "SKIN_TYPE           INT," \
-        "HAIR_TYPE           INT," \
-        "SHIRT_TYPE          INT," \
-        "PANTS_TYPE          INT," \
-        "BOOTS_TYPE          INT," \
-        "HEAD_TYPE           INT," \
-        "SHIELD_TYPE         INT," \
-        "WEAPON_TYPE         INT," \
-        "CAPE_TYPE           INT," \
-        "HELMET_TYPE         INT," \
-        "FRAME               INT," \
-        "MAX_HEALTH          INT," \
-        "CURRENT_HEALTH      INT," \
-        "VISUAL_PROXIMITY    INT," \
-        "LOCAL_TEXT_PROXIMITY INT," \
-        "LAST_IN_GAME        INT," \
-        "CHAR_CREATED        INT," \
-        "JOINED_GUILD        INT," \
-        "INVENTORY_LENGTH    INT," \
-        "INVENTORY           BLOB," \
-        "OVERALL_EXP         INT," \
-        "HARVEST_EXP         INT );";
+    char text_out[1024]="";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        sprintf(text_out, "Error %s executing [%s] in function create_database_table: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);
-}
 
-void create_item_table(){
-
-    int rc;
-    sqlite3_stmt *stmt;
-
-    printf("Create ITEM_TABLE\n");
-
-    char sql[1024] = "CREATE TABLE ITEM_TABLE("  \
-        "IMAGE_ID           INT PRIMARY KEY     NOT NULL," \
-        "ITEM_NAME           TEXT," \
-        "HARVESTABLE         INT," \
-        "CYCLE_AMOUNT        INT," \
-        "EMU                 INT," \
-        "INTERVAL            INT," \
-        "EXP                 INT," \
-        "FOOD_VALUE          INT," \
-        "FOOD_COOLDOWN       INT," \
-        "ORGANIC_NEXUS       INT," \
-        "VEGETAL_NEXUS       INT );";
-
-    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    rc = sqlite3_step(stmt);
-
-    if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
-        exit(1);
-    }
-
-    sqlite3_finalize(stmt);
-}
-
-void create_3d_object_table(){
-
-    int rc;
-    sqlite3_stmt *stmt;
-
-    printf("Create THREED_OBJECT TABLE\n");
-
-    char sql[1024] = "CREATE TABLE THREED_OBJECT_TABLE("  \
-        "OBJECT_ID           INT PRIMARY KEY     NOT NULL," \
-        "FILE_NAME           TEXT,"  \
-        "INVENTORY_IMAGE_ID  INT);";
-
-    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    rc = sqlite3_step(stmt);
-
-    if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
-        exit(1);
-    }
-
-    sqlite3_finalize(stmt);
+    printf("Created [%s]\n", table_name);
 }
 
 void load_3d_objects(){
+
+    /** public function - see header */
 
     int rc;
     sqlite3_stmt *stmt;
@@ -511,7 +488,7 @@ void load_3d_objects(){
         if(i>MAX_THREED_OBJECTS) {
             sprintf(text_out, "Maximum number of 3d objects exceeded in function load_3d_objects: module database.c");
             log_event(EVENT_ERROR, text_out);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -519,6 +496,8 @@ void load_3d_objects(){
 }
 
 void load_items(){
+
+    /** public function - see header */
 
     int rc;
     sqlite3_stmt *stmt;
@@ -535,7 +514,7 @@ void load_items(){
         if(id>MAX_ITEMS){
             sprintf(text_out, "item id [%i] exceeds MAX_ITEM array size [%i] in function load_items: module database.c", id, MAX_ITEMS);
             log_event(EVENT_ERROR, text_out);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         strcpy(item[id].item_name, (char*)sqlite3_column_text(stmt, 1));
@@ -553,10 +532,53 @@ void load_items(){
     sqlite3_finalize(stmt);
 }
 
-void update_db_char_position(int connection){
+void load_maps(){
+
+    /** public function - see header */
 
     int rc;
     sqlite3_stmt *stmt;
+    char text_out[1024]="";
+    int map_id=0;
+    int i=0;
+
+    char sql[1024]="SELECT * FROM MAP_TABLE";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    printf("\nloading maps...\n");
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        map_id=sqlite3_column_int(stmt,0);
+
+        //make sure map_id doesn't exceed the size of the map array
+        if(map_id>MAX_MAPS){
+            sprintf(text_out, "map id [%i] exceeds MAX_MAP array size [%i] in function load_maps: module database.c", map_id, MAX_MAPS);
+            log_event(EVENT_ERROR, text_out);
+            exit(EXIT_FAILURE);
+        }
+
+        strcpy(maps.map[map_id]->map_name, (char*)sqlite3_column_text(stmt, 1));
+        strcpy(maps.map[map_id]->elm_filename, (char*)sqlite3_column_text(stmt, 2));
+
+        load_map(map_id);
+        printf("loaded [%i] %s\n", map_id, maps.map[map_id]->map_name);
+
+        i++;
+    }
+
+    sqlite3_finalize(stmt);
+    printf("[%i] maps were loaded\n", i);
+}
+
+
+void update_db_char_position(int connection){
+
+    /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    char text_out[1024]="";
 
     char sql[1024]="UPDATE CHARACTER_TABLE SET MAP_TILE=?, MAP_ID=? WHERE CHAR_ID=?;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -568,8 +590,9 @@ void update_db_char_position(int connection){
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        sprintf(text_out, "Error %s executing '%s' in function update_db_char_pos: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);
@@ -577,8 +600,11 @@ void update_db_char_position(int connection){
 
 void update_db_char_name(int connection){
 
+    /** public function - see header */
+
     int rc;
     sqlite3_stmt *stmt;
+    char text_out[1024]="";
 
     char sql[1024]="UPDATE CHARACTER_TABLE SET CHAR_NAME='?' WHERE CHAR_ID=?;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -589,8 +615,9 @@ void update_db_char_name(int connection){
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        sprintf(text_out, "Error %s executing '%s' in function update_db_char_name: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);
@@ -598,28 +625,34 @@ void update_db_char_name(int connection){
 
 void update_db_char_frame(int connection){
 
+    /** public function - see header */
+
     int rc;
     sqlite3_stmt *stmt;
+    char text_out[1024]="";
 
     char sql[1024]="UPDATE CHARACTER_TABLE SET FRAME=? WHERE CHAR_ID=?;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-/** DEBUG */
+/*
+    //debug
+
     if(clients.client[connection]->frame==sit_down){
         printf("SIT saved to database\n");
     }
     else{
         printf("STAND saved to database\n");
     }
-
+*/
     sqlite3_bind_int(stmt, 1, clients.client[connection]->frame);
     sqlite3_bind_int(stmt, 2, clients.client[connection]->character_id);
 
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        sprintf(text_out, "Error %s executing '%s' in function update_db_char_frame: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);
@@ -627,8 +660,11 @@ void update_db_char_frame(int connection){
 
 void update_db_char_stats(int connection){
 
+    /** public function - see header */
+
     int rc;
     sqlite3_stmt *stmt;
+    char text_out[1024]="";
 
     char sql[1024]="UPDATE CHARACTER_TABLE SET OVERALL_EXP=?, HARVEST_EXP=? WHERE CHAR_ID=?;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -640,8 +676,9 @@ void update_db_char_stats(int connection){
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        sprintf(text_out, "Error %s executing '%s' in function update_db_char_stats: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);
@@ -649,8 +686,11 @@ void update_db_char_stats(int connection){
 
 void update_db_char_last_in_game(int connection){
 
+    /** public function - see header */
+
     int rc;
     sqlite3_stmt *stmt;
+    char text_out[1024]="";
 
     char sql[1024]="UPDATE CHARACTER_TABLE SET LAST_IN_GAME=? WHERE CHAR_ID=?;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -661,17 +701,47 @@ void update_db_char_last_in_game(int connection){
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        sprintf(text_out, "Error %s executing '%s' in function update_char_last_in_game: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);
 }
 
-void update_db_char_channels(int connection){
+void update_db_char_time_played(int connection){
+
+    /** public function - see header */
 
     int rc;
     sqlite3_stmt *stmt;
+    char text_out[1024]="";
+
+    char sql[1024]="UPDATE CHARACTER_TABLE SET TIME_PLAYED=? WHERE CHAR_ID=?;";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, (int) clients.client[connection]->time_played);
+    sqlite3_bind_int(stmt, 2, clients.client[connection]->character_id);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        sprintf(text_out, "Error %s executing '%s' in function update_db_char_time_played: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+         exit(EXIT_FAILURE);
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+
+void update_db_char_channels(int connection){
+
+    /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    char text_out[1024]="";
 
     char sql[1024]="UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=?, CHAN_0=?, CHAN_1=?, CHAN_2=? WHERE CHAR_ID=?;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -685,8 +755,9 @@ void update_db_char_channels(int connection){
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function add_char\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        sprintf(text_out, "Error %s executing '%s' in function update_db_char_channels: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);
@@ -694,8 +765,11 @@ void update_db_char_channels(int connection){
 
 void update_db_char_inventory(int connection){
 
+    /** public function - see header */
+
     int rc;
     sqlite3_stmt *stmt;
+    char text_out[1024]="";
 
     char sql[1024]="UPDATE CHARACTER_TABLE SET INVENTORY=?, INVENTORY_LENGTH=? WHERE CHAR_ID=?;";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -707,8 +781,9 @@ void update_db_char_inventory(int connection){
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE) {
-        printf("Error %s executing '%s' in function execute_sql\n", sql, sqlite3_errmsg(db));
-        exit(1);
+        sprintf(text_out, "Error %s executing '%s' in function update_db_char_inventory: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
     }
 
     sqlite3_finalize(stmt);

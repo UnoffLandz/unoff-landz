@@ -3,6 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "string_functions.h"
+
 void str_trim_right(char *str_in){
 
     int i=0;
@@ -51,6 +53,17 @@ void str_conv_upper(char *str_in){
     for(i=0; i<(int) strlen(str_in); i++){
 
         if(str_in[i]>=97 && str_in[i]<=122)str_in[i]-=32;
+    }
+
+}
+
+void str_remove_underscores(char *str_in){
+
+    int i;
+
+    for(i=0; i<(int) strlen(str_in); i++){
+
+        if(str_in[i]==ASCII_UNDERSCORE) str_in[i]=ASCII_SPACE;
     }
 
 }

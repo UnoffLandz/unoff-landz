@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/socket.h> //needed for send function
 #include <sys/time.h>   //needed for gettimeofday function
+#include <string.h>
 
 #include "global.h"
 #include "protocol.h"
@@ -36,16 +37,22 @@ int find_inventory_item(int connection, int find_item_image_id){
     return NOT_FOUND;
 }
 
-int get_inventory_slot_amount(int connection, int inventory_slot){
+void get_inventory_slot(int connection, int inventory_slot){
 
     int j=1+(inventory_slot*8);
 
-    return Uint32_to_dec(clients.client[connection]->inventory[j+2], clients.client[connection]->inventory[j+3], clients.client[connection]->inventory[j+4], clients.client[connection]->inventory[j+5]);
+    inventory.slot=inventory_slot;
+    inventory.image_id=Uint16_to_dec(clients.client[connection]->inventory[j+0], clients.client[connection]->inventory[j+1]);
+    strcpy(inventory.item_name, item[inventory.image_id].item_name);
+    inventory.amount=Uint32_to_dec(clients.client[connection]->inventory[j+2], clients.client[connection]->inventory[j+3], clients.client[connection]->inventory[j+4], clients.client[connection]->inventory[j+5]);
 }
 
-void put_inventory_slot_amount(int connection, int inventory_slot, int amount){
+void put_inventory_slot(int connection, int slot, int amount, int image_id){
 
-    int j=1+(inventory_slot*8);
+    int j=1+(slot*8);
+
+    clients.client[connection]->inventory[j+0]=image_id % 256;
+    clients.client[connection]->inventory[j+1]=image_id / 256;
 
     clients.client[connection]->inventory[j+2]=amount % 256;
     clients.client[connection]->inventory[j+3]=amount / 256 % 256;
@@ -63,22 +70,24 @@ void put_inventory_slot_amount(int connection, int inventory_slot, int amount){
     printf("pos in inventory%i\n", clients.client[connection]->inventory[7]);
     printf("flags           %i\n", clients.client[connection]->inventory[8]);
 */
+
+    update_db_char_inventory(connection);
+    send_get_new_inventory_item(connection, image_id, amount, slot);
 }
 
 void new_inventory_item(int connection, int item_image_id){
 
     int i, j;
     char text_out[1024]="";
-    int slot_amount;
 
-    //search for slot with 0 amount
+    //search for slot with no image id
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
 
         j=1+(i*8);
 
-        slot_amount=get_inventory_slot_amount(connection, i);
+        get_inventory_slot(connection, i);
 
-        if(slot_amount==0){
+        if(inventory.image_id==0){
 
             printf("new slot %i\n", i);
 
@@ -101,7 +110,6 @@ void new_inventory_item(int connection, int item_image_id){
 
 void process_harvesting(int connection, time_t current_time){
 
-    int slot_amount;
     int inventory_image_id=clients.client[connection]->inventory_image_id;
 
       // exit if there's nothing to be harvested
@@ -123,11 +131,11 @@ void process_harvesting(int connection, time_t current_time){
     update_db_char_stats(connection);
 
     //calculate the new slot amount
-    slot_amount=get_inventory_slot_amount(connection, clients.client[connection]->inventory_slot);
-    slot_amount+=item[inventory_image_id].cycle_amount;
+    get_inventory_slot(connection, clients.client[connection]->inventory_slot);
+    inventory.amount+=item[inventory_image_id].cycle_amount;
 
     //update the inventory string and send to client
-    put_inventory_slot_amount(connection, clients.client[connection]->inventory_slot, slot_amount);
-    update_db_char_inventory(connection);
-    send_get_new_inventory_item(connection, inventory_image_id, slot_amount, clients.client[connection]->inventory_slot);
+    put_inventory_slot(connection, inventory.slot, inventory.amount, inventory.image_id);
+    //update_db_char_inventory(connection);
+    //send_get_new_inventory_item(connection, inventory.image_id, inventory.amount, inventory.slot);
 }

@@ -70,37 +70,11 @@ void save_channel(char *chan_name, int id){
     fclose(file);
 }
 
-void save_map(char *map_name, int id){
-
-    FILE *file;
-    char file_name[1024]="";
-
-    sprintf(file_name, "%s.map", map_name);
-
-    if((file=fopen(file_name, "w"))==NULL){
-        printf("map file %s\n", file_name);
-        perror("cannot find file");
-        exit(EXIT_FAILURE);
-    }
-
-    if(!fprintf(file, "%s\n%i\n",
-            strcpy(maps.map[id]->elm_filename, "./maps/startmap.elm"),
-            maps.map[id]->map_axis=192
-        )){
-        printf("map file %s\n", file_name);
-        perror("problem saving data to file in function save_map");
-        exit(EXIT_FAILURE);
-    }
-
-    //printf("save map [%s]\n", maps.map[id]->map_name);
-    fclose(file);
-}
-
 int load_channel(char *file_name, int i){
 
     FILE *file;
 
-    if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
+    if((file=fopen(file_name, "r"))==NULL) return NOT_FOUND;
 
     if(!fscanf(file, "%u %s %i %i %[^\n]", // the %u is needed because chan_type is an enum
             &channels.channel[i]->chan_type,
@@ -116,14 +90,14 @@ int load_channel(char *file_name, int i){
 
     fclose(file);
 
-    return FILE_FOUND;
+    return FOUND;
 }
 
 int load_guild(char *file_name, int i){
 
     FILE *file;
 
-    if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
+    if((file=fopen(file_name, "r"))==NULL) return NOT_FOUND;
 
     if(!fscanf(file, "%s %i %i %i %i %i",
             guilds.guild[i]->guild_tag,
@@ -140,16 +114,15 @@ int load_guild(char *file_name, int i){
 
     fclose(file);
 
-    return FILE_FOUND;
+    return FOUND;
 }
 
-int load_map(char *file_name, int id){
+int load_map(int id){
 
     FILE *file;
 
     unsigned char bytes[4];
-
-    char elm_filename[1024]="";
+    char elm_filename[80]="";
 
     int h_tiles=0, v_tiles=0;
     int tile_map_offset=0;
@@ -167,18 +140,6 @@ int load_map(char *file_name, int id){
     //int twod_object_count=0;
 
     int lights_object_offset=0;
-
-    //open the .map overview file and extract the .elm filename
-    if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
-
-    // extract the data
-    if(!fscanf(file, "%s", maps.map[id]->elm_filename)){
-        printf("file %s\n", maps.map[id]->elm_filename);
-        perror("problem loading data from file");
-        exit(EXIT_FAILURE);
-    }
-
-    fclose(file);
 
     //open the elm file and extract map data
     extract_file_name(maps.map[id]->elm_filename, elm_filename);
@@ -629,6 +590,27 @@ int load_map(char *file_name, int id){
         exit (EXIT_FAILURE);
     }
 
+/*
+    //TEST 3D STRUCTURE
+    int i,j,k=0;
+    float x=0.0f, y=0.0f, z=0.0f;
+
+    for(i=0; i<maps.map[id]->threed_object_count; i++){
+
+        for(j=k; j<k+144; j++){
+            printf("%c", maps.map[id]->threed_object_map[j]);
+        }
+
+        x=Uint32_to_float(maps.map[id]->threed_object_map+k+80);
+        y=Uint32_to_float(maps.map[id]->threed_object_map+k+84);
+        z=Uint32_to_float(maps.map[id]->threed_object_map+k+88);
+
+        printf("  [%f] [%f] [%f]\n", x, y, z);
+
+        k+=144;
+    }
+*/
+
     /**read 2d object map
 
     the lights object offset indicates the end of the 2d object map, hence we use it to calculate
@@ -683,7 +665,7 @@ int load_map(char *file_name, int id){
   exit(1);
 */
 
-    return FILE_FOUND;
+    return FOUND;
 }
 
 void load_all_channels(char *file_name){
@@ -771,7 +753,7 @@ void load_all_channels(char *file_name){
 
             sprintf(channel_file_name, "%s.chn", channels.channel[i]->channel_name);
 
-            if(load_channel(channel_file_name, i)==FILE_FOUND){
+            if(load_channel(channel_file_name, i)==FOUND){
                printf("loaded [%i] %s\n", i, channels.channel[i]->channel_name);
             }
             else{
@@ -841,7 +823,7 @@ void load_all_guilds(char *file_name){
 
             sprintf(guild_file_name, "%s.gld", guilds.guild[i]->guild_name);
 
-            if(load_guild(guild_file_name, i)==FILE_FOUND) {
+            if(load_guild(guild_file_name, i)==FOUND) {
                 printf("loaded [%i] %s\n", i, guilds.guild[i]->guild_name);
             }
             else{
@@ -866,78 +848,12 @@ void load_all_guilds(char *file_name){
     fclose(file);
 }
 
-void load_all_maps(char *file_name){
-
-    FILE *file;
-    char map_file_name[1024];
-    int i=1;// set to 1 (rather than 0) otherwise it won't be possible to when no map has been found
-
-    //check we have an existing list file and, if not, then create one
-    if((file=fopen(file_name, "r"))==NULL) {
-
-        printf("Can't find map list file [%s]. Creating new one\n", file_name);
-
-        if((file=fopen(file_name, "w"))==NULL) {
-            perror("unable to create list file in function load_all_maps");
-            exit(EXIT_FAILURE);
-        }
-
-        /*add the Isla_Prima map to the new map.lst file (We use isla prima as the default map as, anyone
-        using Unoff-Landz can easily obtain the elm file from the Eternal Lands client */
-        if(!fprintf(file, "%s\n", "Isla_Prima")){
-            perror("unable to save data to .lst file in function load_all_maps");
-            exit(EXIT_FAILURE);
-        }
-
-        //assume that the map file for the Isla Prima map is missing and create new one.
-        strcpy(maps.map[0]->elm_filename, "./maps/startmap.elm");
-        maps.map[0]->map_axis=192;
-        save_map("Isla_Prima", 0);
-
-        // close the list file as we need to reopen in read mode
-        fclose(file);
-        file=fopen(file_name, "r");
-    }
-
-    printf("\nLoading map list file [%s]...\n", file_name);
-
-    if((file=fopen(file_name, "r"))) {
-
-        while ((fscanf(file, "%s", maps.map[i]->map_name))!=-1){
-
-            sprintf(map_file_name, "%s.map", maps.map[i]->map_name);
-
-            if(load_map(map_file_name, i)==FILE_FOUND) {
-                printf("loaded [%i] %s\n", i, maps.map[i]->map_name);
-            }
-            else{
-                printf("file name %s\n", map_file_name);
-                perror("missing file in function load_all_maps");
-                exit(EXIT_FAILURE);
-            }
-
-            i++;
-
-            if(i==maps.max){
-                perror("maximum game maps exceeded in function load_all_maps");
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
-
-    printf("[%i] maps were loaded\n", i-1);
-
-    maps.count=i;
-
-    fclose(file);
-}
-
 int get_file_size(char *file_name){
 
     FILE *file;
     int count=0;
 
-    if((file=fopen(file_name, "r"))==NULL) return FILE_NOT_FOUND;
+    if((file=fopen(file_name, "r"))==NULL) return NOT_FOUND;
 
     while(fgetc(file) != EOF) {
         count++;
@@ -1051,19 +967,104 @@ void load_database_item_table_data(char *file_name){
             exit(EXIT_FAILURE);
         }
 
-        //add the guidance line to the text file
+        //add the guidance lines to the text file
         fprintf(file, "UNOFFLANDZ Item data file\n");
         fprintf(file, "\n");
         fprintf(file, "Image Item                          Harvest Cycle                   Food  Food     Organic Vegetal\n");
         fprintf(file, "ID    Name              Harvestable Cycle   Amount EMU Interval EXP Value Cooldown Nexus   Nexus  \n");
         fprintf(file, "---------------------------------------------------------------------------------------------------------\n");
 
-        printf("Created new item list table\n");
+        //as there's no data to be read, close the file and exit function
+        fclose(file);
+
+        printf("Now edit the file [%s] with your item data\n", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    //load data from the text file
+    printf("\nLoading data to database item_table\n");
+
+    if((file=fopen(file_name, "r"))) {
+
+        //skip 5 lines before reading so we jump past the opening file comments
+        for(j=0; j<5; j++){
+
+            if(fgets(buf, 1024, file)==NULL){
+                printf("Item file [%s] has incorrect format\n", file_name);
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        //scan the entries and load to database
+        while (fscanf(file, "%i %19s %i %i %i %i %i %i %i %i %i %i\n",
+                       &image_id,
+                       item_name,
+                       &harvestable,
+                       &harvest_cycle,
+                       &cycle_amount,
+                       &emu,
+                       &interval,
+                       &exp,
+                       &food_value,
+                       &food_cooldown,
+                       &organic_nexus,
+                       &vegetal_nexus)!=-1){
+
+            //remove underscores which are needed for fscanf to ignore spaces in item name
+            str_remove_underscores(item_name);
+
+            //add item to database
+            add_item(image_id, item_name, harvestable, harvest_cycle, cycle_amount, emu, interval, exp, food_value, food_cooldown, organic_nexus, vegetal_nexus);
+
+            //zero this item data so that its not carried over to next item data
+            image_id=0;
+            strcpy(item_name, "");
+            harvestable=0;
+            harvest_cycle=0;
+            cycle_amount=0;
+            emu=0;
+            interval=0;
+            exp=0;
+            food_value=0;
+            food_cooldown=0;
+            organic_nexus=0;
+            vegetal_nexus=0;
+        }
+    }
+
+    fclose(file);
+}
+
+void load_database_threed_object_table_data(char *file_name){
+
+    FILE *file;
+    int j=0;
+
+    int image_id=0;
+    char e3d_file_name[80]="";
+    char buf[1024]="";
+    int table_id=0;
+
+    //check we have an existing file and, if not, then create one
+    if((file=fopen(file_name, "r"))==NULL) {
+
+        if((file=fopen(file_name, "w"))==NULL) {
+            perror("unable to create item file in function load_database_threed_object_table_data");
+            exit(EXIT_FAILURE);
+        }
+
+        //add the guidance lines to the text file
+        fprintf(file, "UNOFFLANDZ 3d object data file\n");
+        fprintf(file, "\n");
+        fprintf(file, "Image e3d\n");
+        fprintf(file, "ID    File Name\n");
+        fprintf(file, "---------------\n");
 
         //as there's no data to be read, close the file and exit function
         fclose(file);
-        file=fopen(file_name, "r");
-        return;
+
+        printf("Now edit the file [%s] with your 3d object data\n", file_name);
+        exit(EXIT_FAILURE);
     }
 
     //load data from the text file
@@ -1080,36 +1081,85 @@ void load_database_item_table_data(char *file_name){
             }
         };
 
-        while (fscanf(file, "%i %s %i %i %i %i %i %i %i %i %i %i\n",
+        //scan the entries and load to database
+        while (fscanf(file, "%i %s\n",
                        &image_id,
-                       item_name,
-                       &harvestable,
-                       &harvest_cycle,
-                       &cycle_amount,
-                       &emu,
-                       &interval,
-                       &exp,
-                       &food_value,
-                       &food_cooldown,
-                       &organic_nexus,
-                       &vegetal_nexus)!=-1){;
+                       e3d_file_name)!=-1){
 
-            //add item to database item_table
-            add_item(image_id, item_name, harvestable, cycle_amount, emu, interval, exp, food_value, food_cooldown, organic_nexus, vegetal_nexus);
+            //add 3d object to database threed_object_table
+            add_threed_object(table_id, e3d_file_name, image_id);
 
+            //increment id field on database table
+            table_id++;
+
+            //zero items
             image_id=0;
-            strcpy(item_name, "");
-            harvestable=0;
-            harvest_cycle=0;
-            cycle_amount=0;
-            emu=0;
-            interval=0;
-            exp=0;
-            food_value=0;
-            food_cooldown=0;
-            organic_nexus=0;
-            vegetal_nexus=0;
+            strcpy(e3d_file_name, "");
+         }
+    }
+
+    fclose(file);
+}
+
+void load_database_map_table_data(char *file_name){
+
+    FILE *file;
+    int j=0;
+    int map_id;
+    char map_name[80]="";
+    char elm_file_name[80]="";
+    char buf[1024]="";
+
+    //check we have an existing file and, if not, then create one
+    if((file=fopen(file_name, "r"))==NULL) {
+
+        if((file=fopen(file_name, "w"))==NULL) {
+            perror("unable to create item file in function load_database_map_table_data");
+            exit(EXIT_FAILURE);
         }
+
+        //add the guidance lines to the text file
+        fprintf(file, "UNOFFLANDZ map data file\n");
+        fprintf(file, "\n");
+        fprintf(file, "Map   Map         ELM");
+        fprintf(file, "ID    Name        File name\n");
+        fprintf(file, "---------------------------------\n");
+
+        //as there's no data to be read, close the file and exit function
+        fclose(file);
+
+        printf("Now edit the file [%s] with your map data\n", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    //load data from the text file
+    printf("\nLoading data to database map_table\n");
+
+    if((file=fopen(file_name, "r"))) {
+
+        //skip 5 lines before reading so we jump past the opening file comments
+        for(j=0; j<5; j++){
+
+            if(fgets(buf, 1024, file)==NULL){
+                printf("Item file [%s] has incorrect format\n", file_name);
+                exit(EXIT_FAILURE);
+            }
+        };
+
+        //scan the entries and load to database
+        while (fscanf(file, "%i %s %s\n",
+                       &map_id,
+                       map_name,
+                       elm_file_name)!=-1){
+
+            //add 3d object to database threed_object_table
+            add_map(map_id, map_name, elm_file_name);
+
+            //zero items
+            map_id=0;
+            strcpy(map_name, "");
+            strcpy(elm_file_name, "");
+         }
     }
 
     fclose(file);

@@ -5,29 +5,23 @@
 #define MAX_MAPS 10
 #define MAX_GUILDS 10
 #define MAX_CLIENTS 20
+#define MAX_THREED_OBJECTS 100 // maximum number of e3d files that can be held in the threed_object array
+#define MAX_ITEMS 1500 //maximum number of mixable/harvestable items that can be held in the item array
 
 #define PATH_MAX 100 //longest permitted path
 #define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
-
-#define CHANNEL_LIST_FILE "channels.lst"
-#define MAP_LIST_FILE "maps.lst"
-#define GUILD_LIST_FILE "guild.lst"
 
 #define TILE_MAP_MAX 50000
 #define HEIGHT_MAP_MAX 150000
 #define TWOD_OBJECT_MAP_MAX 800000
 #define THREED_OBJECT_MAP_MAX 800000
 
-#define MAX_THREED_OBJECTS 100 // maximum number of e3d files that can be held in the threed_object array
-#define MAX_ITEMS 1500 //maximum number of mixable/harvestable items that can be held in the item array
-
 #define START_MAP_ID 1 // map_id of the map on which characters are created (1=Isla Prima)
 #define START_MAP_TILE 27225 // tile_pos at which characters are created
 
 #define MIN_MAP_AXIS 10 //used to bounds check maps
 
-#define ASCII_BACKSLASH 47 //used to separate file names from path
-#define ASCII_SPACE 32
+#define GAME_YEAR 6300 //used to calculate char age
 
 enum { // server to client protocol
     CHANGE_MAP=7,
@@ -127,17 +121,9 @@ enum{ // general boolean values
     TRUE
 };
 
-enum{
+enum{ // general boolean values
     FOUND=0,
     NOT_FOUND=-1
-};
-
-enum { //log events
-    EVENT_NEW_CHAR,
-    EVENT_ERROR,
-    EVENT_SESSION,
-    EVENT_CHAT,
-    EVENT_MOVE_ERROR
 };
 
 enum {// colours
@@ -386,7 +372,7 @@ struct client_node_type{
     int inventory_slot;
 
     char ip_address[16];
-    int sit_down;
+    //int sit_down;
 
     char char_name[1024];
     char password[1024];
@@ -418,6 +404,7 @@ struct client_node_type{
     time_t last_in_game; // date char was last in-game
     time_t char_created; // date char was created
     time_t joined_guild; // date joined guild
+    time_t session_commenced; //time latest session commenced
 
     unsigned char inventory[1024];
     int inventory_length;
@@ -538,7 +525,7 @@ struct item_type{
 };
 struct item_type item[MAX_ITEMS];
 
-/** STATIC OBJECTS **/
+/** STATIC 3D OBJECTS **/
 /*holds a list of e3d filenames and their corresponding inventory image id's. This is used so as when an item is
 harvested, the nature of the item can be determined and inked to an inventory image id. */
 struct threed_object_type{
@@ -551,15 +538,13 @@ struct threed_object_type threed_object[MAX_THREED_OBJECTS];
 struct timeval time_check;
 time_t server_start_time;
 
-#include <sqlite3.h>
-sqlite3 *db;
-
 //struct used to pass to database on character creation and get_char_id function
 struct character_type{
     int char_id;
     char char_name[1024];
     char password[1024];
     int char_status;
+    int time_played;
     int active_chan;
     int chan[3];
     int gm_permission;
@@ -591,7 +576,6 @@ struct character_type{
     int overall_exp;
     int harvest_exp;
 };
-
 struct character_type character;
 
 //struct to carry global data
@@ -600,7 +584,6 @@ struct game_data_type {
     char name_last_char_created[1024];
     time_t date_last_char_created;
 };
-
 struct game_data_type game_data;
 
 #endif // GLOBAL_H_INCLUDED

@@ -3,6 +3,7 @@
 #include <sys/socket.h> //needed for send function
 #include <sys/time.h> //needed for usec time
 #include <string.h>
+#include <time.h>//needed for time function
 
 #include "global.h"
 #include "protocol.h"
@@ -212,22 +213,27 @@ void process_log_in(int connection, char *text) {
     //add char to local map list
     map_id=clients.client[connection]->map_id;
 
+    //printf("map axis %i\n", maps.map[map_id]->map_axis);
+    //exit(1);
+
     if(add_char_to_map(connection, map_id, clients.client[connection]->map_tile)==ILLEGAL_MAP){
         sprintf(text_out, "cannot add char [%s] to map [%s] in function process_packet", char_name, maps.map[map_id]->map_name);
         log_event(EVENT_ERROR, text_out);
         exit(EXIT_FAILURE);
     }
 
-
     //tell char to sit if the frame is set to sit
     if(clients.client[connection]->frame==sit_down) {
-        printf("tell char to sit\n");
+        //printf("tell char to sit\n");
         broadcast_actor_packet(connection, sit_down, clients.client[connection]->map_tile);
     }
-    if(clients.client[connection]->frame==stand_up) {
-        printf("tell char to stand\n");
+    else {
+        //printf("tell char to stand\n");
         broadcast_actor_packet(connection, stand_up, clients.client[connection]->map_tile);
     }
+
+    //record time session commenced so we can calculate time in-game
+    clients.client[connection]->session_commenced=time(NULL);
 
     send_login_ok(connection);
     send_you_are(connection);

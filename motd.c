@@ -84,7 +84,7 @@ int send_motd_file(int connection){
     FILE *file;
     char line_in[1024]="";
 
-    if((file=fopen(MOTD_FILE, "r"))==NULL) return FILE_NOT_FOUND;
+    if((file=fopen(MOTD_FILE, "r"))==NULL) return NOT_FOUND;
 
     while( fgets(line_in, 80, file) != NULL){
         str_trim_right(line_in);
@@ -94,7 +94,7 @@ int send_motd_file(int connection){
 
     fclose(file);
 
-    return FILE_FOUND;
+    return FOUND;
 }
 
 void send_motd(int connection){

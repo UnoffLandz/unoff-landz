@@ -126,7 +126,7 @@ void send_server_text(int sock, int channel, char *text){
     int packet_length;
 
     text_length=strlen(text);
-    message_length=text_length+2; /* add 1 for the channel byte and 1 for the msb byte */
+    message_length=text_length+2; // add 1 for the channel byte and 1 for the msb byte
 
     packet[0]=0;
     packet[1]=message_length % 256;
@@ -135,7 +135,7 @@ void send_server_text(int sock, int channel, char *text){
 
     memmove(packet+4, text, text_length);
 
-    packet_length=message_length+2; /* add 1 for the protocol byte and 1 for the lsb byte */
+    packet_length=message_length+2; // add 1 for the protocol byte and 1 for the lsb byte
 
     send(sock, packet, packet_length, 0);
 }
@@ -438,7 +438,8 @@ void process_packet(int connection, unsigned char *packet){
     int map_object_id=0;
     int use_with_position=0;
     int result=0;
-    int inventory_image_id;
+    int x, y, x_diff, y_diff;
+    int slot, to_slot, from_slot;
 
     // extract data from packet
     for(i=0; i<data_length; i++){
@@ -532,7 +533,6 @@ void process_packet(int connection, unsigned char *packet){
         break;
 
         case MOVE_TO:
-
         //if char is harvesting then stop
         if(clients.client[connection]->harvest_flag==TRUE){
             sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection]->inventory_image_id].item_name);
@@ -542,8 +542,8 @@ void process_packet(int connection, unsigned char *packet){
         }
 
         //if char is sitting then stand before moving
-        if(clients.client[connection]->frame==13){
-            clients.client[connection]->frame=14;
+        if(clients.client[connection]->frame==sit_down){
+            clients.client[connection]->frame=stand_up;
             broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
         }
 
@@ -660,9 +660,45 @@ void process_packet(int connection, unsigned char *packet){
         }
         break;
 
-        case HARVEST:
+        case LOOK_AT_INVENTORY_ITEM:
+        //returns a Uint8 giving the slot number looked at
 
-        //HARVEST packet returns a integer corresponding to the id of an object in the map 3d object list
+        slot=(int)data[0];
+
+        printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", slot);
+
+        get_inventory_slot(connection, slot);
+
+        sprintf(text_out, "%c%s", c_green3+127, inventory.item_name);
+        send_server_text(connection, CHAT_SERVER, text_out);
+
+        break;
+
+        case MOVE_INVENTORY_ITEM:
+        //returns 2 Uint8 indicating the slots to be moved from and tp
+
+        from_slot=(int)data[0];
+        to_slot=(int)data[1];
+
+        printf("MOVE_INVENTORY_ITEM - slot [%i] to slot [%i]\n", from_slot, to_slot);
+
+        get_inventory_slot(connection, to_slot);
+
+        //make sure the new slot is empty
+        if (inventory.image_id!=0) {
+            sprintf(text_out, "%cThat inventory slot is already occupied", c_red3+127);
+            send_server_text(connection, CHAT_SERVER, text_out);
+            break;
+        }
+
+        get_inventory_slot(connection, from_slot);
+        put_inventory_slot(connection, to_slot, inventory.amount, inventory.image_id);
+        put_inventory_slot(connection, from_slot, 0,0);
+
+        break;
+
+        case HARVEST:
+        //returns a integer corresponding to the id of an object in the map 3d object list
         map_object_id=Uint16_to_dec(data[0], data[1]);
 
         printf("HARVEST object_id %i\n", map_object_id);
@@ -676,23 +712,33 @@ void process_packet(int connection, unsigned char *packet){
         }
 
         //find the inventory image id for the map object
-        inventory_image_id=get_map_object(map_object_id, map_id);
-
-        //can't find an inventory image id for this map object
-        if(inventory_image_id==NOT_FOUND){
+        if(get_map_object(map_object_id, map_id)==NOT_FOUND){
             log_event(EVENT_ERROR, "inventory image id not found in function process_packet: module protocol.c");
             sprintf(text_out, "%cSorry. You can't harvest this item.", c_red3+127);
             send_server_text(connection, CHAT_SERVER, text_out);
             clients.client[connection]->harvest_flag=FALSE;
             break;
-         }
+        }
 
-        //record the image id of the item being harvested in the connection array
-        clients.client[connection]->inventory_image_id=inventory_image_id;
+        //check for harvesting proximity
+        x=clients.client[connection]->map_tile % maps.map[map_id]->map_axis;
+        y=clients.client[connection]->map_tile / maps.map[map_id]->map_axis;
+
+        x_diff=abs(x-(int)map_object.x);
+        y_diff=abs(y-(int)map_object.y);
+
+        if(x_diff>3 || y_diff>3){
+            sprintf(text_out, "%cYou are too far away to harvest that item", c_red3+127);
+            send_server_text(connection, CHAT_SERVER, text_out);
+            break;
+        }
+
+        //record the image id of the item being harvested in the client array
+        clients.client[connection]->inventory_image_id=map_object.image_id;
 
         //if there's not an existing inventory slot for the harvested item, create one
-        if(find_inventory_item(connection, inventory_image_id)==NOT_FOUND) {
-            new_inventory_item(connection, inventory_image_id);
+        if(find_inventory_item(connection, map_object.image_id)==NOT_FOUND) {
+            new_inventory_item(connection, map_object.image_id);
         }
 
         printf("using slot [%i]\n", inventory.slot);
@@ -705,6 +751,18 @@ void process_packet(int connection, unsigned char *packet){
 
         //send message to client
         sprintf(text_out, "%cYou started to harvest %s", c_green3+127, item[clients.client[connection]->inventory_image_id].item_name);
+        send_server_text(connection, CHAT_SERVER, text_out);
+
+        break;
+
+        case LOOK_AT_MAP_OBJECT:
+        //returns a Uint32 indicating the object_id of the item looked at
+        map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
+        printf("LOOK_AT_MAP_OBJECT %i\n", map_object_id);
+
+        get_map_object(map_object_id, map_id);
+
+        sprintf(text_out, "%c%s", c_green3+127, item[map_object.image_id].item_name);
         send_server_text(connection, CHAT_SERVER, text_out);
 
         break;
@@ -728,6 +786,7 @@ void process_packet(int connection, unsigned char *packet){
 
         printf("CREATE_CHAR connection [%i]\n", connection);
 
+        //detect and handle malformed packet
         if(count_str_island(text)!=2){
 
             send_create_char_not_ok(connection);
@@ -784,15 +843,26 @@ void process_packet(int connection, unsigned char *packet){
         character.visual_proximity=15;
         character.local_text_proximity=12;
         character.char_created=time(NULL);
-        character.inventory[0]=0;
+        character.inventory[0]=0;// zero the character inventory
         character.inventory_length=1;
 
+        character.map_id=START_MAP_ID;
+        character.map_tile=START_MAP_TILE;
+
+        //add character entry to database
         add_char(character);
 
+        //update game data for the MOTD
+        game_data.char_count++;
+        strcpy(game_data.name_last_char_created, char_name);
+        game_data.date_last_char_created=character.char_created;
+
+        //notify connection that character has been created
         sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
         send_server_text(connection, CHAT_SERVER, text_out);
         send_create_char_ok(connection);
 
+        //log character creation event
         sprintf(text_out, "[%s] password [%s]\n", char_name, password);
         log_event(EVENT_NEW_CHAR, text_out);
 
