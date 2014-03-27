@@ -23,6 +23,8 @@
 
 #define GAME_YEAR 6300 //used to calculate char age
 
+#define DEBUG 1
+
 enum { // server to client protocol
     CHANGE_MAP=7,
     HERE_YOUR_STATS=18,
@@ -122,8 +124,8 @@ enum{ // general boolean values
 };
 
 enum{ // general boolean values
-    FOUND=0,
-    NOT_FOUND=-1
+    FOUND=-1,
+    NOT_FOUND=-2
 };
 
 enum {// colours
@@ -349,11 +351,18 @@ struct guild_list_type {
     int max;
     struct guild_node_type **guild;
 };
-
 struct guild_list_type guilds;
 
 
 /** CLIENTS */
+struct client_inventory_type {
+        int image_id;
+        int amount;
+        int slot;
+        int flags;
+};
+struct client_inventory_type client_inventory;
+
 struct client_node_type{
     enum {LOGGED_IN, CONNECTED, LOGGED_OUT} status;
     int packet_buffer[1024];
@@ -372,7 +381,6 @@ struct client_node_type{
     int inventory_slot;
 
     char ip_address[16];
-    //int sit_down;
 
     char char_name[1024];
     char password[1024];
@@ -406,8 +414,7 @@ struct client_node_type{
     time_t joined_guild; // date joined guild
     time_t session_commenced; //time latest session commenced
 
-    unsigned char inventory[1024];
-    int inventory_length;
+    struct client_inventory_type client_inventory[36];
 
     int physique;
     int max_physique;
@@ -571,8 +578,9 @@ struct character_type{
     time_t last_in_game;
     time_t joined_guild;
     int guild_id;
-    unsigned char inventory[1024];
-    int inventory_length;
+
+    struct client_inventory_type client_inventory[36];
+
     int overall_exp;
     int harvest_exp;
 };

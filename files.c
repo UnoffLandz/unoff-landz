@@ -1043,7 +1043,6 @@ void load_database_threed_object_table_data(char *file_name){
     int image_id=0;
     char e3d_file_name[80]="";
     char buf[1024]="";
-    int table_id=0;
 
     //check we have an existing file and, if not, then create one
     if((file=fopen(file_name, "r"))==NULL) {
@@ -1082,15 +1081,10 @@ void load_database_threed_object_table_data(char *file_name){
         };
 
         //scan the entries and load to database
-        while (fscanf(file, "%i %s\n",
-                       &image_id,
-                       e3d_file_name)!=-1){
+        while (fscanf(file, "%i %s\n", &image_id, e3d_file_name)!=-1){
 
             //add 3d object to database threed_object_table
-            add_threed_object(table_id, e3d_file_name, image_id);
-
-            //increment id field on database table
-            table_id++;
+            add_threed_object(e3d_file_name, image_id);
 
             //zero items
             image_id=0;

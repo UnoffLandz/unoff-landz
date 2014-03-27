@@ -15,6 +15,7 @@
 #include "chat.h"
 #include "broadcast.h"
 #include "database.h"
+#include "harvesting.h"
 
 void send_login_ok(int connection){
 
@@ -66,6 +67,8 @@ void send_you_are(int connection){
 
 void load_char_data_into_connection(int connection){
 
+    int i=0;
+
     clients.client[connection]->character_id=character.char_id;
     strcpy(clients.client[connection]->char_name, character.char_name);
     strcpy(clients.client[connection]->password, character.password);
@@ -99,8 +102,10 @@ void load_char_data_into_connection(int connection){
     clients.client[connection]->char_created=character.char_created;
     clients.client[connection]->joined_guild=character.joined_guild;
 
-    clients.client[connection]->inventory_length=character.inventory_length;
-    memcpy(clients.client[connection]->inventory, character.inventory, character.inventory_length);
+    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
+        clients.client[connection]->client_inventory[i].image_id=character.client_inventory[i].image_id;
+        clients.client[connection]->client_inventory[i].amount=character.client_inventory[i].amount;
+    }
 
     clients.client[connection]->overall_exp=character.overall_exp;
     clients.client[connection]->harvest_exp=character.harvest_exp;
@@ -212,9 +217,6 @@ void process_log_in(int connection, char *text) {
 
     //add char to local map list
     map_id=clients.client[connection]->map_id;
-
-    //printf("map axis %i\n", maps.map[map_id]->map_axis);
-    //exit(1);
 
     if(add_char_to_map(connection, map_id, clients.client[connection]->map_tile)==ILLEGAL_MAP){
         sprintf(text_out, "cannot add char [%s] to map [%s] in function process_packet", char_name, maps.map[map_id]->map_name);

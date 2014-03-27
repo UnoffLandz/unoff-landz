@@ -381,17 +381,19 @@ int main(void) {
     //open an existing database file or create a new one
     open_database(DATABASE_FILE);
 
-    //if no tables in the database, a new database file has been created
+    //if no tables in the database, create table structures
     if(get_table_count()==0) {
 
-        //create and populate database table
+        //create database table structure
         printf("\nNew database. Creating...\n");
 
         create_database_table("CHARACTER_TABLE", CHARACTER_TABLE_SQL);
+        create_database_table("INVENTORY_TABLE", INVENTORY_TABLE_SQL);
         create_database_table("ITEM_TABLE", ITEM_TABLE_SQL);
         create_database_table("THREED_OBJECT_TABLE", THREED_OBJECT_TABLE_SQL);
         create_database_table("MAP_TABLE", MAP_TABLE_SQL);
 
+        //populate database tables with initial data
         load_database_item_table_data(ITEM_DATA_FILE);
         load_database_threed_object_table_data(THREED_OBJECT_DATA_FILE);
         load_database_map_table_data(MAP_DATA_FILE);

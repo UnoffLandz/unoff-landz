@@ -5,7 +5,7 @@
 sqlite3 *db; // database handle which is set when function open_database is called
 
 #define CHARACTER_TABLE_SQL "CREATE TABLE CHARACTER_TABLE( \
-        CHAR_ID             INT PRIMARY KEY NOT NULL, \
+        CHAR_ID             INTEGER PRIMARY KEY AUTOINCREMENT, \
         CHAR_NAME           TEXT            NOT NULL, \
         PASSWORD            TEXT            NOT NULL, \
         CHAR_STATUS         INT, \
@@ -38,13 +38,19 @@ sqlite3 *db; // database handle which is set when function open_database is call
         LAST_IN_GAME        INT, \
         CHAR_CREATED        INT, \
         JOINED_GUILD        INT, \
-        INVENTORY_LENGTH    INT, \
         INVENTORY           BLOB, \
         OVERALL_EXP         INT, \
         HARVEST_EXP         INT )"
 
+#define INVENTORY_TABLE_SQL "CREATE TABLE INVENTORY_TABLE( \
+        ID                  INTEGER PRIMARY KEY    AUTOINCREMENT, \
+        CHAR_ID             INT, \
+        SLOT                INT, \
+        IMAGE_ID            INT, \
+        AMOUNT              INT)"
+
 #define ITEM_TABLE_SQL  "CREATE TABLE ITEM_TABLE(  \
-        IMAGE_ID           INT PRIMARY KEY     NOT NULL, \
+        IMAGE_ID            INTEGER PRIMARY KEY     NOT NULL, \
         ITEM_NAME           TEXT, \
         HARVESTABLE         INT, \
         HARVEST_CYCLE       INT, \
@@ -58,12 +64,12 @@ sqlite3 *db; // database handle which is set when function open_database is call
         VEGETAL_NEXUS       INT )"
 
 #define THREED_OBJECT_TABLE_SQL  "CREATE TABLE THREED_OBJECT_TABLE(  \
-        OBJECT_ID           INT PRIMARY KEY     NOT NULL, \
+        ID                  INTEGER PRIMARY KEY     AUTOINCREMENT, \
         FILE_NAME           TEXT,  \
         INVENTORY_IMAGE_ID  INT )"
 
 #define MAP_TABLE_SQL "CREATE TABLE MAP_TABLE( \
-        MAP_ID              INT PRIMARY KEY     NOT NULL, \
+        MAP_ID              INTEGER PRIMARY KEY     NOT NULL, \
         MAP_NAME            TEXT, \
         ELM_FILE_NAME       TEXT )"
 
@@ -78,6 +84,16 @@ sqlite3 *db; // database handle which is set when function open_database is call
 void open_database(char *database_name);
 
 
+/** RESULT  : gets the highest char_id in the database
+
+    RETURNS : the highest char_id in the database
+
+    PURPOSE : Enables the char_id of a newly created char to be associated with an entry in the clients struct
+
+    USAGE   : process_packet protocol.c */
+int get_max_char_id();
+
+
 /** RESULT  : Finds sqlite database file and creates the handle [db] which can then be called by other
               database functions.
 
@@ -88,17 +104,6 @@ void open_database(char *database_name);
 
     USAGE   : send_pm:chat.c, rename_char:hash_command.c, process_log_in:log_in.c, process_packet:protocol.c */
 int get_char_data(char *char_name);
-
-
-/** RESULT  : Finds the highest entry in the ID field of the database character table
-
-    RETURNS : The value of the highest entry in the ID field of the database character table
-
-    PURPOSE : Allows each entry on the character table to be given a unique ID
-
-    USAGE   : process_packet:protocol.c */
-int get_max_char_id();
-
 
 /** RESULT  : Determines the number of tables in the database
 
@@ -223,7 +228,7 @@ void update_db_char_time_played(int connection);
 void update_db_char_channels(int connection);
 
 
-/** RESULT  : Updates the character entry in the character_table with the current inventory
+/** RESULT  : Updates a characters entire inventory to the database
 
     RETURNS : void
 
@@ -231,6 +236,16 @@ void update_db_char_channels(int connection);
 
     USAGE   : process_harvesting:harvesting.c */
 void update_db_char_inventory(int connection);
+
+
+/** RESULT  : Updates a specific slot in a characters inventory to the database
+
+    RETURNS : void
+
+    PURPOSE : Facilitates persistent character state
+
+    USAGE   : process_harvesting:harvesting.c */
+void update_db_char_slot(int connection, int slot);
 
 
 /** RESULT  : loads 3d object data from the database to the threed_object struct array
@@ -286,7 +301,7 @@ void add_item(int image_id, char *item_name, int harvestable, int harvest_cycle,
     PURPOSE : enables data to be bulk loaded from a text file
 
     USAGE   : load_database_threed_object_table_data:files.c */
-void add_threed_object(int id, char *filename, int image_id);
+void add_threed_object(char *filename, int image_id);
 
 
 /** RESULT  : adds an entry to the map_table of the database

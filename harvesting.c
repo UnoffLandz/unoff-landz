@@ -13,129 +13,81 @@
 #include "chat.h"
 #include "broadcast.h"
 
-int find_inventory_item(int connection, int find_item_image_id){
+int get_used_inventory_slot(int connection, int image_id){
 
-    int i, j;
-    int slot_item_image_id;
+    int i;
 
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        j=1+(i*8);
-
-        slot_item_image_id=Uint16_to_dec(clients.client[connection]->inventory[j], clients.client[connection]->inventory[j+1]);
-
-        if(slot_item_image_id==find_item_image_id) {
-
-            inventory.slot=i;
-            inventory.image_id=slot_item_image_id;
-            inventory.amount=Uint32_to_dec(clients.client[connection]->inventory[j+3], clients.client[connection]->inventory[j+4], clients.client[connection]->inventory[j+5], clients.client[connection]->inventory[j+6]);
-
-            return FOUND;
-        }
+        if(clients.client[connection]->client_inventory[i].image_id==image_id) return i;
     }
 
     return NOT_FOUND;
 }
 
-void get_inventory_slot(int connection, int inventory_slot){
+int get_unused_inventory_slot(int connection){
 
-    int j=1+(inventory_slot*8);
-
-    inventory.slot=inventory_slot;
-    inventory.image_id=Uint16_to_dec(clients.client[connection]->inventory[j+0], clients.client[connection]->inventory[j+1]);
-    strcpy(inventory.item_name, item[inventory.image_id].item_name);
-    inventory.amount=Uint32_to_dec(clients.client[connection]->inventory[j+2], clients.client[connection]->inventory[j+3], clients.client[connection]->inventory[j+4], clients.client[connection]->inventory[j+5]);
-}
-
-void put_inventory_slot(int connection, int slot, int amount, int image_id){
-
-    int j=1+(slot*8);
-
-    clients.client[connection]->inventory[j+0]=image_id % 256;
-    clients.client[connection]->inventory[j+1]=image_id / 256;
-
-    clients.client[connection]->inventory[j+2]=amount % 256;
-    clients.client[connection]->inventory[j+3]=amount / 256 % 256;
-    clients.client[connection]->inventory[j+4]=amount / 256 / 256 % 256;
-    clients.client[connection]->inventory[j+5]=amount / 256 / 256 / 256 % 256;
-/*
-    printf("ADD TO INVENTORY\n");
-    printf("number of items %i\n", clients.client[connection]->inventory[0]);
-    printf("item id lsb     %i\n", clients.client[connection]->inventory[1]);
-    printf("item id msb     %i\n", clients.client[connection]->inventory[2]);
-    printf("item quantity   %i\n", clients.client[connection]->inventory[3]);
-    printf("item quantity   %i\n", clients.client[connection]->inventory[4]);
-    printf("item quantity   %i\n", clients.client[connection]->inventory[5]);
-    printf("item quantity   %i\n", clients.client[connection]->inventory[6]);
-    printf("pos in inventory%i\n", clients.client[connection]->inventory[7]);
-    printf("flags           %i\n", clients.client[connection]->inventory[8]);
-*/
-
-    update_db_char_inventory(connection);
-    send_get_new_inventory_item(connection, image_id, amount, slot);
-}
-
-void new_inventory_item(int connection, int item_image_id){
-
-    int i, j;
-    char text_out[1024]="";
+    int i;
 
     //search for slot with no image id
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
-
-        j=1+(i*8);
-
-        get_inventory_slot(connection, i);
-
-        if(inventory.image_id==0){
-
-            printf("new slot %i\n", i);
-
-            clients.client[connection]->inventory[j]=item_image_id % 256;
-            clients.client[connection]->inventory[j+1]=item_image_id / 256;
-
-            inventory.slot=i;
-            inventory.image_id=item_image_id;
-            inventory.amount=0;
-
-            return;
-        }
+        if(clients.client[connection]->client_inventory[i].amount==0) return i;
     }
 
-    sprintf(text_out, "%cSorry, but you don't have enough inventory slots", c_red1+127);
-    send_raw_text_packet(connection, CHAT_SERVER, text_out);
+    return NOT_FOUND;
+}
 
-    return;
+int get_inventory_emu(int connection){
+
+    int i=0;
+    int total_emu=0;
+    int image_id=0;
+
+    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
+
+        image_id=clients.client[connection]->client_inventory[i].image_id;
+        total_emu +=(clients.client[connection]->client_inventory[i].amount * item[image_id].emu);
+    }
+
+    return total_emu;
+
 }
 
 void process_harvesting(int connection, time_t current_time){
 
-    int inventory_image_id=clients.client[connection]->inventory_image_id;
+    char text_out[1024]="";
+    int image_id=clients.client[connection]->inventory_image_id;
+    int slot=clients.client[connection]->inventory_slot;
 
-      // exit if there's nothing to be harvested
+    // exit if there's nothing to be harvested
     if(clients.client[connection]->harvest_flag==FALSE) return;
 
     //adjust timer to compensate for minute wrap-around>
     if(clients.client[connection]->time_of_last_harvest>current_time) current_time+=60;
 
     // exit if the harvest interval hasn't expired
-    if(current_time<clients.client[connection]->time_of_last_harvest+item[inventory_image_id].interval) return;
+    if(current_time<clients.client[connection]->time_of_last_harvest+item[image_id].interval) return;
 
     //update the time of harvest
     gettimeofday(&time_check, NULL);
     clients.client[connection]->time_of_last_harvest=time_check.tv_sec;
 
+    // if inventory is overloaded stop harvesting
+    if(get_inventory_emu(connection)+ (item[image_id].emu * item[image_id].cycle_amount) > MAX_EMU){
+
+        sprintf(text_out, "%cYou are overloaded", c_red1+127);
+        send_raw_text_packet(connection, CHAT_SERVER, text_out);
+        clients.client[connection]->harvest_flag=FALSE;
+        return;
+    }
+
     //update stats and send to client
-    clients.client[connection]->harvest_exp+=item[inventory_image_id].exp;
+    clients.client[connection]->harvest_exp+=item[image_id].exp;
     send_partial_stats(connection, HARVEST_EXP,  clients.client[connection]->harvest_exp);
     update_db_char_stats(connection);
 
-    //calculate the new slot amount
-    get_inventory_slot(connection, clients.client[connection]->inventory_slot);
-    inventory.amount+=item[inventory_image_id].cycle_amount;
-
-    //update the inventory string and send to client
-    put_inventory_slot(connection, inventory.slot, inventory.amount, inventory.image_id);
-    //update_db_char_inventory(connection);
-    //send_get_new_inventory_item(connection, inventory.image_id, inventory.amount, inventory.slot);
+    //Add the harvested amount to the inventory and send to client
+    clients.client[connection]->client_inventory[slot].amount+= item[image_id].cycle_amount;
+    send_get_new_inventory_item(connection, image_id, clients.client[connection]->client_inventory[slot].amount, slot);
+    update_db_char_slot(connection, slot);
 }

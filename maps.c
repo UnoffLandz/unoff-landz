@@ -48,6 +48,13 @@ int get_map_object(int object_id, int map_id){
     char obj_file[80]="";
     int j=0;
 
+    //zero struct elements
+    map_object.image_id=0;
+    map_object.x=0.0f;
+    map_object.y=0.0f;
+    map_object.z=0.0f;
+    strcpy(map_object.e3d_filename,"");
+
     memcpy(obj_file, maps.map[map_id]->threed_object_map+offset, 80);
     extract_file_name(obj_file, obj_file);
 

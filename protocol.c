@@ -51,7 +51,6 @@ void send_get_new_inventory_item(int connection, int item_image_id, int amount, 
 void send_here_your_inventory(int connection){
 
     int i=0;
-
     unsigned char packet[(MAX_INVENTORY_SLOTS*8)+4];
 
     int data_length=2+(MAX_INVENTORY_SLOTS*8);
@@ -68,17 +67,16 @@ void send_here_your_inventory(int connection){
 
         j=4+(i*8);
 
-        packet[j+0]=clients.client[connection]->inventory[1+(8*i)]; //image_id of item
-        packet[j+1]=clients.client[connection]->inventory[2+(8*i)];
+        packet[j+0]=clients.client[connection]->client_inventory[i].image_id % 256; //image_id of item
+        packet[j+1]=clients.client[connection]->client_inventory[i].image_id / 256;
 
-        packet[j+2]=clients.client[connection]->inventory[3+(8*i)]; //amount (when zero nothing is shown in inventory)
-        packet[j+3]=clients.client[connection]->inventory[4+(8*i)];
-        packet[j+4]=clients.client[connection]->inventory[5+(8*i)];
-        packet[j+5]=clients.client[connection]->inventory[6+(8*i)];
+        packet[j+2]=clients.client[connection]->client_inventory[i].amount % 256; //amount (when zero nothing is shown in inventory)
+        packet[j+3]=clients.client[connection]->client_inventory[i].amount / 256 % 256;
+        packet[j+4]=clients.client[connection]->client_inventory[i].amount / 256 / 256 % 256;
+        packet[j+5]=clients.client[connection]->client_inventory[i].amount / 256 / 256 / 256 % 256;
 
         packet[j+6]=i; //inventory pos (starts at 0)
         packet[j+7]=0; //flags
-
     }
 
 /*
@@ -425,7 +423,6 @@ void process_packet(int connection, unsigned char *packet){
     char char_name[1024]="";
     char password[1024]="";
 
-    int char_id;
     int current_tile=clients.client[connection]->map_tile;
     int other_connection;
     int map_id=clients.client[connection]->map_id;
@@ -439,7 +436,9 @@ void process_packet(int connection, unsigned char *packet){
     int use_with_position=0;
     int result=0;
     int x, y, x_diff, y_diff;
-    int slot, to_slot, from_slot;
+    int slot=0, to_slot=0, from_slot=0;
+    int image_id=0;
+    int amount=0;
 
     // extract data from packet
     for(i=0; i<data_length; i++){
@@ -579,17 +578,19 @@ void process_packet(int connection, unsigned char *packet){
                 exit(EXIT_FAILURE);
             }
 
-            printf("got new path\n");
-            for(i=0; i<clients.client[connection]->path_count; i++){
-                printf("%i %i\n", i, clients.client[connection]->path[i]);
-            }
+            //DEBUG
+            //printf("got new path\n");
+            //for(i=0; i<clients.client[connection]->path_count; i++){
+            //    printf("%i %i\n", i, clients.client[connection]->path[i]);
+            //}
 
             //reset time of last move to zero so the movement is processed without delay
             clients.client[connection]->time_of_last_move=0;
             break;
         }
 
-        printf("current tile = destination (ignored)\n");
+        //DEBUG
+        //printf("current tile = destination (ignored)\n");
 
         break;
 
@@ -662,38 +663,38 @@ void process_packet(int connection, unsigned char *packet){
 
         case LOOK_AT_INVENTORY_ITEM:
         //returns a Uint8 giving the slot number looked at
+        printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", data[0]);
 
         slot=(int)data[0];
+        image_id=clients.client[connection]->client_inventory[slot].image_id;
 
-        printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", slot);
-
-        get_inventory_slot(connection, slot);
-
-        sprintf(text_out, "%c%s", c_green3+127, inventory.item_name);
+        sprintf(text_out, "%c%s", c_green3+127, item[image_id].item_name);
         send_server_text(connection, CHAT_SERVER, text_out);
 
         break;
 
         case MOVE_INVENTORY_ITEM:
-        //returns 2 Uint8 indicating the slots to be moved from and tp
-
+        //returns 2 Uint8 indicating the slots to be moved from and to
+        //if an attempt is made to move to an occupied slot or, to move from an empty slot, the client will automatically block
         from_slot=(int)data[0];
         to_slot=(int)data[1];
 
         printf("MOVE_INVENTORY_ITEM - slot [%i] to slot [%i]\n", from_slot, to_slot);
 
-        get_inventory_slot(connection, to_slot);
+        image_id=clients.client[connection]->client_inventory[from_slot].image_id;
+        amount=clients.client[connection]->client_inventory[from_slot].amount;
 
-        //make sure the new slot is empty
-        if (inventory.image_id!=0) {
-            sprintf(text_out, "%cThat inventory slot is already occupied", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            break;
-        }
+        //zero the 'from slot'
+        clients.client[connection]->client_inventory[from_slot].image_id=0;
+        clients.client[connection]->client_inventory[from_slot].amount=0;
+        send_get_new_inventory_item(connection, 0, 0, from_slot);
+        update_db_char_slot(connection, from_slot);
 
-        get_inventory_slot(connection, from_slot);
-        put_inventory_slot(connection, to_slot, inventory.amount, inventory.image_id);
-        put_inventory_slot(connection, from_slot, 0,0);
+        //place item in the 'to slot'
+        clients.client[connection]->client_inventory[to_slot].image_id=image_id;
+        clients.client[connection]->client_inventory[to_slot].amount=amount;
+        send_get_new_inventory_item(connection, image_id, amount, to_slot);
+        update_db_char_slot(connection, to_slot);
 
         break;
 
@@ -705,17 +706,22 @@ void process_packet(int connection, unsigned char *packet){
 
         //if already harvesting then stop
         if(clients.client[connection]->harvest_flag==TRUE){
+
             sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection]->inventory_image_id].item_name);
             send_server_text(connection, CHAT_SERVER, text_out);
+
             clients.client[connection]->harvest_flag=FALSE;
             break;
         }
 
         //find the inventory image id for the map object
         if(get_map_object(map_object_id, map_id)==NOT_FOUND){
+
             log_event(EVENT_ERROR, "inventory image id not found in function process_packet: module protocol.c");
+
             sprintf(text_out, "%cSorry. You can't harvest this item.", c_red3+127);
             send_server_text(connection, CHAT_SERVER, text_out);
+
             clients.client[connection]->harvest_flag=FALSE;
             break;
         }
@@ -736,15 +742,29 @@ void process_packet(int connection, unsigned char *packet){
         //record the image id of the item being harvested in the client array
         clients.client[connection]->inventory_image_id=map_object.image_id;
 
-        //if there's not an existing inventory slot for the harvested item, create one
-        if(find_inventory_item(connection, map_object.image_id)==NOT_FOUND) {
-            new_inventory_item(connection, map_object.image_id);
+        //see if we have this item in the inventory
+        slot=get_used_inventory_slot(connection, map_object.image_id);
+
+        if(slot==NOT_FOUND){
+
+            //if we don't have the item in the inventory, find an empty slot
+            slot=get_unused_inventory_slot(connection);
+
+            if(slot==NOT_FOUND){
+
+                sprintf(text_out, "%cSorry, but you don't have enough inventory slots", c_red1+127);
+                send_raw_text_packet(connection, CHAT_SERVER, text_out);
+                break;
+            }
         }
 
-        printf("using slot [%i]\n", inventory.slot);
+        //note the slot so we don't have to parse the whole inventory on each harvest cycle
+        clients.client[connection]->inventory_slot=slot;
 
-        //set the inventory slot to to be used for the harvested item
-        clients.client[connection]->inventory_slot=inventory.slot;
+        //set the inventory slot to the image_id of the item to be harvested
+        clients.client[connection]->client_inventory[slot].image_id=map_object.image_id;
+
+        printf("using slot [%i] for [%s]\n", clients.client[connection]->inventory_slot, item[clients.client[connection]->inventory_image_id].item_name);
 
         //set the harvest flag so that harvesting will be continuous
         clients.client[connection]->harvest_flag=TRUE;
@@ -762,7 +782,13 @@ void process_packet(int connection, unsigned char *packet){
 
         get_map_object(map_object_id, map_id);
 
-        sprintf(text_out, "%c%s", c_green3+127, item[map_object.image_id].item_name);
+        if(map_object.image_id>0){
+            sprintf(text_out, "%c%s", c_green3+127, item[map_object.image_id].item_name);
+        }
+        else {
+              sprintf(text_out, "%cUnknown item", c_green3+127);
+        }
+
         send_server_text(connection, CHAT_SERVER, text_out);
 
         break;
@@ -819,15 +845,9 @@ void process_packet(int connection, unsigned char *packet){
             return;
         }
 
-        //create new character id
-        char_id=get_max_char_id();
-        if(char_id==0) char_id=1; else char_id++;
-
-        clients.client[connection]->character_id=char_id;
         clients.client[connection]->status=LOGGED_IN;
 
         //copy data to the struct which will be passed to the database
-        character.char_id=char_id;
         strcpy(character.char_name, char_name);
         strcpy(character.password, password);
 
@@ -843,14 +863,15 @@ void process_packet(int connection, unsigned char *packet){
         character.visual_proximity=15;
         character.local_text_proximity=12;
         character.char_created=time(NULL);
-        character.inventory[0]=0;// zero the character inventory
-        character.inventory_length=1;
 
         character.map_id=START_MAP_ID;
         character.map_tile=START_MAP_TILE;
 
         //add character entry to database
         add_char(character);
+
+        //once the char has been added to the database, find its char_id
+        clients.client[connection]->character_id=get_max_char_id();
 
         //update game data for the MOTD
         game_data.char_count++;

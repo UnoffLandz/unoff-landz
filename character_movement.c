@@ -108,16 +108,12 @@ int get_move_command(int tile_pos, int tile_dest, int map_axis){
     for(i=0; i<8; i++){
 
         if(vector[i].x==move_x && vector[i].y==move_y){
-        //if(vector_x[i]==move_x && vector_y[i]==move_y){
-            //return movement_cmd[i];
-            return vector[i].move_cmd;
+             return vector[i].move_cmd;
         }
     }
 
     sprintf(text_out, "illegal move in function get_move_command position[%i] destination[%i] move[%i]", tile_pos, tile_dest, move);
     log_event(EVENT_ERROR, text_out);
-
-    perror(text_out);
     exit(EXIT_FAILURE);
 
     return 0;
@@ -148,7 +144,8 @@ void process_char_move(int connection, time_t current_utime){
             // filter out moves where position and destination are the same
             if(current_tile!=next_tile){
 
-                printf("move char [%s] from tile [%i] to tile [%i]\n", clients.client[connection]->char_name, current_tile, next_tile);
+                //DEBUG
+                //printf("move char [%s] from tile [%i] to tile [%i]\n", clients.client[connection]->char_name, current_tile, next_tile);
 
                 //update the time of move
                 gettimeofday(&time_check, NULL);
@@ -313,8 +310,6 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
     //check to see if old map is legal and, if not, transport char to Isla Prima
     if(remove_char_from_map(connection)==ILLEGAL_MAP) {
 
-        printf("attempt to leave illegal map_id [%i] map name [%s]\n", old_map_id, maps.map[old_map_id]->map_name);
-
         sprintf(text_out, "attempt to leave illegal map (id[%i] map name [%s]) in function remove_char_from_map", old_map_id, maps.map[old_map_id]->map_name);
         log_event(EVENT_ERROR, text_out);
 
@@ -325,9 +320,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
     //check to see if new map is legal and, if not, return char to old map
     if(add_char_to_map(connection, new_map_id, new_map_tile)==ILLEGAL_MAP){
 
-        printf("attempt to join illegal map_id [%i] map name [%s]\n", new_map_id, maps.map[new_map_id]->map_name);
-
-        sprintf(text_out, "attempt to join illegal map (id[%i] map name [%s]) in function remove_char_from_map", new_map_id, maps.map[new_map_id]->map_name);
+         sprintf(text_out, "attempt to join illegal map (id[%i] map name [%s]) in function remove_char_from_map", new_map_id, maps.map[new_map_id]->map_name);
         log_event(EVENT_ERROR, text_out);
 
         if(add_char_to_map(connection, old_map_id, clients.client[connection]->map_tile)==ILLEGAL_MAP){
