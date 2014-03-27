@@ -23,6 +23,7 @@
 #include "log_in.h"
 #include "database.h"
 #include "harvesting.h"
+#include "character_inventory.h"
 
 void send_get_new_inventory_item(int connection, int item_image_id, int amount, int slot){
 
@@ -453,7 +454,9 @@ void process_packet(int connection, unsigned char *packet){
 
         case RAW_TEXT:
 
+            #ifdef DEBUG
             printf("RAW_TEXT [%s]\n", text);
+            #endif
 
             // trim off excess left hand space
             str_trim_left(text);
@@ -518,8 +521,6 @@ void process_packet(int connection, unsigned char *packet){
 
                 default://local chat
                     sprintf(text_out, "%c%s: %s", c_grey1+127, clients.client[connection]->char_name, text);
-
-                    //echo to sender
                     send_raw_text_packet(connection, CHAT_LOCAL, text_out);
 
                     //broadcast to receivers
@@ -532,381 +533,466 @@ void process_packet(int connection, unsigned char *packet){
         break;
 
         case MOVE_TO:
-        //if char is harvesting then stop
-        if(clients.client[connection]->harvest_flag==TRUE){
-            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection]->inventory_image_id].item_name);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            clients.client[connection]->harvest_flag=FALSE;
-            break;
-        }
 
-        //if char is sitting then stand before moving
-        if(clients.client[connection]->frame==sit_down){
-            clients.client[connection]->frame=stand_up;
-            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
-        }
+            //calculate destination
+            x_dest=Uint16_to_dec(data[0], data[1]);
+            y_dest=Uint16_to_dec(data[2], data[3]);
+            tile_dest=x_dest+(y_dest*maps.map[clients.client[connection]->map_id]->map_axis);
 
-        //calculate destination
-        x_dest=Uint16_to_dec(data[0], data[1]);
-        y_dest=Uint16_to_dec(data[2], data[3]);
-        tile_dest=x_dest+(y_dest*maps.map[clients.client[connection]->map_id]->map_axis);
+            #ifdef DEBUG
+            printf("MOVE_TO position x[%i] y[%i] tile[%i]\n", x_dest, y_dest, tile_dest);
+            #endif
 
-        printf("MOVE_TO position x[%i] y[%i] tile[%i]\n", x_dest, y_dest, tile_dest);
-
-        if(maps.map[map_id]->height_map[tile_dest]<MIN_TRAVERSABLE_VALUE){
-            sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            break;
-        }
-
-        if(current_tile!=tile_dest){
-
-            result=get_astar_path(connection, current_tile, tile_dest);
-
-            if(result==ASTAR_UNREACHABLE) {
-                printf("path unreachable ???\n");
-                exit(EXIT_FAILURE);
+            //if char is harvesting then stop
+            if(clients.client[connection]->harvest_flag==TRUE){
+                sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection]->inventory_image_id].item_name);
+                send_server_text(connection, CHAT_SERVER, text_out);
+                clients.client[connection]->harvest_flag=FALSE;
+                break;
             }
 
-            if(result==ASTAR_ABORT) {
-                printf("path aborted ???\n");
-                exit(EXIT_FAILURE);
+            //if char is sitting then stand before moving
+            if(clients.client[connection]->frame==sit_down){
+                clients.client[connection]->frame=stand_up;
+                broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
             }
 
-            if(result==ASTAR_UNKNOWN) {
-                printf("path unknown\n");
-                exit(EXIT_FAILURE);
+
+            if(maps.map[map_id]->height_map[tile_dest]<MIN_TRAVERSABLE_VALUE){
+                sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
+                send_server_text(connection, CHAT_SERVER, text_out);
+                break;
             }
 
-            //DEBUG
-            //printf("got new path\n");
-            //for(i=0; i<clients.client[connection]->path_count; i++){
-            //    printf("%i %i\n", i, clients.client[connection]->path[i]);
-            //}
+            if(current_tile!=tile_dest){
 
-            //reset time of last move to zero so the movement is processed without delay
-            clients.client[connection]->time_of_last_move=0;
+                result=get_astar_path(connection, current_tile, tile_dest);
+
+                if(result==ASTAR_UNREACHABLE) {
+                    printf("path unreachable ???\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                if(result==ASTAR_ABORT) {
+                    printf("path aborted ???\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                if(result==ASTAR_UNKNOWN) {
+                    printf("path unknown\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                #ifdef DEBUG
+                printf("got new path\n");
+                for(i=0; i<clients.client[connection]->path_count; i++){
+                    printf("%i %i\n", i, clients.client[connection]->path[i]);
+                }
+                #endif
+
+                //reset time of last move to zero so the movement is processed without delay
+                clients.client[connection]->time_of_last_move=0;
+                break;
+            }
+
+            #ifdef DEBUG
+            printf("current tile = destination (ignored)\n");
+            #endif
+
             break;
-        }
-
-        //DEBUG
-        //printf("current tile = destination (ignored)\n");
-
-        break;
 
         case SEND_PM:
-        printf("SEND_PM %i %i\n", lsb, msb);
-        send_pm(connection, text);
-        break;
+
+            #ifdef DEBUG
+            printf("SEND_PM %i %i\n", lsb, msb);
+            #endif
+
+            send_pm(connection, text);
+            break;
 
         case SIT_DOWN:
-        printf("SIT_DOWN %i\n", data[0]);
 
-        if(data[0]==1){
-            clients.client[connection]->frame=sit_down;
-        }
-        else clients.client[connection]->frame=stand_up;
+            #ifdef DEBUG
+            printf("SIT_DOWN %i\n", data[0]);
+            #endif
 
-        broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
+            if(data[0]==1){
+                clients.client[connection]->frame=sit_down;
+            }
+            else clients.client[connection]->frame=stand_up;
 
-        //save frame to database
-        update_db_char_frame(connection);
+            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
 
-        break;
+            //save frame to database
+            update_db_char_frame(connection);
+
+            break;
 
         case GET_PLAYER_INFO:
-        printf("GET_PLAYER_INFO %i %i\n", lsb, msb);
-        other_connection=Uint32_to_dec(data[0], data[1], data[2], data[3]);
-        sprintf(text_out, "You see %s", clients.client[other_connection]->char_name);
-        send_server_text(connection, CHAT_SERVER, text_out);
-        break;
+
+            #ifdef DEBUG
+            printf("GET_PLAYER_INFO %i %i\n", lsb, msb);
+            #endif
+
+            other_connection=Uint32_to_dec(data[0], data[1], data[2], data[3]);
+            sprintf(text_out, "You see %s", clients.client[other_connection]->char_name);
+            send_server_text(connection, CHAT_SERVER, text_out);
+
+            break;
 
         case SEND_ME_MY_ACTORS:
-        printf("SEND_ME_MY_ACTORS %i %i \n", lsb, msb);
-        break;
+
+            #ifdef DEBUG
+            printf("SEND_ME_MY_ACTORS %i %i \n", lsb, msb);
+            #endif
+
+            break;
 
         case SEND_OPENING_SCREEN:
-        printf("SEND OPENING SCREEN %i %i \n", lsb, msb);
-        break;
+
+            #ifdef DEBUG
+            printf("SEND OPENING SCREEN %i %i \n", lsb, msb);
+            #endif
+
+            break;
 
         case SEND_VERSION:
-        printf("SEND VERSION %i %i \n", lsb, msb);
-        break;
+
+            #ifdef DEBUG
+            printf("SEND VERSION %i %i \n", lsb, msb);
+            #endif
+
+            break;
 
         case HEARTBEAT:
-        printf("HEARTBEAT %i %i \n", lsb, msb);
-        /* dont need to do anything on this message as the receipt of any data automatically updates the heartbeat
-        via the recv_data function in main.c */
-        break;
+
+            #ifdef DEBUG
+            printf("HEARTBEAT %i %i \n", lsb, msb);
+            #endif
+
+            /* dont need to do anything on this message as the receipt of any data automatically updates the heartbeat
+            via the recv_data function in main.c */
+            break;
 
         case USE_OBJECT:
-        printf("USE_OBJECT %i %i \n", lsb, msb);
 
-        map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
-        use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
-        printf("map object id %i use with position %i\n", map_object_id, use_with_position);
+            map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
+            use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
 
-        //if char is moving when protocol arrives, cancel rest of path
-        clients.client[connection]->path_count=0;
+            #ifdef DEBUG
+            printf("USE_OBJECT - map object [%i] position [%i]\n", map_object_id, use_with_position);
+            #endif
 
-        //travel from IP to Ravens Isle
-        if(map_object_id==520 && clients.client[connection]->map_id==1) move_char_between_maps(connection, 2, 64946);
+            //if char is moving when protocol arrives, cancel rest of path
+            clients.client[connection]->path_count=0;
 
-        //travel from Ravens Isle to IP
-        if(map_object_id==5416 && clients.client[connection]->map_id==2) move_char_between_maps(connection, 1, 4053);
+            //travel from IP to Ravens Isle
+            if(map_object_id==520 && clients.client[connection]->map_id==1) move_char_between_maps(connection, 2, 64946);
 
-        //travel from Ravens Isle to neiva
-        if(map_object_id==4986 && clients.client[connection]->map_id==2 && clients.client[connection]->map_tile==108627){
-            move_char_between_maps(connection, 3, 3000);
-        }
-        break;
+            //travel from Ravens Isle to IP
+            if(map_object_id==5416 && clients.client[connection]->map_id==2) move_char_between_maps(connection, 1, 4053);
+
+            //travel from Ravens Isle to neiva
+            if(map_object_id==4986 && clients.client[connection]->map_id==2 && clients.client[connection]->map_tile==108627){
+                move_char_between_maps(connection, 3, 3000);
+            }
+
+            break;
 
         case LOOK_AT_INVENTORY_ITEM:
-        //returns a Uint8 giving the slot number looked at
-        printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", data[0]);
 
-        slot=(int)data[0];
-        image_id=clients.client[connection]->client_inventory[slot].image_id;
+            //returns a Uint8 giving the slot number looked at
 
-        sprintf(text_out, "%c%s", c_green3+127, item[image_id].item_name);
-        send_server_text(connection, CHAT_SERVER, text_out);
+            slot=(int)data[0];
+            image_id=clients.client[connection]->client_inventory[slot].image_id;
 
-        break;
+            #ifdef DEBUG
+            printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", slot);
+            #endif
+
+            sprintf(text_out, "%c%s", c_green3+127, item[image_id].item_name);
+            send_server_text(connection, CHAT_SERVER, text_out);
+
+            break;
 
         case MOVE_INVENTORY_ITEM:
-        //returns 2 Uint8 indicating the slots to be moved from and to
-        //if an attempt is made to move to an occupied slot or, to move from an empty slot, the client will automatically block
-        from_slot=(int)data[0];
-        to_slot=(int)data[1];
 
-        printf("MOVE_INVENTORY_ITEM - slot [%i] to slot [%i]\n", from_slot, to_slot);
+            //returns 2 Uint8 indicating the slots to be moved from and to
+            //if an attempt is made to move to an occupied slot or, to move from an empty slot, the client will automatically block
 
-        image_id=clients.client[connection]->client_inventory[from_slot].image_id;
-        amount=clients.client[connection]->client_inventory[from_slot].amount;
+            from_slot=(int)data[0];
+            to_slot=(int)data[1];
 
-        //zero the 'from slot'
-        clients.client[connection]->client_inventory[from_slot].image_id=0;
-        clients.client[connection]->client_inventory[from_slot].amount=0;
-        send_get_new_inventory_item(connection, 0, 0, from_slot);
-        update_db_char_slot(connection, from_slot);
+            #ifdef DEBUG
+            printf("MOVE_INVENTORY_ITEM - slot [%i] to slot [%i]\n", from_slot, to_slot);
+            #endif
 
-        //place item in the 'to slot'
-        clients.client[connection]->client_inventory[to_slot].image_id=image_id;
-        clients.client[connection]->client_inventory[to_slot].amount=amount;
-        send_get_new_inventory_item(connection, image_id, amount, to_slot);
-        update_db_char_slot(connection, to_slot);
+            image_id=clients.client[connection]->client_inventory[from_slot].image_id;
+            amount=clients.client[connection]->client_inventory[from_slot].amount;
 
-        break;
+            //zero the 'from slot'
+            clients.client[connection]->client_inventory[from_slot].image_id=0;
+            clients.client[connection]->client_inventory[from_slot].amount=0;
+            send_get_new_inventory_item(connection, 0, 0, from_slot);
+            update_db_char_slot(connection, from_slot);
+
+            //place item in the 'to slot'
+            clients.client[connection]->client_inventory[to_slot].image_id=image_id;
+            clients.client[connection]->client_inventory[to_slot].amount=amount;
+            send_get_new_inventory_item(connection, image_id, amount, to_slot);
+
+            //save to the database
+            update_db_char_slot(connection, to_slot);
+
+            break;
 
         case HARVEST:
-        //returns a integer corresponding to the id of an object in the map 3d object list
-        map_object_id=Uint16_to_dec(data[0], data[1]);
 
-        printf("HARVEST object_id %i\n", map_object_id);
+            //returns a integer corresponding to the id of an object in the map 3d object list
 
-        //if already harvesting then stop
-        if(clients.client[connection]->harvest_flag==TRUE){
+            map_object_id=Uint16_to_dec(data[0], data[1]);
 
-            sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection]->inventory_image_id].item_name);
-            send_server_text(connection, CHAT_SERVER, text_out);
+             #ifdef DEBUG
+            printf("HARVEST object_id %i\n", map_object_id);
+            #endif
 
-            clients.client[connection]->harvest_flag=FALSE;
-            break;
-        }
+            //if already harvesting then stop
+            if(clients.client[connection]->harvest_flag==TRUE){
 
-        //find the inventory image id for the map object
-        if(get_map_object(map_object_id, map_id)==NOT_FOUND){
+                sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection]->inventory_image_id].item_name);
+                send_server_text(connection, CHAT_SERVER, text_out);
 
-            log_event(EVENT_ERROR, "inventory image id not found in function process_packet: module protocol.c");
+                clients.client[connection]->harvest_flag=FALSE;
+                break;
+            }
 
-            sprintf(text_out, "%cSorry. You can't harvest this item.", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
+            //find the inventory image id for the map object
+            if(get_map_object(map_object_id, map_id)==NOT_FOUND){
 
-            clients.client[connection]->harvest_flag=FALSE;
-            break;
-        }
+                log_event(EVENT_ERROR, "inventory image id not found in function process_packet: module protocol.c");
 
-        //check for harvesting proximity
-        x=clients.client[connection]->map_tile % maps.map[map_id]->map_axis;
-        y=clients.client[connection]->map_tile / maps.map[map_id]->map_axis;
+                sprintf(text_out, "%cSorry. You can't harvest this item.", c_red3+127);
+                send_server_text(connection, CHAT_SERVER, text_out);
 
-        x_diff=abs(x-(int)map_object.x);
-        y_diff=abs(y-(int)map_object.y);
+                clients.client[connection]->harvest_flag=FALSE;
+                break;
+            }
 
-        if(x_diff>3 || y_diff>3){
-            sprintf(text_out, "%cYou are too far away to harvest that item", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            break;
-        }
+            //check for harvesting proximity
+            x=clients.client[connection]->map_tile % maps.map[map_id]->map_axis;
+            y=clients.client[connection]->map_tile / maps.map[map_id]->map_axis;
 
-        //record the image id of the item being harvested in the client array
-        clients.client[connection]->inventory_image_id=map_object.image_id;
+            x_diff=abs(x-(int)map_object.x);
+            y_diff=abs(y-(int)map_object.y);
 
-        //see if we have this item in the inventory
-        slot=get_used_inventory_slot(connection, map_object.image_id);
+            if(x_diff>3 || y_diff>3){
+                sprintf(text_out, "%cYou are too far away to harvest that item", c_red3+127);
+                send_server_text(connection, CHAT_SERVER, text_out);
+                break;
+            }
 
-        if(slot==NOT_FOUND){
+            //record the image id of the item being harvested in the client array
+            clients.client[connection]->inventory_image_id=map_object.image_id;
 
-            //if we don't have the item in the inventory, find an empty slot
-            slot=get_unused_inventory_slot(connection);
+            //see if we have this item in the inventory
+            slot=get_used_inventory_slot(connection, map_object.image_id);
 
             if(slot==NOT_FOUND){
 
-                sprintf(text_out, "%cSorry, but you don't have enough inventory slots", c_red1+127);
-                send_raw_text_packet(connection, CHAT_SERVER, text_out);
-                break;
+                //if we don't have the item in the inventory, find an empty slot
+                slot=get_unused_inventory_slot(connection);
+
+                if(slot==NOT_FOUND){
+
+                    //if there are no empty slots then tell client
+                    sprintf(text_out, "%cSorry, but you don't have enough inventory slots", c_red1+127);
+                    send_raw_text_packet(connection, CHAT_SERVER, text_out);
+                    break;
+                }
             }
-        }
 
-        //note the slot so we don't have to parse the whole inventory on each harvest cycle
-        clients.client[connection]->inventory_slot=slot;
+            //note the slot so we don't have to parse the whole inventory on each harvest cycle
+            clients.client[connection]->inventory_slot=slot;
 
-        //set the inventory slot to the image_id of the item to be harvested
-        clients.client[connection]->client_inventory[slot].image_id=map_object.image_id;
+            //set the inventory slot to the image_id of the item to be harvested
+            clients.client[connection]->client_inventory[slot].image_id=map_object.image_id;
 
-        printf("using slot [%i] for [%s]\n", clients.client[connection]->inventory_slot, item[clients.client[connection]->inventory_image_id].item_name);
+            #ifdef DEBUG
+            printf("using slot [%i] for [%s]\n", clients.client[connection]->inventory_slot, item[clients.client[connection]->inventory_image_id].item_name);
+            #endif
 
-        //set the harvest flag so that harvesting will be continuous
-        clients.client[connection]->harvest_flag=TRUE;
+            //set the harvest flag so that harvesting will be continuous
+            clients.client[connection]->harvest_flag=TRUE;
 
-        //send message to client
-        sprintf(text_out, "%cYou started to harvest %s", c_green3+127, item[clients.client[connection]->inventory_image_id].item_name);
-        send_server_text(connection, CHAT_SERVER, text_out);
+            //send message to client
+            sprintf(text_out, "%cYou started to harvest %s", c_green3+127, item[clients.client[connection]->inventory_image_id].item_name);
+            send_server_text(connection, CHAT_SERVER, text_out);
 
-        break;
+            break;
 
         case LOOK_AT_MAP_OBJECT:
-        //returns a Uint32 indicating the object_id of the item looked at
-        map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
-        printf("LOOK_AT_MAP_OBJECT %i\n", map_object_id);
 
-        get_map_object(map_object_id, map_id);
+            //returns a Uint32 indicating the object_id of the item looked at
+            map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
 
-        if(map_object.image_id>0){
-            sprintf(text_out, "%c%s", c_green3+127, item[map_object.image_id].item_name);
-        }
-        else {
-              sprintf(text_out, "%cUnknown item", c_green3+127);
-        }
+            #ifdef DEBUG
+            printf("LOOK_AT_MAP_OBJECT - map object [%i]\n", map_object_id);
+            #endif
 
-        send_server_text(connection, CHAT_SERVER, text_out);
+            get_map_object(map_object_id, map_id);
 
-        break;
+            if(map_object.image_id>0){
+                sprintf(text_out, "%c%s", c_green3+127, item[map_object.image_id].item_name);
+            }
+            else {
+                sprintf(text_out, "%cUnknown item", c_green3+127);
+            }
+
+            send_server_text(connection, CHAT_SERVER, text_out);
+
+            break;
 
         case PING_RESPONSE:
-        printf("PING_RESPONSE %i %i \n", lsb, msb);
-        break;
+
+            #ifdef DEBUG
+            printf("PING_RESPONSE %i %i \n", lsb, msb);
+            #endif
+
+            break;
 
         case SET_ACTIVE_CHANNEL:
-        printf("SET_ACTIVE_CHANNEL %i %i\n", lsb, msb);
-        clients.client[connection]->active_chan=data[0]-32;
-        update_db_char_channels(connection);
-        break;
+
+            #ifdef DEBUG
+            printf("SET_ACTIVE_CHANNEL %i %i\n", lsb, msb);
+            #endif
+
+            clients.client[connection]->active_chan=data[0]-32;
+            update_db_char_channels(connection);
+
+            break;
 
         case LOG_IN:
-        printf("LOG_IN connection [%i]\n", connection);
-        process_log_in(connection, text);
-        break;
+
+            #ifdef DEBUG
+            printf("LOG_IN connection [%i]\n", connection);
+            #endif
+
+            process_log_in(connection, text);
+            break;
 
         case CREATE_CHAR:
 
-        printf("CREATE_CHAR connection [%i]\n", connection);
+            #ifdef DEBUG
+            printf("CREATE_CHAR connection [%i]\n", connection);
+            #endif
 
-        //detect and handle malformed packet
-        if(count_str_island(text)!=2){
+            //detect and handle malformed packet
+            if(count_str_island(text)!=2){
 
-            send_create_char_not_ok(connection);
+                send_create_char_not_ok(connection);
 
-            printf("create char not ok\n");
+                #ifdef DEBUG
+                printf("create char not ok\n");
+                #endif
 
-            sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
-            send_raw_text_packet(connection, CHAT_SERVER, text_out);
+                sprintf(text_out, "malformed login attempt for new char name [%s] password [%s]\n", char_name, password);
+                log_event(EVENT_ERROR, text_out);
+                return;
+            }
 
-            sprintf(text_out, "malformed login attempt for new char name [%s] password [%s]\n", char_name, password);
-            log_event(EVENT_ERROR, text_out);
-            return;
-        }
+            //get the char name and password from the packet
+            get_str_island(text, char_name, 1);
+            get_str_island(text, password, 2);
 
-        //get the char name and password from the packet
-        get_str_island(text, char_name, 1);
-        get_str_island(text, password, 2);
+            //check if char name is already used
+            if(get_char_data(char_name)!=NOT_FOUND){
 
-        //check if char name is already used
-        if(get_char_data(char_name)!=NOT_FOUND){
+                send_create_char_not_ok(connection);
 
-            send_create_char_not_ok(connection);
+                sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
+                send_raw_text_packet(connection, CHAT_SERVER, text_out);
 
-            sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
-            send_raw_text_packet(connection, CHAT_SERVER, text_out);
+                sprintf(text_out, "Attempt to create new char with existing char name [%s]\n", char_name);
+                log_event(EVENT_SESSION, text_out);
 
-            sprintf(text_out, "Attempt to create new char with existing char name [%s]\n", char_name);
-            log_event(EVENT_SESSION, text_out);
+                return;
+            }
 
-            return;
-        }
+            clients.client[connection]->status=LOGGED_IN;
 
-        clients.client[connection]->status=LOGGED_IN;
+            //copy data to the struct which will be used to save the char to the database
+            strcpy(character.char_name, char_name);
+            strcpy(character.password, password);
 
-        //copy data to the struct which will be passed to the database
-        strcpy(character.char_name, char_name);
-        strcpy(character.password, password);
+            i=strlen(char_name)+strlen(password)+2;
+            character.skin_type=data[i++];
+            character.hair_type=data[i++];
+            character.shirt_type=data[i++];
+            character.pants_type=data[i++];
+            character.boots_type=data[i++];
+            character.char_type=data[i++];
+            character.head_type=data[i++];
 
-        i=strlen(char_name)+strlen(password)+2;
-        character.skin_type=data[i++];
-        character.hair_type=data[i++];
-        character.shirt_type=data[i++];
-        character.pants_type=data[i++];
-        character.boots_type=data[i++];
-        character.char_type=data[i++];
-        character.head_type=data[i++];
+            character.visual_proximity=15;
+            character.local_text_proximity=12;
+            character.char_created=time(NULL);
 
-        character.visual_proximity=15;
-        character.local_text_proximity=12;
-        character.char_created=time(NULL);
+            character.map_id=START_MAP_ID;
+            character.map_tile=START_MAP_TILE;
 
-        character.map_id=START_MAP_ID;
-        character.map_tile=START_MAP_TILE;
+            //add character entry to database
+            add_char(character);
 
-        //add character entry to database
-        add_char(character);
+            //once the char has been added to the database, find its char_id
+            clients.client[connection]->character_id=get_max_char_id();
 
-        //once the char has been added to the database, find its char_id
-        clients.client[connection]->character_id=get_max_char_id();
+            //update game data for the MOTD
+            game_data.char_count++;
+            strcpy(game_data.name_last_char_created, char_name);
+            game_data.date_last_char_created=character.char_created;
 
-        //update game data for the MOTD
-        game_data.char_count++;
-        strcpy(game_data.name_last_char_created, char_name);
-        game_data.date_last_char_created=character.char_created;
+            //notify connection that character has been created
+            sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
+            send_server_text(connection, CHAT_SERVER, text_out);
+            send_create_char_ok(connection);
 
-        //notify connection that character has been created
-        sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
-        send_server_text(connection, CHAT_SERVER, text_out);
-        send_create_char_ok(connection);
+            //log character creation event
+            sprintf(text_out, "[%s] password [%s]\n", char_name, password);
+            log_event(EVENT_NEW_CHAR, text_out);
 
-        //log character creation event
-        sprintf(text_out, "[%s] password [%s]\n", char_name, password);
-        log_event(EVENT_NEW_CHAR, text_out);
-
-        break;
+            break;
 
         case GET_DATE:
-        printf("GET DATE %i %i \n", lsb, msb);
-        break;
+
+            #ifdef DEBUG
+            printf("GET DATE %i %i \n", lsb, msb);
+            #endif
+
+            break;
 
         case GET_TIME:
-        printf("GET TIME %i %i \n", lsb, msb);
-        break;
+
+            #ifdef DEBUG
+            printf("GET TIME %i %i \n", lsb, msb);
+            #endif
+
+            break;
 
         case SERVER_STATS:
-        printf("SERVER_STATS %i %i \n", lsb, msb);
-        send_motd_header(connection);
-        break;
+
+            #ifdef DEBUG
+            printf("SERVER_STATS %i %i \n", lsb, msb);
+            #endif
+
+            send_motd_header(connection);
+
+            break;
 
         default: // UNKNOWN
-        printf("UNKNOWN PROTOCOL %i %i %i \n", protocol, lsb, msb);
-        sprintf(text_out, "unknown protocol [%i]\n", protocol);
-        log_event(EVENT_ERROR, text_out);
-        break;
+
+            sprintf(text_out, "unknown protocol [%i]\n", protocol);
+            log_event(EVENT_ERROR, text_out);
+            break;
     }
 
 }

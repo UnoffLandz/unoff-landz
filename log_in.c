@@ -15,7 +15,7 @@
 #include "chat.h"
 #include "broadcast.h"
 #include "database.h"
-#include "harvesting.h"
+#include "character_inventory.h"
 
 void send_login_ok(int connection){
 

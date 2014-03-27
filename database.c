@@ -6,7 +6,7 @@
 #include "global.h"
 #include "database.h"
 #include "log_in.h"
-#include "harvesting.h"
+#include "character_inventory.h"
 #include "files.h"
 #include "numeric_functions.h"
 
@@ -772,8 +772,6 @@ void update_db_char_slot(int connection, int slot){
     char sql[1024]="UPDATE INVENTORY_TABLE SET IMAGE_ID=?, AMOUNT=? WHERE CHAR_ID=? AND SLOT=?";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    printf("### image %i amount %i char %i slot %i\n",clients.client[connection]->client_inventory[slot].image_id, clients.client[connection]->client_inventory[slot].amount, clients.client[connection]->character_id, slot );
 
     sqlite3_bind_int(stmt, 1, clients.client[connection]->client_inventory[slot].image_id);
     sqlite3_bind_int(stmt, 2, clients.client[connection]->client_inventory[slot].amount);

@@ -23,7 +23,7 @@
 
 #define GAME_YEAR 6300 //used to calculate char age
 
-#define DEBUG 1
+#define DEBUG 1// sets DEBUG BUILD
 
 enum { // server to client protocol
     CHANGE_MAP=7,
