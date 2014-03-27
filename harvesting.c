@@ -14,7 +14,6 @@
 #include "broadcast.h"
 #include "character_inventory.h"
 
-
 void process_harvesting(int connection, time_t current_time){
 
     char text_out[1024]="";

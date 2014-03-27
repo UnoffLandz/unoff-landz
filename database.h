@@ -73,6 +73,14 @@ sqlite3 *db; // database handle which is set when function open_database is call
         MAP_NAME            TEXT, \
         ELM_FILE_NAME       TEXT )"
 
+#define CHANNEL_TABLE_SQL "CREATE TABLE CHANNEL_TABLE( \
+        CHANNEL_ID          INTEGER PRIMARY KEY     NOT NULL, \
+        TYPE                INT,  \
+        OWNER_ID            INT,  \
+        PASSWORD            TEXT, \
+        NAME                TEXT, \
+        DESCRIPTION         TEXT)"
+
 /** RESULT  : Opens sqlite database file and creates the handle [db] which can then be called by other
               database functions.
 
@@ -248,6 +256,16 @@ void update_db_char_inventory(int connection);
 void update_db_char_slot(int connection, int slot);
 
 
+/** RESULT  : load channel data from the database to the channels struct array
+
+    RETURNS : void
+
+    PURPOSE : allows channel data to be held in memory for faster operations
+
+    USAGE   : initialise_channels: initialisation.c */
+void load_channels();
+
+
 /** RESULT  : loads 3d object data from the database to the threed_object struct array
 
     RETURNS : void
@@ -312,5 +330,15 @@ void add_threed_object(char *filename, int image_id);
 
     USAGE   : load_database_threed_object_table_data:files.c */
 void add_map(int map_id, char *map_name, char *elm_file_name);
+
+
+/** RESULT  : adds an entry to the channelp_table of the database
+
+    RETURNS : void
+
+    PURPOSE : enables data to be bulk loaded from a text file
+
+    USAGE   : load_database_channel_table_data:files.c */
+void add_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description);
 
 #endif // DATABASE_H_INCLUDED

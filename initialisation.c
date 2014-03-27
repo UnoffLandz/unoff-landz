@@ -29,6 +29,14 @@ void initialise_items(){
     load_items();
 }
 
+void initialise_channels(){
+
+    /*function ensures that all database related actions are confined to the database.c module. This makes it easier
+    to change from sqlite to mysql at sometime in the future */
+
+    load_channels();
+}
+
 void initialise_movement_vectors(){
 
     vector[0].x=0; vector[0].y=1; vector[0].move_cmd=20;

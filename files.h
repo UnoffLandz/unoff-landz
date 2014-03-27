@@ -9,6 +9,7 @@
 #define ITEM_DATA_FILE          "item_data.txt"
 #define THREED_OBJECT_DATA_FILE "threed_object_data.txt"
 #define MAP_DATA_FILE           "map_data.txt"
+#define CHANNEL_DATA_FILE       "channel_data.txt"
 #define DATABASE_FILE           "unoff.db"
 
 enum { //log events
@@ -38,5 +39,8 @@ void load_database_item_table_data(char *file_name);
 void load_database_threed_object_table_data(char *file_name);
 
 void load_database_map_table_data(char *file_name);
+
+void load_database_channel_table_data(char *file_name);
+
 
 #endif // FILES_H_INCLUDED

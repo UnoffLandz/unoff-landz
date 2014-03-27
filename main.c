@@ -392,16 +392,19 @@ int main(void) {
         create_database_table("ITEM_TABLE", ITEM_TABLE_SQL);
         create_database_table("THREED_OBJECT_TABLE", THREED_OBJECT_TABLE_SQL);
         create_database_table("MAP_TABLE", MAP_TABLE_SQL);
+        create_database_table("CHANNEL_TABLE", CHANNEL_TABLE_SQL);
 
         //populate database tables with initial data
         load_database_item_table_data(ITEM_DATA_FILE);
         load_database_threed_object_table_data(THREED_OBJECT_DATA_FILE);
         load_database_map_table_data(MAP_DATA_FILE);
+        load_database_channel_table_data(CHANNEL_DATA_FILE);
     }
 
     //initialise data structs
     initialise_channel_list(MAX_CHANNELS);
-    load_all_channels(CHANNEL_LIST_FILE);
+    //load_all_channels(CHANNEL_LIST_FILE);
+    initialise_channels();
 
     initialise_map_list(MAX_MAPS);
     load_maps();

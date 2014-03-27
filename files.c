@@ -41,58 +41,6 @@ void save_guild(char *guild_name, int id){
     fclose(file);
 }
 
-void save_channel(char *chan_name, int id){
-
-    FILE *file;
-    char file_name[1024]="";
-
-    sprintf(file_name, "%s.chn", chan_name);
-
-    if((file=fopen(file_name, "w"))==NULL){
-        printf("channel file %s\n", file_name);
-        perror("cannot find file");
-        exit(EXIT_FAILURE);
-    }
-
-    if(!fprintf(file, "%u\n%s\n%i\n%i\n%s\n", /* the %u is needed because chan_type is an enum */
-            channels.channel[id]->chan_type,
-            channels.channel[id]->password,
-            channels.channel[id]->owner_id,
-            channels.channel[id]->channel_id,
-            channels.channel[id]->description
-        )){
-        printf("channel file %s\n", file_name);
-        perror("problem saving data to file in function save_channel");
-        exit(EXIT_FAILURE);
-    }
-
-    //printf("save channel [%s]\n", channels.channel[id]->channel_name);
-    fclose(file);
-}
-
-int load_channel(char *file_name, int i){
-
-    FILE *file;
-
-    if((file=fopen(file_name, "r"))==NULL) return NOT_FOUND;
-
-    if(!fscanf(file, "%u %s %i %i %[^\n]", // the %u is needed because chan_type is an enum
-            &channels.channel[i]->chan_type,
-            channels.channel[i]->password,
-            &channels.channel[i]->owner_id,
-            &channels.channel[i]->channel_id,
-            channels.channel[i]->description
-        )){
-        printf("channel file %s\n", file_name);
-        perror("data missing from file");
-        exit(EXIT_FAILURE);
-    }
-
-    fclose(file);
-
-    return FOUND;
-}
-
 int load_guild(char *file_name, int i){
 
     FILE *file;
@@ -668,117 +616,6 @@ int load_map(int id){
     return FOUND;
 }
 
-void load_all_channels(char *file_name){
-
-    FILE *file;
-    char channel_file_name[1024];
-    int i=0;
-
-    //check we have an existing list file and, if not, then create one
-    if((file=fopen(file_name, "r"))==NULL) {
-
-        printf("Can't find channel list file [%s]. Creating new one\n", file_name);
-
-        if((file=fopen(file_name, "w"))==NULL) {
-            perror("unable to create list file in function load_all_channels");
-            exit(EXIT_FAILURE);
-        }
-
-        //add the permanent channels to the new channel.lst file
-        if(!fprintf(file, "%s\n", "system")){
-            perror("unable to save data to file in function load_all_channels");
-            exit(EXIT_FAILURE);
-        }
-
-        if(!fprintf(file, "%s\n", "nub")){
-            perror("unable to save data to file in function load_all_channels");
-            exit(EXIT_FAILURE);
-        }
-
-        if(!fprintf(file, "%s\n", "pro")){
-            perror("unable to save data to file in function load_all_channels");
-            exit(EXIT_FAILURE);
-        }
-
-        if(!fprintf(file, "%s\n", "troll")){
-            perror("unable to save data to file in function load_all_channels");
-            exit(EXIT_FAILURE);
-        }
-
-        //create new  chn files for the permanent channels
-        i=0;
-        channels.channel[i]->chan_type=CHAN_SYSTEM;
-        strcpy(channels.channel[i]->password, "password");
-        channels.channel[i]->owner_id=0;
-        channels.channel[i]->channel_id=i;
-        strcpy(channels.channel[i]->description, "a permanent restricted system channel");
-        save_channel("system", i);
-
-        i=1;
-        channels.channel[i]->chan_type=CHAN_PERMANENT;
-        strcpy(channels.channel[i]->password, "password");
-        channels.channel[i]->owner_id=0;
-        channels.channel[i]->channel_id=i;
-        strcpy(channels.channel[i]->description, "a public chan for nubs to be nubby in");
-        save_channel("nub", i);
-
-        i=2;
-        channels.channel[i]->chan_type=CHAN_PERMANENT;
-        strcpy(channels.channel[i]->password, "password");
-        channels.channel[i]->owner_id=0;
-        channels.channel[i]->channel_id=i;
-        strcpy(channels.channel[i]->description, "a public chan so pro's don't get a headache from nubby nubs");
-        save_channel("pro", i);
-
-        i=3;
-        channels.channel[i]->chan_type=CHAN_PERMANENT;
-        strcpy(channels.channel[i]->password, "password");
-        channels.channel[i]->owner_id=0;
-        channels.channel[i]->channel_id=i;
-        strcpy(channels.channel[i]->description, "a public chan for trolling, flaming and mischief");
-        save_channel("troll", i);
-
-        //close the file for writing and reopen for reading
-        fclose(file);
-        file=fopen(file_name, "r");
-    }
-
-    i=0;
-
-    printf("\nLoading channel list file [%s]...\n", file_name);
-
-    if((file=fopen(file_name, "r"))) {
-
-        while ((fscanf(file, "%s", channels.channel[i]->channel_name))!=-1){
-
-            sprintf(channel_file_name, "%s.chn", channels.channel[i]->channel_name);
-
-            if(load_channel(channel_file_name, i)==FOUND){
-               printf("loaded [%i] %s\n", i, channels.channel[i]->channel_name);
-            }
-            else{
-                printf("file name %s\n", channel_file_name);
-
-                perror("missing file in function load_all_channels");
-                exit(EXIT_FAILURE);
-            }
-
-            i++;
-
-            if(i==channels.max){
-                perror("maximum game channels exceeded in function load_all_channels");
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
-
-    printf("[%i] channels were loaded\n", i);
-
-    channels.count=i;
-
-    fclose(file);
-}
-
 void load_all_guilds(char *file_name){
 
     FILE *file;
@@ -1159,4 +996,77 @@ void load_database_map_table_data(char *file_name){
     fclose(file);
 }
 
+void load_database_channel_table_data(char *file_name){
+
+    FILE *file;
+    int j=0;
+    int channel_id=0;
+    int channel_type=0;
+    char password[80]="";
+    char channel_name[80]="";
+    char channel_description[80]="";
+    char buf[1024]="";
+
+    //check we have an existing file and, if not, then create one
+    if((file=fopen(file_name, "r"))==NULL) {
+
+        if((file=fopen(file_name, "w"))==NULL) {
+            perror("unable to create channel file in function load_database_channel_table_data");
+            exit(EXIT_FAILURE);
+        }
+
+        //add the guidance lines to the text file
+        fprintf(file, "UNOFFLANDZ channel data file\n");
+        fprintf(file, "\n");
+        fprintf(file, "Channel Channel  Channel    Channel       Channel\n");
+        fprintf(file, "ID      Type     Password   Name          Description\n");
+        fprintf(file, "-----------------------------------------------------\n");
+
+        //as there's no data to be read, close the file and exit function
+        fclose(file);
+
+        printf("Now edit the file [%s] with your channel data\n", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    //load data from the text file
+    printf("\nLoading data to database channel_table\n");
+
+    if((file=fopen(file_name, "r"))) {
+
+        //skip 5 lines before reading so we jump past the opening file comments
+        for(j=0; j<5; j++){
+
+            if(fgets(buf, 1024, file)==NULL){
+                printf("Channel file [%s] has incorrect format\n", file_name);
+                exit(EXIT_FAILURE);
+            }
+        };
+
+        //scan the entries and load to database
+        while (fscanf(file, "%i %i %s %s %s\n",
+                       &channel_id,
+                       &channel_type,
+                       password,
+                       channel_name,
+                       channel_description)!=-1){
+
+            //remove underscores which are needed for fscanf to ignore spaces in channel name and description
+            str_remove_underscores(channel_name);
+            str_remove_underscores(channel_description);
+
+            //add channel to database channel_table
+            add_channel(channel_id, 0, channel_type, password, channel_name, channel_description);
+
+            //zero channels
+            channel_id=0;
+            channel_type=0;
+            strcpy(password, "");
+            strcpy(channel_name, "");
+            strcpy(channel_description, "");
+         }
+    }
+
+    fclose(file);
+}
 

@@ -25,4 +25,6 @@ void initialise_items();
 
 void initialise_maps();
 
+void initialise_channels();
+
 #endif // INITIALISATION_H_INCLUDED

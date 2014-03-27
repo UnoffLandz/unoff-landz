@@ -342,6 +342,44 @@ void add_map(int map_id, char *map_name, char *elm_file_name){
     printf("Added map [%s] to MAP_TABLE\n", map_name);
 }
 
+void add_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description){
+
+    /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    char text_out[1024]="";
+
+    char sql[1024] ="INSERT INTO CHANNEL_TABLE("  \
+        "CHANNEL_ID," \
+        "OWNER_ID," \
+        "TYPE," \
+        "PASSWORD," \
+        "NAME,"  \
+        "DESCRIPTION" \
+        ") VALUES( ?, ?, ?, ?, ?, ?)";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, channel_id);
+    sqlite3_bind_int(stmt, 2, owner_id);
+    sqlite3_bind_int(stmt, 3, channel_type);
+    sqlite3_bind_text(stmt, 4, password, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 5, channel_name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 6, channel_description, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        sprintf(text_out, "Error %s executing '%s' in function add_channel: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
+    }
+
+    sqlite3_finalize(stmt);
+
+    printf("Added channel [%i] [%s] to CHANNEL_TABLE\n", channel_id, channel_name);
+}
+
 int get_char_data(char *name){
 
     /** public function - see header */
@@ -467,6 +505,45 @@ void load_3d_objects(){
     }
 
     sqlite3_finalize(stmt);
+}
+
+void load_channels(){
+
+    /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    int i=0;
+    char text_out[1024]="";
+
+    char sql[1024]="SELECT * FROM CHANNEL_TABLE";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    printf("\nloading channels...\n");
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        channels.channel[i]->channel_id=sqlite3_column_int(stmt, 0);
+        channels.channel[i]->chan_type=sqlite3_column_int(stmt, 1);
+        channels.channel[i]->owner_id=sqlite3_column_int(stmt, 2);
+        strcpy(channels.channel[i]->password, (char*)sqlite3_column_text(stmt, 3));
+        strcpy(channels.channel[i]->channel_name, (char*)sqlite3_column_text(stmt, 4));
+        strcpy(channels.channel[i]->description, (char*)sqlite3_column_text(stmt, 5));
+
+        i++;
+
+        if(i>MAX_CHANNELS) {
+            sprintf(text_out, "Maximum number of channels exceeded in function load_channels: module database.c");
+            log_event(EVENT_ERROR, text_out);
+            exit(EXIT_FAILURE);
+        }
+
+        printf("loaded [%i] [%s]\n", i, channels.channel[i]->channel_name);
+    }
+
+    sqlite3_finalize(stmt);
+
+    printf("[%i] channels were loaded\n", i);
 }
 
 void load_items(){
@@ -696,7 +773,6 @@ void update_db_char_time_played(int connection){
 
     sqlite3_finalize(stmt);
 }
-
 
 void update_db_char_channels(int connection){
 
