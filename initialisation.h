@@ -27,4 +27,9 @@ void initialise_maps();
 
 void initialise_channels();
 
+void initialise_races();
+
+void initialise_logs();
+
+
 #endif // INITIALISATION_H_INCLUDED

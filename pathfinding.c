@@ -4,6 +4,7 @@
 #include "global.h"
 #include "files.h"
 #include "pathfinding.h"
+#include "protocol.h"
 
 #define PATH_STACK_MAX 25
 
@@ -21,12 +22,6 @@ enum{ // values for explore_stack/path_stack STATUS (used in functions explore_p
 enum{ //return values for functions add_tile_to_explore_stack and add_adjacent_tiles_to_explore_stack
     ADD_TILE_ABORT,
     ADD_TILE_COMPLETE
-};
-
-enum{ //return values for explore_path
-    EXPLORE_UNREACHABLE,
-    EXPLORE_REACHABLE,
-    EXPLORE_ABORT
 };
 
 int add_tile_to_explore_stack(int new_value, int new_tile, int *explore_stack_count, int explore_stack[][3]){
@@ -89,8 +84,7 @@ int add_tile_to_explore_stack(int new_value, int new_tile, int *explore_stack_co
 
         //if stack array is exceeded then pass message to calling function to recover gracefully rather than crash
         sprintf(text_out, "explore stack array exceeded in function add_tile_to_explore_stack\n");
-        perror(text_out);
-        log_event(EVENT_ERROR, text_out);
+        log_event(EVENT_MOVE_ERROR, text_out);
         exit(EXIT_FAILURE);// have to stop server
     }
 
@@ -207,7 +201,7 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
     return ADD_TILE_COMPLETE;
 }
 
-int explore_path(int start_tile, int destination_tile, int map_id, int *path_stack_count, int path_stack[][3]){
+int explore_path(int connection, int destination_tile, int *path_stack_count, int path_stack[][3]){
 
     /** RESULT  : fills array path_stack with a list of tiles explored between start and destination
 
@@ -227,16 +221,20 @@ int explore_path(int start_tile, int destination_tile, int map_id, int *path_sta
     int heuristic_value=0;
     int found=FALSE;
     char text_out[1024]="";
+    int start_tile=clients.client[connection]->map_tile;
+    int map_id=clients.client[connection]->map_id;
 
     //filter out paths where start = destination
-    if(start_tile==destination_tile) return EXPLORE_ABORT;
+    if(start_tile==destination_tile) return NOT_FOUND;
 
     //add start tile to stack
     heuristic_value=get_heuristic_value(start_tile, destination_tile, map_id);
 
     if(add_tile_to_explore_stack(heuristic_value, start_tile, &explore_stack_count, explore_stack)==ADD_TILE_ABORT) {
+
         //if something went wrong in sub function then pass message to calling function to recover gracefully rather than crash
-        return EXPLORE_ABORT;
+        log_event(EVENT_MOVE_ERROR, "abort in function add_tile_to_explore module pathfinding.c");
+        return NOT_FOUND;
     }
 
     explore_stack[node][STATUS]=EXPLORED;
@@ -246,7 +244,9 @@ int explore_path(int start_tile, int destination_tile, int map_id, int *path_sta
     do{
 
         if(add_adjacent_tiles_to_explore_stack(explore_stack[node][TILE], destination_tile, map_id, &explore_stack_count, explore_stack)==ADD_TILE_ABORT){
-            return EXPLORE_ABORT;
+
+            log_event(EVENT_MOVE_ERROR, "abort in function add_adjacent_tiles_to_explore_stack module: pathfinding.c");
+            return NOT_FOUND;
         }
 
         //get next unexplored tile
@@ -263,10 +263,14 @@ int explore_path(int start_tile, int destination_tile, int map_id, int *path_sta
         }
 
         if(found==FALSE) {
+
+            sprintf(text_out, "%cthat destination is unreachable", c_red1+127);
+            send_server_text(connection, CHAT_PERSONAL, text_out);
+
             sprintf(text_out, "destination unreachable - no explorable tiles left in stack");
-            perror(text_out);
             log_event(EVENT_MOVE_ERROR, text_out);
-            return EXPLORE_UNREACHABLE;
+
+            return NOT_FOUND;
         }
 
     } while(explore_stack[node][TILE]!=destination_tile);
@@ -288,7 +292,7 @@ int explore_path(int start_tile, int destination_tile, int map_id, int *path_sta
 
     *path_stack_count=j;
 
-    return EXPLORE_REACHABLE;
+    return FOUND;
 }
 
 int get_astar_path(int connection, int start_tile, int destination_tile){
@@ -304,67 +308,65 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
     int next_tile=0;
     int map_id=clients.client[connection]->map_id;
     char text_out[1024]="";
-    int result=0;
     int found=FALSE;
 
-    result=explore_path(start_tile, destination_tile, map_id, &path_stack_count, path_stack);
+    if(explore_path(connection, destination_tile, &path_stack_count, path_stack)==NOT_FOUND){
+        return NOT_FOUND;
+    }
 
-    if(result==EXPLORE_UNREACHABLE) return ASTAR_UNREACHABLE;
+    //start path at destination tile
+    next_tile=destination_tile;
+    path_stack[0][STATUS]=EXPLORED;
 
-    else if(result==EXPLORE_ABORT) return ASTAR_ABORT;
+    //load destination tile to the path
+    clients.client[connection]->path_count=1;
+    clients.client[connection]->path[ clients.client[connection]->path_count-1]=next_tile;
 
-    else if(result==EXPLORE_REACHABLE){
+    //loop through explored tiles finding the best adjacent moves from destination to start
+    do{
+        lowest_value=9999;//works for paths up to 9999 tiles long which ought to be sufficient
+        found=FALSE;
 
-        //start path at destination tile
-        next_tile=destination_tile;
-        path_stack[0][STATUS]=EXPLORED;
+        for(i=0; i<path_stack_count; i++){
 
-        //load destination tile to the path
-        clients.client[connection]->path_count=1;
-        clients.client[connection]->path[ clients.client[connection]->path_count-1]=next_tile;
+            if(is_tile_adjacent(next_tile, path_stack[i][TILE], map_id)==TRUE){
 
-        //loop through explored tiles finding the best adjacent moves from destination to start
-        do{
-            lowest_value=9999;//works for paths up to 9999 tiles long which ought to be sufficient
-            found=FALSE;
+                if(path_stack[i][VALUE]<lowest_value && path_stack[i][STATUS]==UNEXPLORED){
 
-            for(i=0; i<path_stack_count; i++){
+                    //ensure path doesn't cross lateral bounds
+                    if(is_tile_in_lateral_bounds(next_tile, path_stack[i][TILE], map_id)==TRUE){
 
-                if(is_tile_adjacent(next_tile, path_stack[i][TILE], map_id)==TRUE){
-
-                    if(path_stack[i][VALUE]<lowest_value && path_stack[i][STATUS]==UNEXPLORED){
-
-                        //ensure path doesn't cross lateral bounds
-                        if(is_tile_in_lateral_bounds(next_tile, path_stack[i][TILE], map_id)==TRUE){
-                            lowest_value=path_stack[i][VALUE];
-                            j=i;
-                            found=TRUE;
-                        }
+                        lowest_value=path_stack[i][VALUE];
+                        j=i;
+                        found=TRUE;
                     }
                 }
             }
+        }
 
-            //if no adjacent tiles then start is unreachable from destination so abort function
-            if(found==FALSE) return ASTAR_UNREACHABLE;
+        //if no adjacent tiles then start is unreachable from destination so abort function
+        if(found==FALSE) {
 
-            next_tile=path_stack[j][TILE];
-            path_stack[j][STATUS]=EXPLORED;
+            sprintf(text_out, "%cthat destination is unreachable", c_red1+127);
+            send_server_text(connection, CHAT_PERSONAL, text_out);
+            return NOT_FOUND;
+        }
 
-            clients.client[connection]->path_count++;
+        next_tile=path_stack[j][TILE];
+        path_stack[j][STATUS]=EXPLORED;
 
-            if(clients.client[connection]->path_count>PATH_MAX-1) {
-                sprintf(text_out, "client path array exceeded in function get_astar_path\n");
-                perror(text_out);
-                log_event(EVENT_ERROR, text_out);
-                return ASTAR_ABORT;
-            }
+        clients.client[connection]->path_count++;
 
-            clients.client[connection]->path[ clients.client[connection]->path_count-1]=next_tile;
+        if(clients.client[connection]->path_count>PATH_MAX-1) {
 
-        }while(clients.client[connection]->path[clients.client[connection]->path_count-1]!=start_tile);
+            sprintf(text_out, "client path array exceeded in function get_astar_path\n");
+            log_event(EVENT_MOVE_ERROR, text_out);
+            exit(EXIT_FAILURE);
+        }
 
-        return ASTAR_REACHABLE;
-    }
+        clients.client[connection]->path[ clients.client[connection]->path_count-1]=next_tile;
 
-    return ASTAR_UNKNOWN;
+    }while(clients.client[connection]->path[clients.client[connection]->path_count-1]!=start_tile);
+
+    return FOUND;
 }

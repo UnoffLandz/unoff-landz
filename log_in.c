@@ -109,6 +109,9 @@ void load_char_data_into_connection(int connection){
 
     clients.client[connection]->overall_exp=character.overall_exp;
     clients.client[connection]->harvest_exp=character.harvest_exp;
+
+    clients.client[connection]->inventory_emu=character.inventory_emu;  // saves having to calculate carry capacity each time its tested
+    clients.client[connection]->max_carry_capacity=character.max_carry_capacity;  // saves having to calculate carry capacity each time its tested
 }
 
 void process_log_in(int connection, char *text) {
@@ -143,7 +146,7 @@ void process_log_in(int connection, char *text) {
     log_event(EVENT_SESSION, text_out);
 
     //get the char_id corresponding to the char name
-    char_id=get_char_data(char_name);
+    char_id=get_char_data_from_db(char_name);
 
     if(char_id==NOT_FOUND) {
 

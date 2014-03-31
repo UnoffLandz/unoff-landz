@@ -113,7 +113,7 @@ int get_move_command(int tile_pos, int tile_dest, int map_axis){
     }
 
     sprintf(text_out, "illegal move in function get_move_command position[%i] destination[%i] move[%i]", tile_pos, tile_dest, move);
-    log_event(EVENT_ERROR, text_out);
+    log_event(EVENT_MOVE_ERROR, text_out);
     exit(EXIT_FAILURE);
 
     return 0;
@@ -144,8 +144,9 @@ void process_char_move(int connection, time_t current_utime){
             // filter out moves where position and destination are the same
             if(current_tile!=next_tile){
 
-                //DEBUG
-                //printf("move char [%s] from tile [%i] to tile [%i]\n", clients.client[connection]->char_name, current_tile, next_tile);
+                #ifdef DEBUG
+                printf("move char [%s] from tile [%i] to tile [%i]\n", clients.client[connection]->char_name, current_tile, next_tile);
+                #endif
 
                 //update the time of move
                 gettimeofday(&time_check, NULL);
@@ -185,7 +186,7 @@ int remove_char_from_map(int connection){
     broadcast_remove_actor_packet(connection);
 
     //remove from local map list
-    remove_client_from_map_list(connection, map_id);
+    remove_client_from_map(connection, map_id);
 
     sprintf(text_out, "char %s removed from map %s", clients.client[connection]->char_name, maps.map[map_id]->map_name);
     log_event(EVENT_SESSION, text_out);
@@ -272,7 +273,7 @@ int add_char_to_map(int connection, int new_map_id, int map_tile){
     //check for illegal maps
     if(new_map_id>maps.max || new_map_id<START_MAP_ID) {
         sprintf(text_out, "attempt to access illegal map (id[%i] map name [%s]) in function add_char_to_map", new_map_id, maps.map[new_map_id]->map_name);
-        log_event(EVENT_ERROR, text_out);
+        log_event(EVENT_MOVE_ERROR, text_out);
         return ILLEGAL_MAP;
     }
 
@@ -286,7 +287,7 @@ int add_char_to_map(int connection, int new_map_id, int map_tile){
     send_change_map(connection, maps.map[new_map_id]->elm_filename);
 
     //add client to local map list
-    add_client_to_map_list(connection, clients.client[connection]->map_id);
+    add_client_to_map(connection, clients.client[connection]->map_id);
 
     // add in-game chars to this clients
     send_actors_to_client(connection);
@@ -311,7 +312,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
     if(remove_char_from_map(connection)==ILLEGAL_MAP) {
 
         sprintf(text_out, "attempt to leave illegal map (id[%i] map name [%s]) in function remove_char_from_map", old_map_id, maps.map[old_map_id]->map_name);
-        log_event(EVENT_ERROR, text_out);
+        log_event(EVENT_MOVE_ERROR, text_out);
 
         new_map_id=START_MAP_ID;
         new_map_tile=START_MAP_TILE;
@@ -326,7 +327,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
         if(add_char_to_map(connection, old_map_id, clients.client[connection]->map_tile)==ILLEGAL_MAP){
 
             //if old map and new map are illegal, close down the server
-            log_event(EVENT_ERROR, "severe map error in function move_char_between_maps - shutting down server");
+            log_event(EVENT_MOVE_ERROR, "severe map error in function move_char_between_maps - shutting down server");
             exit(EXIT_FAILURE);
             //#TODO simply remove client rather than crash server
         }

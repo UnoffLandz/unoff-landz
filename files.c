@@ -11,6 +11,21 @@
 #include "maps.h"
 #include "database.h"
 
+void clear_file(char *file_name){
+
+    FILE *file;
+
+    if((file=fopen(file_name, "a"))!=NULL){
+        printf("clearing file [%s]\n", file_name);
+        fclose(file);
+
+        if((file=fopen(file_name, "w"))==NULL){
+            printf("problem clearing file [%s]\n", file_name);
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
 void save_guild(char *guild_name, int id){
 
     FILE *file;
@@ -705,7 +720,9 @@ void log_to_file(char *file_name, char *text) {
 
     FILE *file;
 
-    printf("%s\n", text);// print message to console
+    #ifdef DEBUG
+    printf("%s\n", text);
+    #endif
 
     //check we have an existing list file and, if not, then create one
     if((file=fopen(file_name, "a"))==NULL) {
@@ -742,32 +759,32 @@ void log_event(int event_type, char *text_in){
     switch(event_type){
 
         case EVENT_NEW_CHAR:
-            strcpy(file_name, "character.log");
+            strcpy(file_name, CHARACTER_LOG);
             sprintf(text_out, "[%s][%s] New Character Created - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_ERROR:
-            strcpy(file_name, "error.log");
+            strcpy(file_name, ERROR_LOG);
             sprintf(text_out, "[%s][%s] Error - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_SESSION:
-            strcpy(file_name, "session.log");
-            sprintf(text_out, "[%s][%s] %s", date_stamp_str, time_stamp_str, text_in);
+            strcpy(file_name, SESSION_LOG);
+            sprintf(text_out, "[%s][%s] session - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_CHAT:
-            strcpy(file_name, "chat.log");
+            strcpy(file_name, CHAT_LOG);
             sprintf(text_out, "[%s][%s] Event - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_MOVE_ERROR:
-            strcpy(file_name, "move.log");
+            strcpy(file_name, MOVE_LOG);
             sprintf(text_out, "[%s][%s] Move-error - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         default:
-            strcpy(file_name, "error.log");
+            strcpy(file_name, ERROR_LOG);
             sprintf(text_out, "[%s][%s] Unknown Event - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
@@ -783,7 +800,6 @@ void load_database_item_table_data(char *file_name){
     int image_id=0;
     char item_name[80]="";
     int harvestable=0;
-    int harvest_cycle=0;
     int cycle_amount=0;
     int emu=0;
     int interval=0;
@@ -807,9 +823,9 @@ void load_database_item_table_data(char *file_name){
         //add the guidance lines to the text file
         fprintf(file, "UNOFFLANDZ Item data file\n");
         fprintf(file, "\n");
-        fprintf(file, "Image Item                          Harvest Cycle                   Food  Food     Organic Vegetal\n");
-        fprintf(file, "ID    Name              Harvestable Cycle   Amount EMU Interval EXP Value Cooldown Nexus   Nexus  \n");
-        fprintf(file, "---------------------------------------------------------------------------------------------------------\n");
+        fprintf(file, "Image Item                          Cycle                   Food  Food     Organic Vegetal\n");
+        fprintf(file, "ID    Name              Harvestable Amount EMU Interval EXP Value Cooldown Nexus   Nexus  \n");
+        fprintf(file, "------------------------------------------------------------------------------------------\n");
 
         //as there's no data to be read, close the file and exit function
         fclose(file);
@@ -833,11 +849,10 @@ void load_database_item_table_data(char *file_name){
         }
 
         //scan the entries and load to database
-        while (fscanf(file, "%i %19s %i %i %i %i %i %i %i %i %i %i\n",
+        while (fscanf(file, "%i %s %i %i %i %i %i %i %i %i %i\n",
                        &image_id,
                        item_name,
                        &harvestable,
-                       &harvest_cycle,
                        &cycle_amount,
                        &emu,
                        &interval,
@@ -851,13 +866,14 @@ void load_database_item_table_data(char *file_name){
             str_remove_underscores(item_name);
 
             //add item to database
-            add_item(image_id, item_name, harvestable, harvest_cycle, cycle_amount, emu, interval, exp, food_value, food_cooldown, organic_nexus, vegetal_nexus);
+            add_item(image_id, item_name, harvestable, cycle_amount, emu, interval, exp, food_value, food_cooldown,
+                     organic_nexus,
+                     vegetal_nexus);
 
-            //zero this item data so that its not carried over to next item data
+            //zero items
             image_id=0;
             strcpy(item_name, "");
             harvestable=0;
-            harvest_cycle=0;
             cycle_amount=0;
             emu=0;
             interval=0;
@@ -1070,3 +1086,76 @@ void load_database_channel_table_data(char *file_name){
     fclose(file);
 }
 
+void load_database_race_table_data(char *file_name){
+
+    FILE *file;
+    int j=0;
+    int race_id=0;
+    char race_name[20]="";
+    char race_description[160]="";
+    int initial_emu=0;
+    int emu_multiplier=0;
+    char buf[1024]="";
+
+    //check we have an existing file and, if not, then create one
+    if((file=fopen(file_name, "r"))==NULL) {
+
+        if((file=fopen(file_name, "w"))==NULL) {
+            perror("unable to create race file in function load_database_race_table_data");
+            exit(EXIT_FAILURE);
+        }
+
+        //add the guidance lines to the text file
+        fprintf(file, "UNOFFLANDZ race data file\n");
+        fprintf(file, "\n");
+        fprintf(file, "Race Race          Race                                                Initial Emu\n");
+        fprintf(file, "ID   Name          Description                                         Emu     Multiplier\n");
+        fprintf(file, "-----------------------------------------------------------------------------------------\n");
+
+        //as there's no data to be read, close the file and exit function
+        fclose(file);
+
+        printf("Now edit the file [%s] with your race data\n", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    //load data from the text file
+    printf("\nLoading data to database race table\n");
+
+    if((file=fopen(file_name, "r"))) {
+
+        //skip 5 lines before reading so we jump past the opening file comments
+        for(j=0; j<5; j++){
+
+            if(fgets(buf, 1024, file)==NULL){
+                printf("race file [%s] has incorrect format\n", file_name);
+                exit(EXIT_FAILURE);
+            }
+        };
+
+        //scan the entries and load to database
+        while (fscanf(file, "%i %s %s %i %i\n",
+                       &race_id,
+                       race_name,
+                       race_description,
+                       &initial_emu,
+                       &emu_multiplier)!=-1){
+
+            //remove underscores which are needed for fscanf to ignore spaces in channel name and description
+            str_remove_underscores(race_name);
+            str_remove_underscores(race_description);
+
+            //add race to database race_table
+            add_race(race_id, race_name, race_description, initial_emu, emu_multiplier);
+
+            //zero channels
+            race_id=0;
+            strcpy(race_name, "");
+            strcpy(race_description, "");
+            initial_emu=0;
+            emu_multiplier=0;
+        }
+    }
+
+    fclose(file);
+}

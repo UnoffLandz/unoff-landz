@@ -1,13 +1,6 @@
 #ifndef PATHINDING_H_INCLUDED
 #define PATHINDING_H_INCLUDED
 
-enum{ //return values for public function get_astar_path (pathfinding.c)
-    ASTAR_UNREACHABLE,
-    ASTAR_REACHABLE,
-    ASTAR_ABORT,
-    ASTAR_UNKNOWN
-};
-
 enum{//tile bounds returned from check_tile_bounds function
     TILE_OUTSIDE_BOUNDS=-2,
     TILE_NON_TRAVERSABLE=-1,

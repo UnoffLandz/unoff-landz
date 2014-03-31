@@ -25,7 +25,7 @@ void open_database(char *database_name){
         exit(EXIT_FAILURE);
   }
     else{
-        printf("Opened database [%s] successfully\n", database_name);
+        printf("\nOpened database [%s] successfully\n", database_name);
     }
 }
 
@@ -149,7 +149,6 @@ void add_char(struct character_type character){
         "VISUAL_PROXIMITY," \
         "LOCAL_TEXT_PROXIMITY," \
         "CHAR_CREATED" \
-
         ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -159,13 +158,13 @@ void add_char(struct character_type character){
 
     sqlite3_bind_int(stmt, 3, CHAR_ALIVE); // char status
 
-    sqlite3_bind_int(stmt, 4, 0); // active_chan
-    sqlite3_bind_int(stmt, 5, 0); // chan 0
-    sqlite3_bind_int(stmt, 6, 0); // chan 1
-    sqlite3_bind_int(stmt, 7, 0); // chan 2
+    sqlite3_bind_int(stmt, 4, character.active_chan);
+    sqlite3_bind_int(stmt, 5, character.chan[0]);
+    sqlite3_bind_int(stmt, 6, character.chan[1]);
+    sqlite3_bind_int(stmt, 7, character.chan[2]);
 
-    sqlite3_bind_int(stmt, 8, 0); // gm permission
-    sqlite3_bind_int(stmt, 9, 0); // ig permission
+    sqlite3_bind_int(stmt, 8, FALSE); // gm permission
+    sqlite3_bind_int(stmt, 9, FALSE); // ig permission
 
     sqlite3_bind_int(stmt, 10, character.map_id);
     sqlite3_bind_int(stmt, 11, character.map_tile);
@@ -205,8 +204,11 @@ void add_char(struct character_type character){
     strcpy(sql, "INSERT INTO INVENTORY_TABLE(CHAR_ID, SLOT) VALUES(?, ?)");
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    //wrap in a transaction to speed up insertion
     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
 
+    //create the char inventory record on the database
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
 
         sqlite3_bind_int(stmt, 1, char_id);
@@ -215,7 +217,7 @@ void add_char(struct character_type character){
         rc = sqlite3_step(stmt);
 
         if (rc != SQLITE_DONE) {
-            sprintf(text_out, "Error %s executing '%s' in function add_inventory_slot: module database.c", sql, sqlite3_errmsg(db));
+            sprintf(text_out, "Error %s executing '%s' in function add_char: module database.c", sql, sqlite3_errmsg(db));
             log_event(EVENT_ERROR, text_out);
             exit(EXIT_FAILURE);
         }
@@ -225,10 +227,12 @@ void add_char(struct character_type character){
     }
 
     sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+
     sqlite3_finalize(stmt);
 }
 
-void add_item(int image_id, char *item_name, int harvestable, int harvest_cycle, int cycle_amount, int emu, int interval, int exp,
+void add_item(int image_id, char *item_name, int harvestable, int cycle_amount, int emu, int interval,
+              int exp,
               int food_value,
               int food_cooldown,
               int organic_nexus,
@@ -244,7 +248,6 @@ void add_item(int image_id, char *item_name, int harvestable, int harvest_cycle,
         "IMAGE_ID,"  \
         "ITEM_NAME," \
         "HARVESTABLE,"  \
-        "HARVEST_CYCLE," \
         "CYCLE_AMOUNT," \
         "EMU," \
         "INTERVAL," \
@@ -252,23 +255,22 @@ void add_item(int image_id, char *item_name, int harvestable, int harvest_cycle,
         "FOOD_VALUE," \
         "FOOD_COOLDOWN," \
         "ORGANIC_NEXUS," \
-        "VEGETAL_NEXUS " \
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "VEGETAL_NEXUS" \
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_int(stmt, 1, image_id);
     sqlite3_bind_text(stmt, 2, item_name, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 3, harvestable);
-    sqlite3_bind_int(stmt, 4, harvest_cycle);
-    sqlite3_bind_int(stmt, 5, cycle_amount);
-    sqlite3_bind_int(stmt, 6, emu);
-    sqlite3_bind_int(stmt, 7, interval);
-    sqlite3_bind_int(stmt, 8, exp);
-    sqlite3_bind_int(stmt, 9, food_value);
-    sqlite3_bind_int(stmt, 10, food_cooldown);
-    sqlite3_bind_int(stmt, 11, organic_nexus);
-    sqlite3_bind_int(stmt, 12, vegetal_nexus);
+    sqlite3_bind_int(stmt, 4, cycle_amount);
+    sqlite3_bind_int(stmt, 5, emu);
+    sqlite3_bind_int(stmt, 6, interval);
+    sqlite3_bind_int(stmt, 7, exp);
+    sqlite3_bind_int(stmt, 8, food_value);
+    sqlite3_bind_int(stmt, 9, food_cooldown);
+    sqlite3_bind_int(stmt, 10, organic_nexus);
+    sqlite3_bind_int(stmt, 11, vegetal_nexus);
 
     rc = sqlite3_step(stmt);
 
@@ -380,7 +382,43 @@ void add_channel(int channel_id, int owner_id, int channel_type, char *password,
     printf("Added channel [%i] [%s] to CHANNEL_TABLE\n", channel_id, channel_name);
 }
 
-int get_char_data(char *name){
+void add_race(int race_id, char *race_name, char *race_description, int initial_carry_capacity, int carry_capacity_multiplier){
+
+    /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    char text_out[1024]="";
+
+    char sql[1024] ="INSERT INTO RACE_TABLE("  \
+        "RACE_ID," \
+        "RACE_NAME," \
+        "RACE_DESCRIPTION," \
+        "INITIAL_EMU," \
+        "EMU_MULTIPLIER"  \
+        ") VALUES( ?, ?, ?, ?, ?)";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, race_id);
+    sqlite3_bind_text(stmt, 2, race_name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, race_description, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 4, initial_carry_capacity);
+    sqlite3_bind_int(stmt, 5, carry_capacity_multiplier);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        sprintf(text_out, "Error %s executing '%s' in function add_race: module database.c", sql, sqlite3_errmsg(db));
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
+    }
+
+    sqlite3_finalize(stmt);
+
+    printf("Added race [%i] [%s] to RACE_TABLE\n", race_id, race_name);
+}
+
+int get_char_data_from_db(char *name){
 
     /** public function - see header */
 
@@ -388,12 +426,15 @@ int get_char_data(char *name){
     int rc;
     sqlite3_stmt *stmt;
 
+    character.char_id=0; //set to zero as we use this to determine if the char exists
+
     char sql[1024]="SELECT * FROM CHARACTER_TABLE WHERE CHAR_NAME=?";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
 
-    character.char_id=NOT_FOUND;
+    //zero the struct
+    memset(&character, 0, sizeof(character));
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -430,8 +471,14 @@ int get_char_data(char *name){
         character.last_in_game=sqlite3_column_int(stmt,  30);
         character.char_created=sqlite3_column_int(stmt, 31);
         character.joined_guild=sqlite3_column_int(stmt, 32);
-        character.overall_exp=sqlite3_column_int(stmt, 33);
-        character.harvest_exp=sqlite3_column_int(stmt, 34);
+        character.physique=sqlite3_column_int(stmt, 33);
+        character.overall_exp=sqlite3_column_int(stmt, 34);
+        character.harvest_exp=sqlite3_column_int(stmt, 35);
+
+        //calculate max emu that can be held in inventory
+        int initial_carry_capacity=race[character.char_type].initial_carry_capacity;
+        int carry_capacity_multiplier=race[character.char_type].carry_capacity_multiplier;
+        character.max_carry_capacity=initial_carry_capacity + (carry_capacity_multiplier * character.physique);
     }
 
     sqlite3_finalize(stmt);
@@ -444,16 +491,19 @@ int get_char_data(char *name){
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        //i++; //count slots returned from the table so we can check they don't exceed MAX_INVENTORY_SLOTS
-
         slot=sqlite3_column_int(stmt, 0);
         character.client_inventory[slot].image_id=sqlite3_column_int(stmt, 1);
         character.client_inventory[slot].amount=sqlite3_column_int(stmt, 2);
+
+        //calc total emu of inventory
+        character.inventory_emu+=item[character.client_inventory[slot].image_id].emu * character.client_inventory[slot].amount;
     }
 
     sqlite3_finalize(stmt);
 
-    return character.char_id;
+    if(character.char_id==0) return NOT_FOUND;
+
+    return FOUND;
 }
 
 void create_database_table(char *table_name, char *sql){
@@ -497,7 +547,7 @@ void load_3d_objects(){
 
         i++;
 
-        if(i>MAX_THREED_OBJECTS) {
+        if(i==MAX_THREED_OBJECTS) {
             sprintf(text_out, "Maximum number of 3d objects exceeded in function load_3d_objects: module database.c");
             log_event(EVENT_ERROR, text_out);
             exit(EXIT_FAILURE);
@@ -505,6 +555,47 @@ void load_3d_objects(){
     }
 
     sqlite3_finalize(stmt);
+}
+
+void load_races(){
+
+    /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    char text_out[1024]="";
+    int race_id=0;
+    int i=0;
+
+    char sql[1024]="SELECT * FROM RACE_TABLE";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    printf("\nloading races...\n");
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        race_id=sqlite3_column_int(stmt, 0);
+
+        if(race_id>MAX_RACES) {
+            sprintf(text_out, "race_id [%i] exceeds max rang [0 - %i] in function load_races: module database.c", race_id, MAX_RACES);
+            log_event(EVENT_ERROR, text_out);
+            exit(EXIT_FAILURE);
+        }
+
+        strcpy(race[race_id].race_name, (char*)sqlite3_column_text(stmt, 1));
+        strcpy(race[race_id].race_description, (char*)sqlite3_column_text(stmt, 2));
+        race[race_id].initial_carry_capacity=sqlite3_column_int(stmt, 3);
+        race[race_id].carry_capacity_multiplier=sqlite3_column_int(stmt, 4);
+        race[race_id].char_count=sqlite3_column_int(stmt, 5);
+
+        printf("loaded [%i] [%s]\n", race_id, race[race_id].race_name);
+
+        i++;
+    }
+
+    sqlite3_finalize(stmt);
+
+    printf("[%i] races were loaded\n", i);
 }
 
 void load_channels(){
@@ -515,6 +606,7 @@ void load_channels(){
     sqlite3_stmt *stmt;
     int i=0;
     char text_out[1024]="";
+    int chan_id=0;
 
     char sql[1024]="SELECT * FROM CHANNEL_TABLE";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -523,22 +615,24 @@ void load_channels(){
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        channels.channel[i]->channel_id=sqlite3_column_int(stmt, 0);
-        channels.channel[i]->chan_type=sqlite3_column_int(stmt, 1);
-        channels.channel[i]->owner_id=sqlite3_column_int(stmt, 2);
-        strcpy(channels.channel[i]->password, (char*)sqlite3_column_text(stmt, 3));
-        strcpy(channels.channel[i]->channel_name, (char*)sqlite3_column_text(stmt, 4));
-        strcpy(channels.channel[i]->description, (char*)sqlite3_column_text(stmt, 5));
-
-        i++;
+        chan_id=sqlite3_column_int(stmt, 0);
 
         if(i>MAX_CHANNELS) {
-            sprintf(text_out, "Maximum number of channels exceeded in function load_channels: module database.c");
+            sprintf(text_out, "chan_id [%i] exceeds range [0 - %i] in function load_channels: module database.c", chan_id, MAX_CHANNELS);
             log_event(EVENT_ERROR, text_out);
             exit(EXIT_FAILURE);
         }
 
+        channels.channel[chan_id]->channel_id=chan_id;
+        channels.channel[chan_id]->chan_type=sqlite3_column_int(stmt, 1);
+        channels.channel[chan_id]->owner_id=sqlite3_column_int(stmt, 2);
+        strcpy(channels.channel[chan_id]->password, (char*)sqlite3_column_text(stmt, 3));
+        strcpy(channels.channel[chan_id]->channel_name, (char*)sqlite3_column_text(stmt, 4));
+        strcpy(channels.channel[chan_id]->description, (char*)sqlite3_column_text(stmt, 5));
+
         printf("loaded [%i] [%s]\n", i, channels.channel[i]->channel_name);
+
+        i++;
     }
 
     sqlite3_finalize(stmt);
@@ -563,13 +657,14 @@ void load_items(){
         id=sqlite3_column_int(stmt,0);
 
         if(id>MAX_ITEMS){
-            sprintf(text_out, "item id [%i] exceeds MAX_ITEM array size [%i] in function load_items: module database.c", id, MAX_ITEMS);
+            sprintf(text_out, "item id [%i] exceeds range [0 - %i] in function load_items: module database.c", id, MAX_ITEMS);
             log_event(EVENT_ERROR, text_out);
             exit(EXIT_FAILURE);
         }
 
         strcpy(item[id].item_name, (char*)sqlite3_column_text(stmt, 1));
         item[id].harvestable=sqlite3_column_int(stmt,2);
+
         item[id].cycle_amount=sqlite3_column_int(stmt,3);
         item[id].emu=sqlite3_column_int(stmt,4);
         item[id].interval=sqlite3_column_int(stmt,5);
@@ -604,7 +699,7 @@ void load_maps(){
 
         //make sure map_id doesn't exceed the size of the map array
         if(map_id>MAX_MAPS){
-            sprintf(text_out, "map id [%i] exceeds MAX_MAP array size [%i] in function load_maps: module database.c", map_id, MAX_MAPS);
+            sprintf(text_out, "map id [%i] exceeds range [0 - %i] in function load_maps: module database.c", map_id, MAX_MAPS);
             log_event(EVENT_ERROR, text_out);
             exit(EXIT_FAILURE);
         }
@@ -706,11 +801,16 @@ void update_db_char_stats(int connection){
     sqlite3_stmt *stmt;
     char text_out[1024]="";
 
-    char sql[1024]="UPDATE CHARACTER_TABLE SET OVERALL_EXP=?, HARVEST_EXP=? WHERE CHAR_ID=?;";
+    char sql[1024]="UPDATE CHARACTER_TABLE SET \
+                    OVERALL_EXP=?, \
+                    HARVEST_EXP=? \
+                    WHERE CHAR_ID=?";
+
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_int(stmt, 1, clients.client[connection]->overall_exp);
     sqlite3_bind_int(stmt, 2, clients.client[connection]->harvest_exp);
+
     sqlite3_bind_int(stmt, 3, clients.client[connection]->character_id);
 
     rc = sqlite3_step(stmt);

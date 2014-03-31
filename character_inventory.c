@@ -31,6 +31,15 @@ int get_unused_inventory_slot(int connection){
     return NOT_FOUND;
 }
 
+int get_char_carry_capacity(int connection){
+
+    int race_id=clients.client[connection]->char_type;
+    int initial_carry_capacity=race[race_id].initial_carry_capacity;
+    int carry_capacity_multiplier=race[race_id].carry_capacity_multiplier;
+
+    return initial_carry_capacity + (carry_capacity_multiplier * clients.client[connection]->physique);
+}
+
 int get_inventory_emu(int connection){
 
     int i=0;

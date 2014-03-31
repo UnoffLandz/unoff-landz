@@ -15,7 +15,7 @@ enum { //return values for rename_char
     CANNOT_CREATE_TEMP_FILE=-2
 };
 
-int process_hash_commands(int connection, char *text, int text_len);
+int process_hash_commands(int connection, char *text);
 
 void save_data(int connection);
 

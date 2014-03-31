@@ -4,6 +4,16 @@
 
 #include "global.h"
 #include "database.h"
+#include "files.h"
+
+void initialise_logs(){
+
+    clear_file(CHARACTER_LOG);
+    clear_file(ERROR_LOG);
+    clear_file(SESSION_LOG);
+    clear_file(CHAT_LOG);
+    clear_file(MOVE_LOG);
+}
 
 void initialise_maps(){
 
@@ -35,6 +45,13 @@ void initialise_channels(){
     to change from sqlite to mysql at sometime in the future */
 
     load_channels();
+}
+
+void initialise_races(){
+    /*function ensures that all database related actions are confined to the database.c module. This makes it easier
+    to change from sqlite to mysql at sometime in the future */
+
+    load_races();
 }
 
 void initialise_movement_vectors(){

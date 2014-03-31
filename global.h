@@ -1,12 +1,15 @@
 #ifndef GLOBAL_H_INCLUDED
 #define GLOBAL_H_INCLUDED
 
-#define MAX_CHANNELS 10
+#include "chat.h" //required to access the value for MAX_CHAN_SLOTS
+
 #define MAX_MAPS 10
 #define MAX_GUILDS 10
-#define MAX_CLIENTS 20
+
+#define MAX_CLIENTS 50
 #define MAX_THREED_OBJECTS 100 // maximum number of e3d files that can be held in the threed_object array
 #define MAX_ITEMS 1500 //maximum number of mixable/harvestable items that can be held in the item array
+#define MAX_RACES 7
 
 #define PATH_MAX 100 //longest permitted path
 #define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
@@ -59,12 +62,14 @@ enum {//stats codes
     //36 37 magic
     //38 39 potion
 
-    //40 41 ?????
+    INVENTORY_EMU=40,
+    MAX_INVENTORY_EMU=41,
+
     //42 43 material points
     //44 45 ethereal points
     //46 food level
-    //47 ????
-    //48 ????
+    //47 ?
+    //48 ?,
 
     //49 50 manufacturing
     HARVEST_EXP=51,
@@ -126,6 +131,16 @@ enum{ // general boolean values
 enum{ // general boolean values
     FOUND=-1,
     NOT_FOUND=-2
+};
+
+enum { // general boolean value
+    SENT,
+    NOT_SENT,
+};
+
+enum {
+    IN_GAME,
+    NOT_IN_GAME
 };
 
 enum {// colours
@@ -387,7 +402,7 @@ struct client_node_type{
     int char_status;
     int time_played;
     int active_chan;
-    int chan[4];       // chan0, chan1, chan2  (chan3 used for guild chat)
+    int chan[MAX_CHAN_SLOTS];       // chan0, chan1, chan2  (chan3 used for guild chat)
     int gm_permission; // permission to use #GM command (aka mute)
     int ig_permission; // permission to use #IG command
     int map_id;
@@ -459,6 +474,9 @@ struct client_node_type{
     int potion_lvl;
     int max_potion_lvl;
 
+    int inventory_emu;  // saves having to calculate carry capacity each time its tested
+    int max_carry_capacity; // saves having to calculate carry capacity each time its tested
+
     int material_pts;
     int max_material_pts;
     int ethereal_pts;
@@ -501,7 +519,7 @@ struct channel_node_type{
     enum {CHAN_SYSTEM, CHAN_PERMANENT, CHAN_GUILD, CHAN_CHAT, CHAN_VACANT} chan_type;
     char channel_name[1024];
     int channel_id;
-    int owner_id; /* could be char or guild depending on chan_type */
+    int owner_id; // could be char or guild depending on chan_type
     char password[1024];
     char description[1024];
     int client_list[MAX_CLIENTS];
@@ -515,6 +533,7 @@ struct channel_list_type {
     struct channel_node_type **channel;
 };
 struct channel_list_type channels;
+
 
 /** ITEMS **/
 //holds data about each mixable and harvestable item
@@ -532,6 +551,7 @@ struct item_type{
 };
 struct item_type item[MAX_ITEMS];
 
+
 /** STATIC 3D OBJECTS **/
 /*holds a list of e3d filenames and their corresponding inventory image id's. This is used so as when an item is
 harvested, the nature of the item can be determined and inked to an inventory image id. */
@@ -540,6 +560,17 @@ struct threed_object_type{
     int inventory_image_id;
 };
 struct threed_object_type threed_object[MAX_THREED_OBJECTS];
+
+
+/** RACES **/
+struct race_type{
+    char race_name[20];
+    char race_description[160];
+    int initial_carry_capacity;
+    int carry_capacity_multiplier;
+    int char_count;
+};
+struct race_type race[MAX_RACES];
 
 /** OTHERS */
 struct timeval time_check;
@@ -553,7 +584,7 @@ struct character_type{
     int char_status;
     int time_played;
     int active_chan;
-    int chan[3];
+    int chan[MAX_CHAN_SLOTS];
     int gm_permission;
     int ig_permission;
     int map_id;
@@ -580,6 +611,12 @@ struct character_type{
     int guild_id;
 
     struct client_inventory_type client_inventory[36];
+
+    int inventory_emu;  // saves having to calculate carry capacity each time its tested
+    int max_carry_capacity; // saves having to calculate carry capacity each time its tested
+
+    int physique;
+    int max_physique;
 
     int overall_exp;
     int harvest_exp;

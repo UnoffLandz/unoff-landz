@@ -58,7 +58,7 @@ void close_connection_slot(int connection){
         broadcast_remove_actor_packet(connection);
 
         //remove from map
-        remove_client_from_map_list(connection, clients.client[connection]->map_id);
+        remove_client_from_map(connection, clients.client[connection]->map_id);
 
         //remove from channels
         for(j=0; j<3; j++){
@@ -291,6 +291,13 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
 
     client_sockfd = accept( watcher->fd, (struct sockaddr *)&client_address, &client_len);
 
+    //check that sock is within client array range
+    if(client_sockfd>=MAX_CLIENTS) {
+        sprintf(text_out, "new client socket [%i] outside client array max range [0 - %i]", client_sockfd, MAX_CLIENTS);
+        log_event(EVENT_ERROR, text_out);
+        exit(EXIT_FAILURE);
+    }
+
     //accept client error
     if(client_sockfd < 0){
         sprintf(text_out, "client [%i] error in accept_client", client_sockfd);
@@ -298,7 +305,7 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
         return;
     }
 
-    sprintf(text_out, "New connection from address %s on socket %d", inet_ntoa(client_address.sin_addr), client_sockfd);
+    sprintf(text_out, "Connection from address %s on socket %d", inet_ntoa(client_address.sin_addr), client_sockfd);
     log_event(EVENT_SESSION, text_out);
 
     //add watcher to connect client fd
@@ -375,6 +382,9 @@ int main(void) {
     struct ev_io stdin_watcher;
     int bReuseaddr = 1;
 
+    //clear the logs
+    initialise_logs();
+
     //set server start time
     server_start_time=time(NULL);
 
@@ -393,17 +403,18 @@ int main(void) {
         create_database_table("THREED_OBJECT_TABLE", THREED_OBJECT_TABLE_SQL);
         create_database_table("MAP_TABLE", MAP_TABLE_SQL);
         create_database_table("CHANNEL_TABLE", CHANNEL_TABLE_SQL);
+        create_database_table("RACE_TABLE", RACE_TABLE_SQL);
 
         //populate database tables with initial data
         load_database_item_table_data(ITEM_DATA_FILE);
         load_database_threed_object_table_data(THREED_OBJECT_DATA_FILE);
         load_database_map_table_data(MAP_DATA_FILE);
         load_database_channel_table_data(CHANNEL_DATA_FILE);
+        load_database_race_table_data(RACE_DATA_FILE);
     }
 
     //initialise data structs
     initialise_channel_list(MAX_CHANNELS);
-    //load_all_channels(CHANNEL_LIST_FILE);
     initialise_channels();
 
     initialise_map_list(MAX_MAPS);
@@ -417,8 +428,10 @@ int main(void) {
     //load data into lookup structs
     initialise_movement_vectors();
 
+    //load database tables into memory
     initialise_3d_objects();
     initialise_items();
+    initialise_races();
 
     //set global data
     game_data.char_count=get_chars_created_count();

@@ -17,9 +17,9 @@ struct map_object_type{
 };
 struct map_object_type map_object;
 
-void add_client_to_map_list(int client_id, int map_id);
+void add_client_to_map(int client_id, int map_id);
 
-void remove_client_from_map_list(int client_id, int map_id);
+void remove_client_from_map(int client_id, int map_id);
 
 int get_map_object(int object_id, int map_id);
 

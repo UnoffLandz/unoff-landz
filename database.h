@@ -38,9 +38,9 @@ sqlite3 *db; // database handle which is set when function open_database is call
         LAST_IN_GAME        INT, \
         CHAR_CREATED        INT, \
         JOINED_GUILD        INT, \
-        INVENTORY           BLOB, \
+        PHYSIQUE_PP         INT, \
         OVERALL_EXP         INT, \
-        HARVEST_EXP         INT )"
+        HARVEST_EXP         INT)"
 
 #define INVENTORY_TABLE_SQL "CREATE TABLE INVENTORY_TABLE( \
         ID                  INTEGER PRIMARY KEY    AUTOINCREMENT, \
@@ -53,7 +53,6 @@ sqlite3 *db; // database handle which is set when function open_database is call
         IMAGE_ID            INTEGER PRIMARY KEY     NOT NULL, \
         ITEM_NAME           TEXT, \
         HARVESTABLE         INT, \
-        HARVEST_CYCLE       INT, \
         CYCLE_AMOUNT        INT, \
         EMU                 INT, \
         INTERVAL            INT, \
@@ -80,6 +79,14 @@ sqlite3 *db; // database handle which is set when function open_database is call
         PASSWORD            TEXT, \
         NAME                TEXT, \
         DESCRIPTION         TEXT)"
+
+#define RACE_TABLE_SQL "CREATE TABLE RACE_TABLE( \
+        RACE_ID             INTEGER PRIMARY KEY     NOT NULL, \
+        RACE_NAME           TEXT, \
+        RACE_DESCRIPTION    TEXT, \
+        INITIAL_EMU         INT,  \
+        EMU_MULTIPLIER      INT,  \
+        CHAR_COUNT          INT)"
 
 /** RESULT  : Opens sqlite database file and creates the handle [db] which can then be called by other
               database functions.
@@ -111,7 +118,7 @@ int get_max_char_id();
               loads the data for that character into into the character struct
 
     USAGE   : send_pm:chat.c, rename_char:hash_command.c, process_log_in:log_in.c, process_packet:protocol.c */
-int get_char_data(char *char_name);
+int get_char_data_from_db(char *char_name);
 
 /** RESULT  : Determines the number of tables in the database
 
@@ -255,6 +262,15 @@ void update_db_char_inventory(int connection);
     USAGE   : process_harvesting:harvesting.c */
 void update_db_char_slot(int connection, int slot);
 
+/** RESULT  : load race data from the database to the race struct array
+
+    RETURNS : void
+
+    PURPOSE : allows race data to be held in memory for faster operations
+
+    USAGE   : initialise_races: initialisation.c */
+void load_races();
+
 
 /** RESULT  : load channel data from the database to the channels struct array
 
@@ -303,8 +319,7 @@ void load_maps();
     PURPOSE : enables database entries to be bulk loaded from a text file
 
     USAGE   : load_database_item_table_data:files.c */
-void add_item(int image_id, char *item_name, int harvestable, int harvest_cycle, int cycle_amount, int emu,
-              int interval,
+void add_item(int image_id, char *item_name, int harvestable, int harvest_cycle, int emu, int interval,
               int exp,
               int food_value,
               int food_cooldown,
@@ -332,7 +347,7 @@ void add_threed_object(char *filename, int image_id);
 void add_map(int map_id, char *map_name, char *elm_file_name);
 
 
-/** RESULT  : adds an entry to the channelp_table of the database
+/** RESULT  : adds an entry to the channel_table of the database
 
     RETURNS : void
 
@@ -340,5 +355,16 @@ void add_map(int map_id, char *map_name, char *elm_file_name);
 
     USAGE   : load_database_channel_table_data:files.c */
 void add_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description);
+
+
+/** RESULT  : adds an entry to the race_table of the database
+
+    RETURNS : void
+
+    PURPOSE : enables data to be bulk loaded from a text file
+
+    USAGE   : load_database_race_table_data:files.c */
+void add_race(int race_id, char *race_name, char *race_description, int initial_emu, int emu_multiplier);
+
 
 #endif // DATABASE_H_INCLUDED
