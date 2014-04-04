@@ -40,6 +40,24 @@ int get_char_carry_capacity(int connection){
     return initial_carry_capacity + (carry_capacity_multiplier * clients.client[connection]->physique);
 }
 
+int get_char_visual_proximity(int connection){
+
+    int race_id=clients.client[connection]->char_type;
+    int initial_visual_proximity=race[race_id].initial_visual_proximity;
+    int visual_proximity_multiplier=race[race_id].visual_proximity_multiplier;
+
+    return initial_visual_proximity + (visual_proximity_multiplier * clients.client[connection]->vitality);
+}
+
+int get_char_chat_proximity(int connection){
+
+    int race_id=clients.client[connection]->char_type;
+    int initial_chat_proximity=race[race_id].initial_chat_proximity;
+    int chat_proximity_multiplier=race[race_id].chat_proximity_multiplier;
+
+    return initial_chat_proximity + (chat_proximity_multiplier * clients.client[connection]->will);
+}
+
 int get_inventory_emu(int connection){
 
     int i=0;

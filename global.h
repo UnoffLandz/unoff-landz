@@ -422,8 +422,6 @@ struct client_node_type{
     int frame;
     int max_health;
     int current_health;
-    int visual_proximity; // proximity for display of other actors/creatures
-    int local_text_proximity; //  proximity for local messages from other actors
     time_t last_in_game; // date char was last in-game
     time_t char_created; // date char was created
     time_t joined_guild; // date joined guild
@@ -476,6 +474,9 @@ struct client_node_type{
 
     int inventory_emu;  // saves having to calculate carry capacity each time its tested
     int max_carry_capacity; // saves having to calculate carry capacity each time its tested
+
+    int visual_proximity; //saves having to calculate visual proximity each time its tested
+    int chat_proximity;
 
     int material_pts;
     int max_material_pts;
@@ -567,7 +568,11 @@ struct race_type{
     char race_name[20];
     char race_description[160];
     int initial_carry_capacity;
-    int carry_capacity_multiplier;
+    float carry_capacity_multiplier;
+    int initial_visual_proximity;
+    float visual_proximity_multiplier;
+    int initial_chat_proximity;
+    float chat_proximity_multiplier;
     int char_count;
 };
 struct race_type race[MAX_RACES];
@@ -603,8 +608,6 @@ struct character_type{
     int frame;
     int max_health;
     int current_health;
-    int visual_proximity; // proximity for display of other actors/creatures
-    int local_text_proximity; //  proximity for local messages from other actors
     int char_created;
     time_t last_in_game;
     time_t joined_guild;
@@ -615,8 +618,13 @@ struct character_type{
     int inventory_emu;  // saves having to calculate carry capacity each time its tested
     int max_carry_capacity; // saves having to calculate carry capacity each time its tested
 
+    int visual_proximity; // proximity for display of other actors/creatures
+    int chat_proximity; //  proximity for local messages from other actors
+
     int physique;
-    int max_physique;
+    int vitality;
+    int will;
+    int coordination;
 
     int overall_exp;
     int harvest_exp;

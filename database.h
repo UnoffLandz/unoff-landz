@@ -2,7 +2,6 @@
 #define DATABASE_H_INCLUDED
 
 #include <sqlite3.h> //required to allow creation of the sqlite3 type used for the db handle (see next statement)
-sqlite3 *db; // database handle which is set when function open_database is called
 
 #define CHARACTER_TABLE_SQL "CREATE TABLE CHARACTER_TABLE( \
         CHAR_ID             INTEGER PRIMARY KEY AUTOINCREMENT, \
@@ -33,12 +32,13 @@ sqlite3 *db; // database handle which is set when function open_database is call
         FRAME               INT, \
         MAX_HEALTH          INT, \
         CURRENT_HEALTH      INT, \
-        VISUAL_PROXIMITY    INT, \
-        LOCAL_TEXT_PROXIMITY INT, \
         LAST_IN_GAME        INT, \
         CHAR_CREATED        INT, \
         JOINED_GUILD        INT, \
         PHYSIQUE_PP         INT, \
+        VITALITY_PP         INT, \
+        WILL_PP             INT, \
+        COORDINATION_PP     INT, \
         OVERALL_EXP         INT, \
         HARVEST_EXP         INT)"
 
@@ -85,8 +85,14 @@ sqlite3 *db; // database handle which is set when function open_database is call
         RACE_NAME           TEXT, \
         RACE_DESCRIPTION    TEXT, \
         INITIAL_EMU         INT,  \
-        EMU_MULTIPLIER      INT,  \
+        EMU_MULTIPLIER      REAL, \
+        INITIAL_VISPROX     INT, \
+        VISPROX_MULTIPLIER  REAL \
+        INITIAL_CHATPROX    INT, \
+        CHATPROX_MULTIPLIER REAL, \
         CHAR_COUNT          INT)"
+
+sqlite3 *db; // database handle which is set when function open_database is called
 
 /** RESULT  : Opens sqlite database file and creates the handle [db] which can then be called by other
               database functions.
@@ -364,7 +370,7 @@ void add_channel(int channel_id, int owner_id, int channel_type, char *password,
     PURPOSE : enables data to be bulk loaded from a text file
 
     USAGE   : load_database_race_table_data:files.c */
-void add_race(int race_id, char *race_name, char *race_description, int initial_emu, int emu_multiplier);
+void add_race(int race_id, char *race_name, char *race_description, int initial_emu, float emu_multiplier);
 
 
 #endif // DATABASE_H_INCLUDED

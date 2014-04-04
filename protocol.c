@@ -450,6 +450,10 @@ void process_packet(int connection, unsigned char *packet){
 
     text[data_length]='\0';
 
+    /*when the client connects to the server, it will send a SIT_DOWN message if there is a delay in logging in which
+    unless trapped, results in a floating point error exception that causes the server to crash.*/
+    if(clients.client[connection]->status==CONNECTED && protocol ==SIT_DOWN) return;
+
 /***************************************************************************************************/
 
     if(protocol==RAW_TEXT) {
@@ -859,9 +863,6 @@ void process_packet(int connection, unsigned char *packet){
         character.char_type=data[i++];
         character.head_type=data[i++];
 
-        //set starting values for character
-        character.visual_proximity=15;
-        character.local_text_proximity=12;
         character.char_created=time(NULL);
 
         //set starting channel
@@ -883,7 +884,7 @@ void process_packet(int connection, unsigned char *packet){
         strcpy(game_data.name_last_char_created, char_name);
         game_data.date_last_char_created=character.char_created;
 
-        //notify clientn that character has been created
+        //notify client that character has been created
         sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
         send_server_text(connection, CHAT_SERVER, text_out);
         send_create_char_ok(connection);

@@ -82,7 +82,7 @@ void broadcast_local_chat(int sender_connection, char *text_in){
 
         if(receiver_connection!=sender_connection){
 
-            receiver_local_text_proximity=clients.client[receiver_connection]->local_text_proximity;
+            receiver_local_text_proximity=clients.client[receiver_connection]->chat_proximity;
             receiver_char_tile=clients.client[receiver_connection]->map_tile;
 
             //broadcast only to chars in local text proximity

@@ -14,5 +14,8 @@ int get_inventory_emu(int connection);
 
 int get_char_carry_capacity(int connection);
 
+int get_char_visual_proximity(int connection);
+
+int get_char_chat_proximity(int connection);
 
 #endif // CHARACTER_INVENTORY_H_INCLUDED

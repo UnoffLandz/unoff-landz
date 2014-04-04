@@ -146,10 +146,8 @@ void add_char(struct character_type character){
         "HELMET_TYPE," \
         "MAX_HEALTH," \
         "CURRENT_HEALTH," \
-        "VISUAL_PROXIMITY," \
-        "LOCAL_TEXT_PROXIMITY," \
         "CHAR_CREATED" \
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
@@ -184,9 +182,7 @@ void add_char(struct character_type character){
 
     sqlite3_bind_int(stmt, 23, 0); // max health
     sqlite3_bind_int(stmt, 24, 0); // current health
-    sqlite3_bind_int(stmt, 25, character.visual_proximity);
-    sqlite3_bind_int(stmt, 26, character.local_text_proximity);
-    sqlite3_bind_int(stmt, 27, character.char_created);
+    sqlite3_bind_int(stmt, 25, character.char_created);
 
     rc = sqlite3_step(stmt);
 
@@ -382,7 +378,7 @@ void add_channel(int channel_id, int owner_id, int channel_type, char *password,
     printf("Added channel [%i] [%s] to CHANNEL_TABLE\n", channel_id, channel_name);
 }
 
-void add_race(int race_id, char *race_name, char *race_description, int initial_carry_capacity, int carry_capacity_multiplier){
+void add_race(int race_id, char *race_name, char *race_description, int initial_carry_capacity, float carry_capacity_multiplier){
 
     /** public function - see header */
 
@@ -403,7 +399,7 @@ void add_race(int race_id, char *race_name, char *race_description, int initial_
     sqlite3_bind_text(stmt, 2, race_name, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, race_description, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 4, initial_carry_capacity);
-    sqlite3_bind_int(stmt, 5, carry_capacity_multiplier);
+    sqlite3_bind_double(stmt, 5, carry_capacity_multiplier);
 
     rc = sqlite3_step(stmt);
 
@@ -466,19 +462,30 @@ int get_char_data_from_db(char *name){
         character.frame=sqlite3_column_int(stmt, 25);
         character.max_health=sqlite3_column_int(stmt, 26);
         character.current_health=sqlite3_column_int(stmt, 27);
-        character.visual_proximity=sqlite3_column_int(stmt, 28);
-        character.local_text_proximity=sqlite3_column_int(stmt, 29);
-        character.last_in_game=sqlite3_column_int(stmt,  30);
-        character.char_created=sqlite3_column_int(stmt, 31);
-        character.joined_guild=sqlite3_column_int(stmt, 32);
-        character.physique=sqlite3_column_int(stmt, 33);
-        character.overall_exp=sqlite3_column_int(stmt, 34);
-        character.harvest_exp=sqlite3_column_int(stmt, 35);
+        character.last_in_game=sqlite3_column_int(stmt,  28);
+        character.char_created=sqlite3_column_int(stmt, 29);
+        character.joined_guild=sqlite3_column_int(stmt, 30);
+        character.physique=sqlite3_column_int(stmt, 31);
+        character.vitality=sqlite3_column_int(stmt, 32);
+        character.will=sqlite3_column_int(stmt, 33);
+        character.coordination=sqlite3_column_int(stmt, 34);
+        character.overall_exp=sqlite3_column_int(stmt, 35);
+        character.harvest_exp=sqlite3_column_int(stmt, 36);
 
         //calculate max emu that can be held in inventory
         int initial_carry_capacity=race[character.char_type].initial_carry_capacity;
         int carry_capacity_multiplier=race[character.char_type].carry_capacity_multiplier;
         character.max_carry_capacity=initial_carry_capacity + (carry_capacity_multiplier * character.physique);
+
+        //calculate visual proximity
+        int initial_visual_proximity=race[character.char_type].initial_visual_proximity;
+        int visual_proximity_multiplier=race[character.char_type].visual_proximity_multiplier;
+        character.visual_proximity=initial_visual_proximity + (visual_proximity_multiplier * character.vitality);
+
+        //calculate chat proximity
+        int initial_chat_proximity=race[character.char_type].initial_chat_proximity;
+        int chat_proximity_multiplier=race[character.char_type].chat_proximity_multiplier;
+        character.chat_proximity=initial_chat_proximity + (chat_proximity_multiplier * character.will);
     }
 
     sqlite3_finalize(stmt);
@@ -585,7 +592,7 @@ void load_races(){
         strcpy(race[race_id].race_name, (char*)sqlite3_column_text(stmt, 1));
         strcpy(race[race_id].race_description, (char*)sqlite3_column_text(stmt, 2));
         race[race_id].initial_carry_capacity=sqlite3_column_int(stmt, 3);
-        race[race_id].carry_capacity_multiplier=sqlite3_column_int(stmt, 4);
+        race[race_id].carry_capacity_multiplier=sqlite3_column_double(stmt, 4);
         race[race_id].char_count=sqlite3_column_int(stmt, 5);
 
         printf("loaded [%i] [%s]\n", race_id, race[race_id].race_name);

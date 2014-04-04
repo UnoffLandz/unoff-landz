@@ -96,8 +96,6 @@ void load_char_data_into_connection(int connection){
     clients.client[connection]->frame=character.frame;
     clients.client[connection]->max_health=character.max_health;
     clients.client[connection]->current_health=character.current_health;
-    clients.client[connection]->visual_proximity=character.visual_proximity;
-    clients.client[connection]->local_text_proximity=character.local_text_proximity;
     clients.client[connection]->last_in_game=character.last_in_game;
     clients.client[connection]->char_created=character.char_created;
     clients.client[connection]->joined_guild=character.joined_guild;
@@ -110,8 +108,12 @@ void load_char_data_into_connection(int connection){
     clients.client[connection]->overall_exp=character.overall_exp;
     clients.client[connection]->harvest_exp=character.harvest_exp;
 
-    clients.client[connection]->inventory_emu=character.inventory_emu;  // saves having to calculate carry capacity each time its tested
-    clients.client[connection]->max_carry_capacity=character.max_carry_capacity;  // saves having to calculate carry capacity each time its tested
+    /*these values are also returned from functions but we hold them in the struct to avoid having to
+    continually recalculate them during actions like moving, mixing, harvesting, or picking up/dropping bags*/
+    clients.client[connection]->inventory_emu=character.inventory_emu;
+    clients.client[connection]->max_carry_capacity=character.max_carry_capacity;
+    clients.client[connection]->visual_proximity=character.visual_proximity;
+    clients.client[connection]->chat_proximity=character.chat_proximity;
 }
 
 void process_log_in(int connection, char *text) {

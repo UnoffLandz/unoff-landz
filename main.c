@@ -10,7 +10,6 @@
 #include <sys/time.h> //required for timer
 #include <time.h>
 #include <ev.h>
-//#include <pthread.h>
 
 #include "global.h"
 #include "initialisation.h"
@@ -32,15 +31,18 @@
 /** credit for the underlying libev socket code goes to Pierce <jqug123321@gmail.com>, details of which can be
 found @ http://jqug.blogspot.co.uk/2013/02/libev-socket.html **/
 
-/*
-struct ev_timer_type{
-    ev_timer connection_timer;
-    int connectionfd;
-};
-*/
 
-//struct ev_timer_type timeout_watcher;
+//ev_timer ev_test[50];
+
 ev_timer timeout_watcher;
+
+/*
+static void test_cb (struct ev_loop *loop, struct ev_timer *ev_test, int revents) {
+
+    printf("timer %i\n", (int) ev_test->data);
+
+}
+*/
 
 void close_connection_slot(int connection){
 
@@ -74,9 +76,6 @@ void close_connection_slot(int connection){
         //update total time this char has been played
         clients.client[connection]->time_played+=(int) clients.client[connection]->last_in_game - (int) clients.client[connection]->session_commenced;
 
-        printf("last in game %i\n", (int) clients.client[connection]->last_in_game);
-        printf("session commenced %i\n", (int) clients.client[connection]->session_commenced);
-
         //check if guild member
         if(guild_id>0) {
 
@@ -87,6 +86,7 @@ void close_connection_slot(int connection){
 
     }
 
+
     //set the connection slot to indicate its available for use
     clients.client[connection]->status=LOGGED_OUT;
 
@@ -94,7 +94,6 @@ void close_connection_slot(int connection){
     update_db_char_time_played(connection);
     update_db_char_last_in_game(connection);
 
-    //zero struct data in case this corrupts the next connection to use this slot
     clients.client[connection]->packet_buffer_length=0;
     clients.client[connection]->character_id=0;
     clients.client[connection]->path_max=0;
@@ -105,78 +104,6 @@ void close_connection_slot(int connection){
     clients.client[connection]->harvest_flag=0;
     clients.client[connection]->inventory_image_id=0;
     clients.client[connection]->inventory_slot=0;
-/*
-    int physique;
-    int max_physique;
-    int coordination;
-    int max_coordination;
-    int reasoning;
-    int max_reasoning;
-    int will;
-    int max_will;
-    int instinct;
-    int max_instinct;
-    int vitality;
-    int max_vitality;
-
-    int human;
-    int max_human;
-    int animal;
-    int max_animal;
-    int vegetal;
-    int max_vegetal;
-    int inorganic;
-    int max_inorganic;
-    int artificial;
-    int max_artificial;
-    int magic;
-    int max_magic;
-
-    int manufacturing_lvl;
-    int max_manufacturing_lvl;
-    int harvest_lvl;
-    int max_harvest_lvl;
-    int alchemy_lvl;
-    int max_alchemy_lvl;
-    int overall_lvl;
-    int max_overall_lvl;
-    int attack_lvl;
-    int max_attack_lvl;
-    int defence_lvl;
-    int max_defence_lvl;
-    int magic_lvl;
-    int max_magic_lvl;
-    int potion_lvl;
-    int max_potion_lvl;
-
-    int material_pts;
-    int max_material_pts;
-    int ethereal_pts;
-    int max_ethereal_pts;
-
-    int food_lvl;
-
-    int manufacture_exp;
-    int max_manufacture_exp;
-    int harvest_exp;
-    int max_harvest_exp;
-    int alchemy_exp;
-    int max_alchemy_exp;
-    int overall_exp;
-    int max_overall_exp;
-    int attack_exp;
-    int max_attack_exp;
-    int defence_exp;
-    int max_defence_exp;
-    int magic_exp;
-    int max_magic_exp;
-    int potion_exp;
-    int max_potion_exp;
-
-    int book_id;
-    int max_book_time;
-    int elapsed_book_time;
- */
 }
 
 void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
@@ -200,7 +127,6 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
 
             //client has terminated prematurely (probably due to not having a required map file)
             close_connection_slot(watcher->fd);
-
             sprintf(text_out, "client [%i]  char [%s] was terminated by the server in function recv_data", watcher->fd, clients.client[watcher->fd]->char_name);
             log_event(EVENT_ERROR, text_out);
 
@@ -214,6 +140,8 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
             //client has terminated prematurely (probably due to closing client whilst char was moving)
             sprintf(text_out, "client [%i]  char [%s] read error [%i]in function recv_data", watcher->fd, clients.client[watcher->fd]->char_name, errno);
             log_event(EVENT_ERROR, text_out);
+
+            close_connection_slot(watcher->fd);
 
             ev_io_stop(loop, watcher);
             free(watcher);
@@ -237,7 +165,9 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
     }
 
     //copy new bytes to client packet buffer(memcpy doesn't work)
+    #ifdef DEBUG
     printf("bytes %i\n", read);
+    #endif
 
     for(j=0; j<read; j++){
         clients.client[watcher->fd]->packet_buffer[clients.client[watcher->fd]->packet_buffer_length]=buffer[j];
@@ -312,6 +242,13 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     ev_io_init(w_client, recv_data, client_sockfd, EV_READ);
     ev_io_start(loop, w_client);
 
+/*
+//how about set up timer here ????
+ev_test[client_sockfd].data= (int*)client_sockfd;
+ev_timer_init(&ev_test[client_sockfd], test_cb, 1.05, 1.05);
+ev_timer_start(loop, &ev_test[client_sockfd]);
+*/
+
     //set up connection data entry in client struct
     clients.client[client_sockfd]->status=CONNECTED;
     clients.client[client_sockfd]->packet_buffer_length=0;
@@ -354,8 +291,6 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
                 close_connection_slot(i);
 
-                //ev_io_stop(loop, watcher);
-                //free(watcher);
                 close(i);
             }
 
@@ -370,7 +305,6 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
     // repeat
     ev_timer_again(loop, &timeout_watcher);
-    //ev_timer_again(loop, &timeout_watcher->connection_timer);
 }
 
 int main(void) {
@@ -469,9 +403,7 @@ int main(void) {
     }
 
     // initialize a timer watcher
-    //ev_timer_init(&timeout_watcher.connection_timer, timeout_cb, 0.05, 0.05);
     ev_timer_init(&timeout_watcher, timeout_cb, 0.05, 0.05);
-    //ev_timer_start(loop, &timeout_watcher.connection_timer);
     ev_timer_start(loop, &timeout_watcher);
 
     //create watcher to accept connection

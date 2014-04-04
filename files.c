@@ -1094,7 +1094,11 @@ void load_database_race_table_data(char *file_name){
     char race_name[20]="";
     char race_description[160]="";
     int initial_emu=0;
-    int emu_multiplier=0;
+    float emu_multiplier=0.0f;
+    int initial_visual_proximity=0;
+    float visual_proximity_multiplier=0.0f;
+    int initial_chat_proximity=0;
+    float chat_proximity_multiplier=0.0f;
     char buf[1024]="";
 
     //check we have an existing file and, if not, then create one
@@ -1108,9 +1112,9 @@ void load_database_race_table_data(char *file_name){
         //add the guidance lines to the text file
         fprintf(file, "UNOFFLANDZ race data file\n");
         fprintf(file, "\n");
-        fprintf(file, "Race Race          Race                                                Initial Emu\n");
-        fprintf(file, "ID   Name          Description                                         Emu     Multiplier\n");
-        fprintf(file, "-----------------------------------------------------------------------------------------\n");
+        fprintf(file, "Race Race          Race              Initial Emu        Initial Visual Visual Proximity Initial Chat Chat Proximity\n");
+        fprintf(file, "ID   Name          Description       Emu     Multiplier Proximity      Multiplier       Proximity    Multiplier    \n");
+        fprintf(file, "-------------------------------------------------------------------------------------------------------------------\n");
 
         //as there's no data to be read, close the file and exit function
         fclose(file);
@@ -1134,12 +1138,17 @@ void load_database_race_table_data(char *file_name){
         };
 
         //scan the entries and load to database
-        while (fscanf(file, "%i %s %s %i %i\n",
+        while (fscanf(file, "%i %s %s %i %f %i %f %i %f\n",
                        &race_id,
                        race_name,
                        race_description,
                        &initial_emu,
-                       &emu_multiplier)!=-1){
+                       &emu_multiplier,
+                       &initial_visual_proximity,
+                       &visual_proximity_multiplier,
+                       &initial_chat_proximity,
+                       &chat_proximity_multiplier
+                       )!=-1){
 
             //remove underscores which are needed for fscanf to ignore spaces in channel name and description
             str_remove_underscores(race_name);
@@ -1153,7 +1162,11 @@ void load_database_race_table_data(char *file_name){
             strcpy(race_name, "");
             strcpy(race_description, "");
             initial_emu=0;
-            emu_multiplier=0;
+            emu_multiplier=0.0f;
+            initial_visual_proximity=0;
+            visual_proximity_multiplier=0.0f;
+            initial_chat_proximity=0;
+            chat_proximity_multiplier=0.0f;
         }
     }
 
