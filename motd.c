@@ -23,6 +23,7 @@ void send_motd_header(int connection){
     int chars_in_game_count=0;
     long int server_up_time=0;
     char time_up_str[50]="";
+    int total_chars=0;
 
     //send separator line so MOTD is distinct from previous text
     send_server_text(connection, CHAT_SERVER, " ");
@@ -57,7 +58,10 @@ void send_motd_header(int connection){
 
     send_server_text(connection, CHAT_SERVER, text_out);
 
-    sprintf(text_out, "%cCharacters created to date : %i", c_blue2+127, game_data.char_count);
+    for(i=0; i<MAX_RACES; i++){
+        total_chars+=race[i].char_count;
+    }
+    sprintf(text_out, "%cCharacters created to date : %i", c_blue2+127, total_chars);
     send_server_text(connection, CHAT_SERVER, text_out);
 
     get_time_stamp_str(game_data.date_last_char_created, time_stamp_str);

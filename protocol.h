@@ -15,6 +15,7 @@ enum { // client to server protocol
     LOOK_AT_INVENTORY_ITEM=19,
     MOVE_INVENTORY_ITEM=20,
     HARVEST=21,
+    DROP_ITEM=22,
     LOOK_AT_MAP_OBJECT=27,
     SEND_PARTIAL_STATS=49,
     PING_RESPONSE=60,
@@ -44,7 +45,8 @@ enum { // sit down command instruction
 
     USAGE   : main.c
 */
-void process_packet(int connection, unsigned char *packet); //, struct client_list_type *clients, struct guild_list_type *guilds, struct character_list_type *characters, struct map_list_type *maps, struct message_list_type *messages, struct channel_list_type *channels);
+//void process_packet(int connection, unsigned char *packet);
+void process_packet(int connection, unsigned char *packet, struct ev_loop *loop);
 
 
 /** RESULT  : sends a text string to the client
@@ -91,27 +93,5 @@ void send_partial_stats(int connection, int attribute_type, int attribute_level)
     USAGE   :  protocol.c process_packet
 */
 void send_here_your_stats(int connection);
-
-
-/** RESULT  : sends entire char inventory
-
-    RETURNS : void
-
-    PURPOSE : send char inventory at log in
-
-    USAGE   : protocol.c process_packet
-*/
-void send_here_your_inventory(int connection);
-
-
-/** RESULT  : updates a specific slot in the char inventory
-
-    RETURNS : void
-
-    PURPOSE : send char inventory at log in
-
-    USAGE   : harvesting.c
-*/
-void send_get_new_inventory_item(int connection, int item_image_id, int amount, int slot);
 
 #endif // PROTOCOL_H_INCLUDED

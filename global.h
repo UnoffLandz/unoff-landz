@@ -1,6 +1,7 @@
 #ifndef GLOBAL_H_INCLUDED
 #define GLOBAL_H_INCLUDED
 
+#include <ev.h> //required to access ev_timer
 #include "chat.h" //required to access the value for MAX_CHAN_SLOTS
 
 #define MAX_MAPS 10
@@ -10,6 +11,7 @@
 #define MAX_THREED_OBJECTS 100 // maximum number of e3d files that can be held in the threed_object array
 #define MAX_ITEMS 1500 //maximum number of mixable/harvestable items that can be held in the item array
 #define MAX_RACES 7
+#define MAX_BAGS 256 //maximum bags on a map
 
 #define PATH_MAX 100 //longest permitted path
 #define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
@@ -33,6 +35,8 @@ enum { // server to client protocol
     HERE_YOUR_STATS=18,
     HERE_YOUR_INVENTORY=19,
     GET_NEW_INVENTORY_ITEM=21,
+    GET_NEW_BAG=27,
+    DESTROY_BAG=29,
     ADD_NEW_ENHANCED_ACTOR=51
 };
 
@@ -138,9 +142,14 @@ enum { // general boolean value
     NOT_SENT,
 };
 
-enum {
+enum { // general boolean value
     IN_GAME,
     NOT_IN_GAME
+};
+
+enum { // general boolean value
+    EMPTY,
+    FULL
 };
 
 enum {// colours
@@ -324,19 +333,26 @@ enum { // neck type
 
 /** MAPS */
 struct map_node_type{
+
     char map_name[1024];    // eg Isla Prima
     char elm_filename[1024];// eg startmap.elm
+
     int map_axis;
+
     unsigned char tile_map[TILE_MAP_MAX];
     int tile_map_size;
+
     unsigned char height_map[HEIGHT_MAP_MAX];
     int height_map_size;
+
     unsigned char threed_object_map[THREED_OBJECT_MAP_MAX];
     int threed_object_map_size;
     int threed_object_structure_len;
     int threed_object_count;
+
     unsigned char twod_object_map[TWOD_OBJECT_MAP_MAX];
     int twod_object_map_size;
+
     int client_list[MAX_CLIENTS];
     int client_list_count;
 };
@@ -346,19 +362,20 @@ struct map_list_type {
     int max;
     struct map_node_type **map;
 };
-
 struct map_list_type maps;
 
 
 /** GUILDS */
 struct guild_node_type{
-    char guild_name[1024];
-    char guild_tag[1024];
+    char guild_name[80];
+    char guild_tag[10];
+    char guild_description[1024];
     int tag_colour;
     int log_on_notification_colour;
     int log_off_notification_colour;
     int guild_chan_text_colour;
     int guild_chan_number;
+    time_t date_created;
 };
 
 struct guild_list_type {
@@ -475,8 +492,9 @@ struct client_node_type{
     int inventory_emu;  // saves having to calculate carry capacity each time its tested
     int max_carry_capacity; // saves having to calculate carry capacity each time its tested
 
-    int visual_proximity; //saves having to calculate visual proximity each time its tested
-    int chat_proximity;
+    int day_visual_proximity; //saves having to calculate visual proximity each time its tested
+    int chat_proximity;//saves having to calculate chat proximity each time its tested
+    int night_visual_proximity;//saves having to calculate visual proximity each time its tested
 
     int material_pts;
     int max_material_pts;
@@ -573,6 +591,8 @@ struct race_type{
     float visual_proximity_multiplier;
     int initial_chat_proximity;
     float chat_proximity_multiplier;
+    float initial_night_vis;
+    float night_vis_multiplier;
     int char_count;
 };
 struct race_type race[MAX_RACES];
@@ -580,6 +600,7 @@ struct race_type race[MAX_RACES];
 /** OTHERS */
 struct timeval time_check;
 time_t server_start_time;
+ev_timer ev_bag_timer[50];
 
 //struct used to pass to database on character creation and get_char_id function
 struct character_type{
@@ -618,8 +639,9 @@ struct character_type{
     int inventory_emu;  // saves having to calculate carry capacity each time its tested
     int max_carry_capacity; // saves having to calculate carry capacity each time its tested
 
-    int visual_proximity; // proximity for display of other actors/creatures
+    int day_visual_proximity; // proximity for display of other actors/creatures
     int chat_proximity; //  proximity for local messages from other actors
+    int night_visual_proximity; //
 
     int physique;
     int vitality;
@@ -631,12 +653,22 @@ struct character_type{
 };
 struct character_type character;
 
+/** BAGS **/
+struct bag_list_type {
+        int map_id;
+        int tile_pos;
+        time_t created; //not used (using ev_timer to time the poof)
+        int char_id; //char id that created the bag
+        int status; //EMPTY, FULL
+};
+struct bag_list_type bag_list[MAX_BAGS];
+
 //struct to carry global data
 struct game_data_type {
-    int char_count;
-    char name_last_char_created[1024];
+    char name_last_char_created[80];
     time_t date_last_char_created;
 };
 struct game_data_type game_data;
+
 
 #endif // GLOBAL_H_INCLUDED

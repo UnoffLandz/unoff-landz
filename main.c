@@ -112,7 +112,6 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
 
     unsigned char buffer[1024];
     unsigned char packet[1024];
-    char text_out[1024]="";
 
     int lsb=0, msb=0;
     int packet_length=0;
@@ -127,8 +126,8 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
 
             //client has terminated prematurely (probably due to not having a required map file)
             close_connection_slot(watcher->fd);
-            sprintf(text_out, "client [%i]  char [%s] was terminated by the server in function recv_data", watcher->fd, clients.client[watcher->fd]->char_name);
-            log_event(EVENT_ERROR, text_out);
+
+            log_event2(EVENT_SESSION, "client [%i]  char [%s] was terminated by the server in function recv_data", watcher->fd, clients.client[watcher->fd]->char_name);
 
             ev_io_stop(loop, watcher);
             free(watcher);
@@ -138,8 +137,7 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
         else {
 
             //client has terminated prematurely (probably due to closing client whilst char was moving)
-            sprintf(text_out, "client [%i]  char [%s] read error [%i]in function recv_data", watcher->fd, clients.client[watcher->fd]->char_name, errno);
-            log_event(EVENT_ERROR, text_out);
+            log_event2(EVENT_SESSION, "client [%i]  char [%s] read error [%i]in function recv_data", watcher->fd, clients.client[watcher->fd]->char_name, errno);
 
             close_connection_slot(watcher->fd);
 
@@ -153,8 +151,7 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
     //client disconnect
     else if (read == 0) {
 
-        sprintf(text_out, "client [%i] char [%s] disconnected\n", watcher->fd, clients.client[watcher->fd]->char_name);
-        log_event(EVENT_SESSION, text_out);
+        log_event2(EVENT_SESSION, "client [%i] char [%s] disconnected\n", watcher->fd, clients.client[watcher->fd]->char_name);
 
         close_connection_slot(watcher->fd);
 
@@ -165,9 +162,7 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
     }
 
     //copy new bytes to client packet buffer(memcpy doesn't work)
-    #ifdef DEBUG
-    printf("bytes %i\n", read);
-    #endif
+    log_event2(EVENT_SESSION, "bytes %i", read);
 
     for(j=0; j<read; j++){
         clients.client[watcher->fd]->packet_buffer[clients.client[watcher->fd]->packet_buffer_length]=buffer[j];
@@ -196,7 +191,8 @@ void recv_data(struct ev_loop *loop, struct ev_io *watcher, int revents){
             }
 
             //process packet
-            process_packet(watcher->fd, packet);
+            //process_packet(watcher->fd, packet);
+            process_packet(watcher->fd, packet, loop);
 
             // remove packet from buffer
             clients.client[watcher->fd]->packet_buffer_length=clients.client[watcher->fd]->packet_buffer_length-packet_length;
@@ -217,26 +213,24 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
     size_t client_len = sizeof(client_address);
     int client_sockfd;
     struct ev_io *w_client = (struct ev_io*) malloc (sizeof(struct ev_io));
-    char text_out[1024]="";
 
     client_sockfd = accept( watcher->fd, (struct sockaddr *)&client_address, &client_len);
 
     //check that sock is within client array range
     if(client_sockfd>=MAX_CLIENTS) {
-        sprintf(text_out, "new client socket [%i] outside client array max range [0 - %i]", client_sockfd, MAX_CLIENTS);
-        log_event(EVENT_ERROR, text_out);
+
+        log_event2(EVENT_ERROR, "new client socket [%i] outside client array max range [0 - %i]", client_sockfd, MAX_CLIENTS);
         exit(EXIT_FAILURE);
     }
 
     //accept client error
     if(client_sockfd < 0){
-        sprintf(text_out, "client [%i] error in accept_client", client_sockfd);
-        log_event(EVENT_ERROR, text_out);
+
+        log_event2(EVENT_ERROR, "client [%i] error in accept_client", client_sockfd);
         return;
     }
 
-    sprintf(text_out, "Connection from address %s on socket %d", inet_ntoa(client_address.sin_addr), client_sockfd);
-    log_event(EVENT_SESSION, text_out);
+    log_event2(EVENT_ERROR, "Connection from address %s on socket %d", inet_ntoa(client_address.sin_addr), client_sockfd);
 
     //add watcher to connect client fd
     ev_io_init(w_client, recv_data, client_sockfd, EV_READ);
@@ -272,7 +266,6 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     int i=0;
     time_t current_utime;
     time_t current_time;
-    char text_out[1024]="";
 
     gettimeofday(&time_check, NULL);
     current_utime=time_check.tv_usec;
@@ -286,8 +279,7 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             //check for lagged connection
             if(clients.client[i]->time_of_last_heartbeat+HEARTBEAT_INTERVAL< time_check.tv_sec){
 
-                sprintf(text_out, "client [%i]  char [%s]lagged out", i, clients.client[i]->char_name);
-                log_event(EVENT_SESSION, text_out);
+                log_event2(EVENT_ERROR, "client [%i]  char [%s] lagged out", i, clients.client[i]->char_name);
 
                 close_connection_slot(i);
 
@@ -322,30 +314,9 @@ int main(void) {
     //set server start time
     server_start_time=time(NULL);
 
-    //open an existing database file or create a new one
-    open_database(DATABASE_FILE);
-
-    //if no tables in the database, create table structures
-    if(get_table_count()==0) {
-
-        //create database table structure
-        printf("\nNew database. Creating...\n");
-
-        create_database_table("CHARACTER_TABLE", CHARACTER_TABLE_SQL);
-        create_database_table("INVENTORY_TABLE", INVENTORY_TABLE_SQL);
-        create_database_table("ITEM_TABLE", ITEM_TABLE_SQL);
-        create_database_table("THREED_OBJECT_TABLE", THREED_OBJECT_TABLE_SQL);
-        create_database_table("MAP_TABLE", MAP_TABLE_SQL);
-        create_database_table("CHANNEL_TABLE", CHANNEL_TABLE_SQL);
-        create_database_table("RACE_TABLE", RACE_TABLE_SQL);
-
-        //populate database tables with initial data
-        load_database_item_table_data(ITEM_DATA_FILE);
-        load_database_threed_object_table_data(THREED_OBJECT_DATA_FILE);
-        load_database_map_table_data(MAP_DATA_FILE);
-        load_database_channel_table_data(CHANNEL_DATA_FILE);
-        load_database_race_table_data(RACE_DATA_FILE);
-    }
+    //initialise database
+    open_database(DATABASE_FILE_NAME);
+    if(database_table_count()==0) create_new_database();
 
     //initialise data structs
     initialise_channel_list(MAX_CHANNELS);
@@ -355,9 +326,12 @@ int main(void) {
     load_maps();
 
     initialise_guild_list(MAX_GUILDS);
-    load_all_guilds(GUILD_LIST_FILE);
+    load_guilds();
 
     initialise_client_list(MAX_CLIENTS);
+
+    //initialise bag_list struct
+    initialise_bag_list();
 
     //load data into lookup structs
     initialise_movement_vectors();
@@ -368,14 +342,12 @@ int main(void) {
     initialise_races();
 
     //set global data
-    game_data.char_count=get_chars_created_count();
-    get_last_char_created();
-
-    printf("\n");
+    get_last_char_created(); //loads details of the last char created into the game_data struct
 
     //create server socket & bind it to socket address
     if((server_sockfd = socket(AF_INET, SOCK_STREAM, 0))==-1){
-        perror("socket failed");
+
+        log_event2(EVENT_ERROR, "socket failed in function main: module main.c");
         exit(EXIT_FAILURE);
     }
 
@@ -386,19 +358,22 @@ int main(void) {
 
     //no wait time to reuse the socket
     if(setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, (const char*)&bReuseaddr, sizeof(bReuseaddr))==-1){
-        perror("setsockopt failed");
+
+        log_event2(EVENT_ERROR, "setsockopt failed in function main: module main.c");
         exit(EXIT_FAILURE);
     }
 
     //bind the server socket to an address
     if(bind(server_sockfd, (struct sockaddr *)&server_address, server_len)==-1){
-        perror("bind failed");
+
+        log_event2(EVENT_ERROR, "bind failed in function main: module main.c");
         exit(EXIT_FAILURE);
     }
 
     //listen on server socket
     if(listen(server_sockfd, 5)==-1){
-        perror("listen failed");
+
+        log_event2(EVENT_ERROR, "listen failed in function main: module main.c");
         exit(EXIT_FAILURE);
     }
 
@@ -410,7 +385,7 @@ int main(void) {
     ev_io_init(&stdin_watcher, accept_client, server_sockfd, EV_READ);
     ev_io_start(loop, &stdin_watcher);
 
-    printf("server is ready\n");
+    log_event2(EVENT_INITIALISATION, "server is ready");
 
     //start event loop
     while (1) {
@@ -419,5 +394,3 @@ int main(void) {
 
     return 0;
 }
-
-

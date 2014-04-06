@@ -5,6 +5,7 @@
 #include <sys/time.h> //needed for usec time
 #include <time.h>
 #include <unistd.h>
+#include <ev.h> //needed for bag timer
 
 #include "global.h"
 #include "string_functions.h"
@@ -25,91 +26,31 @@
 #include "harvesting.h"
 #include "character_inventory.h"
 
-void send_get_new_inventory_item(int connection, int item_image_id, int amount, int slot){
+static void bag_poof_cb (struct ev_loop *loop, struct ev_timer *ev_bag_timer, int revents) {
 
-    unsigned char packet[11];
-
-    packet[0]=GET_NEW_INVENTORY_ITEM;
-
-    packet[1]=9;
-    packet[2]=0;
-
-    packet[3]=item_image_id % 256;
-    packet[4]=item_image_id / 256;
-
-    packet[5]=amount % 256;
-    packet[6]=amount / 256 % 256;
-    packet[7]=amount / 256 / 256 % 256;
-    packet[8]=amount / 256 / 256 / 256 % 256;
-
-    packet[9]=slot;
-
-    packet[10]=0;//flags
-
-    send(connection, packet, 11, 0);
-}
-
-void send_here_your_inventory(int connection){
+    (void)(revents);//removes unused parameter warning
+    (void)(loop);//removes unused parameter warning
 
     int i=0;
-    unsigned char packet[(MAX_INVENTORY_SLOTS*8)+4];
+    int connection=0;
+    int bag=(int) ev_bag_timer->data;
+    int map_id=bag_list[bag].map_id;
 
-    int data_length=2+(MAX_INVENTORY_SLOTS*8);
-    int j;
+    printf("poofing bag [%i] on map [%i] name [%s]\n", bag, map_id, maps.map[map_id]->map_name);
 
-    packet[0]=HERE_YOUR_INVENTORY;
-    packet[1]=data_length % 256;
-    packet[2]=data_length / 256;
+    for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
-    packet[3]=MAX_INVENTORY_SLOTS;
+        connection=maps.map[map_id]->client_list[i];
 
+        if(clients.client[connection]->status==LOGGED_IN){
 
-    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
+            /** add proximity test **/
 
-        j=4+(i*8);
-
-        packet[j+0]=clients.client[connection]->client_inventory[i].image_id % 256; //image_id of item
-        packet[j+1]=clients.client[connection]->client_inventory[i].image_id / 256;
-
-        packet[j+2]=clients.client[connection]->client_inventory[i].amount % 256; //amount (when zero nothing is shown in inventory)
-        packet[j+3]=clients.client[connection]->client_inventory[i].amount / 256 % 256;
-        packet[j+4]=clients.client[connection]->client_inventory[i].amount / 256 / 256 % 256;
-        packet[j+5]=clients.client[connection]->client_inventory[i].amount / 256 / 256 / 256 % 256;
-
-        packet[j+6]=i; //inventory pos (starts at 0)
-        packet[j+7]=0; //flags
+            send_destroy_bag(connection, bag);
+        }
     }
 
-/*
-    packet[0]=HERE_YOUR_INVENTORY;
-
-    packet[1]=18; //packet count -1
-    packet[2]=0;
-
-    packet[3]=2;
-
-    packet[4]=28;
-    packet[5]=0;
-    packet[6]=10;
-    packet[7]=0;
-    packet[8]=0;
-    packet[9]=0;
-    packet[10]=0;
-    packet[11]=0;
-
-    packet[12]=28;
-    packet[13]=0;
-    packet[14]=10;
-    packet[15]=0;
-    packet[16]=0;
-    packet[17]=0;
-    packet[18]=1;
-    packet[19]=0;
-
-    send(connection, packet, 20, 0);//packet count+1
-*/
-
-    send(connection, packet, (MAX_INVENTORY_SLOTS*8)+4, 0);
+    bag_list[bag].status=EMPTY;
 }
 
 void send_server_text(int connection, int channel, char *text){
@@ -374,7 +315,7 @@ void send_partial_stats(int connection, int attribute_type, int attribute_level)
 
 void send_actors_to_client(int connection){
 
-    /** RESULT  : make other actors visible to this actor
+    /** RESULT  : make other actors visible to this client
 
        RETURNS : void
 
@@ -389,7 +330,7 @@ void send_actors_to_client(int connection){
     int map_id=clients.client[connection]->map_id;
     int char_tile=clients.client[connection]->map_tile;
     int map_axis=maps.map[map_id]->map_axis;
-    int char_visual_proximity=clients.client[connection]->visual_proximity;
+    int char_visual_proximity=clients.client[connection]->day_visual_proximity;
 
     int other_client_id;
     int other_char_tile;
@@ -412,7 +353,7 @@ void send_actors_to_client(int connection){
     }
 }
 
-void process_packet(int connection, unsigned char *packet){
+void process_packet(int connection, unsigned char *packet, struct ev_loop *loop){
 
     int i=0;
 
@@ -424,7 +365,9 @@ void process_packet(int connection, unsigned char *packet){
     char char_name[1024]="";
     char password[1024]="";
 
+    int char_id=clients.client[connection]->character_id;
     int current_tile=clients.client[connection]->map_tile;
+
     int other_connection;
     int map_id=clients.client[connection]->map_id;
     //int guild_id=clients.client[connection]->guild_id;
@@ -757,6 +700,57 @@ void process_packet(int connection, unsigned char *packet){
     }
 /***************************************************************************************************/
 
+    else if(protocol==DROP_ITEM){
+
+        amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
+        slot=data[0];
+        image_id=clients.client[connection]->client_inventory[slot].image_id;
+
+        #ifdef DEBUG
+        printf("DROP_ITEM position [%i] quantity [%i]\n", slot, amount);
+        #endif
+
+        //deduct item from the slot and send revised inventory to client
+        clients.client[connection]->client_inventory[slot].amount-=amount;
+        send_get_new_inventory_item(connection, image_id, clients.client[connection]->client_inventory[slot].amount, slot);
+
+        //send updated inventory_emu to client
+        clients.client[connection]->inventory_emu += item[image_id].cycle_amount * item[image_id].emu;
+        send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection]->inventory_emu);
+
+        //update char inventory on database
+        update_db_char_slot(connection, slot);
+
+        /** needs to put contents in bag */
+
+        for(i=1; i<MAX_BAGS; i++){
+
+            if(bag_list[i].status==EMPTY){
+
+                printf("created bag [%i]\n", i);
+                bag_list[i].char_id=char_id;
+                bag_list[i].map_id=map_id;
+                bag_list[i].tile_pos=current_tile;
+                bag_list[i].created=time(NULL);
+                bag_list[i].status=FULL;
+
+                // send new bag to client
+                send_get_new_bag(connection, i);
+
+                //set bag timer
+                ev_bag_timer[i].data= (int*) i;
+                ev_timer_init(&ev_bag_timer[i], bag_poof_cb, 20, 0);
+                ev_timer_start(loop, &ev_bag_timer[i]);
+
+                return;
+            }
+        }
+
+        log_event2(EVENT_ERROR, "Bag count exceeds max [%i]", MAX_BAGS);
+        exit(EXIT_FAILURE);
+    }
+/***************************************************************************************************/
+
     else if(protocol==LOOK_AT_MAP_OBJECT){
 
         //returns a Uint32 indicating the object_id of the item looked at
@@ -879,8 +873,11 @@ void process_packet(int connection, unsigned char *packet){
         //once the char has been added to the database, find its char_id
         clients.client[connection]->character_id=get_max_char_id();
 
-        //update game data for the MOTD
-        game_data.char_count++;
+        //update game data for chars created
+        race[character.char_type].char_count++;
+        update_db_race_count(character.char_type);
+
+        //update game data for MOTD
         strcpy(game_data.name_last_char_created, char_name);
         game_data.date_last_char_created=character.char_created;
 

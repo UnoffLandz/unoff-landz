@@ -66,6 +66,7 @@ void remove_client_from_channel(int connection, int chan);
 
 void send_pm(int connection, char *receiver_name, char *message);
 
+int get_char_chat_proximity(int connection);
 
 /** RESULT  : instructs client to set/change the active chat chan
 

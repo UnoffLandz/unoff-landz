@@ -14,6 +14,15 @@
 #include "database.h"
 #include "chat.h"
 
+int get_char_chat_proximity(int connection){
+
+    int race_id=clients.client[connection]->char_type;
+    int initial_chat_proximity=race[race_id].initial_chat_proximity;
+    int chat_proximity_multiplier=race[race_id].chat_proximity_multiplier;
+
+    return initial_chat_proximity + (chat_proximity_multiplier * clients.client[connection]->will);
+}
+
 void send_get_active_channels(int connection){
 
     unsigned char packet[1024];

@@ -86,13 +86,28 @@
         RACE_DESCRIPTION    TEXT, \
         INITIAL_EMU         INT,  \
         EMU_MULTIPLIER      REAL, \
-        INITIAL_VISPROX     INT, \
-        VISPROX_MULTIPLIER  REAL \
-        INITIAL_CHATPROX    INT, \
+        INITIAL_VISPROX     INT,  \
+        VISPROX_MULTIPLIER  REAL, \
+        INITIAL_CHATPROX    INT,  \
         CHATPROX_MULTIPLIER REAL, \
+        INITIAL_NIGHTVIS    REAL, \
+        NIGHTVIS_MULTIPLIER REAL, \
         CHAR_COUNT          INT)"
 
+#define GUILD_TABLE_SQL "CREATE TABLE GUILD_TABLE( \
+        GUILD_ID             INTEGER PRIMARY KEY     NOT NULL, \
+        GUILD_TAG            TEXT, \
+        GUILD_NAME           TEXT, \
+        GUILD_DESCRIPTION    TEXT, \
+        TAG_COLOUR           INT,  \
+        LOGON_COLOUR         INT, \
+        LOGOFF_COLOUR        INT, \
+        CHAN_TEXT_COLOUR     INT, \
+        CHAN_ID              INT, \
+        DATE_CREATED         INT)"
+
 sqlite3 *db; // database handle which is set when function open_database is called
+
 
 /** RESULT  : Opens sqlite database file and creates the handle [db] which can then be called by other
               database functions.
@@ -132,8 +147,8 @@ int get_char_data_from_db(char *char_name);
 
     PURPOSE : To determine if a database table structure needs to be created.
 
-    USAGE   : main:main.c */
-int get_table_count();
+    USAGE   : database_exists database.c */
+int database_table_count();
 
 
 /** RESULT  : Creates a database table structure
@@ -143,7 +158,7 @@ int get_table_count();
     PURPOSE : Creates a required table when a new database file is created
 
     USAGE   : main:main.c */
-void create_database_table(char *table_name, char *sql);
+void create_database_table(char *sql);
 
 
 /** RESULT  : Adds a character entry to the character_table
@@ -268,6 +283,7 @@ void update_db_char_inventory(int connection);
     USAGE   : process_harvesting:harvesting.c */
 void update_db_char_slot(int connection, int slot);
 
+
 /** RESULT  : load race data from the database to the race struct array
 
     RETURNS : void
@@ -312,10 +328,20 @@ void load_items();
 
     RETURNS : void
 
-    PURPOSE : allows item data to be held in memory for faster operations
+    PURPOSE : allows map data to be held in memory for faster operations
 
-    USAGE   : initialise_items:initialisation.c */
+    USAGE   : initialise_maps:initialisation.c */
 void load_maps();
+
+
+/** RESULT  : loads guild data from the database to the map struct array
+
+    RETURNS : void
+
+    PURPOSE : allows guild data to be held in memory for faster operations
+
+    USAGE   : initialise_guilds:initialisation.c */
+void load_guilds();
 
 
 /** RESULT  : adds an entry to the item_table of the database
@@ -325,7 +351,11 @@ void load_maps();
     PURPOSE : enables database entries to be bulk loaded from a text file
 
     USAGE   : load_database_item_table_data:files.c */
-void add_item(int image_id, char *item_name, int harvestable, int harvest_cycle, int emu, int interval,
+void add_item(int image_id, char *item_name,
+              int harvestable,
+              int harvest_cycle,
+              int emu,
+              int interval,
               int exp,
               int food_value,
               int food_cooldown,
@@ -360,7 +390,11 @@ void add_map(int map_id, char *map_name, char *elm_file_name);
     PURPOSE : enables data to be bulk loaded from a text file
 
     USAGE   : load_database_channel_table_data:files.c */
-void add_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description);
+void add_channel(int channel_id, int owner_id,
+                 int channel_type,
+                 char *password,
+                 char *channel_name,
+                 char*channel_description);
 
 
 /** RESULT  : adds an entry to the race_table of the database
@@ -370,7 +404,41 @@ void add_channel(int channel_id, int owner_id, int channel_type, char *password,
     PURPOSE : enables data to be bulk loaded from a text file
 
     USAGE   : load_database_race_table_data:files.c */
-void add_race(int race_id, char *race_name, char *race_description, int initial_emu, float emu_multiplier);
+void add_race(int race_id, char *race_name, char *race_description,
+              int initial_carry_capacity,
+              float carry_capacity_multiplier,
+              int initial_visprox,
+              float visprox_multiplier,
+              int initial_chatprox,
+              float chatprox_multiplier,
+              float initial_nightvis,
+              float nightvis_multiplier
+              );
 
+
+/** RESULT  : adds an entry to the guild_table of the database
+
+    RETURNS : void
+
+    PURPOSE : enables data to be bulk loaded from a text file
+
+    USAGE   : load_database_guild_table_data:files.c */
+void add_guild(int guild_id, char *guild_tag, char *guild_name, char *guild_description,
+              int tag_colour,
+              int log_on_colour,
+              int log_off_colour,
+              int chan_text_colour,
+              int chan_id
+              );
+
+
+/** RESULT  : Updates the number of chars created for a particular race
+
+    RETURNS : void
+
+    PURPOSE : ???
+
+    USAGE   : process_packet protocol.c */
+void update_db_race_count(int race_id);
 
 #endif // DATABASE_H_INCLUDED

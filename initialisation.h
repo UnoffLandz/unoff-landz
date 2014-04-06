@@ -29,7 +29,13 @@ void initialise_channels();
 
 void initialise_races();
 
+void initialise_guilds();
+
 void initialise_logs();
+
+void create_new_database();
+
+void initialise_bag_list();
 
 
 #endif // INITIALISATION_H_INCLUDED

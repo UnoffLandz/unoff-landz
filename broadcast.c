@@ -9,6 +9,15 @@
 #include "chat.h"
 #include "string_functions.h" //needed for ASCII_SPACE
 
+int get_char_visual_proximity(int connection){
+
+    int race_id=clients.client[connection]->char_type;
+    int initial_visual_proximity=race[race_id].initial_visual_proximity;
+    int visual_proximity_multiplier=race[race_id].visual_proximity_multiplier;
+
+    return initial_visual_proximity + (visual_proximity_multiplier * clients.client[connection]->vitality);
+}
+
 int get_proximity(int tile1, int tile2, int map_axis){
 
     int tile1_x=tile1 % map_axis;
@@ -276,7 +285,7 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
 
         receiver_connection=maps.map[map_id]->client_list[i];
         receiving_char_tile=clients.client[receiver_connection]->map_tile;
-        receiving_char_visual_proximity=clients.client[receiver_connection]->visual_proximity;
+        receiving_char_visual_proximity=clients.client[receiver_connection]->day_visual_proximity;
 
         //restrict to characters within visual proximity
         if(get_proximity(char_tile, receiving_char_tile, map_axis)<receiving_char_visual_proximity){
@@ -332,7 +341,7 @@ void broadcast_remove_actor_packet(int sender_connection) {
         receiver_connection=maps.map[map_id]->client_list[i];
 
         receiver_char_tile=clients.client[receiver_connection]->map_tile;
-        receiver_char_visual_proximity=clients.client[receiver_connection]->visual_proximity;
+        receiver_char_visual_proximity=clients.client[receiver_connection]->day_visual_proximity;
 
         //filter for receiving char visual proximity
         if(get_proximity(char_tile, receiver_char_tile, map_axis)<=receiver_char_visual_proximity){
@@ -385,7 +394,7 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
     int sender_current_tile=clients.client[sender_connection]->map_tile;
     int map_id=clients.client[sender_connection]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
-    int sender_visual_proximity=clients.client[sender_connection]->visual_proximity;
+    int sender_visual_proximity=clients.client[sender_connection]->day_visual_proximity;
 
     int proximity_before_move=0;
     int proximity_after_move=0;
@@ -405,7 +414,7 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
         receiver_connection=maps.map[map_id]->client_list[i];
 
         receiver_char_tile=clients.client[receiver_connection]->map_tile;
-        receiver_char_visual_proximity=clients.client[receiver_connection]->visual_proximity;
+        receiver_char_visual_proximity=clients.client[receiver_connection]->day_visual_proximity;
 
         proximity_before_move=get_proximity(sender_current_tile, receiver_char_tile, map_axis);
         proximity_after_move=get_proximity(sender_destination_tile, receiver_char_tile, map_axis);

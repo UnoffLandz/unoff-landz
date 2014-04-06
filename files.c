@@ -16,75 +16,24 @@ void clear_file(char *file_name){
     FILE *file;
 
     if((file=fopen(file_name, "a"))!=NULL){
-        printf("clearing file [%s]\n", file_name);
+
         fclose(file);
 
         if((file=fopen(file_name, "w"))==NULL){
-            printf("problem clearing file [%s]\n", file_name);
+
+            log_event2(EVENT_ERROR, "unable to clear file [%s]", file_name);
             exit(EXIT_FAILURE);
         }
     }
-}
 
-void save_guild(char *guild_name, int id){
-
-    FILE *file;
-    char file_name[1024]="";
-
-    sprintf(file_name, "%s.gld", guild_name);
-
-    if((file=fopen(file_name, "w"))==NULL){
-        printf("guild file %s\n", file_name);
-        perror("cannot find file");
-        exit(EXIT_FAILURE);
-    }
-
-   if(!fprintf(file, "%s\n%i\n%i\n%i\n%i\n%i",
-            guilds.guild[id]->guild_tag,
-            guilds.guild[id]->tag_colour,
-            guilds.guild[id]->log_on_notification_colour,
-            guilds.guild[id]->log_off_notification_colour,
-            guilds.guild[id]->guild_chan_text_colour,
-            guilds.guild[id]->guild_chan_number
-        )){
-        printf("guild file %s\n", file_name);
-        perror("problem saving data to file in function save_guild");
-        exit(EXIT_FAILURE);
-    }
-
-    //printf("save guild [%s]\n", guilds.guild[id]->guild_name);
-    fclose(file);
-}
-
-int load_guild(char *file_name, int i){
-
-    FILE *file;
-
-    if((file=fopen(file_name, "r"))==NULL) return NOT_FOUND;
-
-    if(!fscanf(file, "%s %i %i %i %i %i",
-            guilds.guild[i]->guild_tag,
-            &guilds.guild[i]->tag_colour,
-            &guilds.guild[i]->log_on_notification_colour,
-            &guilds.guild[i]->log_off_notification_colour,
-            &guilds.guild[i]->guild_chan_text_colour,
-            &guilds.guild[i]->guild_chan_number
-        )){
-        printf("guild file %s\n", file_name);
-        perror("data missing from file");
-        exit(EXIT_FAILURE);
-    }
-
-    fclose(file);
-
-    return FOUND;
+    log_event2(EVENT_INITIALISATION, "clearing file [%s]", file_name);
 }
 
 int load_map(int id){
 
     FILE *file;
 
-    unsigned char bytes[4];
+    unsigned char byte[4];
     char elm_filename[80]="";
 
     int h_tiles=0, v_tiles=0;
@@ -108,36 +57,36 @@ int load_map(int id){
     extract_file_name(maps.map[id]->elm_filename, elm_filename);
 
     if((file=fopen(elm_filename, "r"))==NULL) {
-        printf("filename [%s]\n", elm_filename);
-        perror("file missing in function load_map");
+
+        log_event2(EVENT_ERROR, "unable to open file [%s] in function load_map: module files.c", elm_filename);
         exit(EXIT_FAILURE);
     }
 
     //read file identification bytes (should = elmf)
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem loading file identification bytes in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read identification bytes for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    if(bytes[0]!='e' || bytes[1]!='l' || bytes[2]!='m' || bytes[3]!='f'){
-        printf("filename [%s] identification bytes are %c %c %c %c\n", elm_filename, bytes[0], bytes[1], bytes[2], bytes[3]);
-        perror("incorrect file identification bytes. Should = 'elmf'");
+    if(byte[0]!='e' || byte[1]!='l' || byte[2]!='m' || byte[3]!='f'){
+
+        log_event2(EVENT_ERROR, "identification bytes [%i%i%i%i] should = 'elmf' in file [%s] in function load_map:module files.c", elm_filename, byte[0], byte[1], byte[2], byte[3]);
         exit (EXIT_FAILURE);
     }
 
     //read horizontal tile count
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading horizontal tile count in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read horizontal tile count for file [%s] in file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    h_tiles=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    h_tiles=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
 
     if(h_tiles<MIN_MAP_AXIS) {
-        printf("file name [%s] horizontal tiles %i\n", maps.map[id]->elm_filename, h_tiles);
-        perror("map axis is too small");
+
+        log_event2(EVENT_ERROR, "horizontal tile count [%i] is less than MIN_MAP_AXIS [%i] in file [%s] in function load_map: module files.c", h_tiles, MIN_MAP_AXIS, elm_filename);
         exit(EXIT_FAILURE);
     }
     //printf("horizontal tiles %i\n", h_tiles);
@@ -148,84 +97,84 @@ int load_map(int id){
     maps.map[id]->map_axis=h_tiles*6;
 
     //read vertical tile count
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading vertical tile count in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read vertical tile count for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    v_tiles=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    v_tiles=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
     //printf("vertical tiles %i\n", j);
 
     /* Because we assume that maps will always be a perfect square, if vertical tiles do not equal
     the number of horizontal tiles, we need to flag it as a serious problem */
     if(maps.map[id]->map_axis/6!=v_tiles){
-        printf("filename [%s]\n", elm_filename);
-        perror ("map is not a perfect square in function load_map");
+
+        log_event2(EVENT_ERROR, "horizontal tile count [%i] unequal to vertical tile count [%i] in file [%s]", h_tiles, v_tiles, elm_filename);
         exit (EXIT_FAILURE);
     }
 
     //read tile map offset
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading tile map offset in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read tile map offset for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    tile_map_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    tile_map_offset=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
     //printf("tile map offset %i\n", tile_map_offset);
 
     // We assume that tile map offset will always be 124 bytes otherwise our map data will be loaded incorrectly
     if(tile_map_offset!=ELM_FILE_HEADER_LEN){
-        printf("filename [%s] map header size [%i]\n", elm_filename, tile_map_offset);
-        perror ("unexpected map header size (should be 124) in function load_map");
+
+        log_event2(EVENT_ERROR, "file header size [%i] unequal to ELM_FILE_HEADER_LEN [%i] for file [%s] in function load_map: module files.c", elm_filename, tile_map_offset, ELM_FILE_HEADER_LEN);
         exit (EXIT_FAILURE);
     }
 
     //read height map offset
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading height map offset in function");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read height map offset for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    height_map_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    height_map_offset=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
     //printf("height map offset %i\n", height_map_offset);
 
     //read 3d object structure length
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading 3d object structure length in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read threed object structure length for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    maps.map[id]->threed_object_structure_len=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    maps.map[id]->threed_object_structure_len=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
     //printf("3d object structure length %i\n", maps.map[id]->threed_object_structure_len);
 
     //read 3d object count
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading 3d object count in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read threed object count in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    maps.map[id]->threed_object_count=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    maps.map[id]->threed_object_count=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
     //printf("3d object count %i\n",  maps.map[id]->threed_object_count);
 
     //read 3d object offset
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading 3d object offset in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read threed object offset for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    threed_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    threed_object_offset=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
     //printf("3d object offset %i\n", threed_object_offset);
 
     //read 2d object structure length
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading 2d object structure len in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read twod object structure length for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -233,9 +182,9 @@ int load_map(int id){
     //printf("2d object structure len %i\n", twod_object_structure_len);
 
     //read 2d object count
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading 2d object count in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read twod object count for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -243,19 +192,19 @@ int load_map(int id){
     //printf("2d object count %i\n", twod_object_count);
 
     //read 2d object offset
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading 2d object offset in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read twod object offset for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    twod_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    twod_object_offset=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
     //printf("2d object offset %i\n", twod_object_offset);
 
     //read lights structure length
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading lights structure length in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read lights structure length for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -263,9 +212,9 @@ int load_map(int id){
     //printf("lights structure length %i\n", j);
 
     //read lights count
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading lights count in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read lights count for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -273,61 +222,61 @@ int load_map(int id){
     //printf("lights count %i\n", j);
 
     //read lights offset
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading lights offset in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read lights offset for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    lights_object_offset=Uint32_to_dec(bytes[0], bytes[1], bytes[2], bytes[3]);
+    lights_object_offset=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
     //printf("lights offset %i\n", lights_object_offset);
 
     //read dungeon flag
-    if(fread(bytes, 1, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading dungeon byte in function load_map");
+    if(fread(byte, 1, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read dungeon flag for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
     //printf("dungeon flag %i\n", bytes[0]);
 
     //read version flag
-    if(fread(bytes, 1, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading file version byte in function load_map");
+    if(fread(byte, 1, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read file version byte for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
-    if(bytes[0]!=1){
-        printf("filename [%s] file version byte [%i]\n", elm_filename, bytes[0]);
-        perror("unexpected elm file version (byte should = 1) in function load_map");
+    if(byte[0]!=1){
+
+        log_event2(EVENT_ERROR, "version byte [%i] is unequal to expected version [%i] for file [%s] in function load_map: module files.c", byte[0], ELM_FILE_VERSION, elm_filename);
         exit(EXIT_FAILURE);
     }
 
     //printf("version flag %i\n", bytes[0]);
 
     //read reserved byte 3
-    if(fread(bytes, 1, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading reserved byte 3 in function load_map");
+    if(fread(byte, 1, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 3 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
     //printf("reserved byte 3 %i\n", bytes[0]);
 
     //read reserved byte 4
-    if(fread(bytes, 1, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading reserved byte 4 in function load_map");
+    if(fread(byte, 1, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 4 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
     //printf("reserved byte 4 %i\n", bytes[0]);
 
     //read ambient red
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading ambient red in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read ambient red for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -335,9 +284,9 @@ int load_map(int id){
     //printf("ambient red %f\n", (float)j);
 
     //read ambient green
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading ambient green in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read ambient green for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -345,9 +294,9 @@ int load_map(int id){
     //printf("ambient green %f\n", (float)j);
 
     //read ambient blue
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading ambient blue in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read ambient blue for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -355,9 +304,9 @@ int load_map(int id){
     //printf("ambient blue %f\n", (float)j);
 
     //read particles structure len
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading particules structure length in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read particles structure length for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -365,9 +314,9 @@ int load_map(int id){
     //printf("particles structure len %i\n", j);
 
     //read particles count
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading particules count in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read particles count for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -375,9 +324,9 @@ int load_map(int id){
     //printf("particles count %i\n", j);
 
     //read particles offset
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading particules offset in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read particles offset for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -385,9 +334,9 @@ int load_map(int id){
     //printf("particles offset %i\n", j);
 
     //read clusters offset
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading clusters offset in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read clusters offset for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -395,9 +344,9 @@ int load_map(int id){
     //printf("clusters offset %i\n", j);
 
     //read reserved 9
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading res 9 in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 9 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -405,9 +354,9 @@ int load_map(int id){
     //printf("res 9 %i\n", j);
 
     //read reserved 10
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading res 10 in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 10 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -415,9 +364,9 @@ int load_map(int id){
     //printf("res 10 %i\n", j);
 
     //read reserved 11
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading res 11 in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 11 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -425,9 +374,9 @@ int load_map(int id){
     //printf("res 11 %i\n", j);
 
     //read reserved 12
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading res 12 in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 12 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -435,9 +384,9 @@ int load_map(int id){
     //printf("res 12 %i\n", j);
 
     //read reserved 13
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading res 13 in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 13 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -445,9 +394,9 @@ int load_map(int id){
     //printf("res 13 %i\n", j);
 
     //read reserved 14
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading res 14 in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 14 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -455,9 +404,9 @@ int load_map(int id){
     //printf("res 14 %i\n", j);
 
     //read reserved 15
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading res 15 in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 15 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -465,9 +414,9 @@ int load_map(int id){
     //printf("res 15 %i\n", j);
 
     //read reserved 16
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading res 16 in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 16 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -475,9 +424,9 @@ int load_map(int id){
     //printf("res 16 %i\n", j);
 
     //read reserved 17
-    if(fread(bytes, 4, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading res 17 in function load_map");
+    if(fread(byte, 4, 1, file)!=1){
+
+        log_event2(EVENT_ERROR, "unable to read reserved byte 17 for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -494,16 +443,16 @@ int load_map(int id){
     tile_map_size=height_map_offset-tile_map_offset;
 
     if(tile_map_size>TILE_MAP_MAX) {
-        printf("file name [%s] tile map size %i\n",  maps.map[id]->elm_filename, tile_map_size);
-        perror("tile map exceeds maximum size in function load_map");
+
+        log_event2(EVENT_ERROR, "tile map size [%i] exceeds maximum [i] for file [%s] in function load_map: module files.c", tile_map_size, TILE_MAP_MAX, elm_filename);
         exit(EXIT_FAILURE);
     }
 
     maps.map[id]->tile_map_size=tile_map_size;
 
      if(fread(maps.map[id]->tile_map, tile_map_size, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading tile map in function load_map");
+
+        log_event2(EVENT_ERROR, "unable to read tile map in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -517,16 +466,16 @@ int load_map(int id){
     height_map_size=threed_object_offset-height_map_offset;
 
     if(height_map_size>HEIGHT_MAP_MAX) {
-        printf("file name [%s] height map size %i\n", maps.map[id]->elm_filename, height_map_size);
-        perror("height map exceeds maximum size in function load_map");
+
+        log_event2(EVENT_ERROR, "height map size [%i] exceeds maximum [%i] for file [%s] in function load_map: module files.c", height_map_size, HEIGHT_MAP_MAX, elm_filename);
         exit(EXIT_FAILURE);
     }
 
     maps.map[id]->height_map_size=height_map_size;
 
     if(fread(maps.map[id]->height_map, height_map_size, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading height map in function load_map");
+
+        log_event2(EVENT_ERROR, "unable to read height map in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -539,17 +488,16 @@ int load_map(int id){
     threed_object_map_size=twod_object_offset-threed_object_offset;
 
     if(threed_object_map_size>THREED_OBJECT_MAP_MAX) {
-        printf("file name [%s] 3d object map size %i\n", maps.map[id]->elm_filename, threed_object_map_size);
-        printf("threed map size %i\n", threed_object_map_size);
-        perror("3d object map exceeds maximum size in function load_map");
+
+        log_event2(EVENT_ERROR, "threed object map size [%i] exceeds maximum [%i] for file [%s] in function load_map: module files.c", threed_object_map_size, THREED_OBJECT_MAP_MAX, elm_filename);
         exit(EXIT_FAILURE);
     }
 
     maps.map[id]->threed_object_map_size=threed_object_map_size;
 
     if(fread(maps.map[id]->threed_object_map, threed_object_map_size, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading 3d object map in function load_map");
+
+        log_event2(EVENT_ERROR, "unable to read threed object map for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 
@@ -583,17 +531,16 @@ int load_map(int id){
     twod_object_map_size=lights_object_offset-twod_object_offset;
 
     if(twod_object_map_size>TWOD_OBJECT_MAP_MAX) {
-        printf("file name [%s] 2d object map size %i\n", maps.map[id]->elm_filename, twod_object_map_size);
-        printf("twod map size %i\n", twod_object_map_size);
-        perror("2d object map exceeds maximum size in function load_map");
+
+        log_event2(EVENT_ERROR, "twod object map size [%i] exceeds maximum [%i] for file [%s] in function load_map: module files.c", twod_object_map_size, TWOD_OBJECT_MAP_MAX, elm_filename);
         exit(EXIT_FAILURE);
     }
 
     maps.map[id]->twod_object_map_size=twod_object_map_size;
 
     if(fread(maps.map[id]->twod_object_map, twod_object_map_size, 1, file)!=1){
-        printf("filename [%s]\n", elm_filename);
-        perror ("problem reading 2d object map in function load_map");
+
+        log_event2(EVENT_ERROR, "unable to read twod object map in function load_map: module files.c", elm_filename);
         exit(EXIT_FAILURE);
     }
 
@@ -631,75 +578,6 @@ int load_map(int id){
     return FOUND;
 }
 
-void load_all_guilds(char *file_name){
-
-    FILE *file;
-    char guild_file_name[1024];
-    int i=0;
-
-    //check we have an existing list file and, if not, then create one
-    if((file=fopen(file_name, "r"))==NULL) {
-
-        printf("Can't find guild list file [%s]. Creating new one\n", file_name);
-
-        if((file=fopen(file_name, "w"))==NULL) {
-            perror("unable to create list file in function load_all_guilds");
-            exit(EXIT_FAILURE);
-        }
-
-        //add the guildless guild to the new guild.lst file
-        if(!fprintf(file, "%s\n", "guildless")){
-            perror("unable to save data to file in function load_all_guilds");
-            exit(EXIT_FAILURE);
-        }
-
-        //assume that the gld file for the guildless guild is missing and create new one
-        strcpy(guilds.guild[0]->guild_tag,"");
-        guilds.guild[0]->tag_colour=127;
-        guilds.guild[0]->log_on_notification_colour=127;
-        guilds.guild[0]->log_off_notification_colour=127;
-        guilds.guild[0]->guild_chan_text_colour=127;
-        guilds.guild[0]->guild_chan_number=0;
-        save_guild("guildless", 0);
-
-        //close the file for writing and reopen for reading
-        fclose(file);
-        file=fopen(file_name, "r");
-    }
-
-    printf("\nLoading guild list file [%s]...\n", file_name);
-
-    if((file=fopen(file_name, "r"))) {
-
-        while ((fscanf(file, "%s", guilds.guild[i]->guild_name))!=-1){
-
-            sprintf(guild_file_name, "%s.gld", guilds.guild[i]->guild_name);
-
-            if(load_guild(guild_file_name, i)==FOUND) {
-                printf("loaded [%i] %s\n", i, guilds.guild[i]->guild_name);
-            }
-            else{
-                printf("file name %s\n", guild_file_name);
-                perror("missing file in function load_all_guilds");
-                exit(EXIT_FAILURE);
-            }
-
-            i++;
-
-            if(i==guilds.max){
-                perror("maximum game guilds exceeded in function load_all_guilds");
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
-
-    printf("[%i] guilds were loaded\n", i);
-
-    guilds.count=i;
-
-    fclose(file);
-}
-
 int get_file_size(char *file_name){
 
     FILE *file;
@@ -716,27 +594,32 @@ int get_file_size(char *file_name){
     return count;
 }
 
-void log_to_file(char *file_name, char *text) {
+void log_to_file(char *filename, char *text) {
 
     FILE *file;
 
+    //print to console
     #ifdef DEBUG
     printf("%s\n", text);
     #endif
 
-    //check we have an existing list file and, if not, then create one
-    if((file=fopen(file_name, "a"))==NULL) {
+    //attempt to open the file for append
+    if((file=fopen(filename, "a"))==NULL) {
 
-        printf("Can't find file [%s]. Creating new one\n", file_name);
+        //if we don't have an existing list file, create a new one
+        log_event2(EVENT_INITIALISATION, "Unable to find existing file [%s]. Creating new one", filename);
 
-        if((file=fopen(file_name, "a"))==NULL) {
-            perror("unable to create file in function log_to_file");
+        if((file=fopen(filename, "a"))==NULL) {
+
+            log_event2(EVENT_ERROR, "unable to create file [%s] in function log_to_file: module files.c", filename);
             exit(EXIT_FAILURE);
         }
     }
 
+    //attempt to write to the file
     if(!fprintf(file, "%s\n", text)){
-        perror("can't save data to file in function log_to_file");
+
+        log_event2(EVENT_ERROR, "unable to write to file [%s] in function log_to_file: module files.c", filename);
         exit(EXIT_FAILURE);
     }
 
@@ -759,32 +642,32 @@ void log_event(int event_type, char *text_in){
     switch(event_type){
 
         case EVENT_NEW_CHAR:
-            strcpy(file_name, CHARACTER_LOG);
+            strcpy(file_name, CHARACTER_LOG_FILE_NAME);
             sprintf(text_out, "[%s][%s] New Character Created - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_ERROR:
-            strcpy(file_name, ERROR_LOG);
+            strcpy(file_name, ERROR_LOG_FILE_NAME);
             sprintf(text_out, "[%s][%s] Error - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_SESSION:
-            strcpy(file_name, SESSION_LOG);
+            strcpy(file_name, SESSION_LOG_FILE_NAME);
             sprintf(text_out, "[%s][%s] session - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_CHAT:
-            strcpy(file_name, CHAT_LOG);
+            strcpy(file_name, CHAT_LOG_FILE_NAME);
             sprintf(text_out, "[%s][%s] Event - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         case EVENT_MOVE_ERROR:
-            strcpy(file_name, MOVE_LOG);
+            strcpy(file_name, MOVE_LOG_FILE_NAME);
             sprintf(text_out, "[%s][%s] Move-error - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
         default:
-            strcpy(file_name, ERROR_LOG);
+            strcpy(file_name, ERROR_LOG_FILE_NAME);
             sprintf(text_out, "[%s][%s] Unknown Event - %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
@@ -793,10 +676,91 @@ void log_event(int event_type, char *text_in){
     log_to_file(file_name, text_out);
 }
 
+void log_event2(int event_type, char *fmt, ...){
+
+    char file_name[80]="";
+    char text_in[1024]="";
+    char text_out[1024]="";
+
+    char time_stamp_str[9]="";
+    char date_stamp_str[11]="";
+
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(text_in, fmt, args);
+
+    get_time_stamp_str(time(NULL), time_stamp_str);
+    get_date_stamp_str(time(NULL), date_stamp_str);
+
+    switch(event_type){
+
+        case EVENT_NEW_CHAR:
+            strcpy(file_name, CHARACTER_LOG_FILE_NAME);
+            sprintf(text_out, "[%s][%s] Character - %s", date_stamp_str, time_stamp_str, text_in);
+        break;
+
+        case EVENT_ERROR:
+            strcpy(file_name, ERROR_LOG_FILE_NAME);
+            sprintf(text_out, "[%s][%s] Error - %s", date_stamp_str, time_stamp_str, text_in);
+        break;
+
+        case EVENT_SESSION:
+            strcpy(file_name, SESSION_LOG_FILE_NAME);
+            sprintf(text_out, "[%s][%s] session - %s", date_stamp_str, time_stamp_str, text_in);
+        break;
+
+        case EVENT_CHAT:
+            strcpy(file_name, CHAT_LOG_FILE_NAME);
+            sprintf(text_out, "[%s][%s] Event - %s", date_stamp_str, time_stamp_str, text_in);
+        break;
+
+        case EVENT_MOVE_ERROR:
+            strcpy(file_name, MOVE_LOG_FILE_NAME);
+            sprintf(text_out, "[%s][%s] Move-error - %s", date_stamp_str, time_stamp_str, text_in);
+        break;
+
+        case EVENT_INITIALISATION:
+            strcpy(file_name, INITIALISATION_LOG_FILE_NAME);
+            sprintf(text_out, "[%s][%s] %s", date_stamp_str, time_stamp_str, text_in);
+        break;
+
+        default:
+            strcpy(file_name, ERROR_LOG_FILE_NAME);
+            sprintf(text_out, "[%s][%s] Unknown Event - %s", date_stamp_str, time_stamp_str, text_in);
+        break;
+
+    }
+
+    va_end(args);
+
+    log_to_file(file_name, text_out);
+}
+
+void create_configuration_file(char *file_name, char *file_format_str){
+
+    FILE *file;
+    char dummy=' ';
+    log_event2(EVENT_INITIALISATION, "Creating configuration file [%s]", file_name);
+
+    //create the file
+    if((file=fopen(file_name, "w"))==NULL) {
+
+            log_event2(EVENT_ERROR, "unable to open file [%s] in function create_configuration_file: module files.c", file_name);
+            exit(EXIT_FAILURE);
+    }
+
+    //write the format header information to the file
+    fprintf(file, file_format_str, dummy); //the dummy prevents the compiler warning that file_format is not string literal
+    fclose(file);
+
+    //log the result and stop the server
+    log_event2(EVENT_INITIALISATION, "You need to edit the file [%s] with your data", file_name);
+    exit(EXIT_FAILURE);
+}
+
 void load_database_item_table_data(char *file_name){
 
     FILE *file;
-    int j=0;
     int image_id=0;
     char item_name[80]="";
     int harvestable=0;
@@ -811,211 +775,146 @@ void load_database_item_table_data(char *file_name){
     char buf[1024]="";
 
     //check we have an existing file and, if not, then create one
-    if((file=fopen(file_name, "r"))==NULL) {
-
-        printf("Can't find item file [%s]. Creating new one\n", file_name);
-
-        if((file=fopen(file_name, "w"))==NULL) {
-            perror("unable to create item file in function load_database_item_table");
-            exit(EXIT_FAILURE);
-        }
-
-        //add the guidance lines to the text file
-        fprintf(file, "UNOFFLANDZ Item data file\n");
-        fprintf(file, "\n");
-        fprintf(file, "Image Item                          Cycle                   Food  Food     Organic Vegetal\n");
-        fprintf(file, "ID    Name              Harvestable Amount EMU Interval EXP Value Cooldown Nexus   Nexus  \n");
-        fprintf(file, "------------------------------------------------------------------------------------------\n");
-
-        //as there's no data to be read, close the file and exit function
-        fclose(file);
-
-        printf("Now edit the file [%s] with your item data\n", file_name);
-        exit(EXIT_FAILURE);
-    }
+    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, ITEM_DATA_FILE_FORMAT);
 
     //load data from the text file
-    printf("\nLoading data to database item_table\n");
+    log_event2(EVENT_INITIALISATION, "Loading data to database item_table...");
 
-    if((file=fopen(file_name, "r"))) {
+    //skip notes
+    do{
 
-        //skip 5 lines before reading so we jump past the opening file comments
-        for(j=0; j<5; j++){
+        if(fgets(buf, 1024, file)==NULL){
 
-            if(fgets(buf, 1024, file)==NULL){
-                printf("Item file [%s] has incorrect format\n", file_name);
-                exit(EXIT_FAILURE);
-            }
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_item_data_table: module files.c", file_name);
+            exit(EXIT_FAILURE);
         }
+    }
+    while(buf[0]==ASCII_HASH);
 
-        //scan the entries and load to database
-        while (fscanf(file, "%i %s %i %i %i %i %i %i %i %i %i\n",
-                       &image_id,
-                       item_name,
-                       &harvestable,
-                       &cycle_amount,
-                       &emu,
-                       &interval,
-                       &exp,
-                       &food_value,
-                       &food_cooldown,
-                       &organic_nexus,
-                       &vegetal_nexus)!=-1){
+    //load entries to database
+    while (fscanf(file, "%i %s %i %i %i %i %i %i %i %i %i\n",
+            &image_id,
+            item_name,
+            &harvestable,
+            &cycle_amount,
+            &emu,
+            &interval,
+            &exp,
+            &food_value,
+            &food_cooldown,
+            &organic_nexus,
+            &vegetal_nexus)!=-1){
 
-            //remove underscores which are needed for fscanf to ignore spaces in item name
-            str_remove_underscores(item_name);
+        //remove underscores which are needed for fscanf to ignore spaces in item name
+        str_remove_underscores(item_name);
 
-            //add item to database
-            add_item(image_id, item_name, harvestable, cycle_amount, emu, interval, exp, food_value, food_cooldown,
-                     organic_nexus,
-                     vegetal_nexus);
+        //add item to database
+        add_item(image_id, item_name, harvestable, cycle_amount, emu, interval, exp, food_value, food_cooldown,
+                organic_nexus,
+                vegetal_nexus);
 
-            //zero items
-            image_id=0;
-            strcpy(item_name, "");
-            harvestable=0;
-            cycle_amount=0;
-            emu=0;
-            interval=0;
-            exp=0;
-            food_value=0;
-            food_cooldown=0;
-            organic_nexus=0;
-            vegetal_nexus=0;
-        }
+        //zero variables
+        image_id=0;
+        strcpy(item_name, "");
+        harvestable=0;
+        cycle_amount=0;
+        emu=0;
+        interval=0;
+        exp=0;
+        food_value=0;
+        food_cooldown=0;
+        organic_nexus=0;
+        vegetal_nexus=0;
     }
 
     fclose(file);
+
+    log_event2(EVENT_INITIALISATION, "---");
 }
 
 void load_database_threed_object_table_data(char *file_name){
 
     FILE *file;
-    int j=0;
-
     int image_id=0;
     char e3d_file_name[80]="";
     char buf[1024]="";
 
     //check we have an existing file and, if not, then create one
-    if((file=fopen(file_name, "r"))==NULL) {
-
-        if((file=fopen(file_name, "w"))==NULL) {
-            perror("unable to create item file in function load_database_threed_object_table_data");
-            exit(EXIT_FAILURE);
-        }
-
-        //add the guidance lines to the text file
-        fprintf(file, "UNOFFLANDZ 3d object data file\n");
-        fprintf(file, "\n");
-        fprintf(file, "Image e3d\n");
-        fprintf(file, "ID    File Name\n");
-        fprintf(file, "---------------\n");
-
-        //as there's no data to be read, close the file and exit function
-        fclose(file);
-
-        printf("Now edit the file [%s] with your 3d object data\n", file_name);
-        exit(EXIT_FAILURE);
-    }
+    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, THREED_OBJECT_DATA_FILE_FORMAT);
 
     //load data from the text file
-    printf("\nLoading data to database item_table\n");
+    log_event2(EVENT_INITIALISATION, "Loading data to database threed_object table...");
 
-    if((file=fopen(file_name, "r"))) {
+    //skip notes
+    do{
 
-        //skip 5 lines before reading so we jump past the opening file comments
-        for(j=0; j<5; j++){
+        if(fgets(buf, 1024, file)==NULL){
 
-            if(fgets(buf, 1024, file)==NULL){
-                printf("Item file [%s] has incorrect format\n", file_name);
-                exit(EXIT_FAILURE);
-            }
-        };
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_item_data_table: module files.c", file_name);
+            exit(EXIT_FAILURE);
+        }
+    }
+    while(buf[0]==ASCII_HASH);
 
-        //scan the entries and load to database
-        while (fscanf(file, "%i %s\n", &image_id, e3d_file_name)!=-1){
+    //scan the entries and load to database
+    while (fscanf(file, "%i %s\n", &image_id, e3d_file_name)!=-1){
 
-            //add 3d object to database threed_object_table
-            add_threed_object(e3d_file_name, image_id);
+        add_threed_object(e3d_file_name, image_id);
 
-            //zero items
-            image_id=0;
-            strcpy(e3d_file_name, "");
-         }
+        //zero variables
+        image_id=0;
+        strcpy(e3d_file_name, "");
     }
 
     fclose(file);
+
+    log_event2(EVENT_INITIALISATION, "---");
 }
 
 void load_database_map_table_data(char *file_name){
 
     FILE *file;
-    int j=0;
     int map_id;
     char map_name[80]="";
     char elm_file_name[80]="";
     char buf[1024]="";
 
     //check we have an existing file and, if not, then create one
-    if((file=fopen(file_name, "r"))==NULL) {
-
-        if((file=fopen(file_name, "w"))==NULL) {
-            perror("unable to create item file in function load_database_map_table_data");
-            exit(EXIT_FAILURE);
-        }
-
-        //add the guidance lines to the text file
-        fprintf(file, "UNOFFLANDZ map data file\n");
-        fprintf(file, "\n");
-        fprintf(file, "Map   Map         ELM");
-        fprintf(file, "ID    Name        File name\n");
-        fprintf(file, "---------------------------------\n");
-
-        //as there's no data to be read, close the file and exit function
-        fclose(file);
-
-        printf("Now edit the file [%s] with your map data\n", file_name);
-        exit(EXIT_FAILURE);
-    }
+    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, MAP_DATA_FILE_FORMAT);
 
     //load data from the text file
-    printf("\nLoading data to database map_table\n");
+    log_event2(EVENT_INITIALISATION, "Loading data to database map_table...");
 
-    if((file=fopen(file_name, "r"))) {
+    //skip notes
+    do{
 
-        //skip 5 lines before reading so we jump past the opening file comments
-        for(j=0; j<5; j++){
+        if(fgets(buf, 1024, file)==NULL){
 
-            if(fgets(buf, 1024, file)==NULL){
-                printf("Item file [%s] has incorrect format\n", file_name);
-                exit(EXIT_FAILURE);
-            }
-        };
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_map_data_table: module files.c", file_name);
+            exit(EXIT_FAILURE);
+        }
+    }
+    while(buf[0]==ASCII_HASH);
 
-        //scan the entries and load to database
-        while (fscanf(file, "%i %s %s\n",
-                       &map_id,
-                       map_name,
-                       elm_file_name)!=-1){
+    //scan the entries and load to database
+    while (fscanf(file, "%i %s %s\n", &map_id, map_name, elm_file_name)!=-1){
 
-            //add 3d object to database threed_object_table
-            add_map(map_id, map_name, elm_file_name);
+        add_map(map_id, map_name, elm_file_name);
 
-            //zero items
-            map_id=0;
-            strcpy(map_name, "");
-            strcpy(elm_file_name, "");
-         }
+        //zero variables
+        map_id=0;
+        strcpy(map_name, "");
+        strcpy(elm_file_name, "");
     }
 
     fclose(file);
+
+    log_event2(EVENT_INITIALISATION, "---");
 }
 
 void load_database_channel_table_data(char *file_name){
 
     FILE *file;
-    int j=0;
     int channel_id=0;
     int channel_type=0;
     char password[80]="";
@@ -1024,72 +923,50 @@ void load_database_channel_table_data(char *file_name){
     char buf[1024]="";
 
     //check we have an existing file and, if not, then create one
-    if((file=fopen(file_name, "r"))==NULL) {
+    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, CHANNEL_DATA_FILE_FORMAT);
 
-        if((file=fopen(file_name, "w"))==NULL) {
-            perror("unable to create channel file in function load_database_channel_table_data");
+    //load data from the text file
+    log_event2(EVENT_INITIALISATION, "Loading data to database channel_table...");
+
+    //skip notes
+    do{
+
+        if(fgets(buf, 1024, file)==NULL){
+
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_channel_data_table: module files.c", file_name);
             exit(EXIT_FAILURE);
         }
 
-        //add the guidance lines to the text file
-        fprintf(file, "UNOFFLANDZ channel data file\n");
-        fprintf(file, "\n");
-        fprintf(file, "Channel Channel  Channel    Channel       Channel\n");
-        fprintf(file, "ID      Type     Password   Name          Description\n");
-        fprintf(file, "-----------------------------------------------------\n");
-
-        //as there's no data to be read, close the file and exit function
-        fclose(file);
-
-        printf("Now edit the file [%s] with your channel data\n", file_name);
-        exit(EXIT_FAILURE);
     }
+    while(buf[0]==ASCII_HASH);
 
-    //load data from the text file
-    printf("\nLoading data to database channel_table\n");
+    //scan the entries and load to database
+    while (fscanf(file, "%i %i %s %s %s\n", &channel_id, &channel_type, password, channel_name, channel_description)!=-1){
 
-    if((file=fopen(file_name, "r"))) {
+        //remove underscores which are needed for fscanf to ignore spaces in channel name and description
+        str_remove_underscores(channel_name);
+        str_remove_underscores(channel_description);
 
-        //skip 5 lines before reading so we jump past the opening file comments
-        for(j=0; j<5; j++){
+        //add channel to database channel_table
+        // second parameter is owner_id 0=system
+        add_channel(channel_id, 0, channel_type, password, channel_name, channel_description);
 
-            if(fgets(buf, 1024, file)==NULL){
-                printf("Channel file [%s] has incorrect format\n", file_name);
-                exit(EXIT_FAILURE);
-            }
-        };
-
-        //scan the entries and load to database
-        while (fscanf(file, "%i %i %s %s %s\n",
-                       &channel_id,
-                       &channel_type,
-                       password,
-                       channel_name,
-                       channel_description)!=-1){
-
-            //remove underscores which are needed for fscanf to ignore spaces in channel name and description
-            str_remove_underscores(channel_name);
-            str_remove_underscores(channel_description);
-
-            //add channel to database channel_table
-            add_channel(channel_id, 0, channel_type, password, channel_name, channel_description);
-
-            //zero channels
-            channel_id=0;
-            channel_type=0;
-            strcpy(password, "");
-            strcpy(channel_name, "");
-            strcpy(channel_description, "");
-         }
+        //zero variables
+        channel_id=0;
+        channel_type=0;
+        strcpy(password, "");
+        strcpy(channel_name, "");
+        strcpy(channel_description, "");
     }
 
     fclose(file);
+
+    log_event2(EVENT_INITIALISATION, "---");
 }
 
 void load_database_race_table_data(char *file_name){
 
     FILE *file;
-    int j=0;
     int race_id=0;
     char race_name[20]="";
     char race_description[160]="";
@@ -1099,76 +976,151 @@ void load_database_race_table_data(char *file_name){
     float visual_proximity_multiplier=0.0f;
     int initial_chat_proximity=0;
     float chat_proximity_multiplier=0.0f;
+    float initial_night_vis=0;
+    float night_vis_multiplier=0.0f;
     char buf[1024]="";
 
     //check we have an existing file and, if not, then create one
-    if((file=fopen(file_name, "r"))==NULL) {
-
-        if((file=fopen(file_name, "w"))==NULL) {
-            perror("unable to create race file in function load_database_race_table_data");
-            exit(EXIT_FAILURE);
-        }
-
-        //add the guidance lines to the text file
-        fprintf(file, "UNOFFLANDZ race data file\n");
-        fprintf(file, "\n");
-        fprintf(file, "Race Race          Race              Initial Emu        Initial Visual Visual Proximity Initial Chat Chat Proximity\n");
-        fprintf(file, "ID   Name          Description       Emu     Multiplier Proximity      Multiplier       Proximity    Multiplier    \n");
-        fprintf(file, "-------------------------------------------------------------------------------------------------------------------\n");
-
-        //as there's no data to be read, close the file and exit function
-        fclose(file);
-
-        printf("Now edit the file [%s] with your race data\n", file_name);
-        exit(EXIT_FAILURE);
-    }
+    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, RACE_DATA_FILE_FORMAT);
 
     //load data from the text file
-    printf("\nLoading data to database race table\n");
+    log_event2(EVENT_INITIALISATION, "Loading data to database race_table...");
 
-    if((file=fopen(file_name, "r"))) {
+    //skip notes
+    do{
 
-        //skip 5 lines before reading so we jump past the opening file comments
-        for(j=0; j<5; j++){
+        if(fgets(buf, 1024, file)==NULL){
 
-            if(fgets(buf, 1024, file)==NULL){
-                printf("race file [%s] has incorrect format\n", file_name);
-                exit(EXIT_FAILURE);
-            }
-        };
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_race_data_table: module files.c", file_name);
+            exit(EXIT_FAILURE);
+        }
+    }
+    while(buf[0]==ASCII_HASH);
 
-        //scan the entries and load to database
-        while (fscanf(file, "%i %s %s %i %f %i %f %i %f\n",
+    //scan the entries and load to database
+    while (fscanf(file, "%i %s %s %i %f %i %f %i %f %f %f\n",
                        &race_id,
                        race_name,
                        race_description,
+
                        &initial_emu,
                        &emu_multiplier,
+
                        &initial_visual_proximity,
                        &visual_proximity_multiplier,
+
                        &initial_chat_proximity,
-                       &chat_proximity_multiplier
+                       &chat_proximity_multiplier,
+
+                       &initial_night_vis,
+                       &night_vis_multiplier
                        )!=-1){
 
-            //remove underscores which are needed for fscanf to ignore spaces in channel name and description
-            str_remove_underscores(race_name);
-            str_remove_underscores(race_description);
 
-            //add race to database race_table
-            add_race(race_id, race_name, race_description, initial_emu, emu_multiplier);
+        //remove underscores which are needed for fscanf to ignore spaces in channel name and description
+        str_remove_underscores(race_name);
+        str_remove_underscores(race_description);
 
-            //zero channels
-            race_id=0;
-            strcpy(race_name, "");
-            strcpy(race_description, "");
-            initial_emu=0;
-            emu_multiplier=0.0f;
-            initial_visual_proximity=0;
-            visual_proximity_multiplier=0.0f;
-            initial_chat_proximity=0;
-            chat_proximity_multiplier=0.0f;
-        }
+        //add race to database race_table
+        add_race(race_id, race_name, race_description, initial_emu, emu_multiplier,
+                     initial_visual_proximity,
+                     visual_proximity_multiplier,
+                     initial_chat_proximity,
+                     chat_proximity_multiplier,
+                     initial_night_vis,
+                     night_vis_multiplier
+                     );
+
+        //zero variables
+        race_id=0;
+        strcpy(race_name, "");
+        strcpy(race_description, "");
+        initial_emu=0;
+        emu_multiplier=0.0f;
+        initial_visual_proximity=0;
+        visual_proximity_multiplier=0.0f;
+        initial_chat_proximity=0;
+        chat_proximity_multiplier=0.0f;
+        initial_night_vis=0.0f;
+        night_vis_multiplier=0.0f;
     }
 
     fclose(file);
+
+    log_event2(EVENT_INITIALISATION, "---");
+}
+
+void load_database_guild_table_data(char *file_name){
+
+    FILE *file;
+    int guild_id=0;
+    char guild_tag[4]="";
+    char guild_name[20]="";
+    char guild_description[160]="";
+    int tag_colour=0;
+    int logon_colour=0;
+    int logoff_colour=0;
+    int chan_text_colour=0;
+    int chan_id=0;
+    char buf[1024]="";
+
+    //check we have an existing file and, if not, then create one
+    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, GUILD_DATA_FILE_FORMAT);
+
+    //load data from the text file
+    log_event2(EVENT_INITIALISATION, "Loading data to database guild_table...");
+
+    //skip notes
+    do{
+
+        if(fgets(buf, 1024, file)==NULL){
+
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_guild_data_table: module files.c", file_name);
+            exit(EXIT_FAILURE);
+        }
+    }
+    while(buf[0]==ASCII_HASH);
+
+    //scan the entries and load to database
+    while (fscanf(file, "%i %s %s %s %i %i %i %i %i\n",
+                       &guild_id,
+
+                       guild_tag,
+                       guild_name,
+                       guild_description,
+
+                       &tag_colour,
+                       &logon_colour,
+                       &logoff_colour,
+                       &chan_text_colour,
+
+                       &chan_id
+                      )!=-1){
+
+        //remove underscores which are needed for fscanf to ignore spaces in channel name and description
+        str_remove_underscores(guild_tag);
+        str_remove_underscores(guild_name);
+        str_remove_underscores(guild_description);
+
+        //add guild to database race_table
+        add_guild(guild_id, guild_tag, guild_name, guild_description, tag_colour, logon_colour, logoff_colour,
+                  chan_text_colour,
+                  chan_id);
+
+        //zero variables
+        guild_id=0;
+        strcpy(guild_tag, "");
+        strcpy(guild_name, "");
+        strcpy(guild_description, "");
+
+        tag_colour=0;
+        logon_colour=0;
+        logoff_colour=0;
+        chan_text_colour=0;
+        chan_id=0;
+    }
+
+    fclose(file);
+
+    log_event2(EVENT_INITIALISATION, "---");
 }

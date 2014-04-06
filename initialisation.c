@@ -6,13 +6,43 @@
 #include "database.h"
 #include "files.h"
 
+void create_new_database() {
+
+    //create database tables
+    log_event2(EVENT_INITIALISATION, "New database. Creating tables...");
+
+    create_database_table(CHARACTER_TABLE_SQL);
+    create_database_table(INVENTORY_TABLE_SQL);
+    create_database_table(ITEM_TABLE_SQL);
+    create_database_table(THREED_OBJECT_TABLE_SQL);
+    create_database_table(MAP_TABLE_SQL);
+    create_database_table(CHANNEL_TABLE_SQL);
+    create_database_table(RACE_TABLE_SQL);
+    create_database_table(GUILD_TABLE_SQL);
+
+    log_event2(EVENT_INITIALISATION, "---");
+
+    //populate database tables with initial data
+    load_database_item_table_data(ITEM_DATA_FILE);
+    load_database_threed_object_table_data(THREED_OBJECT_DATA_FILE);
+    load_database_map_table_data(MAP_DATA_FILE);
+    load_database_channel_table_data(CHANNEL_DATA_FILE);
+    load_database_race_table_data(RACE_DATA_FILE);
+    load_database_guild_table_data(GUILD_DATA_FILE);
+
+}
+
 void initialise_logs(){
 
-    clear_file(CHARACTER_LOG);
-    clear_file(ERROR_LOG);
-    clear_file(SESSION_LOG);
-    clear_file(CHAT_LOG);
-    clear_file(MOVE_LOG);
+    //clear initialisation log first, otherwise the log record for its initialisation will be lost
+    clear_file(INITIALISATION_LOG_FILE_NAME);
+
+    clear_file(ERROR_LOG_FILE_NAME);
+    clear_file(CHARACTER_LOG_FILE_NAME);
+    clear_file(SESSION_LOG_FILE_NAME);
+    clear_file(CHAT_LOG_FILE_NAME);
+    clear_file(MOVE_LOG_FILE_NAME);
+    log_event2(EVENT_INITIALISATION, "---");
 }
 
 void initialise_maps(){
@@ -52,6 +82,19 @@ void initialise_races(){
     to change from sqlite to mysql at sometime in the future */
 
     load_races();
+}
+
+void initialise_guilds(){
+    /*function ensures that all database related actions are confined to the database.c module. This makes it easier
+    to change from sqlite to mysql at sometime in the future */
+
+    load_guilds();
+}
+
+void initialise_bag_list(){
+
+    memset(&bag_list, 0, sizeof(bag_list));
+
 }
 
 void initialise_movement_vectors(){

@@ -4,6 +4,7 @@
 #define ASCII_BACKSLASH 47 //used to separate file names from path
 #define ASCII_SPACE 32
 #define ASCII_UNDERSCORE 95 // used to remove underscores from item names
+#define ASCII_HASH 35
 
 // trims space from the right of a string
 void str_trim_right(char *str_in);
