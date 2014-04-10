@@ -25,7 +25,10 @@ void broadcast_channel_event(int chan, int sender_connection, char *text_in);
 
 void broadcast_guild_channel_chat(int guild_id, char *text);
 
-int get_char_visual_proximity(int connection);
+int get_char_visual_range(int connection);
+
+void broadcast_bag_poof(int bag_id, int map_id);
+void broadcast_bag_drop(int bag_id, int map_id);
 
 
 #endif // BROADCAST_H_INCLUDED

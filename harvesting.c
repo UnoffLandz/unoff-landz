@@ -29,11 +29,11 @@ void stop_harvesting(int connection){
 
 void start_harvesting(int connection, int map_object_id){
 
-    int x=0, y=0;
-    int x_diff=0, y_diff=0;
     int slot=0;
     char text_out[80]="";
     int map_id=clients.client[connection]->map_id;
+    int map_axis=maps.map[map_id]->map_axis;
+    int char_tile=clients.client[connection]->map_tile;
 
     //if already harvesting then stop
     if(clients.client[connection]->harvest_flag==TRUE) {
@@ -54,14 +54,8 @@ void start_harvesting(int connection, int map_object_id){
         return;
     }
 
-    //check for harvesting proximity
-    x=clients.client[connection]->map_tile % maps.map[map_id]->map_axis;
-    y=clients.client[connection]->map_tile / maps.map[map_id]->map_axis;
+    if(get_proximity(char_tile, map_object.tile_pos, map_axis) < get_char_visual_range(connection)) {
 
-    x_diff=abs(x-(int)map_object.x);
-    y_diff=abs(y-(int)map_object.y);
-
-    if(x_diff>3 || y_diff>3){
 
         //abort harvesting if item is too far away
         sprintf(text_out, "%cYou are too far away to harvest that item", c_red3+127);
@@ -70,7 +64,7 @@ void start_harvesting(int connection, int map_object_id){
     }
 
     /*record the image id of the item being harvested in the client array so we know what to harvest on each subsequent
-    harvest cycle */
+    harvest cycle without having to continually look it up */
     clients.client[connection]->inventory_image_id=map_object.image_id;
 
     //see if we have this item in the inventory

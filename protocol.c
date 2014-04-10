@@ -31,10 +31,16 @@ static void bag_poof_cb (struct ev_loop *loop, struct ev_timer *ev_bag_timer, in
     (void)(revents);//removes unused parameter warning
     (void)(loop);//removes unused parameter warning
 
+    int bag_id=(int) ev_bag_timer->data;
+    int map_id=bag_list[bag_id].map_id;
+
+    broadcast_bag_poof(bag_id, map_id);
+
+/*
     int i=0;
     int connection=0;
-    int bag=(int) ev_bag_timer->data;
-    int map_id=bag_list[bag].map_id;
+    int char_tile=0, bag_tile=0;
+    int visual_proximity=0;
 
     printf("poofing bag [%i] on map [%i] name [%s]\n", bag, map_id, maps.map[map_id]->map_name);
 
@@ -44,13 +50,20 @@ static void bag_poof_cb (struct ev_loop *loop, struct ev_timer *ev_bag_timer, in
 
         if(clients.client[connection]->status==LOGGED_IN){
 
-            /** add proximity test **/
+            char_tile=clients.client[connection]->map_tile;
+            bag_tile=bag_list[bag].tile_pos;
+            visual_proximity=clients.client[connection]->day_visual_proximity;
 
-            send_destroy_bag(connection, bag);
+            //only send char poof to chars that are within visual proximity of the bag
+            if(get_proximity(char_tile, bag_tile, maps.map[map_id]->map_axis) < visual_proximity) {
+
+                send_destroy_bag(connection, bag);
+            }
         }
     }
 
     bag_list[bag].status=EMPTY;
+*/
 }
 
 void send_server_text(int connection, int channel, char *text){
@@ -330,7 +343,7 @@ void send_actors_to_client(int connection){
     int map_id=clients.client[connection]->map_id;
     int char_tile=clients.client[connection]->map_tile;
     int map_axis=maps.map[map_id]->map_axis;
-    int char_visual_proximity=clients.client[connection]->day_visual_proximity;
+    int char_visual_range=get_char_visual_range(connection);
 
     int other_client_id;
     int other_char_tile;
@@ -344,7 +357,7 @@ void send_actors_to_client(int connection){
         if(connection!=other_client_id){
 
             //restrict to characters within visual proximity
-            if(get_proximity(char_tile, other_char_tile, map_axis)<char_visual_proximity){
+            if(get_proximity(char_tile, other_char_tile, map_axis)<char_visual_range){
 
                 add_new_enhanced_actor_packet(connection, packet, &packet_length);
                 send(connection, packet, packet_length, 0);
@@ -702,20 +715,26 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
     else if(protocol==DROP_ITEM){
 
-        amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
         slot=data[0];
         image_id=clients.client[connection]->client_inventory[slot].image_id;
 
+        amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
+
+        //make sure the amount in the packet is not greater than what is actually in the slot,
+        if(amount>clients.client[connection]->client_inventory[slot].amount) amount=clients.client[connection]->client_inventory[slot].amount;
+
         #ifdef DEBUG
-        printf("DROP_ITEM position [%i] quantity [%i]\n", slot, amount);
+        printf("DROP_ITEM position [%i] drop amount [%i] remaining amount [%i]\n", slot, clients.client[connection]->client_inventory[slot].amount, amount);
         #endif
 
         //deduct item from the slot and send revised inventory to client
-        clients.client[connection]->client_inventory[slot].amount-=amount;
+        clients.client[connection]->client_inventory[slot].amount -= amount;
+        printf("left in slot after drop [%i]\n", clients.client[connection]->client_inventory[slot].amount);
+
         send_get_new_inventory_item(connection, image_id, clients.client[connection]->client_inventory[slot].amount, slot);
 
         //send updated inventory_emu to client
-        clients.client[connection]->inventory_emu += item[image_id].cycle_amount * item[image_id].emu;
+        clients.client[connection]->inventory_emu -= amount * item[image_id].emu;
         send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection]->inventory_emu);
 
         //update char inventory on database
@@ -735,7 +754,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
                 bag_list[i].status=FULL;
 
                 // send new bag to client
-                send_get_new_bag(connection, i);
+                send_get_new_bag(connection, i); /** we need to broadcast this **/
 
                 //set bag timer
                 ev_bag_timer[i].data= (int*) i;

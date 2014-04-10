@@ -25,7 +25,6 @@ void send_here_your_inventory(int connection);
 */
 void send_get_new_inventory_item(int connection, int item_image_id, int amount, int slot);
 
-
 int get_used_inventory_slot(int connection, int image_id);
 
 int get_unused_inventory_slot(int connection);

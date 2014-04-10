@@ -112,7 +112,7 @@ void load_char_data_into_connection(int connection){
     continually recalculate them during actions like moving, mixing, harvesting, or picking up/dropping bags*/
     clients.client[connection]->inventory_emu=character.inventory_emu;
     clients.client[connection]->max_carry_capacity=character.max_carry_capacity;
-    clients.client[connection]->day_visual_proximity=character.day_visual_proximity;
+    //clients.client[connection]->day_visual_proximity=character.day_visual_proximity;
     clients.client[connection]->chat_proximity=character.chat_proximity;
 }
 

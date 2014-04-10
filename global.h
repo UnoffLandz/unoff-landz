@@ -492,9 +492,9 @@ struct client_node_type{
     int inventory_emu;  // saves having to calculate carry capacity each time its tested
     int max_carry_capacity; // saves having to calculate carry capacity each time its tested
 
-    int day_visual_proximity; //saves having to calculate visual proximity each time its tested
+    //int day_visual_proximity; //saves having to calculate visual proximity each time its tested
     int chat_proximity;//saves having to calculate chat proximity each time its tested
-    int night_visual_proximity;//saves having to calculate visual proximity each time its tested
+    //int night_visual_proximity;//saves having to calculate visual proximity each time its tested
 
     int material_pts;
     int max_material_pts;
@@ -639,9 +639,9 @@ struct character_type{
     int inventory_emu;  // saves having to calculate carry capacity each time its tested
     int max_carry_capacity; // saves having to calculate carry capacity each time its tested
 
-    int day_visual_proximity; // proximity for display of other actors/creatures
+    //int day_visual_proximity; // proximity for display of other actors/creatures
     int chat_proximity; //  proximity for local messages from other actors
-    int night_visual_proximity; //
+    //int night_visual_proximity; //
 
     int physique;
     int vitality;

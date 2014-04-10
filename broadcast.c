@@ -8,8 +8,9 @@
 #include "protocol.h"
 #include "chat.h"
 #include "string_functions.h" //needed for ASCII_SPACE
+#include "character_inventory.h"
 
-int get_char_visual_proximity(int connection){
+int get_char_visual_range(int connection){
 
     int race_id=clients.client[connection]->char_type;
     int initial_visual_proximity=race[race_id].initial_visual_proximity;
@@ -18,24 +19,67 @@ int get_char_visual_proximity(int connection){
     return initial_visual_proximity + (visual_proximity_multiplier * clients.client[connection]->vitality);
 }
 
-int get_proximity(int tile1, int tile2, int map_axis){
+int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
 
-    int tile1_x=tile1 % map_axis;
-    int tile1_y=tile1 / map_axis;
-    int tile2_x=tile2 % map_axis;
-    int tile2_y=tile2 / map_axis;
+    int x_diff=abs((tile_pos_1 % map_axis) - (tile_pos_2 % map_axis));
+    int y_diff=abs((tile_pos_1 / map_axis) - (tile_pos_2 / map_axis));
 
-    int x_diff=abs(tile1_x - tile2_x);
-    int y_diff=abs(tile1_y - tile2_y);
+    if(x_diff>y_diff) return x_diff; else return y_diff;
 
-    if(x_diff>y_diff){
-        return x_diff;
+}
+
+void broadcast_bag_drop(int bag_id, int map_id){
+
+    int i=0, j=0;
+    int char_tile=0, bag_tile=0;
+
+    printf("dropping bag [%i] on map [%i] name [%s]\n", bag_id, map_id, maps.map[map_id]->map_name);
+
+    for(i=0; i<maps.map[map_id]->client_list_count; i++){
+
+        j=maps.map[map_id]->client_list[i];
+
+        if(clients.client[j]->status==LOGGED_IN){
+
+            char_tile=clients.client[j]->map_tile;
+            bag_tile=bag_list[bag_id].tile_pos;
+
+            //only send bag drop to chars that are within visual proximity of the bag
+            if(get_proximity(char_tile, bag_tile, maps.map[map_id]->map_axis) < get_char_visual_range(j)) {
+
+                  send_get_new_bag(j, bag_id);
+            }
+        }
     }
-    else{
-        return y_diff;
+
+    bag_list[bag_id].status=FULL;
+}
+
+void broadcast_bag_poof(int bag_id, int map_id){
+
+    int i=0, j=0;
+    int char_tile=0, bag_tile=0;
+
+    printf("poofing bag [%i] on map [%i] name [%s]\n", bag_id, map_id, maps.map[map_id]->map_name);
+
+    for(i=0; i<maps.map[map_id]->client_list_count; i++){
+
+        j=maps.map[map_id]->client_list[i];
+
+        if(clients.client[j]->status==LOGGED_IN){
+
+            char_tile=clients.client[j]->map_tile;
+            bag_tile=bag_list[bag_id].tile_pos;
+
+            //only send char poof to chars that are within visual proximity of the bag
+            if(get_proximity(char_tile, bag_tile, maps.map[map_id]->map_axis) < get_char_visual_range(j)) {
+
+                send_destroy_bag(j, bag_id);
+            }
+        }
     }
 
-    return 0;
+    bag_list[bag_id].status=EMPTY;
 }
 
 void raw_text_packet(int chan_type, char *text, unsigned char *packet, int *packet_length){
@@ -97,9 +141,6 @@ void broadcast_local_chat(int sender_connection, char *text_in){
             //broadcast only to chars in local text proximity
             if(get_proximity(sender_char_tile, receiver_char_tile, map_axis)<receiver_local_text_proximity){
 
-                //raw_text_packet(CHAT_LOCAL, text_in, packet, &packet_length);
-                //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
-                //clients.client[receiver_connection]->cmd_buffer_end++;
                 send_raw_text_packet(receiver_connection, CHAT_LOCAL, text_in);
             }
         }
@@ -147,9 +188,6 @@ void broadcast_channel_event(int chan, int sender_connection, char *text_in){
 
         if(receiver_connection!=sender_connection){
 
-            //raw_text_packet(CHAT_SERVER, text_in, packet, &packet_length);
-            //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
-            //clients.client[receiver_connection]->cmd_buffer_end++;
             send_raw_text_packet(receiver_connection, CHAT_SERVER, text_in);
         }
     }
@@ -169,9 +207,6 @@ void broadcast_guild_channel_chat(int sender_connection, char *text_in){
 
         if(receiver_connection!=sender_connection){
 
-            //raw_text_packet(CHAT_GM, text_in, packet, &packet_length);
-            //memcpy(clients.client[j]->cmd_buffer[clients.client[j]->cmd_buffer_end], packet, packet_length);
-            //clients.client[j]->cmd_buffer_end++;
             send_raw_text_packet(receiver_connection, CHAT_GM, text_in);
         }
     }
@@ -271,7 +306,7 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
     int packet_length=0;
 
     int receiving_char_tile=0;
-    int receiving_char_visual_proximity=0;
+    //int receiving_char_visual_proximity=0;
     int receiver_connection=0;
 
     int map_id=clients.client[connection]->map_id;
@@ -285,13 +320,11 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
 
         receiver_connection=maps.map[map_id]->client_list[i];
         receiving_char_tile=clients.client[receiver_connection]->map_tile;
-        receiving_char_visual_proximity=clients.client[receiver_connection]->day_visual_proximity;
+        //receiving_char_visual_proximity=clients.client[receiver_connection]->day_visual_proximity;
 
         //restrict to characters within visual proximity
-        if(get_proximity(char_tile, receiving_char_tile, map_axis)<receiving_char_visual_proximity){
+        if(get_proximity(char_tile, receiving_char_tile, map_axis)<get_char_visual_range(receiver_connection)){
 
-            //memcpy(clients.client[receiver_connection]->cmd_buffer[clients.client[receiver_connection]->cmd_buffer_end], packet, packet_length);
-            //clients.client[receiver_connection]->cmd_buffer_end++;
             send(receiver_connection, packet, packet_length, 0);
         }
     }
@@ -332,19 +365,17 @@ void broadcast_remove_actor_packet(int sender_connection) {
 
     int receiver_connection=0;
     int receiver_char_tile=0;
-    int receiver_char_visual_proximity=0;
+    int receiver_char_visual_range=get_char_visual_range(receiver_connection);
 
     remove_actor_packet(sender_connection, packet, &packet_length);
 
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
         receiver_connection=maps.map[map_id]->client_list[i];
-
         receiver_char_tile=clients.client[receiver_connection]->map_tile;
-        receiver_char_visual_proximity=clients.client[receiver_connection]->day_visual_proximity;
 
         //filter for receiving char visual proximity
-        if(get_proximity(char_tile, receiver_char_tile, map_axis)<=receiver_char_visual_proximity){
+        if(get_proximity(char_tile, receiver_char_tile, map_axis) < receiver_char_visual_range){
 
              send(receiver_connection, packet, packet_length, 0);
          }
@@ -394,7 +425,7 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
     int sender_current_tile=clients.client[sender_connection]->map_tile;
     int map_id=clients.client[sender_connection]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
-    int sender_visual_proximity=clients.client[sender_connection]->day_visual_proximity;
+    int sender_visual_proximity=get_char_visual_range(sender_connection);
 
     int proximity_before_move=0;
     int proximity_after_move=0;
@@ -414,7 +445,6 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
         receiver_connection=maps.map[map_id]->client_list[i];
 
         receiver_char_tile=clients.client[receiver_connection]->map_tile;
-        receiver_char_visual_proximity=clients.client[receiver_connection]->day_visual_proximity;
 
         proximity_before_move=get_proximity(sender_current_tile, receiver_char_tile, map_axis);
         proximity_after_move=get_proximity(sender_destination_tile, receiver_char_tile, map_axis);
@@ -437,7 +467,6 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
                 //sending char moving within visual proximity of receiving char
                 send(receiver_connection, packet1, packet1_length, 0);
             }
-
         }
 
         //this block deals with sending char vision

@@ -13,6 +13,7 @@ struct map_object_type{
     float x;
     float y;
     float z;
+    int tile_pos;
     int image_id;
 };
 struct map_object_type map_object;

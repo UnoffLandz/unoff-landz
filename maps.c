@@ -67,6 +67,7 @@ int get_map_object(int object_id, int map_id){
     map_object.x=0.0f;
     map_object.y=0.0f;
     map_object.z=0.0f;
+    map_object.tile_pos=0;
     strcpy(map_object.e3d_filename,"");
 
     memcpy(map_object.e3d_filename, maps.map[map_id]->threed_object_map+offset, 80);
@@ -76,8 +77,11 @@ int get_map_object(int object_id, int map_id){
     map_object.y=Uint32_to_float(maps.map[map_id]->threed_object_map+offset+84) * 2.00f;
     map_object.z=Uint32_to_float(maps.map[map_id]->threed_object_map+offset+88) * 2.00f;
 
+    //calculate tile pos as it will save us having to do this multiple times in the future
+    map_object.tile_pos=(int)map_object.x + ((int)map_object.y * maps.map[map_id]->map_axis);
+
     #ifdef DEBUG
-    printf("[%s] [%f] [%f] [%f]\n", map_object.e3d_filename, map_object.x, map_object.y, map_object.z);
+    printf(" file [%s] x [%f] y [%f] z [%f] tile [%i]\n", map_object.e3d_filename, map_object.x, map_object.y, map_object.z, map_object.tile_pos);
     #endif
 
     //find the corresponding inventory image id for this object
