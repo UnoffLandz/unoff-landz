@@ -88,5 +88,6 @@ void load_database_race_table_data(char *file_name);
 
 void load_database_guild_table_data(char *file_name);
 
+void load_e3d(char *filename);
 
 #endif // FILES_H_INCLUDED

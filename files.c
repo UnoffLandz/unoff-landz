@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdint.h>
 
 #include "files.h"
 #include "protocol.h" //required for read_motd
@@ -12,6 +13,8 @@
 #include "database.h"
 
 void clear_file(char *file_name){
+
+    //used to clear logs on boot up
 
     FILE *file;
 
@@ -27,6 +30,386 @@ void clear_file(char *file_name){
     }
 
     log_event2(EVENT_INITIALISATION, "clearing file [%s]", file_name);
+}
+
+const char *byte_to_binary(int x){
+
+    static char b[9];
+    b[0] = '\0';
+
+    int z;
+    for (z = 128; z > 0; z >>= 1)
+    {
+        strcat(b, ((x & z) == z) ? "1" : "0");
+    }
+
+    return b;
+}
+
+void load_e3d(char *filename){
+
+    FILE *file;
+    unsigned char byte[50000];
+
+    //open the e3d file
+    if((file=fopen(filename, "r"))==NULL) {
+
+        log_event2(EVENT_ERROR, "unable to open file [%s] in function load_e3d: module files.c", filename);
+        exit(EXIT_FAILURE);
+    }
+
+/****************************************************************************************************/
+
+    //read file identification bytes
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read identification bytes for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    if(byte[0]!='e' || byte[1]!='3' || byte[2]!='d' || byte[3]!='x'){
+
+        printf("identification bytes [%c %c %c %c] should = 'e3dx' in file [%s] in function load_map:module files.c", byte[0], byte[1], byte[2], byte[3], filename);
+        exit (EXIT_FAILURE);
+    }
+
+    printf("file identification bytes [%c %c %c %c]\n", byte[0], byte[1], byte[2], byte[3]);
+
+/****************************************************************************************************/
+
+    //read e3d format version
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read e3d format version for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    printf("e3d format version [%i %i %i %i]\n", byte[0], byte[1], byte[2], byte[3]);
+
+/****************************************************************************************************/
+
+    //read dummy (this looks like md5 string)
+    if(fread(&byte, 16, 1, file)!=1){
+
+        printf("unable to read dummy for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+/****************************************************************************************************/
+
+    //read header size
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read header offset for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int header_size=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("header size [%i]\n", header_size);
+
+/***************************************************************************************************/
+
+    //read vertex count
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read vertex map offset for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int vertex_count=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("vertex count [%i]\n", vertex_count);
+
+/****************************************************************************************************/
+
+    //read vertex size
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read vertex count for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int vertex_size=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("vertex size [%i]\n", vertex_size);
+
+/****************************************************************************************************/
+
+    //read vertex offset
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read vertex size for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int vertex_offset=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("vertex offset [%i]\n", vertex_offset);
+
+/****************************************************************************************************/
+
+     //read index count
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read index count for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int index_count=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("index count [%i]\n", index_count);
+
+/****************************************************************************************************/
+
+     //read index size
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read index size for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int index_size=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("index size [%i]\n", index_size);
+
+/****************************************************************************************************/
+
+    //read index offset
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read index offset for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int index_offset=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("index offset [%i]\n", index_offset);
+
+/****************************************************************************************************/
+
+    //read material count
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read material count for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int material_count=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("material count [%i]\n", material_count);
+
+/****************************************************************************************************/
+
+   //read material size
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read material size for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int material_size=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("material size [%i]\n", material_size);
+
+/****************************************************************************************************/
+
+   //read material offset
+    if(fread(&byte, 4, 1, file)!=1){
+
+        printf("unable to read material offset for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    int material_offset=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+
+    printf("material offset [%i]\n", material_offset);
+
+/****************************************************************************************************/
+
+    //read vertex options
+    if(fread(&byte, 1, 1, file)!=1){
+
+        printf("unable to read vertex options for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    unsigned int vertex_options=byte[0]; //flag determining whether this is a ground object, has tangents or extra uv's
+
+    printf("vertex options [%i] [%s]\n", byte[0], byte_to_binary(byte[0]));
+
+    if((vertex_options & 1)==0) printf("has normals\n"); else printf("no normals\n");
+    if(((vertex_options / 2) & 1)==0) printf("has tangent\n"); else printf("no tangents\n");
+    if(((vertex_options / 4) & 1)==0) printf("has extra uv\n"); else printf("no extra uv\n");
+
+/****************************************************************************************************/
+
+    //read vertex format
+    if(fread(&byte, 1, 1, file)!=1){
+
+        printf("unable to read reserved char 1 for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    unsigned int vertex_format=byte[0]; // flag determining whether haf floats are used for position, uv and/or extra uv's and if normals and tangents are compressed */
+
+    printf("vertex format [%i]\n", vertex_format);
+
+/****************************************************************************************************/
+
+    //read reserved char 2
+    if(fread(&byte, 1, 1, file)!=1){
+
+        printf("unable to read reserved char 2 for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    unsigned int reserved_2=byte[0];
+
+    printf("reserved char 2 [%i]\n", reserved_2);
+
+/****************************************************************************************************/
+
+    //read reserved char 3
+    if(fread(&byte, 1, 1, file)!=1){
+
+        printf("unable to read reserved char 3 for file [%s] in function load_e3d: module files.c", filename);
+        exit (EXIT_FAILURE);
+    }
+
+    unsigned int reserved_3=byte[0];
+
+    printf("reserved char 3 [%i]\n", reserved_3);
+
+/****************************************************************************************************/
+
+    //read material list
+    if(fread(&byte, material_offset-vertex_offset, 1, file)!=1){
+
+        printf("unable to read material list in function load_e3d: module files.c");
+        exit (EXIT_FAILURE);
+    }
+    //printf("%i\n", material_offset-vertex_offset);
+/****************************************************************************************************/
+
+    int i=0;
+    int material_options=0;
+    char material_filename[128]="";
+    float min_x, min_y, min_z, min_index;
+    float max_x, max_y, max_z, max_index;
+    float index, count;
+
+    for(i=0; i<material_count; i++){
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        material_options=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("material options [%i]\n", material_options);
+
+        if(fread(&byte, 128, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        memcpy(material_filename, byte, 127);
+        printf("material filename [%s]\n", material_filename);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        min_x=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("min x [%f]\n", min_x);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        min_y=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("min y [%f]\n", min_y);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        min_z=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("min z [%f]\n", min_z);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        max_x=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("max x [%f]\n", max_x);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        max_y=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("max y [%f]\n", max_y);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        max_z=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("max z [%f]\n", max_z);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        min_index=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("min index [%f]\n", min_index);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        max_index=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("max index [%f]\n", max_index);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        index=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("index [%f]\n", index);
+
+        if(fread(&byte, 4, 1, file)!=1){
+
+            printf("unable to material [%i] in function load_e3d: module files.c", i);
+            exit (EXIT_FAILURE);
+        }
+
+        count=Uint32_to_dec(byte[0], byte[1], byte[2], byte[3]);
+        printf("count [%f]\n", count);
+
+    }
 }
 
 int load_map(int id){
@@ -71,14 +454,14 @@ int load_map(int id){
 
     if(byte[0]!='e' || byte[1]!='l' || byte[2]!='m' || byte[3]!='f'){
 
-        log_event2(EVENT_ERROR, "identification bytes [%i%i%i%i] should = 'elmf' in file [%s] in function load_map:module files.c", elm_filename, byte[0], byte[1], byte[2], byte[3]);
+        log_event2(EVENT_ERROR, "identification bytes [%c%c%c%c] should = 'elmf' in file [%s] in function load_map:module files.c", byte[0], byte[1], byte[2], byte[3], elm_filename );
         exit (EXIT_FAILURE);
     }
 
     //read horizontal tile count
     if(fread(byte, 4, 1, file)!=1){
 
-        log_event2(EVENT_ERROR, "unable to read horizontal tile count for file [%s] in file [%s] in function load_map: module files.c", elm_filename);
+        log_event2(EVENT_ERROR, "unable to read horizontal tile count for file [%s] in function load_map: module files.c", elm_filename);
         exit (EXIT_FAILURE);
     }
 

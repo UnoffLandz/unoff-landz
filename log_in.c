@@ -110,10 +110,8 @@ void load_char_data_into_connection(int connection){
 
     /*these values are also returned from functions but we hold them in the struct to avoid having to
     continually recalculate them during actions like moving, mixing, harvesting, or picking up/dropping bags*/
-    clients.client[connection]->inventory_emu=character.inventory_emu;
-    clients.client[connection]->max_carry_capacity=character.max_carry_capacity;
-    //clients.client[connection]->day_visual_proximity=character.day_visual_proximity;
-    clients.client[connection]->chat_proximity=character.chat_proximity;
+    //clients.client[connection]->inventory_emu=character.inventory_emu;
+    //clients.client[connection]->max_carry_capacity=character.max_carry_capacity;
 }
 
 void process_log_in(int connection, char *text) {

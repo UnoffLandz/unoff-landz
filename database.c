@@ -515,24 +515,9 @@ int get_char_data_from_db(char *name){
         character.harvest_exp=sqlite3_column_int(stmt, 36);
 
         //calculate max emu that can be held in inventory
-        int initial_carry_capacity=race[character.char_type].initial_carry_capacity;
-        float carry_capacity_multiplier=race[character.char_type].carry_capacity_multiplier;
-        character.max_carry_capacity=initial_carry_capacity + (carry_capacity_multiplier * character.physique);
-
-        //calculate visual proximity
-        //int initial_visual_proximity=race[character.char_type].initial_visual_proximity;
-        //float visual_proximity_multiplier=race[character.char_type].visual_proximity_multiplier;
-        //character.day_visual_proximity=initial_visual_proximity + (visual_proximity_multiplier * character.vitality);
-
-        //calculate chat proximity
-        int initial_chat_proximity=race[character.char_type].initial_chat_proximity;
-        float chat_proximity_multiplier=race[character.char_type].chat_proximity_multiplier;
-        character.chat_proximity=initial_chat_proximity + (chat_proximity_multiplier * character.will);
-
-        //calculate night visual modifier
-        //float initial_night_vis=race[character.char_type].initial_night_vis;
-        //float night_vis_multiplier=race[character.char_type].night_vis_multiplier;
-        //character.night_visual_proximity=initial_night_vis + (night_vis_multiplier * character.coordination);
+        //int initial_carry_capacity=race[character.char_type].initial_carry_capacity;
+        //float carry_capacity_multiplier=race[character.char_type].carry_capacity_multiplier;
+        //character.max_carry_capacity=initial_carry_capacity + (carry_capacity_multiplier * character.physique);
     }
 
     sqlite3_finalize(stmt);

@@ -7,6 +7,23 @@
 #include "character_inventory.h"
 #include "global.h"
 
+void send_here_your_ground_items(int connection, int bag_id){
+
+    //opens up the bag inventory
+
+    unsigned char packet[11];
+
+    packet[0]=HERE_YOUR_GROUND_ITEMS;
+
+    packet[1]=3;
+    packet[2]=0;
+
+    packet[3]=bag_id % 256;
+    packet[4]=bag_id / 256;
+
+    send(connection, packet, 5, 0);
+}
+
 void send_get_new_inventory_item(int connection, int item_image_id, int amount, int slot){
 
     unsigned char packet[11];
@@ -62,57 +79,68 @@ void send_here_your_inventory(int connection){
         packet[j+7]=0; //flags
     }
 
-/*
-    packet[0]=HERE_YOUR_INVENTORY;
-
-    packet[1]=18; //packet count -1
-    packet[2]=0;
-
-    packet[3]=2;
-
-    packet[4]=28;
-    packet[5]=0;
-    packet[6]=10;
-    packet[7]=0;
-    packet[8]=0;
-    packet[9]=0;
-    packet[10]=0;
-    packet[11]=0;
-
-    packet[12]=28;
-    packet[13]=0;
-    packet[14]=10;
-    packet[15]=0;
-    packet[16]=0;
-    packet[17]=0;
-    packet[18]=1;
-    packet[19]=0;
-
-    send(connection, packet, 20, 0);//packet count+1
-*/
-
     send(connection, packet, (MAX_INVENTORY_SLOTS*8)+4, 0);
 }
 
-int get_used_inventory_slot(int connection, int image_id){
+int get_used_bag_slot(int bag_id, int image_id, int *slot){
 
     int i;
 
-    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
+    for(i=0; i<MAX_BAG_SLOTS; i++){
 
-        if(clients.client[connection]->client_inventory[i].image_id==image_id) return i;
+        if(bag_list[bag_id].inventory[i].image_id==image_id) {
+
+            *slot=i;
+            return i;
+        }
     }
 
     return NOT_FOUND;
 }
 
-int get_unused_inventory_slot(int connection){
+int get_used_inventory_slot(int connection, int image_id, int *slot){
+
+    int i;
+
+    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
+
+        if(clients.client[connection]->client_inventory[i].image_id==image_id) {
+            *slot=i;
+            return FOUND;
+        }
+    }
+
+    return NOT_FOUND;
+}
+
+int get_unused_bag(int *bag_id){
+
+    int i;
+
+    for(i=1; i<MAX_BAGS; i++){
+
+        if(bag_list[i].status==EMPTY){
+
+            *bag_id=i;
+            return FOUND;
+        }
+    }
+
+    return NOT_FOUND;
+}
+
+int get_unused_inventory_slot(int connection, int *slot){
 
     int i;
 
     //search for slot with no image id
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
-        if(clients.client[connection]->client_inventory[i].amount==0) return i;
+
+        if(clients.client[connection]->client_inventory[i].amount==0) {
+
+            *slot=i;
+            return FOUND;
+        }
     }
 
     return NOT_FOUND;
@@ -182,3 +210,21 @@ void send_destroy_bag(int connection, int bag_id){
 
     send(connection, packet, 5, 0);
 }
+
+int bag_exists(int map_id, int tile_pos, int *bag_id){
+
+    int i;
+
+    for(i=1; i<MAX_BAGS; i++){
+
+        //if an existing bag exists, use this to place the drop items in
+        if(bag_list[i].tile_pos==tile_pos && bag_list[i].map_id==map_id && bag_list[i].status==FULL) {
+
+            *bag_id=i;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+

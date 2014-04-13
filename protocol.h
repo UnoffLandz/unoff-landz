@@ -16,6 +16,7 @@ enum { // client to server protocol
     MOVE_INVENTORY_ITEM=20,
     HARVEST=21,
     DROP_ITEM=22,
+    INSPECT_BAG=25,
     LOOK_AT_MAP_OBJECT=27,
     SEND_PARTIAL_STATS=49,
     PING_RESPONSE=60,

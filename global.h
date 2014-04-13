@@ -35,6 +35,7 @@ enum { // server to client protocol
     HERE_YOUR_STATS=18,
     HERE_YOUR_INVENTORY=19,
     GET_NEW_INVENTORY_ITEM=21,
+    HERE_YOUR_GROUND_ITEMS=23,
     GET_NEW_BAG=27,
     DESTROY_BAG=29,
     ADD_NEW_ENHANCED_ACTOR=51
@@ -489,12 +490,7 @@ struct client_node_type{
     int potion_lvl;
     int max_potion_lvl;
 
-    int inventory_emu;  // saves having to calculate carry capacity each time its tested
-    int max_carry_capacity; // saves having to calculate carry capacity each time its tested
-
-    //int day_visual_proximity; //saves having to calculate visual proximity each time its tested
-    int chat_proximity;//saves having to calculate chat proximity each time its tested
-    //int night_visual_proximity;//saves having to calculate visual proximity each time its tested
+    int inventory_emu;  // saves having to parse inventory at each harvest/mix cycle
 
     int material_pts;
     int max_material_pts;
@@ -636,12 +632,7 @@ struct character_type{
 
     struct client_inventory_type client_inventory[36];
 
-    int inventory_emu;  // saves having to calculate carry capacity each time its tested
-    int max_carry_capacity; // saves having to calculate carry capacity each time its tested
-
-    //int day_visual_proximity; // proximity for display of other actors/creatures
-    int chat_proximity; //  proximity for local messages from other actors
-    //int night_visual_proximity; //
+    int inventory_emu;  // saves having to parse inventory at each harvest/mix cycle
 
     int physique;
     int vitality;
@@ -657,9 +648,9 @@ struct character_type character;
 struct bag_list_type {
         int map_id;
         int tile_pos;
-        time_t created; //not used (using ev_timer to time the poof)
-        int char_id; //char id that created the bag
+        int char_id;
         int status; //EMPTY, FULL
+        struct client_inventory_type inventory[36];
 };
 struct bag_list_type bag_list[MAX_BAGS];
 

@@ -54,8 +54,11 @@ void start_harvesting(int connection, int map_object_id){
         return;
     }
 
-    if(get_proximity(char_tile, map_object.tile_pos, map_axis) < get_char_visual_range(connection)) {
+    if(get_proximity(char_tile, map_object.tile_pos, map_axis) > get_char_visual_range(connection)) {
 
+        #ifdef DEBUG
+        printf("distance [%i] visual range[%i]\n", get_proximity(char_tile, map_object.tile_pos, map_axis), get_char_visual_range(connection));
+        #endif
 
         //abort harvesting if item is too far away
         sprintf(text_out, "%cYou are too far away to harvest that item", c_red3+127);
@@ -67,22 +70,18 @@ void start_harvesting(int connection, int map_object_id){
     harvest cycle without having to continually look it up */
     clients.client[connection]->inventory_image_id=map_object.image_id;
 
-    //see if we have this item in the inventory
-    slot=get_used_inventory_slot(connection, map_object.image_id);
+    //see if we have a slot in the inventory that has this item
+    if(get_used_inventory_slot(connection, map_object.image_id, &slot)==NOT_FOUND){
 
-            if(slot==NOT_FOUND){
+        //if we don't have the item in the inventory, find an empty slot
+        if(get_unused_inventory_slot(connection, &slot)==NOT_FOUND){
 
-                //if we don't have the item in the inventory, find an empty slot
-                slot=get_unused_inventory_slot(connection);
-
-                if(slot==NOT_FOUND){
-
-                    //if there are no empty slots then tell client
-                    sprintf(text_out, "%cSorry, but you don't have enough inventory slots", c_red1+127);
-                    send_raw_text_packet(connection, CHAT_SERVER, text_out);
-                    return;
-                }
-            }
+            //if there are no empty slots then tell client
+            sprintf(text_out, "%cSorry, but you don't have enough inventory slots", c_red1+127);
+            send_raw_text_packet(connection, CHAT_SERVER, text_out);
+            return;
+        }
+    }
 
     //note the slot so we don't have to parse the whole inventory on each harvest cycle
     clients.client[connection]->inventory_slot=slot;

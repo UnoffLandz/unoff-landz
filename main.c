@@ -301,6 +301,12 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
 int main(void) {
 
+    load_e3d("house1.e3d");
+    exit(1);
+
+
+
+
     int server_sockfd;
     int server_len;
     struct sockaddr_in server_address;

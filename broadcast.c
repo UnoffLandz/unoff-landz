@@ -28,6 +28,16 @@ int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
 
 }
 
+int get_char_chat_range(int connection){
+
+    int race_id=clients.client[connection]->char_type;
+    int initial_chat_proximity=race[race_id].initial_chat_proximity;
+    int chat_proximity_multiplier=race[race_id].chat_proximity_multiplier;
+
+    return initial_chat_proximity + (chat_proximity_multiplier * clients.client[connection]->will);
+
+}
+
 void broadcast_bag_drop(int bag_id, int map_id){
 
     int i=0, j=0;
@@ -125,21 +135,20 @@ void broadcast_local_chat(int sender_connection, char *text_in){
     int map_id=clients.client[sender_connection]->map_id;
     int map_axis=maps.map[map_id]->map_axis;
 
-    int receiver_local_text_proximity=0;
     int receiver_char_tile=0;
     int receiver_connection=0;
 
+    //parse the local map list and get connections for all chars that are there
     for(i=0; i<maps.map[map_id]->client_list_count; i++){
 
         receiver_connection=maps.map[map_id]->client_list[i];
 
         if(receiver_connection!=sender_connection){
 
-            receiver_local_text_proximity=clients.client[receiver_connection]->chat_proximity;
             receiver_char_tile=clients.client[receiver_connection]->map_tile;
 
             //broadcast only to chars in local text proximity
-            if(get_proximity(sender_char_tile, receiver_char_tile, map_axis)<receiver_local_text_proximity){
+            if(get_proximity(sender_char_tile, receiver_char_tile, map_axis) < get_char_chat_range(receiver_connection)) {
 
                 send_raw_text_packet(receiver_connection, CHAT_LOCAL, text_in);
             }
