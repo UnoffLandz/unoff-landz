@@ -4,7 +4,7 @@
 #define MAX_INVENTORY_SLOTS 36
 #define INVENTORY_STRING_LENGTH 1+(MAX_INVENTORY_SLOTS*8)
 
-#define MAX_BAG_SLOTS 36
+#define MAX_BAG_SLOTS 10
 
 /** RESULT  : sends entire char inventory
 
@@ -43,11 +43,15 @@ void send_destroy_bag(int connection, int bag_id);
 
 int get_used_bag_slot(int bag_id, int image_id, int *slot);
 
+int get_unused_bag_slot(int bag_id, int *slot);
+
 int bag_exists(int map_id, int tile_pos, int *bag_id);
 
 int get_unused_bag(int *bag_id);
 
 void send_here_your_ground_items(int connection, int bag_id);
+
+void send_get_new_ground_item(int connection, int item_image_id, int amount, int slot);
 
 
 #endif // CHARACTER_INVENTORY_H_INCLUDED

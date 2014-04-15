@@ -69,7 +69,7 @@ void load_char_data_into_connection(int connection){
 
     int i=0;
 
-    clients.client[connection]->character_id=character.char_id;
+    clients.client[connection]->character_id=character.character_id;
     strcpy(clients.client[connection]->char_name, character.char_name);
     strcpy(clients.client[connection]->password, character.password);
     clients.client[connection]->char_status=character.char_status;

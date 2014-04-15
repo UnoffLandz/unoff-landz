@@ -2,7 +2,9 @@
 #define GLOBAL_H_INCLUDED
 
 #include <ev.h> //required to access ev_timer
+
 #include "chat.h" //required to access the value for MAX_CHAN_SLOTS
+#include "character_inventory.h" //required to access MAX_INVENTORY_SLOTS and MAX_BAG_SLOTS
 
 #define MAX_MAPS 10
 #define MAX_GUILDS 10
@@ -36,6 +38,7 @@ enum { // server to client protocol
     HERE_YOUR_INVENTORY=19,
     GET_NEW_INVENTORY_ITEM=21,
     HERE_YOUR_GROUND_ITEMS=23,
+    GET_NEW_GROUND_ITEM=24,
     GET_NEW_BAG=27,
     DESTROY_BAG=29,
     ADD_NEW_ENHANCED_ACTOR=51
@@ -125,7 +128,6 @@ struct vector_type{
     int y;
     unsigned char move_cmd;
 };
-
 struct vector_type vector[8];
 
 enum{ // general boolean values
@@ -445,7 +447,7 @@ struct client_node_type{
     time_t joined_guild; // date joined guild
     time_t session_commenced; //time latest session commenced
 
-    struct client_inventory_type client_inventory[36];
+    struct client_inventory_type client_inventory[MAX_INVENTORY_SLOTS];
 
     int physique;
     int max_physique;
@@ -544,7 +546,7 @@ struct channel_node_type{
 struct channel_list_type {
     int count;
     int max;
-    int spool_size;
+    //int spool_size;
     struct channel_node_type **channel;
 };
 struct channel_list_type channels;
@@ -598,6 +600,7 @@ struct timeval time_check;
 time_t server_start_time;
 ev_timer ev_bag_timer[50];
 
+/*
 //struct used to pass to database on character creation and get_char_id function
 struct character_type{
     int char_id;
@@ -642,7 +645,9 @@ struct character_type{
     int overall_exp;
     int harvest_exp;
 };
-struct character_type character;
+//struct character_type character;
+*/
+struct client_node_type character;
 
 /** BAGS **/
 struct bag_list_type {
@@ -650,7 +655,7 @@ struct bag_list_type {
         int tile_pos;
         int char_id;
         int status; //EMPTY, FULL
-        struct client_inventory_type inventory[36];
+        struct client_inventory_type inventory[MAX_BAG_SLOTS];
 };
 struct bag_list_type bag_list[MAX_BAGS];
 

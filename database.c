@@ -88,7 +88,7 @@ void get_last_char_created(){
     sqlite3_finalize(stmt);
 }
 
-void add_char(struct character_type character){
+void add_char(struct client_node_type character){
 
     /** public function - see header */
 
@@ -463,7 +463,7 @@ int get_char_data_from_db(char *name){
     int rc;
     sqlite3_stmt *stmt;
 
-    character.char_id=0; //set to zero as we use this to determine if the char exists
+    character.character_id=0; //set to zero as we use this to determine if the char exists
 
     char char_tbl_sql[]="SELECT * FROM CHARACTER_TABLE WHERE CHAR_NAME=?";
 
@@ -476,7 +476,7 @@ int get_char_data_from_db(char *name){
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        character.char_id=sqlite3_column_int(stmt, 0);
+        character.character_id=sqlite3_column_int(stmt, 0);
         strcpy(character.char_name, (char*) sqlite3_column_text(stmt, 1));
         strcpy(character.password, (char*) sqlite3_column_text(stmt,2));
         character.char_status=sqlite3_column_int(stmt, 3);
@@ -527,7 +527,7 @@ int get_char_data_from_db(char *name){
 
     sqlite3_prepare_v2(db, inventory_tbl_sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, character.char_id);
+    sqlite3_bind_int(stmt, 1, character.character_id);
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -541,7 +541,7 @@ int get_char_data_from_db(char *name){
 
     sqlite3_finalize(stmt);
 
-    if(character.char_id==0) return NOT_FOUND;
+    if(character.character_id==0) return NOT_FOUND;
 
     return FOUND;
 }

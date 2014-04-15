@@ -7,23 +7,6 @@
 #include "character_inventory.h"
 #include "global.h"
 
-void send_here_your_ground_items(int connection, int bag_id){
-
-    //opens up the bag inventory
-
-    unsigned char packet[11];
-
-    packet[0]=HERE_YOUR_GROUND_ITEMS;
-
-    packet[1]=3;
-    packet[2]=0;
-
-    packet[3]=bag_id % 256;
-    packet[4]=bag_id / 256;
-
-    send(connection, packet, 5, 0);
-}
-
 void send_get_new_inventory_item(int connection, int item_image_id, int amount, int slot){
 
     unsigned char packet[11];
@@ -80,22 +63,6 @@ void send_here_your_inventory(int connection){
     }
 
     send(connection, packet, (MAX_INVENTORY_SLOTS*8)+4, 0);
-}
-
-int get_used_bag_slot(int bag_id, int image_id, int *slot){
-
-    int i;
-
-    for(i=0; i<MAX_BAG_SLOTS; i++){
-
-        if(bag_list[bag_id].inventory[i].image_id==image_id) {
-
-            *slot=i;
-            return i;
-        }
-    }
-
-    return NOT_FOUND;
 }
 
 int get_used_inventory_slot(int connection, int image_id, int *slot){
@@ -228,3 +195,100 @@ int bag_exists(int map_id, int tile_pos, int *bag_id){
     return FALSE;
 }
 
+void send_here_your_ground_items(int connection, int bag_id){
+
+    //displays the bag inventory
+
+    unsigned char packet[(MAX_BAG_SLOTS*7)+5];
+
+    int i=0, j=0;
+    int data_length=0;
+    int image_id=0, quantity=0;
+
+    packet[0]=HERE_YOUR_GROUND_ITEMS;
+
+    data_length=(MAX_BAG_SLOTS*7)+2;
+
+    packet[1]=data_length % 256;
+    packet[2]=data_length / 256;
+
+    packet[3]=MAX_BAG_SLOTS;
+
+    for(i=0;i<MAX_BAG_SLOTS; i++){
+
+        j=(i*7);
+
+        image_id=bag_list[bag_id].inventory[i].image_id;
+        quantity=bag_list[bag_id].inventory[i].amount;
+
+
+        packet[4+j]=image_id % 256; //image_id
+        packet[5+j]=image_id / 256;
+
+        packet[6+j]=quantity % 256; //quantity;
+        packet[7+j]=quantity / 256 % 256;
+        packet[8+j]=quantity / 256 / 256 % 256;
+        packet[9+j]=quantity / 256 / 256 / 256 % 256;
+
+        packet[10+j]=i; //slot
+
+        printf("slot [%i] image [%i] amount [%i]\n", i, image_id, quantity);
+    }
+
+    send(connection, packet, (MAX_BAG_SLOTS*7)+4, 0);
+
+}
+
+void send_get_new_ground_item(int connection, int item_image_id, int amount, int slot){
+
+    unsigned char packet[11];
+
+    packet[0]=GET_NEW_GROUND_ITEM;
+
+    packet[1]=8;
+    packet[2]=0;
+
+    packet[3]=item_image_id % 256;
+    packet[4]=item_image_id / 256;
+
+    packet[5]=amount % 256;
+    packet[6]=amount / 256 % 256;
+    packet[7]=amount / 256 / 256 % 256;
+    packet[8]=amount / 256 / 256 / 256 % 256;
+
+    packet[9]=slot;//slot
+
+    send(connection, packet, 10, 0);
+}
+
+int get_used_bag_slot(int bag_id, int image_id, int *slot){
+
+    int i;
+
+    for(i=0; i<MAX_BAG_SLOTS; i++){
+
+        if(bag_list[bag_id].inventory[i].image_id==image_id) {
+
+            *slot=i;
+            return FOUND;
+        }
+    }
+
+    return NOT_FOUND;
+}
+
+int get_unused_bag_slot(int bag_id, int *slot){
+
+    int i;
+
+    for(i=0; i<MAX_BAG_SLOTS; i++){
+
+        if(bag_list[bag_id].inventory[i].amount==0) {
+
+            *slot=i;
+            return FOUND;
+        }
+    }
+
+    return NOT_FOUND;
+}

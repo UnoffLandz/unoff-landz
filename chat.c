@@ -472,7 +472,7 @@ void send_pm(int connection, char *receiver_name, char *message) {
     }
 
     //check if message recipient is in game
-    if(char_in_game(character.char_id)==NOT_IN_GAME){
+    if(char_in_game(character.character_id)==NOT_IN_GAME){
 
         sprintf(text_out, "%ccharacter is not currently logged on. To send a letter use #LETTER [name] [message]", c_red2+127);
         send_server_text(connection, CHAT_PERSONAL, text_out);

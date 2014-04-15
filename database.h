@@ -168,7 +168,7 @@ void create_database_table(char *sql);
     PURPOSE : allows a new character to be created
 
     USAGE   : process_packet:protocol.c */
-void add_char(struct character_type character);
+void add_char(struct client_node_type character);
 
 
 /** RESULT  : Determines the number of character entries in the character_table

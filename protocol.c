@@ -399,7 +399,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
     int amount=0;
     char receiver_name[80]="";
     char message[80]="";
-    int bag_id=0, bag_slot=0;
+    int bag_id=0, bag_slot=0, inventory_slot=0, drop_amount=0;
 
     // extract data from packet
     for(i=0; i<data_length; i++){
@@ -720,80 +720,100 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
         //returns a byte indicating the slot number followed by a 32bit integer indicating the amount to be dropped
 
-        slot=data[0];
-
-        amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
-
-        image_id=clients.client[connection]->client_inventory[slot].image_id;
+        inventory_slot=data[0];
+        drop_amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
+        image_id=clients.client[connection]->client_inventory[inventory_slot].image_id;
 
         //make sure the amount in the packet is not greater than what is actually in the slot,
-        if(amount>clients.client[connection]->client_inventory[slot].amount) amount=clients.client[connection]->client_inventory[slot].amount;
-
-        #ifdef DEBUG
-        printf("DROP_ITEM position [%i] drop amount [%i] remaining amount [%i]\n", slot, clients.client[connection]->client_inventory[slot].amount, amount);
-        #endif
-
-        //send revised inventory to client
-        clients.client[connection]->client_inventory[slot].amount -= amount;
-        send_get_new_inventory_item(connection, image_id, clients.client[connection]->client_inventory[slot].amount, slot);
-
-        //send updated emu to client
-        clients.client[connection]->inventory_emu -= amount * item[image_id].emu;
-        send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection]->inventory_emu);
-
-        //update char inventory on database
-        update_db_char_slot(connection, slot);
-
-        //is there an existing bag that we can use at this location
-        if(bag_exists(map_id, current_tile, &bag_id)==TRUE){
-
-            //if bag exists, select the first slot if no existing slot contains the drop item
-            get_used_bag_slot(bag_id, image_id, &bag_slot);
-
-            //add the drop to the bag slot
-            bag_list[bag_id].inventory[bag_slot].amount+=amount;
-
-            /** send open bag to client **/
-
-            //reset the bag poof time
-            ev_timer_stop(loop, &ev_bag_timer[bag_id]);
-            ev_timer_init(&ev_bag_timer[bag_id], bag_poof_cb, 20, 0);
-            ev_timer_start(loop, &ev_bag_timer[bag_id]);
-
-            return;
+        if(drop_amount>clients.client[connection]->client_inventory[inventory_slot].amount) {
+            drop_amount=clients.client[connection]->client_inventory[inventory_slot].amount;
         }
 
-        //create new bag
-        if(get_unused_bag(&bag_id)==FOUND){
+        #ifdef DEBUG
+        printf("DROP_ITEM position [%i] drop amount [%i]\n", slot, drop_amount);
+        #endif
 
-            printf("created new bag [%i]\n", bag_id);
+        //is there is no bag at this location, create a new one
+        if(bag_exists(map_id, current_tile, &bag_id)==FALSE){
 
+            //create new bag
+            if(get_unused_bag(&bag_id)==NOT_FOUND) {
+
+                //we've run out of space on the bag array
+                log_event2(EVENT_ERROR, "Bag array max [%i] exceeded", MAX_BAGS);
+
+                sprintf(text_out, "%cSorry, the server's run out of bag space. Wait a few secs and try again", c_red1+127);
+                send_raw_text_packet(connection, CHAT_SERVER, text_out);
+                return;
+            }
+
+            //add the bag details
             bag_list[bag_id].char_id=char_id;
             bag_list[bag_id].map_id=map_id;
             bag_list[bag_id].tile_pos=current_tile;
             bag_list[bag_id].status=FULL;
 
-            bag_list[bag_id].inventory[0].amount=amount;
-            bag_list[bag_id].inventory[0].image_id=image_id;
+            //select first slot to receive the drop items
+            bag_slot=0;
+            bag_list[bag_id].inventory[bag_slot].image_id=image_id;
 
-            // send new bag to client
+            #ifdef DEBUG
+            printf("Create new bag [%i] at position [%i] on map [%s]\n", bag_id, current_tile, maps.map[map_id]->map_name);
+            #endif
+
+            //broadcast bag drop to all clients in vicinity
             broadcast_bag_drop(bag_id, map_id);
-
-            /** send open bag to client **/
-
-            //set bag timer
-            ev_bag_timer[bag_id].data= (int*) bag_id;
-            ev_timer_init(&ev_bag_timer[bag_id], bag_poof_cb, 20, 0);
-            ev_timer_start(loop, &ev_bag_timer[bag_id]);
-
         }
         else {
 
-            //if unused bag can't be found then the maximum number of bags has been exceeded and we need to stop
-            log_event2(EVENT_ERROR, "Bag count exceeds max [%i]", MAX_BAGS);
-            exit(EXIT_FAILURE);
+            //use existing bag
+            #ifdef DEBUG
+            printf("Found existing bag [%i] at position [%i] on map [%s]\n", bag_id, current_tile, maps.map[map_id]->map_name);
+            #endif
+
+            //stop the poof timer for the bag
+            ev_timer_stop(loop, &ev_bag_timer[bag_id]);
+
+            //check if this item is already in the bag
+            if(get_used_bag_slot(bag_id, image_id, &bag_slot)==NOT_FOUND) {
+
+                //create new bag slot
+                if(get_unused_bag_slot(bag_id, &slot)==NOT_FOUND) {
+
+                    //bag slots exceeded
+                    sprintf(text_out, "%cSorry, there's no more slots in the bag", c_red1+127);
+                    send_raw_text_packet(connection, CHAT_SERVER, text_out);
+
+                    return;
+                }
+
+                bag_list[bag_id].inventory[bag_slot].image_id=image_id;
+            }
+            else {
+
+                //use existing bag slot
+
+            }
         }
 
+        //send revised inventory to client
+        clients.client[connection]->client_inventory[inventory_slot].amount -= drop_amount;
+        send_get_new_inventory_item(connection, image_id, clients.client[connection]->client_inventory[inventory_slot].amount, inventory_slot);
+
+        //send updated emu to client
+        clients.client[connection]->inventory_emu -= drop_amount * item[image_id].emu;
+        send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection]->inventory_emu);
+
+        //update char inventory on database
+        update_db_char_slot(connection, inventory_slot);
+
+        //send the drop to the bag inventory
+        bag_list[bag_id].inventory[bag_slot].amount+=drop_amount;
+        send_get_new_ground_item(connection, image_id,  bag_list[bag_id].inventory[bag_slot].amount, bag_slot);
+
+        //reset the bag poof time
+        ev_timer_init(&ev_bag_timer[bag_id], bag_poof_cb, 20, 0);
+        ev_timer_start(loop, &ev_bag_timer[bag_id]);
     }
 /***************************************************************************************************/
 
@@ -805,9 +825,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         printf("INSPECT_BAG - lsb [%i] msb [%i] bag id [%i]\n", lsb, msb, bag_id);
         #endif
 
-        //need to add contents to bag with GET_NEW_GROUND_ITEM
-
-        send_here_your_ground_items(connection, bag_id-1);
+        send_here_your_ground_items(connection, bag_id);
     }
 
 /***************************************************************************************************/
