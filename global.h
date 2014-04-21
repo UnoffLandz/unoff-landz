@@ -8,12 +8,11 @@
 
 #define MAX_MAPS 10
 #define MAX_GUILDS 10
-
+#define MAX_BAGS 256 //maximum bags on a map
 #define MAX_CLIENTS 50
 #define MAX_THREED_OBJECTS 100 // maximum number of e3d files that can be held in the threed_object array
 #define MAX_ITEMS 1500 //maximum number of mixable/harvestable items that can be held in the item array
 #define MAX_RACES 7
-#define MAX_BAGS 256 //maximum bags on a map
 
 #define PATH_MAX 100 //longest permitted path
 #define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
@@ -39,6 +38,7 @@ enum { // server to client protocol
     GET_NEW_INVENTORY_ITEM=21,
     HERE_YOUR_GROUND_ITEMS=23,
     GET_NEW_GROUND_ITEM=24,
+    S_CLOSE_BAG=26,
     GET_NEW_BAG=27,
     DESTROY_BAG=29,
     ADD_NEW_ENHANCED_ACTOR=51
@@ -151,8 +151,8 @@ enum { // general boolean value
 };
 
 enum { // general boolean value
-    EMPTY,
-    FULL
+    UNUSED,
+    USED
 };
 
 enum {// colours
@@ -412,8 +412,10 @@ struct client_node_type{
     time_t time_of_last_harvest;
 
     int harvest_flag;
+    int harvest_amount; //amount harved each cycle
     int inventory_image_id;
     int inventory_slot;
+    int bag_open;
 
     char ip_address[16];
 
@@ -522,6 +524,7 @@ struct client_node_type{
     int max_book_time;
     int elapsed_book_time;
 };
+struct client_node_type character;
 
 struct client_list_type {
     int count;
@@ -557,7 +560,7 @@ struct channel_list_type channels;
 struct item_type{
     char item_name[1024];
     int harvestable; //flag that item is harvestable
-    int cycle_amount;//amount harvested on each harvesting cycle
+    //int cycle_amount;//amount harvested on each harvesting cycle
     int emu;
     int interval;
     int exp;
@@ -598,66 +601,22 @@ struct race_type race[MAX_RACES];
 /** OTHERS */
 struct timeval time_check;
 time_t server_start_time;
+
+/** TIMERS */
 ev_timer ev_bag_timer[50];
-
-/*
-//struct used to pass to database on character creation and get_char_id function
-struct character_type{
-    int char_id;
-    char char_name[1024];
-    char password[1024];
-    int char_status;
-    int time_played;
-    int active_chan;
-    int chan[MAX_CHAN_SLOTS];
-    int gm_permission;
-    int ig_permission;
-    int map_id;
-    int map_tile;
-    int char_type;
-    int skin_type;
-    int hair_type;
-    int shirt_type;
-    int pants_type;
-    int boots_type;
-    int head_type;
-    int shield_type;
-    int weapon_type;
-    int cape_type;
-    int helmet_type;
-    int frame;
-    int max_health;
-    int current_health;
-    int char_created;
-    time_t last_in_game;
-    time_t joined_guild;
-    int guild_id;
-
-    struct client_inventory_type client_inventory[36];
-
-    int inventory_emu;  // saves having to parse inventory at each harvest/mix cycle
-
-    int physique;
-    int vitality;
-    int will;
-    int coordination;
-
-    int overall_exp;
-    int harvest_exp;
-};
-//struct character_type character;
-*/
-struct client_node_type character;
+ev_timer ev_harvest_timer[MAX_CLIENTS];
 
 /** BAGS **/
 struct bag_list_type {
         int map_id;
         int tile_pos;
-        int char_id;
-        int status; //EMPTY, FULL
+        int connection;
+        int bag_type_id;
+        int status; //USED, UNUSED
         struct client_inventory_type inventory[MAX_BAG_SLOTS];
 };
 struct bag_list_type bag_list[MAX_BAGS];
+
 
 //struct to carry global data
 struct game_data_type {

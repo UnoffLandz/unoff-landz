@@ -197,7 +197,7 @@ void add_char(struct client_node_type character){
     sqlite3_finalize(stmt);
 }
 
-void add_item(int image_id, char *item_name, int harvestable, int cycle_amount, int emu, int interval,
+void add_item(int image_id, char *item_name, int harvestable, int emu, int interval,
               int exp,
               int food_value,
               int food_cooldown,
@@ -213,7 +213,6 @@ void add_item(int image_id, char *item_name, int harvestable, int cycle_amount, 
         "IMAGE_ID,"  \
         "ITEM_NAME," \
         "HARVESTABLE,"  \
-        "CYCLE_AMOUNT," \
         "EMU," \
         "INTERVAL," \
         "EXP," \
@@ -221,21 +220,20 @@ void add_item(int image_id, char *item_name, int harvestable, int cycle_amount, 
         "FOOD_COOLDOWN," \
         "ORGANIC_NEXUS," \
         "VEGETAL_NEXUS" \
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_int(stmt, 1, image_id);
     sqlite3_bind_text(stmt, 2, item_name, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 3, harvestable);
-    sqlite3_bind_int(stmt, 4, cycle_amount);
-    sqlite3_bind_int(stmt, 5, emu);
-    sqlite3_bind_int(stmt, 6, interval);
-    sqlite3_bind_int(stmt, 7, exp);
-    sqlite3_bind_int(stmt, 8, food_value);
-    sqlite3_bind_int(stmt, 9, food_cooldown);
-    sqlite3_bind_int(stmt, 10, organic_nexus);
-    sqlite3_bind_int(stmt, 11, vegetal_nexus);
+    sqlite3_bind_int(stmt, 4, emu);
+    sqlite3_bind_int(stmt, 5, interval);
+    sqlite3_bind_int(stmt, 6, exp);
+    sqlite3_bind_int(stmt, 7, food_value);
+    sqlite3_bind_int(stmt, 8, food_cooldown);
+    sqlite3_bind_int(stmt, 9, organic_nexus);
+    sqlite3_bind_int(stmt, 10, vegetal_nexus);
 
     rc = sqlite3_step(stmt);
 
@@ -735,15 +733,13 @@ void load_items(){
 
         strcpy(item[id].item_name, (char*)sqlite3_column_text(stmt, 1));
         item[id].harvestable=sqlite3_column_int(stmt,2);
-
-        item[id].cycle_amount=sqlite3_column_int(stmt,3);
-        item[id].emu=sqlite3_column_int(stmt,4);
-        item[id].interval=sqlite3_column_int(stmt,5);
-        item[id].exp=sqlite3_column_int(stmt,6);
-        item[id].food_value=sqlite3_column_int(stmt,7);
-        item[id].food_cooldown=sqlite3_column_int(stmt,8);
-        item[id].organic_nexus=sqlite3_column_int(stmt,9);
-        item[id].vegetal_nexus=sqlite3_column_int(stmt,10);
+        item[id].emu=sqlite3_column_int(stmt,3);
+        item[id].interval=sqlite3_column_int(stmt,4);
+        item[id].exp=sqlite3_column_int(stmt,5);
+        item[id].food_value=sqlite3_column_int(stmt,6);
+        item[id].food_cooldown=sqlite3_column_int(stmt,7);
+        item[id].organic_nexus=sqlite3_column_int(stmt,8);
+        item[id].vegetal_nexus=sqlite3_column_int(stmt,9);
 
         log_event2(EVENT_INITIALISATION, "loaded [%i] [%s]", id, item[id].item_name);
 

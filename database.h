@@ -53,7 +53,6 @@
         IMAGE_ID            INTEGER PRIMARY KEY     NOT NULL, \
         ITEM_NAME           TEXT, \
         HARVESTABLE         INT, \
-        CYCLE_AMOUNT        INT, \
         EMU                 INT, \
         INTERVAL            INT, \
         EXP                 INT, \
@@ -353,7 +352,6 @@ void load_guilds();
     USAGE   : load_database_item_table_data:files.c */
 void add_item(int image_id, char *item_name,
               int harvestable,
-              int harvest_cycle,
               int emu,
               int interval,
               int exp,

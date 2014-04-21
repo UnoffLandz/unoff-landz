@@ -23,8 +23,8 @@
 
 #define ITEM_DATA_FILE_FORMAT   "UNOFFLANDZ Item data file\n" \
                                 "\n" \
-                                "Image Item                          Cycle                   Food  Food     Organic Vegetal\n" \
-                                "ID    Name              Harvestable Amount EMU Interval EXP Value Cooldown Nexus   Nexus  \n" \
+                                "Image Item                                           Food  Food     Organic Vegetal\n" \
+                                "ID    Name              Harvestable EMU Interval EXP Value Cooldown Nexus   Nexus  \n" \
                                 "------------------------------------------------------------------------------------------\n"
 
 #define THREED_OBJECT_DATA_FILE_FORMAT  "#UNOFFLANDZ 3d object data file\n" \

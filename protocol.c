@@ -26,46 +26,6 @@
 #include "harvesting.h"
 #include "character_inventory.h"
 
-static void bag_poof_cb (struct ev_loop *loop, struct ev_timer *ev_bag_timer, int revents) {
-
-    (void)(revents);//removes unused parameter warning
-    (void)(loop);//removes unused parameter warning
-
-    int bag_id=(int) ev_bag_timer->data;
-    int map_id=bag_list[bag_id].map_id;
-
-    broadcast_bag_poof(bag_id, map_id);
-
-/*
-    int i=0;
-    int connection=0;
-    int char_tile=0, bag_tile=0;
-    int visual_proximity=0;
-
-    printf("poofing bag [%i] on map [%i] name [%s]\n", bag, map_id, maps.map[map_id]->map_name);
-
-    for(i=0; i<maps.map[map_id]->client_list_count; i++){
-
-        connection=maps.map[map_id]->client_list[i];
-
-        if(clients.client[connection]->status==LOGGED_IN){
-
-            char_tile=clients.client[connection]->map_tile;
-            bag_tile=bag_list[bag].tile_pos;
-            visual_proximity=clients.client[connection]->day_visual_proximity;
-
-            //only send char poof to chars that are within visual proximity of the bag
-            if(get_proximity(char_tile, bag_tile, maps.map[map_id]->map_axis) < visual_proximity) {
-
-                send_destroy_bag(connection, bag);
-            }
-        }
-    }
-
-    bag_list[bag].status=EMPTY;
-*/
-}
-
 void send_server_text(int connection, int channel, char *text){
 
     /* function definition sends to sock rather than connection so that we can reach clients when a connection has not been
@@ -328,78 +288,31 @@ void send_partial_stats(int connection, int attribute_type, int attribute_level)
     send(connection, packet, 8, 0);
 }
 
-void send_actors_to_client(int connection){
-
-    /** RESULT  : make other actors visible to this client
-
-       RETURNS : void
-
-       PURPOSE : ensures our actor can see other actors after log on or a map jump
-
-       USAGE   : protocol.c process_packet
-    */
-
-    int i;
-    unsigned char packet[1024];
-    int packet_length;
-    int map_id=clients.client[connection]->map_id;
-    int char_tile=clients.client[connection]->map_tile;
-    int map_axis=maps.map[map_id]->map_axis;
-    int char_visual_range=get_char_visual_range(connection);
-
-    int other_client_id;
-    int other_char_tile;
-
-    for(i=0; i<maps.map[map_id]->client_list_count; i++){
-
-        other_client_id=maps.map[map_id]->client_list[i];
-        other_char_tile=clients.client[other_client_id]->map_tile;
-
-        // restrict to characters other than self
-        if(connection!=other_client_id){
-
-            //restrict to characters within visual proximity
-            if(get_proximity(char_tile, other_char_tile, map_axis)<char_visual_range){
-
-                add_new_enhanced_actor_packet(connection, packet, &packet_length);
-                send(connection, packet, packet_length, 0);
-            }
-        }
-    }
-}
-
 void process_packet(int connection, unsigned char *packet, struct ev_loop *loop){
 
     int i=0;
 
     unsigned char data[1024];
     char text[1024]="";
-
     char text_out[1024]="";
-
     char char_name[1024]="";
     char password[1024]="";
 
-    int char_id=clients.client[connection]->character_id;
+    //int char_id=clients.client[connection]->character_id;
     int current_tile=clients.client[connection]->map_tile;
 
     int other_connection;
     int map_id=clients.client[connection]->map_id;
     //int guild_id=clients.client[connection]->guild_id;
-    int protocol=packet[0];
-    int lsb=packet[1];
-    int msb=packet[2];
-    int data_length=lsb+(msb*256)-1;
+    int protocol=packet[0], lsb=packet[1], msb=packet[2], data_length=lsb+(msb*256)-1;
     int x_dest=0, y_dest=0, tile_dest=0;
     int map_object_id=0;
     int use_with_position=0;
     int result=0;
-    int slot=0, to_slot=0, from_slot=0;
     int image_id=0;
     int amount=0;
     char receiver_name[80]="";
-    char message[80]="";
-    int bag_id=0, bag_slot=0, inventory_slot=0, drop_amount=0;
+    int move_to_slot=0, move_from_slot=0, bag_id=0, bag_slot=0, inventory_slot=0;
 
     // extract data from packet
     for(i=0; i<data_length; i++){
@@ -462,7 +375,8 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
     else if(protocol==MOVE_TO) {
 
-        //calculate destination
+        //returns 2x 2byte integers indicating the x/y axis of the destination
+
         x_dest=Uint16_to_dec(data[0], data[1]);
         y_dest=Uint16_to_dec(data[2], data[3]);
         tile_dest=x_dest+(y_dest*maps.map[clients.client[connection]->map_id]->map_axis);
@@ -471,51 +385,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         printf("MOVE_TO position x[%i] y[%i] tile[%i]\n", x_dest, y_dest, tile_dest);
         #endif
 
-        //if char is harvesting then stop
-        if(clients.client[connection]->harvest_flag==TRUE){
-
-            stop_harvesting(connection);
-            return;
-        }
-
-        //if char is sitting then stand before moving
-        if(clients.client[connection]->frame==sit_down){
-
-            clients.client[connection]->frame=stand_up;
-            broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
-        }
-
-        //check if the destination is walkable
-        if(maps.map[map_id]->height_map[tile_dest]<MIN_TRAVERSABLE_VALUE){
-
-            sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        //check for zero length path
-        if(current_tile==tile_dest) {
-
-            printf("current tile = destination (ignored)\n");
-            return;
-        }
-
-        if(get_astar_path(connection, current_tile, tile_dest)==NOT_FOUND){
-
-            sprintf(text_out, "path not found in function process_packet: module protocol.c");
-            log_event(EVENT_ERROR, text_out);
-        }
-
-        #ifdef DEBUG
-        printf("character [%s] got a new path...\n", clients.client[connection]->char_name);
-
-        for(i=0; i<clients.client[connection]->path_count; i++){
-            printf("%i %i\n", i, clients.client[connection]->path[i]);
-        }
-        #endif
-
-        //reset time of last move to zero so the movement is processed without delay
-        clients.client[connection]->time_of_last_move=0;
+        start_char_move(connection, tile_dest, loop);
     }
 /***************************************************************************************************/
 
@@ -535,9 +405,9 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
         //extract recipients name and message from pm packet
         get_str_island(text, receiver_name, 1);
-        get_str_island(text, message, 2);
+        get_str_island(text, text_out, 2);
 
-        send_pm(connection, receiver_name, message);
+        send_pm(connection, receiver_name, text_out);
     }
 /***************************************************************************************************/
 
@@ -601,8 +471,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         int host2=(int)data[9];
         int host3=(int)data[10];
         int host4=(int)data[11];
-        int port1=(int)data[12];
-        int port2=(int)data[13];
+        int port=((int)data[12] *256)+(int)data[13];
 
         #ifdef DEBUG
         printf("SEND VERSION lsb [%i] msb [%i] maj [%i] min [%i] version [%i.%i.%i.%i]\n",
@@ -612,12 +481,14 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
                release,
                patch);
 
-        printf("server host [%i.%i.%i.%i] port [%i / %i]\n", host1, host2, host3, host4, port1, port2);
+        printf("server host [%i.%i.%i.%i] port [%i]\n", host1, host2, host3, host4, port);
         #endif
     }
 /***************************************************************************************************/
 
     else if(protocol==HEARTBEAT){
+
+        //returns nothing
 
         #ifdef DEBUG
         printf("HEARTBEAT %i %i \n", lsb, msb);
@@ -629,6 +500,8 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 /***************************************************************************************************/
 
     else if(protocol==USE_OBJECT){
+
+        //returns a 4byte integer indicating the threed object id, followed by a 4byte integer indicating ????
 
         map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
         use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
@@ -657,11 +530,11 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
         //returns a Uint8 giving the slot number looked at
 
-        slot=(int)data[0];
-        image_id=clients.client[connection]->client_inventory[slot].image_id;
+        inventory_slot=(int)data[0];
+        image_id=clients.client[connection]->client_inventory[inventory_slot].image_id;
 
         #ifdef DEBUG
-        printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", slot);
+        printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", inventory_slot);
         #endif
 
         sprintf(text_out, "%c%s", c_green3+127, item[image_id].item_name);
@@ -674,31 +547,31 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         //returns 2 Uint8 indicating the slots to be moved from and to
         //if an attempt is made to move to an occupied slot or, to move from an empty slot, the client will automatically block
 
-        from_slot=(int)data[0];
-        to_slot=(int)data[1];
+        move_from_slot=(int)data[0];
+        move_to_slot=(int)data[1];
 
         #ifdef DEBUG
-        printf("MOVE_INVENTORY_ITEM - slot [%i] to slot [%i]\n", from_slot, to_slot);
+        printf("MOVE_INVENTORY_ITEM - slot [%i] to slot [%i]\n", move_from_slot, move_to_slot);
         #endif
 
-        image_id=clients.client[connection]->client_inventory[from_slot].image_id;
-        amount=clients.client[connection]->client_inventory[from_slot].amount;
+        image_id=clients.client[connection]->client_inventory[move_from_slot].image_id;
+        amount=clients.client[connection]->client_inventory[move_from_slot].amount;
 
         //zero the 'from slot'
-        clients.client[connection]->client_inventory[from_slot].image_id=0;
-        clients.client[connection]->client_inventory[from_slot].amount=0;
-        send_get_new_inventory_item(connection, 0, 0, from_slot);
+        clients.client[connection]->client_inventory[move_from_slot].image_id=0;
+        clients.client[connection]->client_inventory[move_from_slot].amount=0;
+        send_get_new_inventory_item(connection, 0, 0, move_from_slot);
 
         //save to database
-        update_db_char_slot(connection, from_slot);
+        update_db_char_slot(connection, move_from_slot);
 
         //place item in the 'to slot'
-        clients.client[connection]->client_inventory[to_slot].image_id=image_id;
-        clients.client[connection]->client_inventory[to_slot].amount=amount;
-        send_get_new_inventory_item(connection, image_id, amount, to_slot);
+        clients.client[connection]->client_inventory[move_to_slot].image_id=image_id;
+        clients.client[connection]->client_inventory[move_to_slot].amount=amount;
+        send_get_new_inventory_item(connection, image_id, amount, move_to_slot);
 
         //save to the database
-        update_db_char_slot(connection, to_slot);
+        update_db_char_slot(connection, move_to_slot);
     }
 /***************************************************************************************************/
 
@@ -712,7 +585,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         printf("HARVEST object_id %i\n", map_object_id);
         #endif
 
-        start_harvesting(connection, map_object_id);
+        start_harvesting2(connection, map_object_id, loop);
     }
 /***************************************************************************************************/
 
@@ -721,103 +594,35 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         //returns a byte indicating the slot number followed by a 32bit integer indicating the amount to be dropped
 
         inventory_slot=data[0];
-        drop_amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
+        amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
         image_id=clients.client[connection]->client_inventory[inventory_slot].image_id;
 
-        //make sure the amount in the packet is not greater than what is actually in the slot,
-        if(drop_amount>clients.client[connection]->client_inventory[inventory_slot].amount) {
-            drop_amount=clients.client[connection]->client_inventory[inventory_slot].amount;
-        }
-
         #ifdef DEBUG
-        printf("DROP_ITEM position [%i] drop amount [%i]\n", slot, drop_amount);
+        printf("DROP_ITEM image_id [%i] drop amount [%i]\n", image_id, amount);
         #endif
 
-        //is there is no bag at this location, create a new one
-        if(bag_exists(map_id, current_tile, &bag_id)==FALSE){
+        drop_from_inventory(connection, inventory_slot, amount, loop);
+    }
+/***************************************************************************************************/
 
-            //create new bag
-            if(get_unused_bag(&bag_id)==NOT_FOUND) {
+    else if(protocol==PICK_UP_ITEM){
 
-                //we've run out of space on the bag array
-                log_event2(EVENT_ERROR, "Bag array max [%i] exceeded", MAX_BAGS);
+        //returns a 4byte integer indicating quantity followed by 1 byte indicating bag slot position
 
-                sprintf(text_out, "%cSorry, the server's run out of bag space. Wait a few secs and try again", c_red1+127);
-                send_raw_text_packet(connection, CHAT_SERVER, text_out);
-                return;
-            }
+        bag_slot=data[0];
+        amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
 
-            //add the bag details
-            bag_list[bag_id].char_id=char_id;
-            bag_list[bag_id].map_id=map_id;
-            bag_list[bag_id].tile_pos=current_tile;
-            bag_list[bag_id].status=FULL;
+        #ifdef DEBUG
+        printf("PICK_UP_ITEM lsb [%i] msb [%i] amount [%i] slot [%i]\n", lsb, msb, amount, bag_slot);
+        #endif
 
-            //select first slot to receive the drop items
-            bag_slot=0;
-            bag_list[bag_id].inventory[bag_slot].image_id=image_id;
-
-            #ifdef DEBUG
-            printf("Create new bag [%i] at position [%i] on map [%s]\n", bag_id, current_tile, maps.map[map_id]->map_name);
-            #endif
-
-            //broadcast bag drop to all clients in vicinity
-            broadcast_bag_drop(bag_id, map_id);
-        }
-        else {
-
-            //use existing bag
-            #ifdef DEBUG
-            printf("Found existing bag [%i] at position [%i] on map [%s]\n", bag_id, current_tile, maps.map[map_id]->map_name);
-            #endif
-
-            //stop the poof timer for the bag
-            ev_timer_stop(loop, &ev_bag_timer[bag_id]);
-
-            //check if this item is already in the bag
-            if(get_used_bag_slot(bag_id, image_id, &bag_slot)==NOT_FOUND) {
-
-                //create new bag slot
-                if(get_unused_bag_slot(bag_id, &slot)==NOT_FOUND) {
-
-                    //bag slots exceeded
-                    sprintf(text_out, "%cSorry, there's no more slots in the bag", c_red1+127);
-                    send_raw_text_packet(connection, CHAT_SERVER, text_out);
-
-                    return;
-                }
-
-                bag_list[bag_id].inventory[bag_slot].image_id=image_id;
-            }
-            else {
-
-                //use existing bag slot
-
-            }
-        }
-
-        //send revised inventory to client
-        clients.client[connection]->client_inventory[inventory_slot].amount -= drop_amount;
-        send_get_new_inventory_item(connection, image_id, clients.client[connection]->client_inventory[inventory_slot].amount, inventory_slot);
-
-        //send updated emu to client
-        clients.client[connection]->inventory_emu -= drop_amount * item[image_id].emu;
-        send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection]->inventory_emu);
-
-        //update char inventory on database
-        update_db_char_slot(connection, inventory_slot);
-
-        //send the drop to the bag inventory
-        bag_list[bag_id].inventory[bag_slot].amount+=drop_amount;
-        send_get_new_ground_item(connection, image_id,  bag_list[bag_id].inventory[bag_slot].amount, bag_slot);
-
-        //reset the bag poof time
-        ev_timer_init(&ev_bag_timer[bag_id], bag_poof_cb, 20, 0);
-        ev_timer_start(loop, &ev_bag_timer[bag_id]);
+        pick_up_from_bag(connection, bag_slot, loop);
     }
 /***************************************************************************************************/
 
     else if(protocol==INSPECT_BAG){
+
+        //returns a Unit8 indicating the bag_id
 
         bag_id=data[0];
 
@@ -825,9 +630,26 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         printf("INSPECT_BAG - lsb [%i] msb [%i] bag id [%i]\n", lsb, msb, bag_id);
         #endif
 
-        send_here_your_ground_items(connection, bag_id);
-    }
+        if(bag_list[bag_id].tile_pos==current_tile) {
 
+            //standing on the bag so we can open it
+            send_here_your_ground_items(connection, bag_id);
+            clients.client[connection]->bag_open=TRUE;
+        }
+        else {
+
+            //not standing on bag so move towards it
+
+            //find the bag id in the bag array
+            if(bag_exists(map_id, current_tile, &bag_id)==FALSE){
+
+                log_event2(EVENT_ERROR, "bag [%i] does not exist in bag_list", bag_id);
+                return;
+            }
+
+            start_char_move(connection, bag_list[bag_id].tile_pos, loop);
+        }
+    }
 /***************************************************************************************************/
 
     else if(protocol==LOOK_AT_MAP_OBJECT){
@@ -951,6 +773,11 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
         //once the char has been added to the database, find its char_id
         clients.client[connection]->character_id=get_max_char_id();
+
+int slot=0;
+add_item_to_inventory(connection, 612, 1, &slot);
+add_item_to_inventory(connection, 613, 1, &slot);
+add_item_to_inventory(connection, 614, 1, &slot);
 
         //update game data for chars created
         race[character.char_type].char_count++;

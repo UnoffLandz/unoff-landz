@@ -33,10 +33,20 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile);
     RETURNS : LEGAL_MAP / ILLEGAL_MAP
 
     PURPOSE : Consolidate all required operations into a resuable function that can be called
-                  at login and on map change
+              at login and on map change
 
     USAGE   : protocol.c process_packet
 */
 int add_char_to_map(int connection, int new_map_id, int map_tile);
+
+/** RESULT  : initiates char movement
+
+    RETURNS : void
+
+    PURPOSE : Consolidate all required operations into a reusable function
+
+    USAGE   : protocol.c process_packet(MOVE_TO), protocol.c process_packet(INSPECT_BAG)
+*/
+void start_char_move(int connection, int destination, struct ev_loop *loop);
 
 #endif // CHARACTER_MOVEMENT_H_INCLUDED

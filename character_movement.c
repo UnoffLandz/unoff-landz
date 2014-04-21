@@ -7,12 +7,12 @@
 #include "global.h"
 #include "broadcast.h"
 #include "protocol.h"
-#include "debug.h"
 #include "files.h"
 #include "maps.h"
 #include "protocol.h"
 #include "pathfinding.h"
 #include "database.h"
+#include "harvesting.h"
 
 void send_change_map(int connection, char *elm_filename){
 
@@ -33,7 +33,7 @@ void send_change_map(int connection, char *elm_filename){
     packet[1]=lsb;
     packet[2]=msb;
 
-    // TODO (derekl#2#): convert loop to memcpy    // add packet content
+    // add packet content
     for(i=3; i<3+filename_length; i++){
         packet[i]=elm_filename[i-3];
     }
@@ -264,6 +264,76 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile){
     return 0; //Dummy. we should never reach here
 }
 
+void send_actors_to_client(int connection){
+
+    /** RESULT  : make other actors visible to this client
+
+       RETURNS : void
+
+       PURPOSE : ensures our actor can see other actors after log on or a map jump
+
+       USAGE   : protocol.c process_packet
+    */
+
+    int i;
+    unsigned char packet[1024];
+    int packet_length;
+    int map_id=clients.client[connection]->map_id;
+    int char_tile=clients.client[connection]->map_tile;
+    int map_axis=maps.map[map_id]->map_axis;
+    int char_visual_range=get_char_visual_range(connection);
+
+    int other_client_id;
+    int other_char_tile;
+
+    for(i=0; i<maps.map[map_id]->client_list_count; i++){
+
+        other_client_id=maps.map[map_id]->client_list[i];
+        other_char_tile=clients.client[other_client_id]->map_tile;
+
+        // restrict to characters other than self
+        if(connection!=other_client_id){
+
+            //restrict to characters within visual proximity
+            if(get_proximity(char_tile, other_char_tile, map_axis)<char_visual_range){
+
+                add_new_enhanced_actor_packet(connection, packet, &packet_length);
+                send(connection, packet, packet_length, 0);
+            }
+        }
+    }
+}
+
+void send_bags_to_client(int connection){
+
+   /** RESULT  : makes existing bags visible to this client
+
+       RETURNS : void
+
+       PURPOSE : ensures our actor can see existing bags after log on or a map jump
+
+       USAGE   :
+   */
+
+    int i;
+    int map_id=clients.client[connection]->map_id;
+    int char_tile=clients.client[connection]->map_tile;
+    int map_axis=maps.map[map_id]->map_axis;
+    int char_visual_range=get_char_visual_range(connection);
+
+    for(i=0; i<MAX_BAGS; i++){
+
+        if(bag_list[i].map_id==map_id && bag_list[i].status==USED){
+
+            //restrict to bags within chars visual proximity
+            if(get_proximity(char_tile, bag_list[i].tile_pos, map_axis) < char_visual_range){
+
+               send_get_new_bag(connection, i);
+            }
+        }
+    }
+}
+
 int add_char_to_map(int connection, int new_map_id, int map_tile){
 
     /** public function - see header */
@@ -289,8 +359,11 @@ int add_char_to_map(int connection, int new_map_id, int map_tile){
     //add client to local map list
     add_client_to_map(connection, clients.client[connection]->map_id);
 
-    // add in-game chars to this clients
+    // add in-game chars to this client
     send_actors_to_client(connection);
+
+    // add in-game bags to this client
+    send_bags_to_client(connection);
 
     // add this char to each connected client
     broadcast_add_new_enhanced_actor_packet(connection);
@@ -336,4 +409,69 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
 
     //save char map id and position
     update_db_char_position(connection);
+}
+
+void start_char_move(int connection, int destination, struct ev_loop *loop){
+
+    int i=0;
+    char text_out[80]="";
+
+    int map_id=clients.client[connection]->map_id;
+    int current_tile=clients.client[connection]->map_tile;
+
+    //if char is harvesting then stop
+    if(clients.client[connection]->harvest_flag==TRUE){
+
+        stop_harvesting2(connection, loop);
+        return;
+    }
+
+    //if char is sitting then stand before moving
+    if(clients.client[connection]->frame==sit_down){
+
+        clients.client[connection]->frame=stand_up;
+        broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
+    }
+
+    //check if the destination is walkable
+    if(maps.map[map_id]->height_map[destination]<MIN_TRAVERSABLE_VALUE){
+
+        sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
+        send_server_text(connection, CHAT_SERVER, text_out);
+        return;
+    }
+
+    //check for zero length path
+    if(current_tile==destination){
+
+        #ifdef DEBUG
+        printf("current tile = destination (ignored)\n");
+        #endif
+
+        return;
+    }
+
+    if(get_astar_path(connection, current_tile, destination)==NOT_FOUND){
+
+        sprintf(text_out, "path not found in function process_packet: module protocol.c");
+        log_event(EVENT_ERROR, text_out);
+    }
+
+    //if standing on a bag, close the bag grid
+    if(clients.client[connection]->bag_open==TRUE){
+
+        clients.client[connection]->bag_open=FALSE;
+        send_s_close_bag(connection);
+    }
+
+    #ifdef DEBUG
+    printf("character [%s] got a new path...\n", clients.client[connection]->char_name);
+
+    for(i=0; i<clients.client[connection]->path_count; i++){
+        printf("%i %i\n", i, clients.client[connection]->path[i]);
+    }
+    #endif
+
+    //reset time of last move to zero so the movement is processed without delay
+    clients.client[connection]->time_of_last_move=0;
 }

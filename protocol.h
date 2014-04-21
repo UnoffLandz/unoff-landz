@@ -16,6 +16,7 @@ enum { // client to server protocol
     MOVE_INVENTORY_ITEM=20,
     HARVEST=21,
     DROP_ITEM=22,
+    PICK_UP_ITEM=23,
     INSPECT_BAG=25,
     LOOK_AT_MAP_OBJECT=27,
     SEND_PARTIAL_STATS=49,
@@ -46,7 +47,6 @@ enum { // sit down command instruction
 
     USAGE   : main.c
 */
-//void process_packet(int connection, unsigned char *packet);
 void process_packet(int connection, unsigned char *packet, struct ev_loop *loop);
 
 
@@ -62,6 +62,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
     USAGE   : lots
 */
 void send_server_text(int sock, int channel, char *text);
+
 
 /** RESULT  : make other actors in proximity visible to this actor
 

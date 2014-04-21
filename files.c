@@ -1147,7 +1147,6 @@ void load_database_item_table_data(char *file_name){
     int image_id=0;
     char item_name[80]="";
     int harvestable=0;
-    int cycle_amount=0;
     int emu=0;
     int interval=0;
     int exp=0;
@@ -1175,11 +1174,10 @@ void load_database_item_table_data(char *file_name){
     while(buf[0]==ASCII_HASH);
 
     //load entries to database
-    while (fscanf(file, "%i %s %i %i %i %i %i %i %i %i %i\n",
+    while (fscanf(file, "%i %s %i %i %i %i %i %i %i %i\n",
             &image_id,
             item_name,
             &harvestable,
-            &cycle_amount,
             &emu,
             &interval,
             &exp,
@@ -1192,7 +1190,7 @@ void load_database_item_table_data(char *file_name){
         str_remove_underscores(item_name);
 
         //add item to database
-        add_item(image_id, item_name, harvestable, cycle_amount, emu, interval, exp, food_value, food_cooldown,
+        add_item(image_id, item_name, harvestable, emu, interval, exp, food_value, food_cooldown,
                 organic_nexus,
                 vegetal_nexus);
 
@@ -1200,7 +1198,6 @@ void load_database_item_table_data(char *file_name){
         image_id=0;
         strcpy(item_name, "");
         harvestable=0;
-        cycle_amount=0;
         emu=0;
         interval=0;
         exp=0;

@@ -31,18 +31,7 @@
 /** credit for the underlying libev socket code goes to Pierce <jqug123321@gmail.com>, details of which can be
 found @ http://jqug.blogspot.co.uk/2013/02/libev-socket.html **/
 
-
-//ev_timer ev_test[50];
-
 ev_timer timeout_watcher;
-
-/*
-static void test_cb (struct ev_loop *loop, struct ev_timer *ev_test, int revents) {
-
-    printf("timer %i\n", (int) ev_test->data);
-
-}
-*/
 
 void close_connection_slot(int connection){
 
@@ -230,18 +219,11 @@ void accept_client(struct ev_loop *loop, struct ev_io *watcher, int revents){
         return;
     }
 
-    log_event2(EVENT_ERROR, "Connection from address %s on socket %d", inet_ntoa(client_address.sin_addr), client_sockfd);
+    log_event2(EVENT_SESSION, "Connection from address %s on socket %d", inet_ntoa(client_address.sin_addr), client_sockfd);
 
     //add watcher to connect client fd
     ev_io_init(w_client, recv_data, client_sockfd, EV_READ);
     ev_io_start(loop, w_client);
-
-/*
-//how about set up timer here ????
-ev_test[client_sockfd].data= (int*)client_sockfd;
-ev_timer_init(&ev_test[client_sockfd], test_cb, 1.05, 1.05);
-ev_timer_start(loop, &ev_test[client_sockfd]);
-*/
 
     //set up connection data entry in client struct
     clients.client[client_sockfd]->status=CONNECTED;
@@ -257,7 +239,6 @@ ev_timer_start(loop, &ev_test[client_sockfd]);
     send_server_text(client_sockfd, CHAT_SERVER, "\nHit any key to continue...\n");
 }
 
-//static void timeout_cb(EV_P_ struct ev_timer_type* timeout_watcher, int revents){
 static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
     (void)(timer);//removes unused parameter warning
@@ -265,11 +246,11 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
     int i=0;
     time_t current_utime;
-    time_t current_time;
+    //time_t current_time;
 
     gettimeofday(&time_check, NULL);
     current_utime=time_check.tv_usec;
-    current_time=time_check.tv_sec;
+    //current_time=time_check.tv_sec;
 
     //at each timeout check through each connect client and process pending actions
     for(i=0; i<clients.max; i++){
@@ -290,7 +271,7 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             if(clients.client[i]->status==LOGGED_IN) {
 
                 process_char_move(i, current_utime);
-                process_harvesting(i, current_time);
+                //process_harvesting(i, current_time);
             }
         }
     }

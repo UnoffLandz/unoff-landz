@@ -107,11 +107,6 @@ void load_char_data_into_connection(int connection){
 
     clients.client[connection]->overall_exp=character.overall_exp;
     clients.client[connection]->harvest_exp=character.harvest_exp;
-
-    /*these values are also returned from functions but we hold them in the struct to avoid having to
-    continually recalculate them during actions like moving, mixing, harvesting, or picking up/dropping bags*/
-    //clients.client[connection]->inventory_emu=character.inventory_emu;
-    //clients.client[connection]->max_carry_capacity=character.max_carry_capacity;
 }
 
 void process_log_in(int connection, char *text) {
@@ -229,11 +224,11 @@ void process_log_in(int connection, char *text) {
 
     //tell char to sit if the frame is set to sit
     if(clients.client[connection]->frame==sit_down) {
-        //printf("tell char to sit\n");
+
         broadcast_actor_packet(connection, sit_down, clients.client[connection]->map_tile);
     }
     else {
-        //printf("tell char to stand\n");
+
         broadcast_actor_packet(connection, stand_up, clients.client[connection]->map_tile);
     }
 
