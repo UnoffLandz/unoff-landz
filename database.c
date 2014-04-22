@@ -453,6 +453,40 @@ void add_guild(int guild_id, char *guild_tag, char *guild_name, char *guild_desc
     log_event2(EVENT_INITIALISATION, "Added guild [%i] [%s] to GUILD_TABLE", guild_id, guild_name);
 }
 
+void add_bag_type(int bag_type_token, char *bag_description, int poof_time, int max_emu){
+
+ /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+
+    char sql[]="INSERT INTO BAG_TYPE_TABLE("  \
+        "BAG_TYPE_TOKEN," \
+        "BAG_DESCRIPTION," \
+        "POOF_TIME," \
+        "MAX_EMU"  \
+        ") VALUES( ?, ?, ?, ?)";
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, bag_type_token);
+    sqlite3_bind_text(stmt, 2, bag_description, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, poof_time);
+    sqlite3_bind_int(stmt, 4, max_emu);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+
+        log_event2(EVENT_ERROR, "Error %s executing '%s' in function add_bag_type: module database.c", sql, sqlite3_errmsg(db));
+        exit(EXIT_FAILURE);
+    }
+
+    sqlite3_finalize(stmt);
+
+    log_event2(EVENT_INITIALISATION, "Added bag type [%i] [%s] to BAG_TYPE_TABLE", bag_type_token, bag_description);
+}
+
 int get_char_data_from_db(char *name){
 
     /** public function - see header */
@@ -838,6 +872,46 @@ void load_guilds(){
     sqlite3_finalize(stmt);
 
     log_event2(EVENT_INITIALISATION, "[%i] guilds were loaded\n", i);
+}
+
+void load_bag_types(){
+
+    /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    int bag_type_token=0;
+    int i=0;
+
+    char sql[]="SELECT * FROM BAG_TYPE_TABLE";
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    log_event2(EVENT_INITIALISATION, "loading bags...");
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        bag_type_token=sqlite3_column_int(stmt,0);
+
+        //make sure bag_type_tokendoesn't exceed the size of the map array
+        if(bag_type_token>MAX_BAG_TYPES){
+
+            log_event2(EVENT_ERROR, "bag type token [%i] exceeds range [0 - %i] in function load_bag_types: module database.c", bag_type_token, MAX_BAG_TYPES);
+            exit(EXIT_FAILURE);
+        }
+
+        strcpy(bag_type[bag_type_token].bag_type_description, (char*)sqlite3_column_text(stmt, 1));
+        bag_type[bag_type_token].poof_time=sqlite3_column_int(stmt, 2);
+        bag_type[bag_type_token].max_emu=sqlite3_column_int(stmt, 3);
+
+        log_event2(EVENT_INITIALISATION, "loaded [%i] [%s]", bag_type_token, bag_type[bag_type_token].bag_type_description);
+
+        i++;
+    }
+
+    sqlite3_finalize(stmt);
+
+    log_event2(EVENT_INITIALISATION, "[%i] bag types were loaded\n", i);
 }
 
 void update_db_char_position(int connection){

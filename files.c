@@ -1504,3 +1504,55 @@ void load_database_guild_table_data(char *file_name){
 
     log_event2(EVENT_INITIALISATION, "---");
 }
+
+void load_database_bag_type_table_data(char *file_name){
+
+    FILE *file;
+    int bag_type_token=0;
+    char bag_type_description[160]="";
+    int poof_time=0;
+    int max_emu=0;
+    char buf[1024]="";
+
+    //check we have an existing file and, if not, then create one
+    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, BAG_TYPE_DATA_FILE_FORMAT);
+
+    //load data from the text file
+    log_event2(EVENT_INITIALISATION, "Loading data to database bag_type_table...");
+
+    //skip notes
+    do{
+
+        if(fgets(buf, 1024, file)==NULL){
+
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_guild_data_table: module files.c", file_name);
+            exit(EXIT_FAILURE);
+        }
+    }
+    while(buf[0]==ASCII_HASH);
+
+    //scan the entries and load to database
+    while (fscanf(file, "%i %s %i %i\n",
+                       &bag_type_token,
+                       bag_type_description,
+                       &poof_time,
+                       &max_emu
+                      )!=-1){
+
+        //remove underscores which are needed for fscanf to ignore spaces in channel name and description
+        str_remove_underscores(bag_type_description);
+
+        //add guild to database race_table
+        add_bag_type(bag_type_token, bag_type_description, poof_time, max_emu);
+
+        //zero variables
+        bag_type_token=0;
+        strcpy(bag_type_description, "");
+        poof_time=0;
+        max_emu=0;
+    }
+
+    fclose(file);
+
+    log_event2(EVENT_INITIALISATION, "---");
+}

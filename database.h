@@ -105,6 +105,12 @@
         CHAN_ID              INT, \
         DATE_CREATED         INT)"
 
+#define BAG_TYPE_TABLE_SQL "CREATE TABLE BAG_TYPE_TABLE( \
+        BAG_TYPE_TOKEN       INTEGER PRIMARY KEY     NOT NULL, \
+        BAG_TYPE_DESCRIPTION TEXT, \
+        POOF_TIME            TEXT, \
+        MAX_EMU              TEXT)"
+
 sqlite3 *db; // database handle which is set when function open_database is called
 
 
@@ -343,6 +349,15 @@ void load_maps();
 void load_guilds();
 
 
+/** RESULT  : loads bag type data from the database to the bag type struct array
+
+    RETURNS : void
+
+    PURPOSE : allows bag type data to be held in memory for faster operations
+
+    USAGE   : initialise_bag_types:initialisation.c */
+void load_bag_types();
+
 /** RESULT  : adds an entry to the item_table of the database
 
     RETURNS : void
@@ -429,6 +444,14 @@ void add_guild(int guild_id, char *guild_tag, char *guild_name, char *guild_desc
               int chan_id
               );
 
+/** RESULT  : adds an entry to the bag_type_table of the database
+
+    RETURNS : void
+
+    PURPOSE : enables data to be bulk loaded from a text file
+
+    USAGE   : load_database_bag_type_table_data:files.c */
+void add_bag_type(int bag_type_token, char *bag_description, int poof_time, int max_emu);
 
 /** RESULT  : Updates the number of chars created for a particular race
 

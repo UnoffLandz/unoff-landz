@@ -9,6 +9,7 @@
 #define MAX_MAPS 10
 #define MAX_GUILDS 10
 #define MAX_BAGS 256 //maximum bags on a map
+#define MAX_BAG_TYPES 700 //maximum number of bag types
 #define MAX_CLIENTS 50
 #define MAX_THREED_OBJECTS 100 // maximum number of e3d files that can be held in the threed_object array
 #define MAX_ITEMS 1500 //maximum number of mixable/harvestable items that can be held in the item array
@@ -608,15 +609,23 @@ ev_timer ev_harvest_timer[MAX_CLIENTS];
 
 /** BAGS **/
 struct bag_list_type {
-        int map_id;
-        int tile_pos;
-        int connection;
-        int bag_type_id;
-        int status; //USED, UNUSED
-        struct client_inventory_type inventory[MAX_BAG_SLOTS];
+    int map_id;
+    int tile_pos;
+    int connection;
+    int bag_type_id;
+    int status; //USED, UNUSED
+    struct client_inventory_type inventory[MAX_BAG_SLOTS];
 };
 struct bag_list_type bag_list[MAX_BAGS];
 
+/** BAG TYPES **/
+struct bag_type_type{
+    int bag_type_token;
+    char bag_type_description[160];
+    int poof_time;
+    int max_emu;
+};
+struct bag_type_type bag_type[MAX_BAG_TYPES];
 
 //struct to carry global data
 struct game_data_type {

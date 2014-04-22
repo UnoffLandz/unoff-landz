@@ -9,6 +9,7 @@
 #define CHANNEL_DATA_FILE       "channel_data.txt"
 #define RACE_DATA_FILE          "race_data_txt"
 #define GUILD_DATA_FILE         "guild_data_txt"
+#define BAG_TYPE_DATA_FILE      "bag_type_data.txt"
 
 #define DATABASE_FILE_NAME      "unoff.db"
 
@@ -58,6 +59,13 @@
                                 "#ID    Tag    Name            Description       Colour Colour Colour  Colour ID  \n" \
                                 "--------------------------------------------------------------------------------\n"
 
+#define BAG_TYPE_DATA_FILE_FORMAT  "#UNOFFLANDZ bag type data file\n" \
+                                   "#\n" \
+                                   "#Bag   Bag\n" \
+                                   "#Type  Type            Poof  Max\n" \
+                                   "#Token Description     Time  Emu\n" \
+                                   "--------------------------------\n"
+
 enum { //log events
     EVENT_NEW_CHAR,
     EVENT_ERROR,
@@ -87,6 +95,8 @@ void load_database_channel_table_data(char *file_name);
 void load_database_race_table_data(char *file_name);
 
 void load_database_guild_table_data(char *file_name);
+
+void load_database_bag_type_table_data(char *file_name);
 
 void load_e3d(char *filename);
 

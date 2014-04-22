@@ -19,6 +19,7 @@ void create_new_database() {
     create_database_table(CHANNEL_TABLE_SQL);
     create_database_table(RACE_TABLE_SQL);
     create_database_table(GUILD_TABLE_SQL);
+    create_database_table(BAG_TYPE_TABLE_SQL);
 
     log_event2(EVENT_INITIALISATION, "---");
 
@@ -29,7 +30,7 @@ void create_new_database() {
     load_database_channel_table_data(CHANNEL_DATA_FILE);
     load_database_race_table_data(RACE_DATA_FILE);
     load_database_guild_table_data(GUILD_DATA_FILE);
-
+    load_database_bag_type_table_data(BAG_TYPE_DATA_FILE);
 }
 
 void initialise_logs(){
@@ -89,6 +90,13 @@ void initialise_guilds(){
     to change from sqlite to mysql at sometime in the future */
 
     load_guilds();
+}
+
+void initialise_bag_types(){
+    /*function ensures that all database related actions are confined to the database.c module. This makes it easier
+    to change from sqlite to mysql at sometime in the future */
+
+    load_bag_types();
 }
 
 void initialise_bag_list(){

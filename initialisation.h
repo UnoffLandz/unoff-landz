@@ -31,6 +31,8 @@ void initialise_races();
 
 void initialise_guilds();
 
+void initialise_bag_types();
+
 void initialise_logs();
 
 void create_new_database();
