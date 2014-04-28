@@ -7,8 +7,6 @@ void initialise_channel_list(int max_nodes);
 
 void initialise_message_list(int max_nodes);
 
-void initialise_client_list(int max_nodes);
-
 void initialise_guild_list(int max_nodes);
 
 void initialise_character_list(int max_nodes);
@@ -16,6 +14,8 @@ void initialise_character_list(int max_nodes);
 void initialise_map_list(int max_nodes);
 
 void initialise_movement_vectors();
+
+void initialise_character_genders();
 
 void initialise_harvestables();
 
@@ -32,6 +32,8 @@ void initialise_races();
 void initialise_guilds();
 
 void initialise_bag_types();
+
+void initialise_character_types();
 
 void initialise_logs();
 

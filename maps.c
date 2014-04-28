@@ -11,7 +11,7 @@
 void add_client_to_map(int connection, int map_id){
 
     int map_client_count=maps.map[map_id]->client_list_count;
-    char text_out[80]="";
+    char text_out[160]="";
 
     maps.map[map_id]->client_list[map_client_count]=connection;
 

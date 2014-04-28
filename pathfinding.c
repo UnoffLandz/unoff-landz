@@ -221,8 +221,8 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
     int heuristic_value=0;
     int found=FALSE;
     char text_out[1024]="";
-    int start_tile=clients.client[connection]->map_tile;
-    int map_id=clients.client[connection]->map_id;
+    int start_tile=clients.client[connection].map_tile;
+    int map_id=clients.client[connection].map_id;
 
     //filter out paths where start = destination
     if(start_tile==destination_tile) return NOT_FOUND;
@@ -306,7 +306,7 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
 
     int lowest_value=0;
     int next_tile=0;
-    int map_id=clients.client[connection]->map_id;
+    int map_id=clients.client[connection].map_id;
     char text_out[1024]="";
     int found=FALSE;
 
@@ -319,8 +319,8 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
     path_stack[0][STATUS]=EXPLORED;
 
     //load destination tile to the path
-    clients.client[connection]->path_count=1;
-    clients.client[connection]->path[ clients.client[connection]->path_count-1]=next_tile;
+    clients.client[connection].path_count=1;
+    clients.client[connection].path[ clients.client[connection].path_count-1]=next_tile;
 
     //loop through explored tiles finding the best adjacent moves from destination to start
     do{
@@ -355,18 +355,18 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
         next_tile=path_stack[j][TILE];
         path_stack[j][STATUS]=EXPLORED;
 
-        clients.client[connection]->path_count++;
+        clients.client[connection].path_count++;
 
-        if(clients.client[connection]->path_count>PATH_MAX-1) {
+        if(clients.client[connection].path_count>PATH_MAX-1) {
 
             sprintf(text_out, "client path array exceeded in function get_astar_path\n");
             log_event(EVENT_MOVE_ERROR, text_out);
             exit(EXIT_FAILURE);
         }
 
-        clients.client[connection]->path[ clients.client[connection]->path_count-1]=next_tile;
+        clients.client[connection].path[ clients.client[connection].path_count-1]=next_tile;
 
-    }while(clients.client[connection]->path[clients.client[connection]->path_count-1]!=start_tile);
+    }while(clients.client[connection].path[clients.client[connection].path_count-1]!=start_tile);
 
     return FOUND;
 }

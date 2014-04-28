@@ -41,10 +41,10 @@ void send_motd_header(int connection){
     send_server_text(connection, CHAT_SERVER, text_out);
 
     //prepare list of names for characters in game
-    for(i=0; i<clients.max; i++){
+    for(i=0; i<MAX_CLIENTS; i++){
 
-        if(clients.client[i]->status==LOGGED_IN){
-            sprintf(chars_in_game_str, "%s %s",  chars_in_game_str, clients.client[connection]->char_name);
+        if(clients.client[i].status==LOGGED_IN){
+            sprintf(chars_in_game_str, "%s %s",  chars_in_game_str, clients.client[connection].char_name);
             chars_in_game_count++;
         }
     }
@@ -76,7 +76,7 @@ void send_motd_header(int connection){
     send_server_text(connection, CHAT_SERVER, text_out);
 
     //prepare and send connection ip address
-    sprintf(text_out, "%cConnection IP address      : %s", c_blue2+127, clients.client[connection]->ip_address);
+    sprintf(text_out, "%cConnection IP address      : %s", c_blue2+127, clients.client[connection].ip_address);
     send_server_text(connection, CHAT_SERVER, text_out);
 
     //send separator line so MOTD is distinct from subsequent text

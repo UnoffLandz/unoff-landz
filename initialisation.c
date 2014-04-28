@@ -20,6 +20,7 @@ void create_new_database() {
     create_database_table(RACE_TABLE_SQL);
     create_database_table(GUILD_TABLE_SQL);
     create_database_table(BAG_TYPE_TABLE_SQL);
+    create_database_table(CHARACTER_TYPE_TABLE_SQL);
 
     log_event2(EVENT_INITIALISATION, "---");
 
@@ -31,6 +32,7 @@ void create_new_database() {
     load_database_race_table_data(RACE_DATA_FILE);
     load_database_guild_table_data(GUILD_DATA_FILE);
     load_database_bag_type_table_data(BAG_TYPE_DATA_FILE);
+    load_database_char_type_table_data(CHARACTER_TYPE_DATA_FILE);
 }
 
 void initialise_logs(){
@@ -99,6 +101,14 @@ void initialise_bag_types(){
     load_bag_types();
 }
 
+void initialise_character_types(){
+
+    /*function ensures that all database related actions are confined to the database.c module. This makes it easier
+    to change from sqlite to mysql at sometime in the future */
+
+    load_character_types();
+}
+
 void initialise_bag_list(){
 
     memset(&bag_list, 0, sizeof(bag_list));
@@ -117,33 +127,10 @@ void initialise_movement_vectors(){
     vector[7].x=-1; vector[7].y=1; vector[7].move_cmd=27;
 }
 
-void initialise_client_list(int max_nodes){
+void initialise_character_genders(){
 
-    int i=0;
-
-    // zero our struct data
-    clients.count=0;
-    clients.max=max_nodes;
-
-    // allocate memory for our struct
-    if( !(clients.client=malloc(sizeof(struct client_node_type*)*max_nodes))) {
-        perror ("unable to allocate suffient memory for client struct");
-        exit (EXIT_FAILURE);
-    }
-
-    // allocate memory for our struct nodes
-    for(i=0; i<max_nodes; i++){
-
-        if( !(clients.client[i]=malloc(sizeof(struct client_node_type)))) {
-            perror ("unable to allocate suffient memory for client node struct");
-            exit (EXIT_FAILURE);
-        }
-
-        clients.client[i]->status=LOGGED_OUT;
-        clients.client[i]->path_count=0;
-        //clients.client[i]->cmd_buffer_end=0;
-
-     }
+    strcpy(character_gender[0].description, "Female");
+    strcpy(character_gender[1].description, "Male");
 }
 
 void initialise_map_list(int max_nodes){

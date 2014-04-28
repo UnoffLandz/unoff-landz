@@ -52,6 +52,7 @@
 #define ITEM_TABLE_SQL  "CREATE TABLE ITEM_TABLE(  \
         IMAGE_ID            INTEGER PRIMARY KEY     NOT NULL, \
         ITEM_NAME           TEXT, \
+        BAG_TOKEN           INT, \
         HARVESTABLE         INT, \
         EMU                 INT, \
         INTERVAL            INT, \
@@ -93,6 +94,13 @@
         NIGHTVIS_MULTIPLIER REAL, \
         CHAR_COUNT          INT)"
 
+#define CHARACTER_TYPE_TABLE_SQL "CREATE TABLE CHARACTER_TYPE_TABLE( \
+        CHARACTER_TYPE_ID   INTEGER PRIMARY KEY     NOT NULL, \
+        CHARACTER_TYPE_NAME TEXT, \
+        RACE_ID             INT, \
+        SEX_ID              INT, \
+        CHAR_COUNT          INT)"
+
 #define GUILD_TABLE_SQL "CREATE TABLE GUILD_TABLE( \
         GUILD_ID             INTEGER PRIMARY KEY     NOT NULL, \
         GUILD_TAG            TEXT, \
@@ -106,7 +114,8 @@
         DATE_CREATED         INT)"
 
 #define BAG_TYPE_TABLE_SQL "CREATE TABLE BAG_TYPE_TABLE( \
-        BAG_TYPE_TOKEN       INTEGER PRIMARY KEY     NOT NULL, \
+        BAG_TYPE_ID          INTEGER PRIMARY KEY     NOT NULL, \
+        IMAGE_ID             INT, \
         BAG_TYPE_DESCRIPTION TEXT, \
         POOF_TIME            TEXT, \
         MAX_EMU              TEXT)"
@@ -145,6 +154,7 @@ int get_max_char_id();
 
     USAGE   : send_pm:chat.c, rename_char:hash_command.c, process_log_in:log_in.c, process_packet:protocol.c */
 int get_char_data_from_db(char *char_name);
+
 
 /** RESULT  : Determines the number of tables in the database
 
@@ -358,6 +368,17 @@ void load_guilds();
     USAGE   : initialise_bag_types:initialisation.c */
 void load_bag_types();
 
+
+/** RESULT  : loads character type data from the database to the character type struct array
+
+    RETURNS : void
+
+    PURPOSE : allows character type data to be held in memory for faster operations
+
+    USAGE   : initialise_character_types:initialisation.c */
+void load_character_types();
+
+
 /** RESULT  : adds an entry to the item_table of the database
 
     RETURNS : void
@@ -365,11 +386,7 @@ void load_bag_types();
     PURPOSE : enables database entries to be bulk loaded from a text file
 
     USAGE   : load_database_item_table_data:files.c */
-void add_item(int image_id, char *item_name,
-              int harvestable,
-              int emu,
-              int interval,
-              int exp,
+void add_item(int image_id, char *item_name, int bag_token, int harvestable, int emu, int interval, int exp,
               int food_value,
               int food_cooldown,
               int organic_nexus,
@@ -451,7 +468,18 @@ void add_guild(int guild_id, char *guild_tag, char *guild_name, char *guild_desc
     PURPOSE : enables data to be bulk loaded from a text file
 
     USAGE   : load_database_bag_type_table_data:files.c */
-void add_bag_type(int bag_type_token, char *bag_description, int poof_time, int max_emu);
+void add_bag_type(int bag_id, int image_id, char *bag_description, int poof_time, int max_emu);
+
+
+/** RESULT  : adds an entry to the characyer_type_table of the database
+
+    RETURNS : void
+
+    PURPOSE : enables data to be bulk loaded from a text file
+
+    USAGE   : load_database_character_type_table_data:files.c */
+void add_char_type(int char_type_id, char *char_type_name, int race_id, int sex_id);
+
 
 /** RESULT  : Updates the number of chars created for a particular race
 

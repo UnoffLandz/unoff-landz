@@ -16,11 +16,11 @@
 
 int get_char_chat_proximity(int connection){
 
-    int race_id=clients.client[connection]->char_type;
+    int race_id=clients.client[connection].char_type;
     int initial_chat_proximity=race[race_id].initial_chat_proximity;
     int chat_proximity_multiplier=race[race_id].chat_proximity_multiplier;
 
-    return initial_chat_proximity + (chat_proximity_multiplier * clients.client[connection]->will);
+    return initial_chat_proximity + (chat_proximity_multiplier * clients.client[connection].will);
 }
 
 void send_get_active_channels(int connection){
@@ -31,16 +31,16 @@ void send_get_active_channels(int connection){
     packet[0]=71;
     packet[1]=14;
     packet[2]=0;
-    packet[3]=clients.client[connection]->active_chan;
+    packet[3]=clients.client[connection].active_chan;
 
     for(i=0; i<MAX_CHAN_SLOTS; i++){
 
         j=i*4;
 
-        packet[j+4]=clients.client[connection]->chan[i] % 256;
-        packet[j+5]=clients.client[connection]->chan[i]/256 % 256;
-        packet[j+6]=clients.client[connection]->chan[i]/256/256 % 256;
-        packet[j+7]=clients.client[connection]->chan[i]/256/256/256 % 256;
+        packet[j+4]=clients.client[connection].chan[i] % 256;
+        packet[j+5]=clients.client[connection].chan[i]/256 % 256;
+        packet[j+6]=clients.client[connection].chan[i]/256/256 % 256;
+        packet[j+7]=clients.client[connection].chan[i]/256/256/256 % 256;
     }
 
     send(connection, packet, 16, 0);
@@ -65,7 +65,7 @@ void add_client_to_channel(int connection, int chan_id){
         exit(EXIT_FAILURE);
     }
 
-    sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, clients.client[connection]->char_name, channels.channel[chan_id]->channel_name);
+    sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, clients.client[connection].char_name, channels.channel[chan_id]->channel_name);
     broadcast_channel_event(chan_id, connection, text_out);
 }
 
@@ -96,7 +96,7 @@ void remove_client_from_channel(int connection, int chan){
 
     channels.channel[chan]->client_list_count--;
 
-    sprintf(text_out, "%c%s has left channel %s", c_yellow1+127, clients.client[connection]->char_name, channels.channel[chan]->channel_name);
+    sprintf(text_out, "%c%s has left channel %s", c_yellow1+127, clients.client[connection].char_name, channels.channel[chan]->channel_name);
     broadcast_channel_event(chan, connection, text_out);
 }
 
@@ -106,7 +106,7 @@ int get_chan_slot(int connection, int chan, int *slot) {
 
     for(i=0; i<MAX_CHAN_SLOTS; i++){
 
-        if(clients.client[connection]->chan[i]==chan) {
+        if(clients.client[connection].chan[i]==chan) {
             *slot=i;
             return FOUND;
         }
@@ -121,7 +121,7 @@ int get_free_chan_slot(int connection, int *slot) {
 
     for(i=0; i<MAX_CHAN_SLOTS; i++){
 
-        if(clients.client[connection]->chan[i]==0) {
+        if(clients.client[connection].chan[i]==0) {
             *slot=i;
             return FOUND;
         }
@@ -136,7 +136,7 @@ int get_used_chan_slot(int connection, int *slot) {
 
     for(i=0; i<MAX_CHAN_SLOTS; i++){
 
-        if(clients.client[connection]->chan[i]>0) {
+        if(clients.client[connection].chan[i]>0) {
             *slot=i;
             return FOUND;
         }
@@ -159,7 +159,7 @@ void list_clients_in_chan(int connection, int chan){
 
     for(i=0; i<channels.channel[chan]->client_list_count; i++){
 
-        sprintf(text_out, "%c%s ", c_blue1+127, clients.client[connection]->char_name);
+        sprintf(text_out, "%c%s ", c_blue1+127, clients.client[connection].char_name);
         send_server_text(connection, CHAT_SERVER, text_out);
     }
 }
@@ -216,8 +216,8 @@ int join_channel(int connection, int chan){
     add_client_to_channel(connection, chan);
 
     // send revised chan data to client
-    clients.client[connection]->chan[slot]=chan;
-    clients.client[connection]->active_chan=slot;
+    clients.client[connection].chan[slot]=chan;
+    clients.client[connection].active_chan=slot;
     send_get_active_channels(connection);
 
     //update database
@@ -262,18 +262,18 @@ int leave_channel(int connection, int chan){
     remove_client_from_channel(connection, chan);
 
     // reset chan slot to empty
-    clients.client[connection]->chan[slot]=0;
+    clients.client[connection].chan[slot]=0;
 
     // reset active channel
     if(get_used_chan_slot(connection, &slot)==NOT_FOUND){
 
         //there are no other open channels
-        clients.client[connection]->active_chan=0;
+        clients.client[connection].active_chan=0;
     }
     else {
 
         //set active channel to next open channel
-        clients.client[connection]->active_chan=slot;
+        clients.client[connection].active_chan=slot;
     }
 
     //send new active chan to client
@@ -303,16 +303,16 @@ int process_chat(int connection, char *text_in){
     if(get_used_chan_slot(connection, &slot)==NOT_FOUND) return CHAR_NOT_IN_CHAN;
 
     // get the active slot
-    slot=clients.client[connection]->active_chan;
+    slot=clients.client[connection].active_chan;
 
     // find the channel number for the active slot
-    chan=clients.client[connection]->chan[slot];
+    chan=clients.client[connection].chan[slot];
 
-    printf("active chan slot %i\n",clients.client[connection]->active_chan);
-    printf("active chan %i\n", clients.client[connection]->chan[slot]);
+    printf("active chan slot %i\n",clients.client[connection].active_chan);
+    printf("active chan %i\n", clients.client[connection].chan[slot]);
 
     //create the chat string
-    sprintf(text_out, "%c[%s @ %i(%s)] %s", c_grey1+127, clients.client[connection]->char_name, chan, channels.channel[chan]->channel_name, text_in);
+    sprintf(text_out, "%c[%s @ %i(%s)] %s", c_grey1+127, clients.client[connection].char_name, chan, channels.channel[chan]->channel_name, text_in);
 
     // echo to sender
     send_raw_text_packet(connection, CHAT_SERVER, text_out);
@@ -320,9 +320,9 @@ int process_chat(int connection, char *text_in){
     //send to others in chan (don't send colour as thats added in function broadcast_channel_chat
     broadcast_channel_chat(chan, connection, text_in);
 
-    printf("Chat sent from %s to channel %s: %s\n", clients.client[connection]->char_name, channels.channel[chan]->channel_name, text_in);
+    printf("Chat sent from %s to channel %s: %s\n", clients.client[connection].char_name, channels.channel[chan]->channel_name, text_in);
 
-    sprintf(text_out, "[%s @ %i(%s)] %s", clients.client[connection]->char_name, chan, channels.channel[chan]->channel_name, text_in);
+    sprintf(text_out, "[%s @ %i(%s)] %s", clients.client[connection].char_name, chan, channels.channel[chan]->channel_name, text_in);
     log_event(EVENT_CHAT, text_out);
 
     return CHAN_CHAT_SENT;
@@ -345,7 +345,7 @@ int get_guild_id(char *guild_tag, int *guild_id){
 
 int process_guild_chat(int connection, char *message){
 
-    int guild_id=clients.client[connection]->guild_id;
+    int guild_id=clients.client[connection].guild_id;
     int chan_colour=0;
     char text_out[1024]="";
 
@@ -366,7 +366,7 @@ int process_guild_chat(int connection, char *message){
     }
 
     //check sender has permission to send #IG
-    if(clients.client[connection]->gm_permission==FALSE){
+    if(clients.client[connection].gm_permission==FALSE){
 
         sprintf(text_out, "%cyou do not have #GM permission in this guild", c_red3+127);
         send_server_text(connection, CHAT_SERVER, text_out);
@@ -375,7 +375,7 @@ int process_guild_chat(int connection, char *message){
 
     // send to senders guild channel
     chan_colour=guilds.guild[guild_id]->guild_chan_text_colour;
-    sprintf(text_out, "%c#GM from %s: %s", chan_colour, clients.client[connection]->char_name, message);
+    sprintf(text_out, "%c#GM from %s: %s", chan_colour, clients.client[connection].char_name, message);
     broadcast_guild_channel_chat(guild_id, text_out);
 
     return SENT;
@@ -384,7 +384,7 @@ int process_guild_chat(int connection, char *message){
 int process_inter_guild_chat(int connection, char *guild_tag, char *message){
 
     int receiver_guild_id=0;
-    int sender_guild_id=clients.client[connection]->guild_id;
+    int sender_guild_id=clients.client[connection].guild_id;
     char hash_command_tail[1024]="";
     int chan_colour=0;
     char text_out[1024]="";
@@ -406,7 +406,7 @@ int process_inter_guild_chat(int connection, char *guild_tag, char *message){
     }
 
     //check sender has permission to send #IG
-    if(clients.client[connection]->ig_permission==FALSE){
+    if(clients.client[connection].ig_permission==FALSE){
 
         sprintf(text_out, "%cyou do not have #IG permission in this guild", c_red3+127);
         send_server_text(connection, CHAT_SERVER, text_out);
@@ -426,12 +426,12 @@ int process_inter_guild_chat(int connection, char *guild_tag, char *message){
 
     // broadcast to senders guild channel
     chan_colour=guilds.guild[sender_guild_id]->guild_chan_text_colour;
-    sprintf(text_out, "%c#IG [sent by %s to %s]: %s", chan_colour, clients.client[connection]->char_name, guilds.guild[receiver_guild_id]->guild_tag, hash_command_tail);
+    sprintf(text_out, "%c#IG [sent by %s to %s]: %s", chan_colour, clients.client[connection].char_name, guilds.guild[receiver_guild_id]->guild_tag, hash_command_tail);
     broadcast_guild_channel_chat(sender_guild_id, text_out);
 
     // broadcast to receiver guild channel
     chan_colour=guilds.guild[receiver_guild_id]->guild_chan_text_colour;
-    sprintf(text_out, "%c#IG [sent by %s from %s]: %s", chan_colour, clients.client[connection]->char_name, guilds.guild[sender_guild_id]->guild_tag, hash_command_tail);
+    sprintf(text_out, "%c#IG [sent by %s from %s]: %s", chan_colour, clients.client[connection].char_name, guilds.guild[sender_guild_id]->guild_tag, hash_command_tail);
     broadcast_guild_channel_chat(receiver_guild_id, text_out);
 
     return SENT;
@@ -442,10 +442,10 @@ int char_in_game(int char_id){
     int i;
 
     //check if message recipient is in game
-    for(i=0; i<clients.max; i++){
+    for(i=0; i<MAX_CLIENTS; i++){
 
         //if message recipient in game then send message
-        if(clients.client[i]->character_id==char_id && clients.client[i]->char_status==LOGGED_IN){
+        if(clients.client[i].character_id==char_id && clients.client[i].char_status==LOGGED_IN){
             return IN_GAME;
         }
     }
@@ -479,7 +479,7 @@ void send_pm(int connection, char *receiver_name, char *message) {
         printf("SEND_PM from [%s] to [%s] message [%s] - recipient not in-game\n", sender_name, receiver_name, message);
     }
 
-    sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, clients.client[connection]->char_name, message);
+    sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, clients.client[connection].char_name, message);
     send_server_text(recipient_connection, CHAT_PERSONAL, text_out);
 
     log_event(EVENT_CHAT, text_out);

@@ -16,11 +16,10 @@
 #include "log_in.h"
 #include "database.h"
 
-int char_type[12]={HUMAN_FEMALE, HUMAN_MALE, ELF_FEMALE, ELF_MALE, DWARF_FEMALE, DWARF_MALE, GNOME_FEMALE, GNOME_MALE, ORCHAN_FEMALE, ORCHAN_MALE, DRAEGONI_FEMALE, DRAEGONI_MALE};
-int char_race[12]={HUMAN, HUMAN, ELF, ELF, DWARF, DWARF, GNOME, GNOME, ORCHAN, ORCHAN, DRAEGONI, DRAEGONI};
-int char_gender[12]={FEMALE, MALE, FEMALE, MALE, FEMALE, MALE, FEMALE, MALE, FEMALE, MALE, FEMALE, MALE};
+//int char_type[12]={HUMAN_FEMALE, HUMAN_MALE, ELF_FEMALE, ELF_MALE, DWARF_FEMALE, DWARF_MALE, GNOME_FEMALE, GNOME_MALE, ORCHAN_FEMALE, ORCHAN_MALE, DRAEGONI_FEMALE, DRAEGONI_MALE};
+//int char_race[12]={HUMAN, HUMAN, ELF, ELF, DWARF, DWARF, GNOME, GNOME, ORCHAN, ORCHAN, DRAEGONI, DRAEGONI};
+//int char_gender[12]={FEMALE, MALE, FEMALE, MALE, FEMALE, MALE, FEMALE, MALE, FEMALE, MALE, FEMALE, MALE};
 
-//char race_type[6][20]={"HUMAN", "ELF", "DWARF", "GNOME", "ORCHAN", "DRAEGONI"};
 char gender_type[2][10]={"FEMALE", "MALE"};
 char char_status_type[3][10]={"ALIVE", "DEAD", "BANNED"};
 
@@ -29,7 +28,7 @@ void save_data(int connection){
     int sock=connection;
     char text_out[1024]="";
 
-    if(clients.client[connection]->status==LOGGED_IN){
+    if(clients.client[connection].status==LOGGED_IN){
 
         //save_character(clients.client[connection]->char_name, char_id);
 
@@ -44,7 +43,7 @@ int rename_char(int connection, char *new_char_name){
     if(get_char_data_from_db(new_char_name)!=NOT_FOUND) return CHAR_RENAME_FAILED_DUPLICATE;
 
     //update char name and save
-    strcpy(clients.client[connection]->char_name, new_char_name);
+    strcpy(clients.client[connection].char_name, new_char_name);
     update_db_char_name(connection);
 
     // add this char to each connected client
@@ -73,7 +72,7 @@ int process_hash_commands(int connection, char *text){
     str_conv_upper(hash_command);
 
     //log all hash commands
-    sprintf(text_out, "client [%i] character [%s] command [%s]", connection, clients.client[connection]->char_name, text);
+    sprintf(text_out, "client [%i] character [%s] command [%s]", connection, clients.client[connection].char_name, text);
     log_event(EVENT_SESSION, text_out);
 
 /***************************************************************************************************/
@@ -97,7 +96,7 @@ int process_hash_commands(int connection, char *text){
         }
 
         //if char is moving when protocol arrives, cancel rest of path
-        clients.client[connection]->path_count=0;
+        clients.client[connection].path_count=0;
 
         //ensure char doesn't beam on top of another char
         new_map_tile=get_nearest_unoccupied_tile(START_MAP_ID, START_MAP_TILE);
@@ -121,7 +120,7 @@ int process_hash_commands(int connection, char *text){
         if(strcmp(hash_command_tail, "ME")!=0) return HASH_CMD_ABORTED;
 
         //if char is moving when protocol arrives, cancel rest of path
-        clients.client[connection]->path_count=0;
+        clients.client[connection].path_count=0;
 
         //ensure char doesn't beam on top of another char
         new_map_tile=get_nearest_unoccupied_tile(START_MAP_ID, START_MAP_TILE);
@@ -157,7 +156,7 @@ int process_hash_commands(int connection, char *text){
 
         get_str_island(text, hash_command_tail, 2);
 
-        strcpy(old_char_name, clients.client[connection]->char_name);
+        strcpy(old_char_name, clients.client[connection].char_name);
 
         if(rename_char(connection, hash_command_tail)==CHAR_RENAME_FAILED_DUPLICATE){
 
@@ -173,10 +172,10 @@ int process_hash_commands(int connection, char *text){
         sprintf(text_out, "%cIn the future you'll need to purchase a name change token to do this", c_yellow1+127);
         send_raw_text_packet(connection, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "%cGratz. You just changed your character name to %s", c_green1+127, clients.client[connection]->char_name);
+        sprintf(text_out, "%cGratz. You just changed your character name to %s", c_green1+127, clients.client[connection].char_name);
         send_raw_text_packet(connection, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "name change for char[%s] to [%s]\n", old_char_name, clients.client[connection]->char_name);
+        sprintf(text_out, "name change for char[%s] to [%s]\n", old_char_name, clients.client[connection].char_name);
         log_event(EVENT_SESSION, text_out);
 
         return HASH_CMD_EXECUTED;
@@ -219,7 +218,7 @@ int process_hash_commands(int connection, char *text){
         sprintf(text_out, "%cDescription  :%s", c_green3+127, race[character.char_type].race_description);
         send_server_text(connection, CHAT_SERVER, text_out);
 
-        sprintf(text_out, "%cGender       :%s", c_green3+127, gender_type[char_gender[character.char_type]]);
+        sprintf(text_out, "%cGender       :%s", c_green3+127, character_gender[character_type[character.char_type].sex_id].description);
         send_server_text(connection, CHAT_SERVER, text_out);
 
         get_time_stamp_str(character.char_created, time_stamp_str);
@@ -371,7 +370,7 @@ int process_hash_commands(int connection, char *text){
 
     else if (strcmp(hash_command, "#LCC")==0 || strcmp(hash_command, "#LIST_CHANNEL_CHARACTERS")==0){
 
-        chan_id=clients.client[connection]->chan[clients.client[connection]->active_chan];
+        chan_id=clients.client[connection].chan[clients.client[connection].active_chan];
 
         list_clients_in_chan(connection, chan_id);
 

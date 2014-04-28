@@ -69,44 +69,45 @@ void load_char_data_into_connection(int connection){
 
     int i=0;
 
-    clients.client[connection]->character_id=character.character_id;
-    strcpy(clients.client[connection]->char_name, character.char_name);
-    strcpy(clients.client[connection]->password, character.password);
-    clients.client[connection]->char_status=character.char_status;
-    clients.client[connection]->active_chan=character.active_chan;
-    clients.client[connection]->chan[0]=character.chan[0];
-    clients.client[connection]->chan[1]=character.chan[1];
-    clients.client[connection]->chan[2]=character.chan[2];
-    clients.client[connection]->gm_permission=character.gm_permission;
-    clients.client[connection]->ig_permission=character.ig_permission;
-    clients.client[connection]->map_id=character.map_id;
-    clients.client[connection]->map_tile=character.map_tile;
-    clients.client[connection]->guild_id=character.guild_id;
-    clients.client[connection]->char_type=character.char_type;
-    clients.client[connection]->skin_type=character.skin_type;
-    clients.client[connection]->hair_type=character.hair_type;
-    clients.client[connection]->shirt_type=character.shirt_type;
-    clients.client[connection]->pants_type=character.pants_type;
-    clients.client[connection]->boots_type=character.boots_type;
-    clients.client[connection]->head_type=character.head_type;
-    clients.client[connection]->shield_type=character.shield_type;
-    clients.client[connection]->weapon_type=character.weapon_type;
-    clients.client[connection]->cape_type=character.cape_type;
-    clients.client[connection]->helmet_type=character.helmet_type;
-    clients.client[connection]->frame=character.frame;
-    clients.client[connection]->max_health=character.max_health;
-    clients.client[connection]->current_health=character.current_health;
-    clients.client[connection]->last_in_game=character.last_in_game;
-    clients.client[connection]->char_created=character.char_created;
-    clients.client[connection]->joined_guild=character.joined_guild;
+    clients.client[connection].character_id=character.character_id;
+    strcpy(clients.client[connection].char_name, character.char_name);
+    strcpy(clients.client[connection].password, character.password);
+    clients.client[connection].char_status=character.char_status;
+    clients.client[connection].active_chan=character.active_chan;
+    clients.client[connection].chan[0]=character.chan[0];
+    clients.client[connection].chan[1]=character.chan[1];
+    clients.client[connection].chan[2]=character.chan[2];
+    clients.client[connection].gm_permission=character.gm_permission;
+    clients.client[connection].ig_permission=character.ig_permission;
+    clients.client[connection].map_id=character.map_id;
+    clients.client[connection].map_tile=character.map_tile;
+    clients.client[connection].guild_id=character.guild_id;
+    clients.client[connection].char_type=character.char_type;
+    clients.client[connection].race_type=character_type[character.char_type].race_id;
+    clients.client[connection].skin_type=character.skin_type;
+    clients.client[connection].hair_type=character.hair_type;
+    clients.client[connection].shirt_type=character.shirt_type;
+    clients.client[connection].pants_type=character.pants_type;
+    clients.client[connection].boots_type=character.boots_type;
+    clients.client[connection].head_type=character.head_type;
+    clients.client[connection].shield_type=character.shield_type;
+    clients.client[connection].weapon_type=character.weapon_type;
+    clients.client[connection].cape_type=character.cape_type;
+    clients.client[connection].helmet_type=character.helmet_type;
+    clients.client[connection].frame=character.frame;
+    clients.client[connection].max_health=character.max_health;
+    clients.client[connection].current_health=character.current_health;
+    clients.client[connection].last_in_game=character.last_in_game;
+    clients.client[connection].char_created=character.char_created;
+    clients.client[connection].joined_guild=character.joined_guild;
 
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
-        clients.client[connection]->client_inventory[i].image_id=character.client_inventory[i].image_id;
-        clients.client[connection]->client_inventory[i].amount=character.client_inventory[i].amount;
+        clients.client[connection].client_inventory[i].image_id=character.client_inventory[i].image_id;
+        clients.client[connection].client_inventory[i].amount=character.client_inventory[i].amount;
     }
 
-    clients.client[connection]->overall_exp=character.overall_exp;
-    clients.client[connection]->harvest_exp=character.harvest_exp;
+    clients.client[connection].overall_exp=character.overall_exp;
+    clients.client[connection].harvest_exp=character.harvest_exp;
 }
 
 void process_log_in(int connection, char *text) {
@@ -156,7 +157,7 @@ void process_log_in(int connection, char *text) {
     load_char_data_into_connection(connection);
 
     //check we have the correct password for our char
-    if(strcmp(password, clients.client[connection]->password)==PASSWORD_INCORRECT){
+    if(strcmp(password, clients.client[connection].password)==PASSWORD_INCORRECT){
 
         send_login_not_ok(connection);
         log_event(EVENT_SESSION, "login rejected - incorrect password\n");
@@ -164,9 +165,9 @@ void process_log_in(int connection, char *text) {
     }
 
     //prevent login of dead/banned chars
-    if(clients.client[connection]->char_status!=CHAR_ALIVE){
+    if(clients.client[connection].char_status!=CHAR_ALIVE){
 
-        switch(clients.client[connection]->char_status){
+        switch(clients.client[connection].char_status){
 
             case CHAR_DEAD:
             log_event(EVENT_SESSION, "login rejected - dead char\n");
@@ -175,6 +176,9 @@ void process_log_in(int connection, char *text) {
             case CHAR_BANNED:
             log_event(EVENT_SESSION, "login rejected - banned char\n");
             break;
+
+            default:
+            log_event(EVENT_ERROR, "login rejected - unknown char status\n");
         }
 
         send_login_not_ok(connection);
@@ -182,10 +186,10 @@ void process_log_in(int connection, char *text) {
     }
 
     //prevent concurrent login on same char
-    for(i=1; i<clients.max; i++){
+    for(i=1; i<MAX_CLIENTS; i++){
 
-        if(clients.client[connection]->character_id==clients.client[i]->character_id \
-           && clients.client[connection]->status==LOGGED_IN \
+        if(clients.client[connection].character_id==clients.client[i].character_id \
+           && clients.client[connection].status==LOGGED_IN \
            && i!=connection){
 
             send_login_not_ok(connection);
@@ -196,44 +200,34 @@ void process_log_in(int connection, char *text) {
         }
     }
 
-    clients.client[connection]->status=LOGGED_IN;
+    clients.client[connection].status=LOGGED_IN;
 
     //add char to local channel lists
     for(i=0; i<3; i++){
-        if(clients.client[connection]->chan[i]>0) add_client_to_channel(connection, clients.client[connection]->chan[i]);
+        if(clients.client[connection].chan[i]>0) add_client_to_channel(connection, clients.client[connection].chan[i]);
     }
 
     // notify guild that char has logged on
-    guild_id=clients.client[connection]->guild_id;
+    guild_id=clients.client[connection].guild_id;
 
     if(guild_id>0) {
 
         chan_colour=guilds.guild[guild_id]->log_on_notification_colour;
-        sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, clients.client[connection]->char_name);
+        sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, clients.client[connection].char_name);
         broadcast_guild_channel_chat(guild_id, text_out);
     }
 
     //add char to local map list
-    map_id=clients.client[connection]->map_id;
+    map_id=clients.client[connection].map_id;
 
-    if(add_char_to_map(connection, map_id, clients.client[connection]->map_tile)==ILLEGAL_MAP){
+    if(add_char_to_map(connection, map_id, clients.client[connection].map_tile)==ILLEGAL_MAP){
         sprintf(text_out, "cannot add char [%s] to map [%s] in function process_packet", char_name, maps.map[map_id]->map_name);
         log_event(EVENT_ERROR, text_out);
         exit(EXIT_FAILURE);
     }
 
-    //tell char to sit if the frame is set to sit
-    if(clients.client[connection]->frame==sit_down) {
-
-        broadcast_actor_packet(connection, sit_down, clients.client[connection]->map_tile);
-    }
-    else {
-
-        broadcast_actor_packet(connection, stand_up, clients.client[connection]->map_tile);
-    }
-
     //record time session commenced so we can calculate time in-game
-    clients.client[connection]->session_commenced=time(NULL);
+    clients.client[connection].session_commenced=time(NULL);
 
     send_login_ok(connection);
     send_you_are(connection);

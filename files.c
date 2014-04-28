@@ -1146,6 +1146,7 @@ void load_database_item_table_data(char *file_name){
     FILE *file;
     int image_id=0;
     char item_name[80]="";
+    int bag_token=0;
     int harvestable=0;
     int emu=0;
     int interval=0;
@@ -1174,9 +1175,10 @@ void load_database_item_table_data(char *file_name){
     while(buf[0]==ASCII_HASH);
 
     //load entries to database
-    while (fscanf(file, "%i %s %i %i %i %i %i %i %i %i\n",
+    while (fscanf(file, "%i %s %i %i %i %i %i %i %i %i %i\n",
             &image_id,
             item_name,
+            &bag_token,
             &harvestable,
             &emu,
             &interval,
@@ -1190,13 +1192,14 @@ void load_database_item_table_data(char *file_name){
         str_remove_underscores(item_name);
 
         //add item to database
-        add_item(image_id, item_name, harvestable, emu, interval, exp, food_value, food_cooldown,
+        add_item(image_id, item_name, bag_token, harvestable, emu, interval, exp, food_value, food_cooldown,
                 organic_nexus,
                 vegetal_nexus);
 
         //zero variables
         image_id=0;
         strcpy(item_name, "");
+        bag_token=0;
         harvestable=0;
         emu=0;
         interval=0;
@@ -1430,74 +1433,51 @@ void load_database_race_table_data(char *file_name){
     log_event2(EVENT_INITIALISATION, "---");
 }
 
-void load_database_guild_table_data(char *file_name){
+void load_database_char_type_table_data(char *file_name){
 
     FILE *file;
-    int guild_id=0;
-    char guild_tag[4]="";
-    char guild_name[20]="";
-    char guild_description[160]="";
-    int tag_colour=0;
-    int logon_colour=0;
-    int logoff_colour=0;
-    int chan_text_colour=0;
-    int chan_id=0;
+    int char_type_id=0;
+    char char_type_name[80]="";
+    int race_id=0;
+    int sex_id=0;
     char buf[1024]="";
 
     //check we have an existing file and, if not, then create one
-    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, GUILD_DATA_FILE_FORMAT);
+    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, CHARACTER_TYPE_DATA_FILE_FORMAT);
 
     //load data from the text file
-    log_event2(EVENT_INITIALISATION, "Loading data to database guild_table...");
+    log_event2(EVENT_INITIALISATION, "Loading data to database character_type_table...");
 
     //skip notes
     do{
 
         if(fgets(buf, 1024, file)==NULL){
 
-            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_guild_data_table: module files.c", file_name);
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_character_type_data_table: module files.c", file_name);
             exit(EXIT_FAILURE);
         }
     }
     while(buf[0]==ASCII_HASH);
 
     //scan the entries and load to database
-    while (fscanf(file, "%i %s %s %s %i %i %i %i %i\n",
-                       &guild_id,
-
-                       guild_tag,
-                       guild_name,
-                       guild_description,
-
-                       &tag_colour,
-                       &logon_colour,
-                       &logoff_colour,
-                       &chan_text_colour,
-
-                       &chan_id
+    while (fscanf(file, "%i %s %i %i \n",
+                       &char_type_id,
+                       char_type_name,
+                       &race_id,
+                       &sex_id
                       )!=-1){
 
         //remove underscores which are needed for fscanf to ignore spaces in channel name and description
-        str_remove_underscores(guild_tag);
-        str_remove_underscores(guild_name);
-        str_remove_underscores(guild_description);
+        str_remove_underscores(char_type_name);
 
-        //add guild to database race_table
-        add_guild(guild_id, guild_tag, guild_name, guild_description, tag_colour, logon_colour, logoff_colour,
-                  chan_text_colour,
-                  chan_id);
+        //add char type to database char type table
+        add_char_type(char_type_id, char_type_name, race_id, sex_id);
 
         //zero variables
-        guild_id=0;
-        strcpy(guild_tag, "");
-        strcpy(guild_name, "");
-        strcpy(guild_description, "");
-
-        tag_colour=0;
-        logon_colour=0;
-        logoff_colour=0;
-        chan_text_colour=0;
-        chan_id=0;
+        char_type_id=0;
+        strcpy(char_type_name, "");
+        race_id=0;
+        sex_id=0;
     }
 
     fclose(file);
@@ -1508,7 +1488,8 @@ void load_database_guild_table_data(char *file_name){
 void load_database_bag_type_table_data(char *file_name){
 
     FILE *file;
-    int bag_type_token=0;
+    int bag_type_id=0;
+    int image_id=0;
     char bag_type_description[160]="";
     int poof_time=0;
     int max_emu=0;
@@ -1525,15 +1506,16 @@ void load_database_bag_type_table_data(char *file_name){
 
         if(fgets(buf, 1024, file)==NULL){
 
-            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_guild_data_table: module files.c", file_name);
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_bag_typ_data_table: module files.c", file_name);
             exit(EXIT_FAILURE);
         }
     }
     while(buf[0]==ASCII_HASH);
 
     //scan the entries and load to database
-    while (fscanf(file, "%i %s %i %i\n",
-                       &bag_type_token,
+    while (fscanf(file, "%i %i %s %i %i\n",
+                       &bag_type_id,
+                       &image_id,
                        bag_type_description,
                        &poof_time,
                        &max_emu
@@ -1542,14 +1524,87 @@ void load_database_bag_type_table_data(char *file_name){
         //remove underscores which are needed for fscanf to ignore spaces in channel name and description
         str_remove_underscores(bag_type_description);
 
-        //add guild to database race_table
-        add_bag_type(bag_type_token, bag_type_description, poof_time, max_emu);
+        //add bag type to database bag type table
+        add_bag_type(bag_type_id, image_id, bag_type_description, poof_time, max_emu);
 
         //zero variables
-        bag_type_token=0;
+        bag_type_id=0;
+        image_id=0;
         strcpy(bag_type_description, "");
         poof_time=0;
         max_emu=0;
+    }
+
+    fclose(file);
+
+    log_event2(EVENT_INITIALISATION, "---");
+}
+
+void load_database_guild_table_data(char *file_name){
+
+    FILE *file;
+    int guild_id=0;
+    char guild_tag[4]="";
+    char guild_name[80]="";
+    char guild_description[80]="";
+    int tag_colour=0;
+    int log_on_colour=0;
+    int log_off_colour=0;
+    int chan_text_colour=0;
+    int chan_id=0;
+
+    char buf[1024]="";
+
+    //check we have an existing file and, if not, then create one
+    if((file=fopen(file_name, "r"))==NULL) create_configuration_file(file_name, GUILD_DATA_FILE_FORMAT);
+
+    //load data from the text file
+    log_event2(EVENT_INITIALISATION, "Loading data to database guild_data_table...");
+
+    //skip notes
+    do{
+
+        if(fgets(buf, 1024, file)==NULL){
+
+            log_event2(EVENT_ERROR, "Unable to read file [%s] in function load_database_guild_table_data: module files.c", file_name);
+            exit(EXIT_FAILURE);
+        }
+    }
+    while(buf[0]==ASCII_HASH);
+
+    //scan the entries and load to database
+    while (fscanf(file, "%i %s %s %s %i %i %i %i %i\n",
+                        &guild_id,
+                        guild_tag,
+                        guild_name,
+                        guild_description,
+                        &tag_colour,
+                        &log_on_colour,
+                        &log_off_colour,
+                        &chan_text_colour,
+                        &chan_id
+                      )!=-1){
+
+        //remove underscores which are needed for fscanf to ignore spaces in channel name and description
+        str_remove_underscores(guild_tag);
+        str_remove_underscores(guild_name);
+        str_remove_underscores(guild_description);
+
+        //add guild to database guild table
+        add_guild(guild_id, guild_tag, guild_name, guild_description, tag_colour, log_on_colour, log_off_colour,
+              chan_text_colour,
+              chan_id);
+
+        //zero variables
+        guild_id=0;
+        strcpy(guild_tag, "");
+        strcpy(guild_name, "");
+        strcpy(guild_description, "");
+        tag_colour=0;
+        log_on_colour=0;
+        log_off_colour=0;
+        chan_text_colour=0;
+        chan_id=0;
     }
 
     fclose(file);

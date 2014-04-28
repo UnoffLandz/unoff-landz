@@ -24,9 +24,9 @@ static void harvest_cycle_cb (struct ev_loop *loop, struct ev_timer *ev_harvest_
     int connection=(int) ev_harvest_timer->data;
 
     char text_out[1024]="";
-    int image_id=clients.client[connection]->inventory_image_id;
-    int slot=clients.client[connection]->inventory_slot;
-    int amount=clients.client[connection]->harvest_amount;
+    int image_id=clients.client[connection].inventory_image_id;
+    int slot=clients.client[connection].inventory_slot;
+    int amount=clients.client[connection].harvest_amount;
 
     // if inventory is overloaded stop harvesting
     if(get_inventory_emu(connection)+ (item[image_id].emu * amount) > get_char_carry_capacity(connection)){
@@ -40,28 +40,28 @@ static void harvest_cycle_cb (struct ev_loop *loop, struct ev_timer *ev_harvest_
     }
 
     //send updated exp to client
-    clients.client[connection]->harvest_exp+=(item[image_id].exp * amount);
-    send_partial_stats(connection, HARVEST_EXP,  clients.client[connection]->harvest_exp);
+    clients.client[connection].harvest_exp+=(item[image_id].exp * amount);
+    send_partial_stats(connection, HARVEST_EXP,  clients.client[connection].harvest_exp);
 
     #ifdef DEBUG
     printf("harvesting Item %i name %s EMU %i\n", image_id, item[image_id].item_name, item[image_id].emu);
     #endif
 
+    printf("image id %i emu %i\n", image_id, item[image_id].emu);
+
     //send updated inventory_emu to client
-    clients.client[connection]->inventory_emu += (amount * item[image_id].emu);
-    send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection]->inventory_emu);
+    clients.client[connection].inventory_emu += (amount * item[image_id].emu);
+    send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection].inventory_emu);
 
     //update exp and inventory stats on database
     update_db_char_stats(connection);
 
     //Add the harvested amount to the inventory and send to client
-    clients.client[connection]->client_inventory[slot].amount+= amount;
-    send_get_new_inventory_item(connection, image_id, clients.client[connection]->client_inventory[slot].amount, slot);
+    clients.client[connection].client_inventory[slot].amount+= amount;
+    send_get_new_inventory_item(connection, image_id, clients.client[connection].client_inventory[slot].amount, slot);
 
     //update char inventory on database
     update_db_char_slot(connection, slot);
-
-    printf("harvest cycle\n");
 }
 
 void stop_harvesting2(int connection, struct ev_loop *loop){
@@ -69,11 +69,11 @@ void stop_harvesting2(int connection, struct ev_loop *loop){
     char text_out[1024]="";
 
     //unless we send this text to the client, the harvesting effect won't stop
-    sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection]->inventory_image_id].item_name);
+    sprintf(text_out, "%cYou stopped harvesting. %s", c_red3+127, item[clients.client[connection].inventory_image_id].item_name);
     send_server_text(connection, CHAT_SERVER, text_out);
 
     //cancel further harvesting cycles and exit
-    clients.client[connection]->harvest_flag=FALSE;
+    clients.client[connection].harvest_flag=FALSE;
 
     ev_timer_stop(loop, &ev_harvest_timer[connection]);
 }
@@ -156,13 +156,13 @@ void start_harvesting2(int connection, int map_object_id, struct ev_loop *loop){
 
     int slot=0;
     char text_out[80]="";
-    int map_id=clients.client[connection]->map_id;
+    int map_id=clients.client[connection].map_id;
     int map_axis=maps.map[map_id]->map_axis;
-    int char_tile=clients.client[connection]->map_tile;
+    int char_tile=clients.client[connection].map_tile;
     int interval=0;
 
     //if already harvesting then stop
-    if(clients.client[connection]->harvest_flag==TRUE) {
+    if(clients.client[connection].harvest_flag==TRUE) {
 
         ev_timer_start(loop, &ev_harvest_timer[connection]);
         stop_harvesting2(connection, loop);
@@ -177,7 +177,7 @@ void start_harvesting2(int connection, int map_object_id, struct ev_loop *loop){
         sprintf(text_out, "%cSorry. You can't harvest this item.", c_red3+127);
         send_server_text(connection, CHAT_SERVER, text_out);
 
-        clients.client[connection]->harvest_flag=FALSE;
+        clients.client[connection].harvest_flag=FALSE;
         return;
     }
 
@@ -193,24 +193,20 @@ void start_harvesting2(int connection, int map_object_id, struct ev_loop *loop){
         return;
     }
 
-    /*record the image id of the item being harvested in the client array so we know what to harvest on each subsequent
-    harvest cycle without having to continually look it up */
-    clients.client[connection]->inventory_image_id=map_object.image_id;
-
     add_item_to_inventory(connection, map_object.image_id, 0, &slot);
 
     //note the slot so we don't have to parse the whole inventory on each harvest cycle
-    clients.client[connection]->inventory_slot=slot;
-
-    clients.client[connection]->harvest_flag=TRUE;
-    clients.client[connection]->harvest_amount=1; //change this factor for perks/cloaks and special days
+    clients.client[connection].inventory_image_id=map_object.image_id;
+    clients.client[connection].inventory_slot=slot;
+    clients.client[connection].harvest_flag=TRUE;
+    clients.client[connection].harvest_amount=1; /**change this factor for perks/cloaks and special days **/
 
     #ifdef DEBUG
     printf("using slot [%i] for item [%s]\n", slot, item[map_object.image_id].item_name);
     #endif
 
     //send message to client
-    sprintf(text_out, "%cYou started to harvest %s", c_green3+127, item[clients.client[connection]->inventory_image_id].item_name);
+    sprintf(text_out, "%cYou started to harvest %s", c_green3+127, item[clients.client[connection].inventory_image_id].item_name);
     send_server_text(connection, CHAT_SERVER, text_out);
 
     interval=item[map_object.image_id].interval;

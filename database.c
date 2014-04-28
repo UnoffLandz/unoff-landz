@@ -121,10 +121,11 @@ void add_char(struct client_node_type character){
         "WEAPON_TYPE," \
         "CAPE_TYPE," \
         "HELMET_TYPE," \
+        "FRAME," \
         "MAX_HEALTH," \
         "CURRENT_HEALTH," \
         "CHAR_CREATED" \
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     sqlite3_prepare_v2(db, char_tbl_sql, -1, &stmt, NULL);
 
@@ -150,9 +151,10 @@ void add_char(struct client_node_type character){
     sqlite3_bind_int(stmt, 20, WEAPON_NONE);
     sqlite3_bind_int(stmt, 21, CAPE_NONE);
     sqlite3_bind_int(stmt, 22, HELMET_NONE);
-    sqlite3_bind_int(stmt, 23, 0); // max health
-    sqlite3_bind_int(stmt, 24, 0); // current health
-    sqlite3_bind_int(stmt, 25, character.char_created);
+    sqlite3_bind_int(stmt, 23, character.frame);
+    sqlite3_bind_int(stmt, 24, 0); // max health
+    sqlite3_bind_int(stmt, 25, 0); // current health
+    sqlite3_bind_int(stmt, 26, character.char_created);
 
     rc = sqlite3_step(stmt);
 
@@ -197,7 +199,7 @@ void add_char(struct client_node_type character){
     sqlite3_finalize(stmt);
 }
 
-void add_item(int image_id, char *item_name, int harvestable, int emu, int interval,
+void add_item(int image_id, char *item_name, int bag_token, int harvestable, int emu, int interval,
               int exp,
               int food_value,
               int food_cooldown,
@@ -212,6 +214,7 @@ void add_item(int image_id, char *item_name, int harvestable, int emu, int inter
     char sql[] ="INSERT INTO ITEM_TABLE("  \
         "IMAGE_ID,"  \
         "ITEM_NAME," \
+        "BAG_TOKEN," \
         "HARVESTABLE,"  \
         "EMU," \
         "INTERVAL," \
@@ -220,20 +223,21 @@ void add_item(int image_id, char *item_name, int harvestable, int emu, int inter
         "FOOD_COOLDOWN," \
         "ORGANIC_NEXUS," \
         "VEGETAL_NEXUS" \
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_int(stmt, 1, image_id);
     sqlite3_bind_text(stmt, 2, item_name, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, harvestable);
-    sqlite3_bind_int(stmt, 4, emu);
-    sqlite3_bind_int(stmt, 5, interval);
-    sqlite3_bind_int(stmt, 6, exp);
-    sqlite3_bind_int(stmt, 7, food_value);
-    sqlite3_bind_int(stmt, 8, food_cooldown);
-    sqlite3_bind_int(stmt, 9, organic_nexus);
-    sqlite3_bind_int(stmt, 10, vegetal_nexus);
+    sqlite3_bind_int(stmt, 3, bag_token);
+    sqlite3_bind_int(stmt, 4, harvestable);
+    sqlite3_bind_int(stmt, 5, emu);
+    sqlite3_bind_int(stmt, 6, interval);
+    sqlite3_bind_int(stmt, 7, exp);
+    sqlite3_bind_int(stmt, 8, food_value);
+    sqlite3_bind_int(stmt, 9, food_cooldown);
+    sqlite3_bind_int(stmt, 10, organic_nexus);
+    sqlite3_bind_int(stmt, 11, vegetal_nexus);
 
     rc = sqlite3_step(stmt);
 
@@ -453,7 +457,7 @@ void add_guild(int guild_id, char *guild_tag, char *guild_name, char *guild_desc
     log_event2(EVENT_INITIALISATION, "Added guild [%i] [%s] to GUILD_TABLE", guild_id, guild_name);
 }
 
-void add_bag_type(int bag_type_token, char *bag_description, int poof_time, int max_emu){
+void add_bag_type(int bag_type_id, int image_id, char *bag_description, int poof_time, int max_emu){
 
  /** public function - see header */
 
@@ -461,18 +465,20 @@ void add_bag_type(int bag_type_token, char *bag_description, int poof_time, int 
     sqlite3_stmt *stmt;
 
     char sql[]="INSERT INTO BAG_TYPE_TABLE("  \
-        "BAG_TYPE_TOKEN," \
-        "BAG_DESCRIPTION," \
+        "BAG_TYPE_ID," \
+        "IMAGE_ID," \
+        "BAG_TYPE_DESCRIPTION," \
         "POOF_TIME," \
         "MAX_EMU"  \
-        ") VALUES( ?, ?, ?, ?)";
+        ") VALUES( ?, ?, ?, ?, ?)";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, bag_type_token);
-    sqlite3_bind_text(stmt, 2, bag_description, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, poof_time);
-    sqlite3_bind_int(stmt, 4, max_emu);
+    sqlite3_bind_int(stmt, 1, bag_type_id);
+    sqlite3_bind_int(stmt, 2, image_id);
+    sqlite3_bind_text(stmt, 3, bag_description, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 4, poof_time);
+    sqlite3_bind_int(stmt, 5, max_emu);
 
     rc = sqlite3_step(stmt);
 
@@ -484,7 +490,41 @@ void add_bag_type(int bag_type_token, char *bag_description, int poof_time, int 
 
     sqlite3_finalize(stmt);
 
-    log_event2(EVENT_INITIALISATION, "Added bag type [%i] [%s] to BAG_TYPE_TABLE", bag_type_token, bag_description);
+    log_event2(EVENT_INITIALISATION, "Added bag type [%i] [%s] to BAG_TYPE_TABLE", bag_type_id, bag_description);
+}
+
+void add_char_type(int char_type_id, char *char_type_name, int race_id, int sex_id){
+
+ /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+
+    char sql[]="INSERT INTO CHARACTER_TYPE_TABLE("  \
+        "CHARACTER_TYPE_ID," \
+        "CHARACTER_TYPE_NAME," \
+        "RACE_ID," \
+        "SEX_ID"  \
+        ") VALUES( ?, ?, ?, ?)";
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, char_type_id);
+    sqlite3_bind_text(stmt, 2, char_type_name, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, race_id);
+    sqlite3_bind_int(stmt, 4, sex_id);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+
+        log_event2(EVENT_ERROR, "Error %s executing '%s' in function add_char_type: module database.c", sql, sqlite3_errmsg(db));
+        exit(EXIT_FAILURE);
+    }
+
+    sqlite3_finalize(stmt);
+
+    log_event2(EVENT_INITIALISATION, "Added character type [%i] [%s] to CHARACTER_TYPE_TABLE", char_type_id, char_type_name);
 }
 
 int get_char_data_from_db(char *name){
@@ -545,12 +585,7 @@ int get_char_data_from_db(char *name){
         character.coordination=sqlite3_column_int(stmt, 34);
         character.overall_exp=sqlite3_column_int(stmt, 35);
         character.harvest_exp=sqlite3_column_int(stmt, 36);
-
-        //calculate max emu that can be held in inventory
-        //int initial_carry_capacity=race[character.char_type].initial_carry_capacity;
-        //float carry_capacity_multiplier=race[character.char_type].carry_capacity_multiplier;
-        //character.max_carry_capacity=initial_carry_capacity + (carry_capacity_multiplier * character.physique);
-    }
+     }
 
     sqlite3_finalize(stmt);
 
@@ -688,6 +723,46 @@ void load_races(){
         race[race_id].char_count=sqlite3_column_int(stmt, 5);
 
         log_event2(EVENT_INITIALISATION, "loaded [%i] [%s]", race_id, race[race_id].race_name);
+
+        i++;
+    }
+
+    sqlite3_finalize(stmt);
+
+    log_event2(EVENT_INITIALISATION, "[%i] races were loaded\n", i);
+}
+
+void load_character_types(){
+
+    /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    int character_type_id=0;
+    int i=0;
+
+    char sql[]="SELECT * FROM CHARACTER_TYPE_TABLE";
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    log_event2(EVENT_INITIALISATION, "loading character types...");
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        character_type_id=sqlite3_column_int(stmt, 0);
+
+        if(character_type_id>MAX_CHARACTER_TYPES) {
+
+            log_event2(EVENT_ERROR, "character type id [%i] exceeds max rang [0 - %i] in function load_character_types: module database.c", character_type_id, MAX_CHARACTER_TYPES);
+            exit(EXIT_FAILURE);
+        }
+
+        strcpy(character_type[character_type_id].character_type_name, (char*)sqlite3_column_text(stmt, 1));
+        character_type[character_type_id].race_id=sqlite3_column_int(stmt, 2);
+        character_type[character_type_id].sex_id=sqlite3_column_int(stmt, 3);
+        character_type[character_type_id].char_count=sqlite3_column_int(stmt, 4);
+
+        log_event2(EVENT_INITIALISATION, "loaded [%i] [%s]", character_type_id, character_type[character_type_id].character_type_name);
 
         i++;
     }
@@ -880,31 +955,33 @@ void load_bag_types(){
 
     int rc;
     sqlite3_stmt *stmt;
-    int bag_type_token=0;
+    int bag_type_id=0;
     int i=0;
 
     char sql[]="SELECT * FROM BAG_TYPE_TABLE";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    log_event2(EVENT_INITIALISATION, "loading bags...");
+    log_event2(EVENT_INITIALISATION, "loading bag types...");
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        bag_type_token=sqlite3_column_int(stmt,0);
+        bag_type_id=sqlite3_column_int(stmt,0);
 
-        //make sure bag_type_tokendoesn't exceed the size of the map array
-        if(bag_type_token>MAX_BAG_TYPES){
+        //make sure bag_type_id doesn't exceed the size of the bag type array
+        if(bag_type_id>MAX_BAG_TYPES){
 
-            log_event2(EVENT_ERROR, "bag type token [%i] exceeds range [0 - %i] in function load_bag_types: module database.c", bag_type_token, MAX_BAG_TYPES);
+            log_event2(EVENT_ERROR, "bag type token [%i] exceeds range [0 - %i] in function load_bag_types: module database.c", bag_type_id, MAX_BAG_TYPES);
             exit(EXIT_FAILURE);
         }
+        bag_type_id=sqlite3_column_int(stmt, 0);
 
-        strcpy(bag_type[bag_type_token].bag_type_description, (char*)sqlite3_column_text(stmt, 1));
-        bag_type[bag_type_token].poof_time=sqlite3_column_int(stmt, 2);
-        bag_type[bag_type_token].max_emu=sqlite3_column_int(stmt, 3);
+        bag_type[bag_type_id].image_id=sqlite3_column_int(stmt, 1);
+        strcpy(bag_type[bag_type_id].bag_type_description, (char*)sqlite3_column_text(stmt, 2));
+        bag_type[bag_type_id].poof_time=sqlite3_column_int(stmt, 3);
+        bag_type[bag_type_id].max_emu=sqlite3_column_int(stmt, 4);
 
-        log_event2(EVENT_INITIALISATION, "loaded [%i] [%s]", bag_type_token, bag_type[bag_type_token].bag_type_description);
+        log_event2(EVENT_INITIALISATION, "loaded [%i] [%s]", bag_type_id, bag_type[bag_type_id].bag_type_description);
 
         i++;
     }
@@ -926,9 +1003,9 @@ void update_db_char_position(int connection){
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, clients.client[connection]->map_tile);
-    sqlite3_bind_int(stmt, 2, clients.client[connection]->map_id);
-    sqlite3_bind_int(stmt, 3, clients.client[connection]->character_id);
+    sqlite3_bind_int(stmt, 1, clients.client[connection].map_tile);
+    sqlite3_bind_int(stmt, 2, clients.client[connection].map_id);
+    sqlite3_bind_int(stmt, 3, clients.client[connection].character_id);
 
     rc = sqlite3_step(stmt);
 
@@ -952,8 +1029,8 @@ void update_db_char_name(int connection){
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_text(stmt, 1, clients.client[connection]->char_name, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 2, clients.client[connection]->character_id);
+    sqlite3_bind_text(stmt, 1, clients.client[connection].char_name, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, clients.client[connection].character_id);
 
     rc = sqlite3_step(stmt);
 
@@ -977,8 +1054,8 @@ void update_db_char_frame(int connection){
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, clients.client[connection]->frame);
-    sqlite3_bind_int(stmt, 2, clients.client[connection]->character_id);
+    sqlite3_bind_int(stmt, 1, clients.client[connection].frame);
+    sqlite3_bind_int(stmt, 2, clients.client[connection].character_id);
 
     rc = sqlite3_step(stmt);
 
@@ -1005,10 +1082,10 @@ void update_db_char_stats(int connection){
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, clients.client[connection]->overall_exp);
-    sqlite3_bind_int(stmt, 2, clients.client[connection]->harvest_exp);
+    sqlite3_bind_int(stmt, 1, clients.client[connection].overall_exp);
+    sqlite3_bind_int(stmt, 2, clients.client[connection].harvest_exp);
 
-    sqlite3_bind_int(stmt, 3, clients.client[connection]->character_id);
+    sqlite3_bind_int(stmt, 3, clients.client[connection].character_id);
 
     rc = sqlite3_step(stmt);
 
@@ -1032,8 +1109,8 @@ void update_db_char_last_in_game(int connection){
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, (int) clients.client[connection]->last_in_game);
-    sqlite3_bind_int(stmt, 2, clients.client[connection]->character_id);
+    sqlite3_bind_int(stmt, 1, (int) clients.client[connection].last_in_game);
+    sqlite3_bind_int(stmt, 2, clients.client[connection].character_id);
 
     rc = sqlite3_step(stmt);
 
@@ -1057,8 +1134,8 @@ void update_db_char_time_played(int connection){
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, (int) clients.client[connection]->time_played);
-    sqlite3_bind_int(stmt, 2, clients.client[connection]->character_id);
+    sqlite3_bind_int(stmt, 1, (int) clients.client[connection].time_played);
+    sqlite3_bind_int(stmt, 2, clients.client[connection].character_id);
 
     rc = sqlite3_step(stmt);
 
@@ -1082,11 +1159,11 @@ void update_db_char_channels(int connection){
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, clients.client[connection]->active_chan);
-    sqlite3_bind_int(stmt, 2, clients.client[connection]->chan[0]);
-    sqlite3_bind_int(stmt, 3, clients.client[connection]->chan[1]);
-    sqlite3_bind_int(stmt, 4, clients.client[connection]->chan[2]);
-    sqlite3_bind_int(stmt, 5, clients.client[connection]->character_id);
+    sqlite3_bind_int(stmt, 1, clients.client[connection].active_chan);
+    sqlite3_bind_int(stmt, 2, clients.client[connection].chan[0]);
+    sqlite3_bind_int(stmt, 3, clients.client[connection].chan[1]);
+    sqlite3_bind_int(stmt, 4, clients.client[connection].chan[2]);
+    sqlite3_bind_int(stmt, 5, clients.client[connection].character_id);
 
     rc = sqlite3_step(stmt);
 
@@ -1113,9 +1190,9 @@ void update_db_char_inventory(int connection){
 
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        sqlite3_bind_int(stmt, 1, clients.client[connection]->client_inventory[i].image_id);
-        sqlite3_bind_int(stmt, 2, clients.client[connection]->client_inventory[i].amount);
-        sqlite3_bind_int(stmt, 3, clients.client[connection]->character_id);
+        sqlite3_bind_int(stmt, 1, clients.client[connection].client_inventory[i].image_id);
+        sqlite3_bind_int(stmt, 2, clients.client[connection].client_inventory[i].amount);
+        sqlite3_bind_int(stmt, 3, clients.client[connection].character_id);
         sqlite3_bind_int(stmt, 4, i);
 
         rc = sqlite3_step(stmt);
@@ -1144,9 +1221,9 @@ void update_db_char_slot(int connection, int slot){
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
-    sqlite3_bind_int(stmt, 1, clients.client[connection]->client_inventory[slot].image_id);
-    sqlite3_bind_int(stmt, 2, clients.client[connection]->client_inventory[slot].amount);
-    sqlite3_bind_int(stmt, 3, clients.client[connection]->character_id);
+    sqlite3_bind_int(stmt, 1, clients.client[connection].client_inventory[slot].image_id);
+    sqlite3_bind_int(stmt, 2, clients.client[connection].client_inventory[slot].amount);
+    sqlite3_bind_int(stmt, 3, clients.client[connection].character_id);
     sqlite3_bind_int(stmt, 4, slot);
 
     rc = sqlite3_step(stmt);

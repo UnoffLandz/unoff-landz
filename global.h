@@ -9,11 +9,12 @@
 #define MAX_MAPS 10
 #define MAX_GUILDS 10
 #define MAX_BAGS 256 //maximum bags on a map
-#define MAX_BAG_TYPES 700 //maximum number of bag types
+#define MAX_BAG_TYPES 5 //includes type 0 which is the default bag type
 #define MAX_CLIENTS 50
 #define MAX_THREED_OBJECTS 100 // maximum number of e3d files that can be held in the threed_object array
 #define MAX_ITEMS 1500 //maximum number of mixable/harvestable items that can be held in the item array
 #define MAX_RACES 7
+#define MAX_CHARACTER_TYPES 50
 
 #define PATH_MAX 100 //longest permitted path
 #define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
@@ -109,8 +110,8 @@ enum {//stats codes
 
 enum {// frame type
     nothing=0,
-    stand_up=14,
-    sit_down=13,
+    stand_up=13,
+    sit_down=14,
 };
 
 enum {// actor movement vectors
@@ -130,6 +131,11 @@ struct vector_type{
     unsigned char move_cmd;
 };
 struct vector_type vector[8];
+
+struct character_gender_type{
+    char description[20];
+};
+struct character_gender_type character_gender[2];
 
 enum{ // general boolean values
     FALSE,
@@ -400,7 +406,7 @@ struct client_inventory_type {
 struct client_inventory_type client_inventory;
 
 struct client_node_type{
-    enum {LOGGED_IN, CONNECTED, LOGGED_OUT} status;
+    enum {LOGGED_IN=1, CONNECTED=2, LOGGED_OUT=0} status;
     int packet_buffer[1024];
     int packet_buffer_length;
     int character_id; //database id for char
@@ -432,6 +438,7 @@ struct client_node_type{
     int map_tile;
     int guild_id;
     int char_type;
+    int race_type;
     int skin_type;
     int hair_type;
     int shirt_type;
@@ -529,8 +536,9 @@ struct client_node_type character;
 
 struct client_list_type {
     int count;
-    int max;
-    struct client_node_type **client;
+    //int max;
+    //struct client_node_type **client;
+    struct client_node_type client[MAX_CLIENTS];
 };
 struct client_list_type clients;
 
@@ -620,14 +628,25 @@ struct bag_list_type bag_list[MAX_BAGS];
 
 /** BAG TYPES **/
 struct bag_type_type{
-    int bag_type_token;
+    int bag_type_id;
+    int image_id;
     char bag_type_description[160];
     int poof_time;
     int max_emu;
 };
 struct bag_type_type bag_type[MAX_BAG_TYPES];
 
-//struct to carry global data
+/** CHARACTER TYPES **/
+struct character_type_type{
+    int character_type_id;
+    char character_type_name[80];
+    int race_id;
+    int sex_id;
+    int char_count;
+};
+struct character_type_type character_type[MAX_CHARACTER_TYPES];
+
+/** GLOBAL DATA **/
 struct game_data_type {
     char name_last_char_created[80];
     time_t date_last_char_created;

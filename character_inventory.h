@@ -4,6 +4,7 @@
 #define MAX_INVENTORY_SLOTS 36
 #define INVENTORY_STRING_LENGTH 1+(MAX_INVENTORY_SLOTS*8)
 #define MAX_BAG_SLOTS 10
+#define MAX_BAG_SPAM 10
 
 /** RESULT  : sends entire char inventory
 

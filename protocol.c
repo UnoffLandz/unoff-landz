@@ -89,183 +89,183 @@ void send_here_your_stats(int connection){
         packet[i]=0;
     }
 
-    packet[3]=clients.client[connection]->physique % 256;
-    packet[4]=clients.client[connection]->physique / 256;
-    packet[5]=clients.client[connection]->max_physique % 256;
-    packet[6]=clients.client[connection]->max_physique / 256;
-    packet[7]=clients.client[connection]->coordination % 256;
-    packet[8]=clients.client[connection]->coordination / 256;
-    packet[9]=clients.client[connection]->max_coordination % 256;
-    packet[10]=clients.client[connection]->max_coordination / 256;
-    packet[11]=clients.client[connection]->reasoning % 256;
-    packet[12]=clients.client[connection]->reasoning / 256;
-    packet[13]=clients.client[connection]->max_reasoning % 256;
-    packet[14]=clients.client[connection]->max_reasoning / 256;
-    packet[15]=clients.client[connection]->will % 256;
-    packet[16]=clients.client[connection]->will / 256;
-    packet[17]=clients.client[connection]->max_will % 256;
-    packet[18]=clients.client[connection]->max_will / 256;
-    packet[19]=clients.client[connection]->instinct % 256;
-    packet[20]=clients.client[connection]->instinct / 256;
-    packet[21]=clients.client[connection]->max_instinct % 256;
-    packet[22]=clients.client[connection]->max_instinct / 256;
-    packet[23]=clients.client[connection]->vitality % 256;
-    packet[24]=clients.client[connection]->vitality / 256;
-    packet[25]=clients.client[connection]->max_vitality % 256;
-    packet[26]=clients.client[connection]->max_vitality / 256;
+    packet[3]=clients.client[connection].physique % 256;
+    packet[4]=clients.client[connection].physique / 256;
+    packet[5]=clients.client[connection].max_physique % 256;
+    packet[6]=clients.client[connection].max_physique / 256;
+    packet[7]=clients.client[connection].coordination % 256;
+    packet[8]=clients.client[connection].coordination / 256;
+    packet[9]=clients.client[connection].max_coordination % 256;
+    packet[10]=clients.client[connection].max_coordination / 256;
+    packet[11]=clients.client[connection].reasoning % 256;
+    packet[12]=clients.client[connection].reasoning / 256;
+    packet[13]=clients.client[connection].max_reasoning % 256;
+    packet[14]=clients.client[connection].max_reasoning / 256;
+    packet[15]=clients.client[connection].will % 256;
+    packet[16]=clients.client[connection].will / 256;
+    packet[17]=clients.client[connection].max_will % 256;
+    packet[18]=clients.client[connection].max_will / 256;
+    packet[19]=clients.client[connection].instinct % 256;
+    packet[20]=clients.client[connection].instinct / 256;
+    packet[21]=clients.client[connection].max_instinct % 256;
+    packet[22]=clients.client[connection].max_instinct / 256;
+    packet[23]=clients.client[connection].vitality % 256;
+    packet[24]=clients.client[connection].vitality / 256;
+    packet[25]=clients.client[connection].max_vitality % 256;
+    packet[26]=clients.client[connection].max_vitality / 256;
 
-    packet[27]=clients.client[connection]->human % 256;
-    packet[28]=clients.client[connection]->human / 256;
-    packet[29]=clients.client[connection]->max_human % 256;
-    packet[30]=clients.client[connection]->max_human / 256;
-    packet[31]=clients.client[connection]->animal % 256;
-    packet[32]=clients.client[connection]->animal / 256;
-    packet[33]=clients.client[connection]->max_animal % 256;
-    packet[34]=clients.client[connection]->max_animal / 256;
-    packet[35]=clients.client[connection]->vegetal % 256;
-    packet[36]=clients.client[connection]->vegetal / 256;
-    packet[37]=clients.client[connection]->max_vegetal % 256;
-    packet[38]=clients.client[connection]->max_vegetal / 256;
-    packet[39]=clients.client[connection]->inorganic % 256;
-    packet[40]=clients.client[connection]->inorganic / 256;
-    packet[41]=clients.client[connection]->max_inorganic % 256;
-    packet[42]=clients.client[connection]->max_inorganic / 256;
-    packet[43]=clients.client[connection]->artificial % 256;
-    packet[44]=clients.client[connection]->artificial / 256;
-    packet[45]=clients.client[connection]->max_artificial % 256;
-    packet[46]=clients.client[connection]->max_artificial / 256;
-    packet[47]=clients.client[connection]->magic % 256;
-    packet[48]=clients.client[connection]->magic / 256;
-    packet[49]=clients.client[connection]->max_magic % 256;
-    packet[50]=clients.client[connection]->max_magic / 256;
+    packet[27]=clients.client[connection].human % 256;
+    packet[28]=clients.client[connection].human / 256;
+    packet[29]=clients.client[connection].max_human % 256;
+    packet[30]=clients.client[connection].max_human / 256;
+    packet[31]=clients.client[connection].animal % 256;
+    packet[32]=clients.client[connection].animal / 256;
+    packet[33]=clients.client[connection].max_animal % 256;
+    packet[34]=clients.client[connection].max_animal / 256;
+    packet[35]=clients.client[connection].vegetal % 256;
+    packet[36]=clients.client[connection].vegetal / 256;
+    packet[37]=clients.client[connection].max_vegetal % 256;
+    packet[38]=clients.client[connection].max_vegetal / 256;
+    packet[39]=clients.client[connection].inorganic % 256;
+    packet[40]=clients.client[connection].inorganic / 256;
+    packet[41]=clients.client[connection].max_inorganic % 256;
+    packet[42]=clients.client[connection].max_inorganic / 256;
+    packet[43]=clients.client[connection].artificial % 256;
+    packet[44]=clients.client[connection].artificial / 256;
+    packet[45]=clients.client[connection].max_artificial % 256;
+    packet[46]=clients.client[connection].max_artificial / 256;
+    packet[47]=clients.client[connection].magic % 256;
+    packet[48]=clients.client[connection].magic / 256;
+    packet[49]=clients.client[connection].max_magic % 256;
+    packet[50]=clients.client[connection].max_magic / 256;
 
-    packet[51]=clients.client[connection]->manufacturing_lvl % 256;
-    packet[52]=clients.client[connection]->manufacturing_lvl / 256;
-    packet[53]=clients.client[connection]->max_manufacturing_lvl % 256;
-    packet[54]=clients.client[connection]->max_manufacturing_lvl / 256;
-    packet[55]=clients.client[connection]->harvest_lvl % 256;
-    packet[56]=clients.client[connection]->harvest_lvl / 256;
-    packet[57]=clients.client[connection]->max_harvest_lvl % 256;
-    packet[58]=clients.client[connection]->max_harvest_lvl / 256;
-    packet[59]=clients.client[connection]->alchemy_lvl % 256;
-    packet[60]=clients.client[connection]->alchemy_lvl / 256;
-    packet[61]=clients.client[connection]->max_alchemy_lvl % 256;
-    packet[62]=clients.client[connection]->max_alchemy_lvl / 256;
-    packet[63]=clients.client[connection]->overall_lvl % 256;
-    packet[64]=clients.client[connection]->overall_lvl / 256;
-    packet[65]=clients.client[connection]->max_overall_lvl % 256;
-    packet[66]=clients.client[connection]->max_overall_lvl / 256;
-    packet[67]=clients.client[connection]->attack_lvl % 256;
-    packet[68]=clients.client[connection]->attack_lvl / 256;
-    packet[69]=clients.client[connection]->max_attack_lvl % 256;
-    packet[70]=clients.client[connection]->max_attack_lvl / 256;
-    packet[71]=clients.client[connection]->defence_lvl % 256;
-    packet[72]=clients.client[connection]->defence_lvl / 256;
-    packet[73]=clients.client[connection]->max_defence_lvl % 256;
-    packet[74]=clients.client[connection]->max_defence_lvl / 256;
-    packet[75]=clients.client[connection]->magic_lvl % 256;
-    packet[76]=clients.client[connection]->magic_lvl / 256;
-    packet[77]=clients.client[connection]->max_magic_lvl % 256;
-    packet[78]=clients.client[connection]->max_magic_lvl / 256;
-    packet[79]=clients.client[connection]->potion_lvl % 256;
-    packet[80]=clients.client[connection]->potion_lvl / 256;
-    packet[81]=clients.client[connection]->max_potion_lvl % 256;
-    packet[82]=clients.client[connection]->max_potion_lvl / 256;
+    packet[51]=clients.client[connection].manufacturing_lvl % 256;
+    packet[52]=clients.client[connection].manufacturing_lvl / 256;
+    packet[53]=clients.client[connection].max_manufacturing_lvl % 256;
+    packet[54]=clients.client[connection].max_manufacturing_lvl / 256;
+    packet[55]=clients.client[connection].harvest_lvl % 256;
+    packet[56]=clients.client[connection].harvest_lvl / 256;
+    packet[57]=clients.client[connection].max_harvest_lvl % 256;
+    packet[58]=clients.client[connection].max_harvest_lvl / 256;
+    packet[59]=clients.client[connection].alchemy_lvl % 256;
+    packet[60]=clients.client[connection].alchemy_lvl / 256;
+    packet[61]=clients.client[connection].max_alchemy_lvl % 256;
+    packet[62]=clients.client[connection].max_alchemy_lvl / 256;
+    packet[63]=clients.client[connection].overall_lvl % 256;
+    packet[64]=clients.client[connection].overall_lvl / 256;
+    packet[65]=clients.client[connection].max_overall_lvl % 256;
+    packet[66]=clients.client[connection].max_overall_lvl / 256;
+    packet[67]=clients.client[connection].attack_lvl % 256;
+    packet[68]=clients.client[connection].attack_lvl / 256;
+    packet[69]=clients.client[connection].max_attack_lvl % 256;
+    packet[70]=clients.client[connection].max_attack_lvl / 256;
+    packet[71]=clients.client[connection].defence_lvl % 256;
+    packet[72]=clients.client[connection].defence_lvl / 256;
+    packet[73]=clients.client[connection].max_defence_lvl % 256;
+    packet[74]=clients.client[connection].max_defence_lvl / 256;
+    packet[75]=clients.client[connection].magic_lvl % 256;
+    packet[76]=clients.client[connection].magic_lvl / 256;
+    packet[77]=clients.client[connection].max_magic_lvl % 256;
+    packet[78]=clients.client[connection].max_magic_lvl / 256;
+    packet[79]=clients.client[connection].potion_lvl % 256;
+    packet[80]=clients.client[connection].potion_lvl / 256;
+    packet[81]=clients.client[connection].max_potion_lvl % 256;
+    packet[82]=clients.client[connection].max_potion_lvl / 256;
 
-    packet[83]=clients.client[connection]->inventory_emu % 256; // amount of emu in inventory
-    packet[84]=clients.client[connection]->inventory_emu / 256;
+    packet[83]=clients.client[connection].inventory_emu % 256; // amount of emu in inventory
+    packet[84]=clients.client[connection].inventory_emu / 256;
 
     int max_carry_capacity=get_char_carry_capacity(connection);
     packet[85]=max_carry_capacity % 256; // max emu that can be held in inventory
     packet[86]=max_carry_capacity / 256;
 
-    packet[87]=clients.client[connection]->material_pts % 256;
-    packet[88]=clients.client[connection]->material_pts / 256;
-    packet[89]=clients.client[connection]->max_material_pts % 256;
-    packet[90]=clients.client[connection]->max_material_pts / 256;
+    packet[87]=clients.client[connection].material_pts % 256;
+    packet[88]=clients.client[connection].material_pts / 256;
+    packet[89]=clients.client[connection].max_material_pts % 256;
+    packet[90]=clients.client[connection].max_material_pts / 256;
 
-    packet[91]=clients.client[connection]->ethereal_pts % 256;
-    packet[92]=clients.client[connection]->ethereal_pts / 256;
-    packet[93]=clients.client[connection]->max_ethereal_pts % 256;
-    packet[94]=clients.client[connection]->max_ethereal_pts / 256;
+    packet[91]=clients.client[connection].ethereal_pts % 256;
+    packet[92]=clients.client[connection].ethereal_pts / 256;
+    packet[93]=clients.client[connection].max_ethereal_pts % 256;
+    packet[94]=clients.client[connection].max_ethereal_pts / 256;
 
-    packet[95]=clients.client[connection]->food_lvl % 256;
-    packet[96]=clients.client[connection]->food_lvl / 256;
-    packet[97]=clients.client[connection]->elapsed_book_time % 256;
-    packet[98]=clients.client[connection]->elapsed_book_time / 256;
+    packet[95]=clients.client[connection].food_lvl % 256;
+    packet[96]=clients.client[connection].food_lvl / 256;
+    packet[97]=clients.client[connection].elapsed_book_time % 256;
+    packet[98]=clients.client[connection].elapsed_book_time / 256;
 
     //packet[99]=; Unused
     //packet[100]=; Unused
 
-    packet[101]=clients.client[connection]->manufacture_exp % 256;
-    packet[102]=clients.client[connection]->manufacture_exp / 256 % 256;
-    packet[103]=clients.client[connection]->manufacture_exp / 256 / 256 % 256;
-    packet[104]=clients.client[connection]->manufacture_exp / 256 / 256 / 256 % 256;
-    packet[105]=clients.client[connection]->max_manufacture_exp % 256;
-    packet[106]=clients.client[connection]->max_manufacture_exp / 256 % 256;
-    packet[107]=clients.client[connection]->max_manufacture_exp / 256 / 256 % 256;
-    packet[108]=clients.client[connection]->max_manufacture_exp / 256 / 256 / 256 % 256;
-    packet[109]=clients.client[connection]->harvest_exp % 256;
-    packet[110]=clients.client[connection]->harvest_exp / 256 % 256;
-    packet[111]=clients.client[connection]->harvest_exp / 256 / 256 % 256;
-    packet[112]=clients.client[connection]->harvest_exp / 256 / 256 / 256 % 256 ;
-    packet[113]=clients.client[connection]->max_harvest_exp % 256;
-    packet[114]=clients.client[connection]->max_harvest_exp / 256 % 256;
-    packet[115]=clients.client[connection]->max_harvest_exp / 256 / 256 % 256;
-    packet[116]=clients.client[connection]->max_harvest_exp / 256 / 256 / 256 % 256;
-    packet[117]=clients.client[connection]->alchemy_exp % 256;
-    packet[118]=clients.client[connection]->alchemy_exp / 256 % 256;
-    packet[119]=clients.client[connection]->alchemy_exp / 256 / 256 % 256;
-    packet[120]=clients.client[connection]->alchemy_exp / 256 / 256 / 256 % 256;
-    packet[121]=clients.client[connection]->max_alchemy_exp % 256;
-    packet[122]=clients.client[connection]->max_alchemy_exp / 256 % 256;
-    packet[123]=clients.client[connection]->max_alchemy_exp / 256 / 256 % 256;
-    packet[124]=clients.client[connection]->max_alchemy_exp / 256 / 256 / 256 % 256;
-    packet[125]=clients.client[connection]->overall_exp % 256;
-    packet[126]=clients.client[connection]->overall_exp / 256 % 256;
-    packet[127]=clients.client[connection]->overall_exp / 256 / 256 % 256;
-    packet[128]=clients.client[connection]->overall_exp / 256 / 256 / 256 % 256;
-    packet[129]=clients.client[connection]->max_overall_exp % 256;
-    packet[130]=clients.client[connection]->max_overall_exp / 256 % 256;
-    packet[131]=clients.client[connection]->max_overall_exp / 256 / 256 % 256;
-    packet[132]=clients.client[connection]->max_overall_exp / 256 / 256 / 256 % 256;
-    packet[133]=clients.client[connection]->attack_exp % 256;
-    packet[134]=clients.client[connection]->attack_exp / 256 % 256;
-    packet[135]=clients.client[connection]->attack_exp / 256 / 256 % 256;
-    packet[136]=clients.client[connection]->attack_exp / 256 / 256 / 256 % 256;
-    packet[137]=clients.client[connection]->max_attack_exp % 256;
-    packet[138]=clients.client[connection]->max_attack_exp / 256 % 256;
-    packet[139]=clients.client[connection]->max_attack_exp / 256 / 256 % 256;
-    packet[140]=clients.client[connection]->max_attack_exp / 256 / 256 / 256 % 256;
-    packet[141]=clients.client[connection]->defence_exp % 256;
-    packet[142]=clients.client[connection]->defence_exp / 256 % 256;
-    packet[143]=clients.client[connection]->defence_exp / 256 / 256 % 256;
-    packet[144]=clients.client[connection]->defence_exp / 256 / 256 / 256 % 256;
-    packet[145]=clients.client[connection]->max_defence_exp % 256;
-    packet[146]=clients.client[connection]->max_defence_exp / 256 % 256;
-    packet[147]=clients.client[connection]->max_defence_exp / 256 / 256 % 256;
-    packet[148]=clients.client[connection]->max_defence_exp / 256 / 256 / 256 % 256;
-    packet[149]=clients.client[connection]->magic_exp % 256;
-    packet[150]=clients.client[connection]->magic_exp / 256 % 256;
-    packet[151]=clients.client[connection]->magic_exp / 256 / 256 % 256;
-    packet[152]=clients.client[connection]->magic_exp / 256 / 256 / 256 % 256;
-    packet[153]=clients.client[connection]->max_magic_exp % 256;
-    packet[154]=clients.client[connection]->max_magic_exp / 256 % 256;
-    packet[155]=clients.client[connection]->max_magic_exp / 256 / 256 % 256;
-    packet[156]=clients.client[connection]->max_magic_exp / 256 / 256 / 256 % 256;
-    packet[157]=clients.client[connection]->potion_exp % 256;
-    packet[158]=clients.client[connection]->potion_exp / 256 % 256;
-    packet[159]=clients.client[connection]->potion_exp / 256 / 256 % 256;
-    packet[160]=clients.client[connection]->potion_exp / 256 / 256 / 256 % 256;
-    packet[161]=clients.client[connection]->max_potion_exp % 256;
-    packet[162]=clients.client[connection]->max_potion_exp / 256 % 256;
-    packet[163]=clients.client[connection]->max_potion_exp / 256 / 256 % 256;
-    packet[164]=clients.client[connection]->max_potion_exp / 256 / 256 / 256 % 256;
+    packet[101]=clients.client[connection].manufacture_exp % 256;
+    packet[102]=clients.client[connection].manufacture_exp / 256 % 256;
+    packet[103]=clients.client[connection].manufacture_exp / 256 / 256 % 256;
+    packet[104]=clients.client[connection].manufacture_exp / 256 / 256 / 256 % 256;
+    packet[105]=clients.client[connection].max_manufacture_exp % 256;
+    packet[106]=clients.client[connection].max_manufacture_exp / 256 % 256;
+    packet[107]=clients.client[connection].max_manufacture_exp / 256 / 256 % 256;
+    packet[108]=clients.client[connection].max_manufacture_exp / 256 / 256 / 256 % 256;
+    packet[109]=clients.client[connection].harvest_exp % 256;
+    packet[110]=clients.client[connection].harvest_exp / 256 % 256;
+    packet[111]=clients.client[connection].harvest_exp / 256 / 256 % 256;
+    packet[112]=clients.client[connection].harvest_exp / 256 / 256 / 256 % 256 ;
+    packet[113]=clients.client[connection].max_harvest_exp % 256;
+    packet[114]=clients.client[connection].max_harvest_exp / 256 % 256;
+    packet[115]=clients.client[connection].max_harvest_exp / 256 / 256 % 256;
+    packet[116]=clients.client[connection].max_harvest_exp / 256 / 256 / 256 % 256;
+    packet[117]=clients.client[connection].alchemy_exp % 256;
+    packet[118]=clients.client[connection].alchemy_exp / 256 % 256;
+    packet[119]=clients.client[connection].alchemy_exp / 256 / 256 % 256;
+    packet[120]=clients.client[connection].alchemy_exp / 256 / 256 / 256 % 256;
+    packet[121]=clients.client[connection].max_alchemy_exp % 256;
+    packet[122]=clients.client[connection].max_alchemy_exp / 256 % 256;
+    packet[123]=clients.client[connection].max_alchemy_exp / 256 / 256 % 256;
+    packet[124]=clients.client[connection].max_alchemy_exp / 256 / 256 / 256 % 256;
+    packet[125]=clients.client[connection].overall_exp % 256;
+    packet[126]=clients.client[connection].overall_exp / 256 % 256;
+    packet[127]=clients.client[connection].overall_exp / 256 / 256 % 256;
+    packet[128]=clients.client[connection].overall_exp / 256 / 256 / 256 % 256;
+    packet[129]=clients.client[connection].max_overall_exp % 256;
+    packet[130]=clients.client[connection].max_overall_exp / 256 % 256;
+    packet[131]=clients.client[connection].max_overall_exp / 256 / 256 % 256;
+    packet[132]=clients.client[connection].max_overall_exp / 256 / 256 / 256 % 256;
+    packet[133]=clients.client[connection].attack_exp % 256;
+    packet[134]=clients.client[connection].attack_exp / 256 % 256;
+    packet[135]=clients.client[connection].attack_exp / 256 / 256 % 256;
+    packet[136]=clients.client[connection].attack_exp / 256 / 256 / 256 % 256;
+    packet[137]=clients.client[connection].max_attack_exp % 256;
+    packet[138]=clients.client[connection].max_attack_exp / 256 % 256;
+    packet[139]=clients.client[connection].max_attack_exp / 256 / 256 % 256;
+    packet[140]=clients.client[connection].max_attack_exp / 256 / 256 / 256 % 256;
+    packet[141]=clients.client[connection].defence_exp % 256;
+    packet[142]=clients.client[connection].defence_exp / 256 % 256;
+    packet[143]=clients.client[connection].defence_exp / 256 / 256 % 256;
+    packet[144]=clients.client[connection].defence_exp / 256 / 256 / 256 % 256;
+    packet[145]=clients.client[connection].max_defence_exp % 256;
+    packet[146]=clients.client[connection].max_defence_exp / 256 % 256;
+    packet[147]=clients.client[connection].max_defence_exp / 256 / 256 % 256;
+    packet[148]=clients.client[connection].max_defence_exp / 256 / 256 / 256 % 256;
+    packet[149]=clients.client[connection].magic_exp % 256;
+    packet[150]=clients.client[connection].magic_exp / 256 % 256;
+    packet[151]=clients.client[connection].magic_exp / 256 / 256 % 256;
+    packet[152]=clients.client[connection].magic_exp / 256 / 256 / 256 % 256;
+    packet[153]=clients.client[connection].max_magic_exp % 256;
+    packet[154]=clients.client[connection].max_magic_exp / 256 % 256;
+    packet[155]=clients.client[connection].max_magic_exp / 256 / 256 % 256;
+    packet[156]=clients.client[connection].max_magic_exp / 256 / 256 / 256 % 256;
+    packet[157]=clients.client[connection].potion_exp % 256;
+    packet[158]=clients.client[connection].potion_exp / 256 % 256;
+    packet[159]=clients.client[connection].potion_exp / 256 / 256 % 256;
+    packet[160]=clients.client[connection].potion_exp / 256 / 256 / 256 % 256;
+    packet[161]=clients.client[connection].max_potion_exp % 256;
+    packet[162]=clients.client[connection].max_potion_exp / 256 % 256;
+    packet[163]=clients.client[connection].max_potion_exp / 256 / 256 % 256;
+    packet[164]=clients.client[connection].max_potion_exp / 256 / 256 / 256 % 256;
 
-    packet[165]=clients.client[connection]->book_id % 256;
-    packet[166]=clients.client[connection]->book_id / 256;
-    packet[167]=clients.client[connection]->max_book_time % 256;
-    packet[168]=clients.client[connection]->max_book_time / 256;
+    packet[165]=clients.client[connection].book_id % 256;
+    packet[166]=clients.client[connection].book_id / 256;
+    packet[167]=clients.client[connection].max_book_time % 256;
+    packet[168]=clients.client[connection].max_book_time / 256;
 
    //packet[169]=10; summoning lvl
 
@@ -299,10 +299,10 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
     char password[1024]="";
 
     //int char_id=clients.client[connection]->character_id;
-    int current_tile=clients.client[connection]->map_tile;
+    int current_tile=clients.client[connection].map_tile;
 
     int other_connection;
-    int map_id=clients.client[connection]->map_id;
+    int map_id=clients.client[connection].map_id;
     //int guild_id=clients.client[connection]->guild_id;
     int protocol=packet[0], lsb=packet[1], msb=packet[2], data_length=lsb+(msb*256)-1;
     int x_dest=0, y_dest=0, tile_dest=0;
@@ -324,7 +324,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
     /*when the client connects to the server, it will send a SIT_DOWN message if there is a delay in logging in which
     unless trapped, results in a floating point error exception that causes the server to crash.*/
-    if(clients.client[connection]->status==CONNECTED && protocol ==SIT_DOWN) return;
+    if(clients.client[connection].status==CONNECTED && protocol ==SIT_DOWN) return;
 
 /***************************************************************************************************/
 
@@ -367,7 +367,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         }
 
         //local chat
-        sprintf(text_out, "%c%s: %s", c_grey1+127, clients.client[connection]->char_name, text);
+        sprintf(text_out, "%c%s: %s", c_grey1+127, clients.client[connection].char_name, text);
         send_raw_text_packet(connection, CHAT_LOCAL, text_out);
         broadcast_local_chat(connection, text_out);
     }
@@ -379,7 +379,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
         x_dest=Uint16_to_dec(data[0], data[1]);
         y_dest=Uint16_to_dec(data[2], data[3]);
-        tile_dest=x_dest+(y_dest*maps.map[clients.client[connection]->map_id]->map_axis);
+        tile_dest=x_dest+(y_dest*maps.map[clients.client[connection].map_id]->map_axis);
 
         #ifdef DEBUG
         printf("MOVE_TO position x[%i] y[%i] tile[%i]\n", x_dest, y_dest, tile_dest);
@@ -417,16 +417,30 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         printf("SIT_DOWN %i\n", data[0]);
         #endif
 
-        if(data[0]==1){
-            clients.client[connection]->frame=sit_down;
+        if(data[0]==0){
+
+            printf("stand up\n");
+            clients.client[connection].frame=13;
+
+            //broadcast to clients
+            broadcast_actor_packet(connection, 14, clients.client[connection].map_tile);
+
+            //save frame to database
+            update_db_char_frame(connection);
+
         }
-        else clients.client[connection]->frame=stand_up;
 
-        //broadcast to clients
-        broadcast_actor_packet(connection, clients.client[connection]->frame, clients.client[connection]->map_tile);
+        if(data[0]==1){
 
-        //save frame to database
-        update_db_char_frame(connection);
+            printf("sit down\n");
+            clients.client[connection].frame=14;
+
+            //broadcast to clients
+            broadcast_actor_packet(connection, 13, clients.client[connection].map_tile);
+
+            //save frame to database
+            update_db_char_frame(connection);
+        }
     }
 /***************************************************************************************************/
 
@@ -438,7 +452,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
         other_connection=Uint32_to_dec(data[0], data[1], data[2], data[3]);
 
-        sprintf(text_out, "You see %s", clients.client[other_connection]->char_name);
+        sprintf(text_out, "You see %s", clients.client[other_connection].char_name);
         send_server_text(connection, CHAT_SERVER, text_out);
    }
 /***************************************************************************************************/
@@ -511,16 +525,16 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         #endif
 
         //if char is moving when protocol arrives, cancel rest of path
-        clients.client[connection]->path_count=0;
+        clients.client[connection].path_count=0;
 
         //travel from IP to Ravens Isle
-        if(map_object_id==520 && clients.client[connection]->map_id==1) move_char_between_maps(connection, 2, 64946);
+        if(map_object_id==520 && clients.client[connection].map_id==1) move_char_between_maps(connection, 2, 64946);
 
         //travel from Ravens Isle to IP
-        if(map_object_id==5416 && clients.client[connection]->map_id==2) move_char_between_maps(connection, 1, 4053);
+        if(map_object_id==5416 && clients.client[connection].map_id==2) move_char_between_maps(connection, 1, 4053);
 
         //travel from Ravens Isle to neiva
-        if(map_object_id==4986 && clients.client[connection]->map_id==2 && clients.client[connection]->map_tile==108627){
+        if(map_object_id==4986 && clients.client[connection].map_id==2 && clients.client[connection].map_tile==108627){
             move_char_between_maps(connection, 3, 3000);
         }
     }
@@ -531,7 +545,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         //returns a Uint8 giving the slot number looked at
 
         inventory_slot=(int)data[0];
-        image_id=clients.client[connection]->client_inventory[inventory_slot].image_id;
+        image_id=clients.client[connection].client_inventory[inventory_slot].image_id;
 
         #ifdef DEBUG
         printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", inventory_slot);
@@ -554,20 +568,20 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         printf("MOVE_INVENTORY_ITEM - slot [%i] to slot [%i]\n", move_from_slot, move_to_slot);
         #endif
 
-        image_id=clients.client[connection]->client_inventory[move_from_slot].image_id;
-        amount=clients.client[connection]->client_inventory[move_from_slot].amount;
+        image_id=clients.client[connection].client_inventory[move_from_slot].image_id;
+        amount=clients.client[connection].client_inventory[move_from_slot].amount;
 
         //zero the 'from slot'
-        clients.client[connection]->client_inventory[move_from_slot].image_id=0;
-        clients.client[connection]->client_inventory[move_from_slot].amount=0;
+        clients.client[connection].client_inventory[move_from_slot].image_id=0;
+        clients.client[connection].client_inventory[move_from_slot].amount=0;
         send_get_new_inventory_item(connection, 0, 0, move_from_slot);
 
         //save to database
         update_db_char_slot(connection, move_from_slot);
 
         //place item in the 'to slot'
-        clients.client[connection]->client_inventory[move_to_slot].image_id=image_id;
-        clients.client[connection]->client_inventory[move_to_slot].amount=amount;
+        clients.client[connection].client_inventory[move_to_slot].image_id=image_id;
+        clients.client[connection].client_inventory[move_to_slot].amount=amount;
         send_get_new_inventory_item(connection, image_id, amount, move_to_slot);
 
         //save to the database
@@ -595,7 +609,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
         inventory_slot=data[0];
         amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
-        image_id=clients.client[connection]->client_inventory[inventory_slot].image_id;
+        image_id=clients.client[connection].client_inventory[inventory_slot].image_id;
 
         #ifdef DEBUG
         printf("DROP_ITEM image_id [%i] drop amount [%i]\n", image_id, amount);
@@ -634,7 +648,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
 
             //standing on the bag so we can open it
             send_here_your_ground_items(connection, bag_id);
-            clients.client[connection]->bag_open=TRUE;
+            clients.client[connection].bag_open=TRUE;
         }
         else {
 
@@ -693,7 +707,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         #endif
 
         //set the active channel
-        clients.client[connection]->active_chan=data[0]-32;
+        clients.client[connection].active_chan=data[0]-32;
 
         //update the database
         update_db_char_channels(connection);
@@ -713,7 +727,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
     else if(protocol==CREATE_CHAR){
 
         #ifdef DEBUG
-        printf("CREATE_CHAR connection [%i]\n", connection);
+        printf("CREATE_CHAR connection [%i] lsb [%i] msb [%i]\n", connection, lsb, msb);
         #endif
 
         //detect and handle malformed packet
@@ -744,7 +758,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
             return;
         }
 
-        clients.client[connection]->status=LOGGED_IN;
+        clients.client[connection].status=LOGGED_IN;
 
         //extract data from the create_char packet
         strcpy(character.char_name, char_name);
@@ -758,6 +772,9 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         character.char_type=data[i++];
         character.head_type=data[i++];
 
+        character.frame=stand_up;
+
+        //set the char creation time
         character.char_created=time(NULL);
 
         //set starting channel
@@ -772,12 +789,11 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         add_char(character);
 
         //once the char has been added to the database, find its char_id
-        clients.client[connection]->character_id=get_max_char_id();
+        clients.client[connection].character_id=get_max_char_id();
 
 int slot=0;
 add_item_to_inventory(connection, 612, 1, &slot);
 add_item_to_inventory(connection, 613, 1, &slot);
-add_item_to_inventory(connection, 614, 1, &slot);
 
         //update game data for chars created
         race[character.char_type].char_count++;

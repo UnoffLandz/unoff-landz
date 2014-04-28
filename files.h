@@ -3,13 +3,14 @@
 
 #include "global.h"
 
-#define ITEM_DATA_FILE          "item_data.txt"
-#define THREED_OBJECT_DATA_FILE "threed_object_data.txt"
-#define MAP_DATA_FILE           "map_data.txt"
-#define CHANNEL_DATA_FILE       "channel_data.txt"
-#define RACE_DATA_FILE          "race_data_txt"
-#define GUILD_DATA_FILE         "guild_data_txt"
-#define BAG_TYPE_DATA_FILE      "bag_type_data.txt"
+#define ITEM_DATA_FILE           "item_data.txt"
+#define THREED_OBJECT_DATA_FILE  "threed_object_data.txt"
+#define MAP_DATA_FILE            "map_data.txt"
+#define CHANNEL_DATA_FILE        "channel_data.txt"
+#define RACE_DATA_FILE           "race_data_txt"
+#define GUILD_DATA_FILE          "guild_data_txt"
+#define BAG_TYPE_DATA_FILE       "bag_type_data.txt"
+#define CHARACTER_TYPE_DATA_FILE "character_type_data_txt"
 
 #define DATABASE_FILE_NAME      "unoff.db"
 
@@ -24,8 +25,8 @@
 
 #define ITEM_DATA_FILE_FORMAT   "UNOFFLANDZ Item data file\n" \
                                 "\n" \
-                                "Image Item                                           Food  Food     Organic Vegetal\n" \
-                                "ID    Name              Harvestable EMU Interval EXP Value Cooldown Nexus   Nexus  \n" \
+                                "Image Item              Bag                                Food  Food     Organic Vegetal\n" \
+                                "ID    Name              Token Harvestable EMU Interval EXP Value Cooldown Nexus   Nexus  \n" \
                                 "------------------------------------------------------------------------------------------\n"
 
 #define THREED_OBJECT_DATA_FILE_FORMAT  "#UNOFFLANDZ 3d object data file\n" \
@@ -53,6 +54,13 @@
                                 "#ID   Name          Description       Emu     Multiplier Proximity Multiplier Proximity Multiplier Vis     Multiplier \n" \
                                 "---------------------------------------------------------------------------------------------------------------------\n"
 
+#define CHARACTER_TYPE_DATA_FILE_FORMAT   "#UNOFFLANDZ character type data file\n" \
+                                          "#\n" \
+                                          "#Character Character                \n" \
+                                          "#Type      Type           Race Sex  \n" \
+                                          "#ID        Name           ID   ID   \n" \
+                                          "------------------------------------\n"
+
 #define GUILD_DATA_FILE_FORMAT  "#UNOFFLANDZ guild data file\n" \
                                 "#\n" \
                                 "#Guild Guild  Guild           Guild             Tag    Log On Log Off Chan   Chan\n" \
@@ -61,10 +69,10 @@
 
 #define BAG_TYPE_DATA_FILE_FORMAT  "#UNOFFLANDZ bag type data file\n" \
                                    "#\n" \
-                                   "#Bag   Bag\n" \
-                                   "#Type  Type            Poof  Max\n" \
-                                   "#Token Description     Time  Emu\n" \
-                                   "--------------------------------\n"
+                                   "#Bag  item  Bag                      \n" \
+                                   "#Type image Type            Poof  Max\n" \
+                                   "#id   id    Description     Time  Emu\n" \
+                                   "-------------------------------------\n"
 
 enum { //log events
     EVENT_NEW_CHAR,
@@ -97,6 +105,8 @@ void load_database_race_table_data(char *file_name);
 void load_database_guild_table_data(char *file_name);
 
 void load_database_bag_type_table_data(char *file_name);
+
+void load_database_char_type_table_data(char *file_name);
 
 void load_e3d(char *filename);
 
