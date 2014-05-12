@@ -29,7 +29,7 @@ static void harvest_cycle_cb (struct ev_loop *loop, struct ev_timer *ev_harvest_
     int amount=clients.client[connection].harvest_amount;
 
     // if inventory is overloaded stop harvesting
-    if(get_inventory_emu(connection)+ (item[image_id].emu * amount) > get_char_carry_capacity(connection)){
+    if(get_inventory_emu(connection)+ (item[image_id].emu * amount) > get_max_inventory_emu(connection)){
 
         //inform the client
         sprintf(text_out, "%cYou are overloaded", c_red1+127);
@@ -50,8 +50,7 @@ static void harvest_cycle_cb (struct ev_loop *loop, struct ev_timer *ev_harvest_
     printf("image id %i emu %i\n", image_id, item[image_id].emu);
 
     //send updated inventory_emu to client
-    clients.client[connection].inventory_emu += (amount * item[image_id].emu);
-    send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection].inventory_emu);
+    send_partial_stats(connection, INVENTORY_EMU,  get_inventory_emu(connection));
 
     //update exp and inventory stats on database
     update_db_char_stats(connection);

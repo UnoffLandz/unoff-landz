@@ -12,15 +12,71 @@
 #include "database.h"
 #include "protocol.h"
 
-static void bag_poof_cb (struct ev_loop *loop, struct ev_timer *ev_bag_timer, int revents) {
+void clear_bag(int bag_id){
+
+    int i=0;
+
+    for(i=0;i<MAX_BAG_SLOTS; i++){
+        bag_list[bag_id].inventory[i].image_id=0;
+        bag_list[bag_id].inventory[i].amount=0;
+        bag_list[bag_id].inventory[i].flags=0;
+    }
+
+    bag_list[bag_id].tile_pos=0;
+    bag_list[bag_id].map_id=0;
+    bag_list[bag_id].bag_type_id=0; //0=default bag type
+    bag_list[bag_id].mode=BAG_UNUSED;
+}
+
+static void bag_timer_cb (struct ev_loop *loop, struct ev_timer *ev_bag_timer, int revents) {
 
     (void)(revents);//removes unused parameter warning
     (void)(loop);//removes unused parameter warning
 
     int bag_id=(int) ev_bag_timer->data;
     int map_id=bag_list[bag_id].map_id;
+    int bag_type_id=bag_list[bag_id].bag_type_id;
 
-    broadcast_bag_poof(bag_id, map_id);
+    if(bag_list[bag_id].mode==BAG_SET){
+
+        bag_list[bag_id].mode=BAG_INVISIBLE;
+
+        if(bag_type[bag_type_id].invisible_time>0){
+
+            printf("set bag mode to invisible\n");
+
+            ev_timer_init(&ev_bag_timer[bag_id], bag_timer_cb, bag_type[bag_list[bag_id].bag_type_id].invisible_time, 0);
+            ev_timer_start(loop, &ev_bag_timer[bag_id]);
+            return;
+        }
+    }
+
+    if(bag_list[bag_id].mode==BAG_INVISIBLE){
+
+        bag_list[bag_id].mode=BAG_VISIBLE;
+
+        if(bag_type[bag_type_id].visible_time>0){
+
+            printf("set bag mode to visible\n");
+
+            ev_timer_init(&ev_bag_timer[bag_id], bag_timer_cb, bag_type[bag_list[bag_id].bag_type_id].visible_time, 0);
+            ev_timer_start(loop, &ev_bag_timer[bag_id]);
+            return;
+        }
+    }
+
+    if(bag_list[bag_id].mode==BAG_VISIBLE){
+
+        printf("set bag mode to not in use\n");
+
+        bag_list[bag_id].mode=BAG_UNUSED;
+
+        clear_bag(bag_id);
+        broadcast_bag_poof(bag_id, map_id);
+        return;
+    }
+
+    log_event2(EVENT_ERROR, "unknown bag mode [%i] for bag id [%i] in function bag_timer_cb: module character_inventory.c", bag_list[bag_id].mode, bag_id);
 }
 
 void send_s_close_bag(int connection){
@@ -103,7 +159,7 @@ int bag_count(int connection){
 
     for(i=0; i<MAX_BAGS; i++){
 
-        if(bag_list[i].connection==connection && bag_list[i].status==USED) count++;
+        if(bag_list[i].connection==connection && bag_list[i].mode!=BAG_UNUSED) count++;
     }
 
     return count;
@@ -146,7 +202,7 @@ int get_unused_bag(int *bag_id){
 
     for(i=1; i<MAX_BAGS; i++){
 
-        if(bag_list[i].status==UNUSED){
+        if(bag_list[i].mode==BAG_UNUSED){
 
             *bag_id=i;
             return FOUND;
@@ -175,7 +231,7 @@ int get_unused_inventory_slot(int connection, int *slot){
     return NOT_FOUND;
 }
 
-int get_char_carry_capacity(int connection){
+int get_max_inventory_emu(int connection){
 
     int race_id=clients.client[connection].race_type;
     int initial_carry_capacity=race[race_id].initial_carry_capacity;
@@ -193,8 +249,10 @@ int get_inventory_emu(int connection){
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
 
         image_id=clients.client[connection].client_inventory[i].image_id;
+        //printf("slot [%i] item [%i] amount [%i] emu [%i]\n", i, image_id, clients.client[connection].client_inventory[i].amount, item[image_id].emu);
         total_emu +=(clients.client[connection].client_inventory[i].amount * item[image_id].emu);
-    }
+        //printf("total emu %i\n", total_emu);
+     }
 
     return total_emu;
 }
@@ -245,14 +303,13 @@ int bag_exists(int map_id, int tile_pos, int *bag_id){
 
     for(i=1; i<MAX_BAGS; i++){
 
-        //if an existing bag exists, use this to place the drop items in
-        if(bag_list[i].tile_pos==tile_pos && bag_list[i].map_id==map_id && bag_list[i].status==USED) {
+        if(bag_list[i].tile_pos==tile_pos && bag_list[i].map_id==map_id && bag_list[i].mode!=BAG_UNUSED) {
 
             *bag_id=i;
-            return FOUND;
+            return TRUE;
         }
     }
-    return NOT_FOUND;
+    return FALSE;
 }
 
 void send_here_your_ground_items(int connection, int bag_id){
@@ -368,7 +425,7 @@ int bag_is_empty(int bag_id){
     return TRUE;
 }
 
-int create_empty_bag(int map_id, int tile, int *bag_id, struct ev_loop *loop){
+int create_default_bag(int map_id, int tile, int *bag_id, struct ev_loop *loop){
 
     //in order that both the system can use this function to create bags, it needs to avoid
     //returning messages to any particular connection.
@@ -382,23 +439,22 @@ int create_empty_bag(int map_id, int tile, int *bag_id, struct ev_loop *loop){
     }
 
     //set default bag parameters
-    bag_list[*bag_id].bag_type_id=0; //set default bag type
-    bag_list[*bag_id].connection=-1; //set default bag creator (system)
+    bag_list[*bag_id].bag_type_id=DEFAULT_BAG_TYPE;
+    bag_list[*bag_id].connection=-1; //set bag creator to 'system'
     bag_list[*bag_id].map_id=map_id;
     bag_list[*bag_id].tile_pos=tile;
-    bag_list[*bag_id].status=USED;
+    bag_list[*bag_id].mode=BAG_SET;
 
     //broadcast the bag to all client connections in the vicinity
     broadcast_bag_drop(*bag_id, map_id);
 
+    ev_timer_init(&ev_bag_timer[*bag_id], bag_timer_cb, bag_type[DEFAULT_BAG_TYPE].poof_time, 0);
+    ev_bag_timer[*bag_id].data= *bag_id;
+    ev_timer_start(loop, &ev_bag_timer[*bag_id]);
+
     #ifdef DEBUG
         printf("Create new bag [%i] at position [%i] on map [%s]\n", *bag_id, tile, maps.map[map_id]->map_name);
     #endif
-
-    //set poof timer
-    ev_bag_timer[*bag_id].data=(int*) *bag_id;
-    ev_timer_init(&ev_bag_timer[*bag_id], bag_poof_cb, 20, 0);
-    ev_timer_start(loop, &ev_bag_timer[*bag_id]);
 
     return TRUE;
 }
@@ -439,7 +495,8 @@ int add_item_to_bag(int bag_id, int image_id, int amount, int *bag_slot, struct 
     bag_list[bag_id].inventory[*bag_slot].amount+=amount;
 
     //reset the bag poof time
-    ev_timer_init(&ev_bag_timer[bag_id], bag_poof_cb, bag_type[bag_list[bag_id].bag_type_id].poof_time, 0);
+    ev_timer_init(&ev_bag_timer[bag_id], bag_timer_cb, bag_type[bag_list[bag_id].bag_type_id].poof_time, 0);
+    //ev_bag_timer[bag_id].data= bag_id;
     ev_timer_start(loop, &ev_bag_timer[bag_id]);
 
     return TRUE;
@@ -476,7 +533,8 @@ int remove_item_from_bag(int bag_id, int image_id, int amount, int *bag_slot, st
     poof_time=bag_type[bag_type_id].poof_time;
 
     //reset the bag poof time
-    ev_timer_init(&ev_bag_timer[bag_id], bag_poof_cb, poof_time, 0);
+    ev_timer_init(&ev_bag_timer[bag_id], bag_timer_cb, poof_time, 0);
+    //ev_bag_timer[bag_id].data= bag_id;
     ev_timer_start(loop, &ev_bag_timer[bag_id]);
 
     return TRUE;
@@ -506,13 +564,12 @@ int add_item_to_inventory(int connection, int image_id, int amount, int *invento
         #endif
     }
 
-    //send updated inventory_emu to client
-    clients.client[connection].inventory_emu += amount * item[image_id].emu;
-    send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection].inventory_emu);
-
     //Add items to the char inventory
     clients.client[connection].client_inventory[*inventory_slot].amount+=amount;
     send_get_new_inventory_item(connection, image_id, clients.client[connection].client_inventory[*inventory_slot].amount, *inventory_slot);
+
+    //send updated inventory_emu to client
+    send_partial_stats(connection, INVENTORY_EMU,  get_inventory_emu(connection));
 
     //update the database
     update_db_char_slot(connection, *inventory_slot);
@@ -530,8 +587,7 @@ int remove_item_from_inventory(int connection, int image_id, int amount, int slo
     send_get_new_inventory_item(connection, image_id, clients.client[connection].client_inventory[slot].amount, slot);
 
     //send updated emu to client
-    clients.client[connection].inventory_emu -=amount * item[image_id].emu;
-    send_partial_stats(connection, INVENTORY_EMU,  clients.client[connection].inventory_emu);
+    send_partial_stats(connection, INVENTORY_EMU,  get_inventory_emu(connection));
 
     //update char inventory on database
     update_db_char_slot(connection, slot);
@@ -563,7 +619,7 @@ int get_bag_inventory_emu(int bag_id){
     return bag_emu;
 }
 
-void bag_split(int connection, int bag_id){
+void bag_split(int connection, int bag_id, struct ev_loop *loop){
 
     int i=0;
     int amount=0;
@@ -600,21 +656,28 @@ void bag_split(int connection, int bag_id){
         }
     }
 
+    //poof the bag
     broadcast_bag_poof(bag_id, map_id);
 
-    bag_list[bag_id].tile_pos=0;
-    bag_list[bag_id].map_id=0;
-    bag_list[bag_id].bag_type_id=0;
-    bag_list[bag_id].status=UNUSED;
+    //clear the entry in the bag list
+    clear_bag(bag_id);
+    bag_list[bag_id].mode=BAG_UNUSED;
+
+    //kill the bag timer
+    ev_timer_init(&ev_bag_timer[bag_id], bag_timer_cb, 0, 0); //timing of 0 should stop timer
+    //ev_bag_timer[bag_id].data= bag_id;
+    ev_timer_start(loop, &ev_bag_timer[bag_id]);
 }
 
 void pick_up_from_bag(int connection, int bag_slot, struct ev_loop *loop){
 
-    int bag_id=0, image_id=0, amount=0;
+    int bag_id=0;
+    int image_id=0;
+    int amount=0;
     int tile=clients.client[connection].map_tile;
-    char text_out[80]="";
+    char text_out[120]="";
     int inventory_emu=get_inventory_emu(connection);
-    int max_emu =get_char_carry_capacity(connection) - inventory_emu;
+    int max_emu =get_max_inventory_emu(connection) - inventory_emu;
     int map_id=clients.client[connection].map_id;
     int inventory_slot=0;
     int bag_type_id=0;
@@ -624,6 +687,7 @@ void pick_up_from_bag(int connection, int bag_slot, struct ev_loop *loop){
     //find the bag id in the bag array
     if(bag_exists(map_id, tile, &bag_id)==FALSE){
 
+        //if bag doesn't exist the abort pick up
         sprintf(text_out, "%cSorry. No bag here for you to pick up", c_red1+127);
         send_raw_text_packet(connection, CHAT_SERVER, text_out);
         return;
@@ -633,7 +697,18 @@ void pick_up_from_bag(int connection, int bag_slot, struct ev_loop *loop){
     amount=bag_list[bag_id].inventory[bag_slot].amount;
     bag_type_id=bag_list[bag_id].bag_type_id;
     bag_type_max_emu=bag_type[bag_type_id].max_emu;
+/*
+    //check if bag can be accessed
+    printf("bag_id[%i] status[%i]\n", bag_id, bag_list[bag_id].mode);
 
+    if(bag_list[bag_id].status==LOCKED){
+
+        //if bag cannot be accessed then abort pick up
+        sprintf(text_out, "%cSorry. This bag is locked!", c_red1+127);
+        send_raw_text_packet(connection, CHAT_SERVER, text_out);
+        return;
+    }
+*/
     //reduce the amount to be loaded if this is exceeds the char carry capacity
     if(max_emu/item[image_id].emu < amount) amount=max_emu/item[image_id].emu;
 
@@ -658,16 +733,22 @@ void pick_up_from_bag(int connection, int bag_slot, struct ev_loop *loop){
     bag_type_max_emu=bag_type[bag_list[bag_id].bag_type_id].max_emu;
     bag_emu=get_bag_inventory_emu(bag_id);
 
-    if(bag_emu>bag_type_max_emu){
+    //check for random bag split on underloaded bag
+    if(bag_emu<bag_type_max_emu && rand() % bag_type_max_emu==0){
 
-        //calculate chance of a bag split
-        if(rand() % bag_type_max_emu < bag_emu-bag_type_max_emu){
+        sprintf(text_out, "%cDamn!!! The bag split for no reason and you lost some of the contents. Guess it wasn't your luck day", c_red1+127);
+        send_raw_text_packet(connection, CHAT_SERVER, text_out);
+        bag_split(connection, bag_id, loop);
+        return;
+    }
 
-            //ouch. a bag split has occured. Now all items in the bag are loaded back to the inventory
-            //less a random amount for each slot
-            bag_split(connection, bag_id);
-            return;
-        }
+    //check for split on overloaded bag
+    if(bag_emu>bag_type_max_emu && rand() % (bag_emu - bag_type_max_emu)!=0){
+
+        sprintf(text_out, "%cDamn!!! The bag split coz it was overloaded and you lost some of the contents. Serves you right", c_red1+127);
+        send_raw_text_packet(connection, CHAT_SERVER, text_out);
+        bag_split(connection, bag_id, loop);
+        return;
     }
 
     //remove item from the bag
@@ -684,6 +765,15 @@ void pick_up_from_bag(int connection, int bag_slot, struct ev_loop *loop){
 
         //if empty then poof the bag
         broadcast_bag_poof(bag_id, map_id);
+
+        //clear the bag list entry
+        bag_list[bag_id].mode=BAG_UNUSED;
+        clear_bag(bag_id);
+
+        //kill the timer
+        ev_timer_init(&ev_bag_timer[bag_id], bag_timer_cb, 0, 0); //timing of 0 should stop timer
+        //ev_bag_timer[bag_id].data= bag_id;
+        ev_timer_start(loop, &ev_bag_timer[bag_id]);
     }
     else {
 
@@ -711,8 +801,12 @@ void drop_from_inventory(int connection, int inventory_slot, int drop_amount, st
     int tile=clients.client[connection].map_tile;
     int image_id=clients.client[connection].client_inventory[inventory_slot].image_id;
     char text_out[80]="";
-    int bag_token=FALSE, bag_token_type=0;
+
+    int bag_token=FALSE;
+    int bag_token_type=0;
+    int existing_bag=FALSE;
     int inventory_amount=clients.client[connection].client_inventory[inventory_slot].amount;
+    //int restriction_type=0;
 
     //anti bag spam prevents char having any more than 10 live bags
     if(bag_count(connection)+1==MAX_BAG_SPAM) {
@@ -722,12 +816,21 @@ void drop_from_inventory(int connection, int inventory_slot, int drop_amount, st
         return;
     }
 
-    /*determine if drop is a bag token and, the type of token, as we'll need this later on to prevent dropping of
-    empty bags and, so we'll know when to upgrade a bags */
-    bag_token=is_item_a_bag_token(image_id, &bag_token_type);
-    printf("bag token [%i] [%i] [%i]\n", image_id, bag_token, bag_token_type);
+    //function returns true if a bag exists plus updates the bag_id variable
+    existing_bag=bag_exists(map_id, tile, &bag_id);
 
-    //make sure the amount in the packet is not greater than what is actually in the slot,
+    //function returns true if item is a bag token plus updates the bag_token_id variable
+    bag_token=is_item_a_bag_token(image_id, &bag_token_type);
+
+    //prevent bag token from being used to create a bag otherwise, we'll end up creating an empty bag
+    if(existing_bag==FALSE && bag_token==TRUE){
+
+        sprintf(text_out, "%cSorry. You need to create the bag before you can use a bag token", c_red1+127);
+        send_raw_text_packet(connection, CHAT_SERVER, text_out);
+        return;
+    }
+
+    //ensure amount in the packet is not greater than in the slot,
     if(inventory_amount < drop_amount){
 
         #ifdef DEBUG
@@ -737,21 +840,10 @@ void drop_from_inventory(int connection, int inventory_slot, int drop_amount, st
         drop_amount=inventory_amount;
     }
 
-    //check if there's already a bag at this location
-    if(bag_exists(map_id, tile, &bag_id)==NOT_FOUND){
+    //check if we need to create a new bag
+    if(existing_bag==FALSE){
 
-        //create a new bag
-
-        if(bag_token==TRUE){
-
-            /*abort function if the item being used to create the bag is a bag token otherwise, we'll end up creating
-            an empty bag */
-            sprintf(text_out, "%cSorry. You need to create the bag before you can use a bag token", c_red1+127);
-            send_raw_text_packet(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        if(create_empty_bag(map_id, tile, &bag_id, loop)==FALSE){
+        if(create_default_bag(map_id, tile, &bag_id, loop)==FALSE){
 
             //abort function if we can't create the bag
             sprintf(text_out, "%cSorry. Can't create that bag at the moment. Wait a few secs and try again", c_red1+127);
@@ -762,16 +854,39 @@ void drop_from_inventory(int connection, int inventory_slot, int drop_amount, st
         /*bag creation defaults to indicate bag was created by the system, hence lets update that value to show
         that its actually been created by a char */
         bag_list[bag_id].connection=connection;
-
-        //set bag to default type
-        bag_list[bag_id].bag_type_id=0;
     }
 
-    //check if a valid bag token has been dropped
-    if(bag_token==TRUE && bag_token_type>bag_list[bag_id].bag_type_id) {
+    //check if bag token has been dropped
+    if(bag_token==TRUE) {
 
-        //upgrade the bag to the new bag token
-        sprintf(text_out, "%cCongratulations. You just upgraded your bag to a %s", c_green1+127, bag_type[bag_token_type].bag_type_description);
+/*
+        restriction_type=bag_type[bag_list[bag_id].bag_type_id].user_type_restriction;
+
+        //check if bag is restricted to creator
+        if(restriction_type==1 && connection!=bag_list[bag_id].connection){
+
+            sprintf(text_out, "%cSorry. You are not the owner of this bag", c_red1+127);
+            send_raw_text_packet(connection, CHAT_SERVER, text_out);
+            return;
+        }
+
+        //check if bag is restricted to creators guild
+        if(restriction_type==1 && clients.client[connection].guild_id!=clients.client[bag_list[bag_id].connection].guild_id){
+
+            sprintf(text_out, "%cSorry. You are not in the same guild as the owner of this bag", c_red1+127);
+            send_raw_text_packet(connection, CHAT_SERVER, text_out);
+            return;
+        }
+
+        //check if bag is restricted to creators guild
+        if(bag_type[bag_list[bag_id].bag_type_id].user_type_restriction==2 && connection!=bag_list[bag_id].connection){
+
+            sprintf(text_out, "%cSorry. You are not the owner of this bag", c_red1+127);
+            send_raw_text_packet(connection, CHAT_SERVER, text_out);
+            return;
+       }
+*/
+        sprintf(text_out, "%cYou changed the bag to a %s", c_green1+127, bag_type[bag_token_type].bag_type_description);
         send_raw_text_packet(connection, CHAT_SERVER, text_out);
 
         //remove the bag token from the inventory
@@ -786,10 +901,31 @@ void drop_from_inventory(int connection, int inventory_slot, int drop_amount, st
         //upgrade the bag
         bag_list[bag_id].bag_type_id=bag_token_type;
 
+        //change the bag creator so as user type restrictions will be applied to the bag
+        bag_list[bag_id].connection=connection;
+
+        //close the bag inventory grid
+        send_s_close_bag(connection);
+
+        //reset the bag status
+        bag_list[bag_id].mode=BAG_SET;
+        ev_timer_init(&ev_bag_timer[bag_id], bag_timer_cb, 0.1, 0);
+        //ev_bag_timer[bag_id].data=bag_id;
+        ev_timer_start(loop, &ev_bag_timer[bag_id]);
+
         //abort the function so as the bag token isn't added to the bag inventory
         return;
     }
+/*
+    //check if bag is locked
+    if(bag_list[bag_id].status==LOCKED){
 
+        //if bag is locked then abort drop
+        sprintf(text_out, "%cSorry. This bag is locked!", c_red1+127);
+        send_raw_text_packet(connection, CHAT_SERVER, text_out);
+        return;
+    }
+*/
     //add the drop to the bag
     if(add_item_to_bag(bag_id, image_id, drop_amount, &bag_slot, loop)==FALSE) {
 

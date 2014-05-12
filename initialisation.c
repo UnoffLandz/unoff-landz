@@ -20,6 +20,7 @@ void create_new_database() {
     create_database_table(RACE_TABLE_SQL);
     create_database_table(GUILD_TABLE_SQL);
     create_database_table(BAG_TYPE_TABLE_SQL);
+    create_database_table(BAG_TOOLS_TABLE_SQL);
     create_database_table(CHARACTER_TYPE_TABLE_SQL);
 
     log_event2(EVENT_INITIALISATION, "---");
@@ -32,6 +33,7 @@ void create_new_database() {
     load_database_race_table_data(RACE_DATA_FILE);
     load_database_guild_table_data(GUILD_DATA_FILE);
     load_database_bag_type_table_data(BAG_TYPE_DATA_FILE);
+    load_database_bag_tool_table_data(BAG_TOOL_DATA_FILE);
     load_database_char_type_table_data(CHARACTER_TYPE_DATA_FILE);
 }
 
@@ -99,6 +101,13 @@ void initialise_bag_types(){
     to change from sqlite to mysql at sometime in the future */
 
     load_bag_types();
+}
+
+void initialise_bag_tools(){
+    /*function ensures that all database related actions are confined to the database.c module. This makes it easier
+    to change from sqlite to mysql at sometime in the future */
+
+    load_bag_tools();
 }
 
 void initialise_character_types(){

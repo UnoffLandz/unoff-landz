@@ -10,6 +10,7 @@
 #define MAX_GUILDS 10
 #define MAX_BAGS 256 //maximum bags on a map
 #define MAX_BAG_TYPES 5 //includes type 0 which is the default bag type
+#define MAX_BAG_TOOLS 5
 #define MAX_CLIENTS 50
 #define MAX_THREED_OBJECTS 100 // maximum number of e3d files that can be held in the threed_object array
 #define MAX_ITEMS 1500 //maximum number of mixable/harvestable items that can be held in the item array
@@ -108,10 +109,15 @@ enum {//stats codes
     //89 ?????
 };
 
-enum {// frame type
-    nothing=0,
-    stand_up=13,
-    sit_down=14,
+enum { // actor command
+    actor_cmd_sit_down=13,
+    actor_cmd_stand_up=14,
+};
+
+enum {// actor frame
+    frame_sit=12,
+    frame_stand=13,
+    frame_sit_idle=14,
 };
 
 enum {// actor movement vectors
@@ -501,9 +507,6 @@ struct client_node_type{
     int max_magic_lvl;
     int potion_lvl;
     int max_potion_lvl;
-
-    int inventory_emu;  // saves having to parse inventory at each harvest/mix cycle
-
     int material_pts;
     int max_material_pts;
     int ethereal_pts;
@@ -536,8 +539,6 @@ struct client_node_type character;
 
 struct client_list_type {
     int count;
-    //int max;
-    //struct client_node_type **client;
     struct client_node_type client[MAX_CLIENTS];
 };
 struct client_list_type clients;
@@ -615,13 +616,27 @@ time_t server_start_time;
 ev_timer ev_bag_timer[50];
 ev_timer ev_harvest_timer[MAX_CLIENTS];
 
+enum { //bag mode
+    BAG_UNUSED,
+    BAG_VISIBLE,
+    BAG_INVISIBLE,
+    BAG_SET
+};
+
+enum { //bag locking status
+    UNLOCKED,
+    LOCKED_OWNER,
+    LOCKED_GUILD
+};
+
 /** BAGS **/
 struct bag_list_type {
     int map_id;
     int tile_pos;
     int connection;
     int bag_type_id;
-    int status; //USED, UNUSED
+    int mode;
+    int locking_status;
     struct client_inventory_type inventory[MAX_BAG_SLOTS];
 };
 struct bag_list_type bag_list[MAX_BAGS];
@@ -633,8 +648,27 @@ struct bag_type_type{
     char bag_type_description[160];
     int poof_time;
     int max_emu;
+    float u_split_modifier;
+    float o_split_modifier;
+    int invisible_time;
+    int visible_time;
 };
 struct bag_type_type bag_type[MAX_BAG_TYPES];
+
+/** BAG TOOLS **/
+struct bag_tool_type{
+    int bag_tool_id;
+    int image_id;
+    char description[160];
+    int make_visible;
+    int bag_lock_type;
+    int bag_unlock_type;
+    int bag_arm_type;
+    int bag_disarm_type;
+    int single_use;
+    int break_chance;
+};
+struct bag_tool_type bag_tool[MAX_BAG_TOOLS];
 
 /** CHARACTER TYPES **/
 struct character_type_type{

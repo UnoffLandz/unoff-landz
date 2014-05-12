@@ -5,6 +5,7 @@
 #define INVENTORY_STRING_LENGTH 1+(MAX_INVENTORY_SLOTS*8)
 #define MAX_BAG_SLOTS 10
 #define MAX_BAG_SPAM 10
+#define DEFAULT_BAG_TYPE 0
 
 /** RESULT  : sends entire char inventory
 
@@ -35,7 +36,7 @@ void get_inventory_string(int connection, unsigned char *inventory_str);
 
 int get_inventory_emu(int connection);
 
-int get_char_carry_capacity(int connection);
+int get_max_inventory_emu(int connection);
 
 void send_get_new_bag(int connection, int bag_id);
 
@@ -51,7 +52,7 @@ int bag_is_empty(int bag_id);
 
 void send_s_close_bag(int connection);
 
-int create_empty_bag(int map_id, int tile, int *bag_id, struct ev_loop *loop);
+int create_default_bag(int map_id, int tile, int *bag_id, struct ev_loop *loop);
 
 int add_item_to_inventory(int connection, int image_id, int amount, int *inventory_slot);
 

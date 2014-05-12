@@ -59,13 +59,11 @@ void broadcast_bag_drop(int bag_id, int map_id){
             }
         }
     }
-
-    bag_list[bag_id].status=USED;
 }
 
 void broadcast_bag_poof(int bag_id, int map_id){
 
-    int i=0, j=0, k=0;
+    int i=0, j=0;
     int char_tile=0, bag_tile=0;
 
     printf("poofing bag [%i] on map [%i] name [%s]\n", bag_id, map_id, maps.map[map_id]->map_name);
@@ -78,12 +76,6 @@ void broadcast_bag_poof(int bag_id, int map_id){
 
             char_tile=clients.client[j].map_tile;
             bag_tile=bag_list[bag_id].tile_pos;
-
-            //zero the bag inventory
-            for(k=0; k<MAX_BAG_SLOTS; k++){
-                bag_list[bag_id].inventory[k].amount=0;
-                bag_list[bag_id].inventory[k].image_id=0;
-            }
 
             //only send char poof to chars that are within visual proximity of the bag
             if(get_proximity(char_tile, bag_tile, maps.map[map_id]->map_axis) < get_char_visual_range(j)) {
@@ -99,8 +91,6 @@ void broadcast_bag_poof(int bag_id, int map_id){
             }
         }
     }
-
-    bag_list[bag_id].status=UNUSED;
 }
 
 void raw_text_packet(int chan_type, char *text, unsigned char *packet, int *packet_length){

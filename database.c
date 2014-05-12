@@ -457,7 +457,11 @@ void add_guild(int guild_id, char *guild_tag, char *guild_name, char *guild_desc
     log_event2(EVENT_INITIALISATION, "Added guild [%i] [%s] to GUILD_TABLE", guild_id, guild_name);
 }
 
-void add_bag_type(int bag_type_id, int image_id, char *bag_description, int poof_time, int max_emu){
+void add_bag_type(int bag_type_id, int image_id, char *bag_description, int max_emu,
+                  float u_split_modifier,
+                  float o_split_modifier,
+                  int invisible_time,
+                  int visible_time){
 
  /** public function - see header */
 
@@ -468,17 +472,23 @@ void add_bag_type(int bag_type_id, int image_id, char *bag_description, int poof
         "BAG_TYPE_ID," \
         "IMAGE_ID," \
         "BAG_TYPE_DESCRIPTION," \
-        "POOF_TIME," \
-        "MAX_EMU"  \
-        ") VALUES( ?, ?, ?, ?, ?)";
+        "MAX_EMU,"  \
+        "O_SPLIT_MODIFIER," \
+        "U_SPLIT_MODIFIER," \
+        "INVISIBLE_TIME," \
+        "VISIBLE_TIME," \
+        ") VALUES( ?, ?, ?, ?, ?, ?, ?, ?)";
 
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
     sqlite3_bind_int(stmt, 1, bag_type_id);
     sqlite3_bind_int(stmt, 2, image_id);
     sqlite3_bind_text(stmt, 3, bag_description, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 4, poof_time);
-    sqlite3_bind_int(stmt, 5, max_emu);
+    sqlite3_bind_int(stmt, 4, max_emu);
+    sqlite3_bind_double(stmt, 5, u_split_modifier);
+    sqlite3_bind_double(stmt, 6, o_split_modifier);
+    sqlite3_bind_int(stmt, 7, invisible_time);
+    sqlite3_bind_int(stmt, 8, visible_time);
 
     rc = sqlite3_step(stmt);
 
@@ -492,6 +502,61 @@ void add_bag_type(int bag_type_id, int image_id, char *bag_description, int poof
 
     log_event2(EVENT_INITIALISATION, "Added bag type [%i] [%s] to BAG_TYPE_TABLE", bag_type_id, bag_description);
 }
+
+void add_bag_tool(int bag_tool_id, int image_id, char *description, int make_visible, int bag_lock_type, int bag_unlock_type,
+                  int bag_arm_type,
+                  int bag_disarm_type,
+                  int bag_publicity_type,
+                  int single_use,
+                  int break_chance){
+
+ /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+
+    char sql[]="INSERT INTO BAG_TOOL_TABLE("  \
+        "BAG_TOOL_ID," \
+        "IMAGE_ID," \
+        "DESCRIPTION," \
+        "MAKE_VISIBLE,"  \
+        "BAG_LOCK_TYPE," \
+        "BAG_UNLOCK_TYPE," \
+        "BAG_ARM_TYPE," \
+        "BAG_DISARM_TYPE," \
+        "BAG_PUBLICITY_TYPE," \
+        "SINGLE_USE," \
+        "BREAK_CHANCE," \
+        ") VALUES( ?, ?, ?, ?, ?, ?, ?, ?, ? , ?, ?)";
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    sqlite3_bind_int(stmt, 1, bag_tool_id);
+    sqlite3_bind_int(stmt, 2, image_id);
+    sqlite3_bind_text(stmt, 3, description, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 4, make_visible);
+    sqlite3_bind_int(stmt, 5, bag_lock_type);
+    sqlite3_bind_int(stmt, 6, bag_unlock_type);
+    sqlite3_bind_int(stmt, 7, bag_arm_type);
+    sqlite3_bind_int(stmt, 8, bag_disarm_type);
+    sqlite3_bind_int(stmt, 9, bag_publicity_type);
+    sqlite3_bind_int(stmt, 10, single_use);
+    sqlite3_bind_int(stmt, 11, break_chance);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+
+        log_event2(EVENT_ERROR, "Error %s executing '%s' in function add_bag_tool: module database.c", sql, sqlite3_errmsg(db));
+        exit(EXIT_FAILURE);
+    }
+
+    sqlite3_finalize(stmt);
+
+    log_event2(EVENT_INITIALISATION, "Added bag tool [%i] [%s] to BAG_TOOL_TABLE", bag_tool_id, description);
+}
+
+
 
 void add_char_type(int char_type_id, char *char_type_name, int race_id, int sex_id){
 
@@ -601,9 +666,6 @@ int get_char_data_from_db(char *name){
         slot=sqlite3_column_int(stmt, 0);
         character.client_inventory[slot].image_id=sqlite3_column_int(stmt, 1);
         character.client_inventory[slot].amount=sqlite3_column_int(stmt, 2);
-
-        //calc total emu of inventory
-        character.inventory_emu+=item[character.client_inventory[slot].image_id].emu * character.client_inventory[slot].amount;
     }
 
     sqlite3_finalize(stmt);
@@ -841,14 +903,14 @@ void load_items(){
         }
 
         strcpy(item[id].item_name, (char*)sqlite3_column_text(stmt, 1));
-        item[id].harvestable=sqlite3_column_int(stmt,2);
-        item[id].emu=sqlite3_column_int(stmt,3);
-        item[id].interval=sqlite3_column_int(stmt,4);
-        item[id].exp=sqlite3_column_int(stmt,5);
-        item[id].food_value=sqlite3_column_int(stmt,6);
-        item[id].food_cooldown=sqlite3_column_int(stmt,7);
-        item[id].organic_nexus=sqlite3_column_int(stmt,8);
-        item[id].vegetal_nexus=sqlite3_column_int(stmt,9);
+        item[id].harvestable=sqlite3_column_int(stmt,3);
+        item[id].emu=sqlite3_column_int(stmt,4);
+        item[id].interval=sqlite3_column_int(stmt,5);
+        item[id].exp=sqlite3_column_int(stmt,6);
+        item[id].food_value=sqlite3_column_int(stmt,7);
+        item[id].food_cooldown=sqlite3_column_int(stmt,8);
+        item[id].organic_nexus=sqlite3_column_int(stmt,9);
+        item[id].vegetal_nexus=sqlite3_column_int(stmt,10);
 
         log_event2(EVENT_INITIALISATION, "loaded [%i] [%s]", id, item[id].item_name);
 
@@ -978,8 +1040,11 @@ void load_bag_types(){
 
         bag_type[bag_type_id].image_id=sqlite3_column_int(stmt, 1);
         strcpy(bag_type[bag_type_id].bag_type_description, (char*)sqlite3_column_text(stmt, 2));
-        bag_type[bag_type_id].poof_time=sqlite3_column_int(stmt, 3);
-        bag_type[bag_type_id].max_emu=sqlite3_column_int(stmt, 4);
+        bag_type[bag_type_id].max_emu=sqlite3_column_int(stmt, 3);
+        bag_type[bag_type_id].u_split_modifier=sqlite3_column_double(stmt,4);
+        bag_type[bag_type_id].o_split_modifier=sqlite3_column_double(stmt,5);
+        bag_type[bag_type_id].invisible_time=sqlite3_column_int(stmt,6);
+        bag_type[bag_type_id].visible_time=sqlite3_column_int(stmt,7);
 
         log_event2(EVENT_INITIALISATION, "loaded [%i] [%s]", bag_type_id, bag_type[bag_type_id].bag_type_description);
 
@@ -990,6 +1055,54 @@ void load_bag_types(){
 
     log_event2(EVENT_INITIALISATION, "[%i] bag types were loaded\n", i);
 }
+
+void load_bag_tools(){
+
+    /** public function - see header */
+
+    int rc;
+    sqlite3_stmt *stmt;
+    int bag_tool_id=0;
+    int i=0;
+
+    char sql[]="SELECT * FROM BAG_TOOL_TABLE";
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    log_event2(EVENT_INITIALISATION, "loading bag tools...");
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        bag_tool_id=sqlite3_column_int(stmt,0);
+
+        //make sure bag_type_id doesn't exceed the size of the bag type array
+        if(bag_tool_id>MAX_BAG_TOOLS){
+
+            log_event2(EVENT_ERROR, "bag tool id [%i] exceeds range [0 - %i] in function load_bag_tools: module database.c", bag_tool_id, MAX_BAG_TYPES);
+            exit(EXIT_FAILURE);
+        }
+        bag_tool_id=sqlite3_column_int(stmt, 0);
+
+        bag_tool[bag_tool_id].image_id=sqlite3_column_int(stmt, 1);
+        strcpy(bag_tool[bag_tool_id].description, (char*)sqlite3_column_text(stmt, 2));
+        bag_tool[bag_tool_id].make_visible=sqlite3_column_int(stmt, 3);
+        bag_tool[bag_tool_id].bag_lock_type=sqlite3_column_int(stmt,4);
+        bag_tool[bag_tool_id].bag_unlock_type=sqlite3_column_int(stmt,5);
+        bag_tool[bag_tool_id].bag_arm_type=sqlite3_column_int(stmt,6);
+        bag_tool[bag_tool_id].bag_disarm_type=sqlite3_column_int(stmt,7);
+        bag_tool[bag_tool_id].single_use=sqlite3_column_int(stmt,8);
+        bag_tool[bag_tool_id].break_chance=sqlite3_column_int(stmt,9);
+
+        log_event2(EVENT_INITIALISATION, "loaded [%i] [%s]", bag_tool_id, bag_tool[bag_tool_id].description);
+
+        i++;
+    }
+
+    sqlite3_finalize(stmt);
+
+    log_event2(EVENT_INITIALISATION, "[%i] bag tools were loaded\n", i);
+}
+
 
 void update_db_char_position(int connection){
 
@@ -1253,9 +1366,9 @@ void update_db_race_count(int race_id){
 
     if (rc != SQLITE_DONE) {
 
-            log_event2(EVENT_ERROR, "Error %s executing '%s' in function update_db_race_count: module database.c", sql, sqlite3_errmsg(db));
-            exit(EXIT_FAILURE);
-        }
+        log_event2(EVENT_ERROR, "Error %s executing '%s' in function update_db_race_count: module database.c", sql, sqlite3_errmsg(db));
+        exit(EXIT_FAILURE);
+    }
 
     sqlite3_finalize(stmt);
 }

@@ -279,7 +279,7 @@ static void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
 int main(void) {
 
-    //load_e3d("house1.e3d");
+    //load_e3d("house2.e3d");
     //exit(1);
 
     int server_sockfd;
@@ -319,6 +319,7 @@ int main(void) {
     initialise_items();
     initialise_races();
     initialise_bag_types();
+    initialise_bag_tools();
     initialise_character_types();
 
     //set global data

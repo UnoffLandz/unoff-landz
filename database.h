@@ -2,6 +2,7 @@
 #define DATABASE_H_INCLUDED
 
 #include <sqlite3.h> //required to allow creation of the sqlite3 type used for the db handle (see next statement)
+sqlite3 *db; // database handle which is set when function open_database is called
 
 #define CHARACTER_TABLE_SQL "CREATE TABLE CHARACTER_TABLE( \
         CHAR_ID             INTEGER PRIMARY KEY AUTOINCREMENT, \
@@ -114,13 +115,27 @@
         DATE_CREATED         INT)"
 
 #define BAG_TYPE_TABLE_SQL "CREATE TABLE BAG_TYPE_TABLE( \
-        BAG_TYPE_ID          INTEGER PRIMARY KEY     NOT NULL, \
-        IMAGE_ID             INT, \
-        BAG_TYPE_DESCRIPTION TEXT, \
-        POOF_TIME            TEXT, \
-        MAX_EMU              TEXT)"
+        BAG_TYPE_ID           INTEGER PRIMARY KEY NOT NULL, \
+        IMAGE_ID              INT, \
+        BAG_TYPE_DESCRIPTION  TEXT, \
+        MAX_EMU               TEXT, \
+        U_SPLIT_MODIFIER      REAL, \
+        O_SPLIT_MODIFIER      REAL, \
+        INVISIBLE_TIME        INT, \
+        VISIBLE_TIME          INT)"
 
-sqlite3 *db; // database handle which is set when function open_database is called
+#define BAG_TOOLS_TABLE_SQL "CREATE TABLE TOOL_TYPE_TABLE( \
+        BAG_TOOL_ID           INTEGER PRIMARY KEY NOT NULL, \
+        IMAGE_ID              INT, \
+        DESCRIPTION           TEXT, \
+        MAKE_BAG_VISIBLE      INT, \
+        BAG_LOCK_TYPE         INT, \
+        BAG_UNLOCK_TYPE       INT, \
+        BAG_ARM_TYPE          INT, \
+        BAG_DISARM_TYPE       INT, \
+        BAG_PUBLICITY_TYPE    INT, \
+        SINGLE_USE            INT, \
+        BREAK_CHANCE          INT)"
 
 
 /** RESULT  : Opens sqlite database file and creates the handle [db] which can then be called by other
@@ -369,6 +384,16 @@ void load_guilds();
 void load_bag_types();
 
 
+/** RESULT  : loads bag tools data from the database to the bag tool struct array
+
+    RETURNS : void
+
+    PURPOSE : allows bag tool data to be held in memory for faster operations
+
+    USAGE   : initialise_bag_tools:initialisation.c */
+void load_bag_tools();
+
+
 /** RESULT  : loads character type data from the database to the character type struct array
 
     RETURNS : void
@@ -391,6 +416,21 @@ void add_item(int image_id, char *item_name, int bag_token, int harvestable, int
               int food_cooldown,
               int organic_nexus,
               int vegetal_nexus);
+
+
+/** RESULT  : adds an entry to the bag_tool_table of the database
+
+    RETURNS : void
+
+    PURPOSE : enables database entries to be bulk loaded from a text file
+
+    USAGE   : load_database_item_table_data:files.c */
+void add_bag_tool(int bag_tool_id, int image_id, char *description, int make_visible, int locked_type, int unlocked_type,
+                  int arm_type,
+                  int disarm_type,
+                  int publicity_type,
+                  int single_use,
+                  int break_chance);
 
 
 /** RESULT  : adds an entry to the threed_object_table of the database
@@ -461,6 +501,7 @@ void add_guild(int guild_id, char *guild_tag, char *guild_name, char *guild_desc
               int chan_id
               );
 
+
 /** RESULT  : adds an entry to the bag_type_table of the database
 
     RETURNS : void
@@ -468,10 +509,14 @@ void add_guild(int guild_id, char *guild_tag, char *guild_name, char *guild_desc
     PURPOSE : enables data to be bulk loaded from a text file
 
     USAGE   : load_database_bag_type_table_data:files.c */
-void add_bag_type(int bag_id, int image_id, char *bag_description, int poof_time, int max_emu);
+void add_bag_type(int bag_id, int image_id, char *bag_description, int max_emu,
+                  float u_split_modifier,
+                  float o_split_modifier,
+                  int invisible_time,
+                  int visible_time);
 
 
-/** RESULT  : adds an entry to the characyer_type_table of the database
+/** RESULT  : adds an entry to the character_type_table of the database
 
     RETURNS : void
 

@@ -172,12 +172,13 @@ void send_here_your_stats(int connection){
     packet[81]=clients.client[connection].max_potion_lvl % 256;
     packet[82]=clients.client[connection].max_potion_lvl / 256;
 
-    packet[83]=clients.client[connection].inventory_emu % 256; // amount of emu in inventory
-    packet[84]=clients.client[connection].inventory_emu / 256;
+    int inventory_emu=get_inventory_emu(connection);
+    packet[83]=inventory_emu % 256; // amount of emu in inventory
+    packet[84]=inventory_emu / 256;
 
-    int max_carry_capacity=get_char_carry_capacity(connection);
-    packet[85]=max_carry_capacity % 256; // max emu that can be held in inventory
-    packet[86]=max_carry_capacity / 256;
+    int max_inventory_emu=get_max_inventory_emu(connection);
+    packet[85]=max_inventory_emu % 256; // max emu that can be held in inventory
+    packet[86]=max_inventory_emu / 256;
 
     packet[87]=clients.client[connection].material_pts % 256;
     packet[88]=clients.client[connection].material_pts / 256;
@@ -417,6 +418,33 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         printf("SIT_DOWN %i\n", data[0]);
         #endif
 
+        /* the protocol recognises two sets of sit stand command. The first is implemented via the actor command set
+        which is used in the ADD_ACTOR packet; the second is implemented via the frame set which is used in the
+        ADD_ENHANCED_ACTOR packet. When using the ADD_ACTOR packet, command 13=sit down and command 14=stand up. When
+        using the ADD_ENHANCED_ACTOR packet, command 12=sit, command 13=stand and command 14=stand idle. */
+
+        if(clients.client[connection].frame==frame_sit_idle){
+
+            clients.client[connection].frame=frame_stand;
+
+            //broadcast to clients
+            broadcast_actor_packet(connection, actor_cmd_stand_up, clients.client[connection].map_tile);
+
+            //save frame to database
+            update_db_char_frame(connection);
+        }
+        else if(clients.client[connection].frame==frame_stand){
+
+            clients.client[connection].frame=frame_sit_idle;
+
+            //broadcast to clients
+            broadcast_actor_packet(connection, actor_cmd_sit_down, clients.client[connection].map_tile);
+
+            //save frame to database
+            update_db_char_frame(connection);
+        }
+
+/*
         if(data[0]==0){
 
             printf("stand up\n");
@@ -441,6 +469,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
             //save frame to database
             update_db_char_frame(connection);
         }
+*/
     }
 /***************************************************************************************************/
 
@@ -644,9 +673,20 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         printf("INSPECT_BAG - lsb [%i] msb [%i] bag id [%i]\n", lsb, msb, bag_id);
         #endif
 
+        //check we are standing on the bag
         if(bag_list[bag_id].tile_pos==current_tile) {
 
-            //standing on the bag so we can open it
+            //if we are standing on the bag then attempt to open it
+/*
+            //check if bag is locked
+            if(bag_list[bag_id].status!=UNLOCKED){
+
+                //if bag is locked then abort function
+                sprintf(text_out, "%cSorry. that bag is locked", c_red1+127);
+                send_raw_text_packet(connection, CHAT_SERVER, text_out);
+                return;
+            }
+*/
             send_here_your_ground_items(connection, bag_id);
             clients.client[connection].bag_open=TRUE;
         }
@@ -772,7 +812,7 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         character.char_type=data[i++];
         character.head_type=data[i++];
 
-        character.frame=stand_up;
+        character.frame=frame_stand;
 
         //set the char creation time
         character.char_created=time(NULL);
@@ -791,9 +831,12 @@ void process_packet(int connection, unsigned char *packet, struct ev_loop *loop)
         //once the char has been added to the database, find its char_id
         clients.client[connection].character_id=get_max_char_id();
 
-int slot=0;
-add_item_to_inventory(connection, 612, 1, &slot);
-add_item_to_inventory(connection, 613, 1, &slot);
+        //add initial items to inventory
+        int slot=0;
+        add_item_to_inventory(connection, 612, 1, &slot);
+        add_item_to_inventory(connection, 613, 1, &slot);
+        add_item_to_inventory(connection, 216, 1, &slot);
+        add_item_to_inventory(connection, 217, 1, &slot);
 
         //update game data for chars created
         race[character.char_type].char_count++;

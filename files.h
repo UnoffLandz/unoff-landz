@@ -3,16 +3,17 @@
 
 #include "global.h"
 
-#define ITEM_DATA_FILE           "item_data.txt"
-#define THREED_OBJECT_DATA_FILE  "threed_object_data.txt"
-#define MAP_DATA_FILE            "map_data.txt"
-#define CHANNEL_DATA_FILE        "channel_data.txt"
-#define RACE_DATA_FILE           "race_data_txt"
-#define GUILD_DATA_FILE          "guild_data_txt"
-#define BAG_TYPE_DATA_FILE       "bag_type_data.txt"
-#define CHARACTER_TYPE_DATA_FILE "character_type_data_txt"
+#define ITEM_DATA_FILE               "item_data.txt"
+#define THREED_OBJECT_DATA_FILE      "threed_object_data.txt"
+#define MAP_DATA_FILE                "map_data.txt"
+#define CHANNEL_DATA_FILE            "channel_data.txt"
+#define RACE_DATA_FILE               "race_data_txt"
+#define GUILD_DATA_FILE              "guild_data_txt"
+#define BAG_TYPE_DATA_FILE           "bag_type_data.txt"
+#define CHARACTER_TYPE_DATA_FILE     "character_type_data_txt"
+#define BAG_TOOL_DATA_FILE           "bag_tool_data_txt"
 
-#define DATABASE_FILE_NAME      "unoff.db"
+#define DATABASE_FILE_NAME           "unoff.db"
 
 #define CHARACTER_LOG_FILE_NAME      "character.log"
 #define ERROR_LOG_FILE_NAME          "error.log"
@@ -23,11 +24,11 @@
 
 #define ELM_FILE_VERSION 1
 
-#define ITEM_DATA_FILE_FORMAT   "UNOFFLANDZ Item data file\n" \
-                                "\n" \
-                                "Image Item              Bag                                Food  Food     Organic Vegetal\n" \
-                                "ID    Name              Token Harvestable EMU Interval EXP Value Cooldown Nexus   Nexus  \n" \
-                                "------------------------------------------------------------------------------------------\n"
+#define ITEM_DATA_FILE_FORMAT           "UNOFFLANDZ Item data file\n" \
+                                        "\n" \
+                                        "Image Item              Bag                                Food  Food     Organic Vegetal\n" \
+                                        "ID    Name              Token Harvestable EMU Interval EXP Value Cooldown Nexus   Nexus  \n" \
+                                        "------------------------------------------------------------------------------------------\n"
 
 #define THREED_OBJECT_DATA_FILE_FORMAT  "#UNOFFLANDZ 3d object data file\n" \
                                         "#\n" \
@@ -35,44 +36,55 @@
                                         "#ID    File Name\n" \
                                         "---------------\n"
 
-#define MAP_DATA_FILE_FORMAT    "#UNOFFLANDZ map data file\n" \
-                                "#\n" \
-                                "#Map   Map         ELM            \n" \
-                                "#ID    Name        File name      \n" \
-                                "---------------------------------\n"
+#define MAP_DATA_FILE_FORMAT            "#UNOFFLANDZ map data file\n" \
+                                        "#\n" \
+                                        "#Map   Map         ELM            \n" \
+                                        "#ID    Name        File name      \n" \
+                                        "---------------------------------\n"
 
-#define CHANNEL_DATA_FILE_FORMAT    "#UNOFFLANDZ channel data file\n" \
-                                    "#\n" \
-                                    "#Channel Channel  Channel    Channel       Channel    \n" \
-                                    "#ID      Type     Password   Name          Description\n" \
-                                    "-----------------------------------------------------\n"
+#define CHANNEL_DATA_FILE_FORMAT        "#UNOFFLANDZ channel data file\n" \
+                                        "#\n" \
+                                        "#Channel Channel  Channel    Channel       Channel    \n" \
+                                        "#ID      Type     Password   Name          Description\n" \
+                                        "-----------------------------------------------------\n"
 
-#define RACE_DATA_FILE_FORMAT   "#UNOFFLANDZ race data file\n" \
-                                "#\n" \
-                                "#                                                        Initial              Initial              Initial Night      \n" \
-                                "#Race Race          Race              Initial Emu        Visual    Proximity  Chat      Chat       Night   Vis        \n" \
-                                "#ID   Name          Description       Emu     Multiplier Proximity Multiplier Proximity Multiplier Vis     Multiplier \n" \
-                                "---------------------------------------------------------------------------------------------------------------------\n"
+#define RACE_DATA_FILE_FORMAT           "#UNOFFLANDZ race data file\n" \
+                                        "#\n" \
+                                        "#                                                        Initial              Initial              Initial Night      \n" \
+                                        "#Race Race          Race              Initial Emu        Visual    Proximity  Chat      Chat       Night   Vis        \n" \
+                                        "#ID   Name          Description       Emu     Multiplier Proximity Multiplier Proximity Multiplier Vis     Multiplier \n" \
+                                        "---------------------------------------------------------------------------------------------------------------------\n"
 
-#define CHARACTER_TYPE_DATA_FILE_FORMAT   "#UNOFFLANDZ character type data file\n" \
-                                          "#\n" \
-                                          "#Character Character                \n" \
-                                          "#Type      Type           Race Sex  \n" \
-                                          "#ID        Name           ID   ID   \n" \
-                                          "------------------------------------\n"
+#define CHARACTER_TYPE_DATA_FILE_FORMAT "#UNOFFLANDZ character type data file\n" \
+                                        "#\n" \
+                                        "#Character Character                \n" \
+                                        "#Type      Type           Race Sex  \n" \
+                                        "#ID        Name           ID   ID   \n" \
+                                        "------------------------------------\n"
 
-#define GUILD_DATA_FILE_FORMAT  "#UNOFFLANDZ guild data file\n" \
-                                "#\n" \
-                                "#Guild Guild  Guild           Guild             Tag    Log On Log Off Chan   Chan\n" \
-                                "#ID    Tag    Name            Description       Colour Colour Colour  Colour ID  \n" \
-                                "--------------------------------------------------------------------------------\n"
+#define GUILD_DATA_FILE_FORMAT          "#UNOFFLANDZ guild data file\n" \
+                                        "#\n" \
+                                        "#Guild Guild  Guild           Guild             Tag    Log On Log Off Chan   Chan\n" \
+                                        "#ID    Tag    Name            Description       Colour Colour Colour  Colour ID  \n" \
+                                        "--------------------------------------------------------------------------------\n"
 
-#define BAG_TYPE_DATA_FILE_FORMAT  "#UNOFFLANDZ bag type data file\n" \
-                                   "#\n" \
-                                   "#Bag  item  Bag                      \n" \
-                                   "#Type image Type            Poof  Max\n" \
-                                   "#id   id    Description     Time  Emu\n" \
-                                   "-------------------------------------\n"
+#define BAG_TYPE_DATA_FILE_FORMAT       "#UNOFFLANDZ bag type data file\n" \
+                                        "#\n" \
+                                        "#Bag  Item  Bag                       Underload  Overload                    \n" \
+                                        "#Type Image Type                  Max Split      Split     Invisible Visible \n" \
+                                        "#ID   ID    Description           Emu Modifier   Modifier  Time      Time    \n" \
+                                        "-----------------------------------------------------------------------------\n"
+
+#define BAG_TOOL_DATA_FILE_FORMAT       "#UNOFFLANDZ bag tool data file\n" \
+                                        "#\n" \
+                                        "#Lock & Unlock Types NONE, OWNER, GUILD, UNIVERSAL\n" \
+                                        "#Arm & Disarm Types NONE \n" \
+                                        "#Publicity Types NONE \n" \
+                                        "# \n" \
+                                        "#Bag  Item  Bag                 Make    Bag    Bag    Bag   Bag    Bag                      \n" \
+                                        "#Tool Image Tool                Bag     Lock   Unlock Arm   Disarm Publicity  Single Break  \n" \
+                                        "#ID   ID    Description         Visible Type   Type   Type  Type   Type       Use    Chance \n" \
+                                        "------------------------------------------------------------------------------------\n"
 
 enum { //log events
     EVENT_NEW_CHAR,
@@ -105,6 +117,8 @@ void load_database_race_table_data(char *file_name);
 void load_database_guild_table_data(char *file_name);
 
 void load_database_bag_type_table_data(char *file_name);
+
+void load_database_bag_tool_table_data(char *file_name);
 
 void load_database_char_type_table_data(char *file_name);
 

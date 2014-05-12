@@ -324,7 +324,7 @@ void send_bags_to_client(int connection){
 
     for(i=0; i<MAX_BAGS; i++){
 
-        if(bag_list[i].map_id==map_id && bag_list[i].status==USED){
+        if(bag_list[i].map_id==map_id && bag_list[i].mode!=BAG_UNUSED){
 
             //restrict to bags within chars visual proximity
             if(get_proximity(char_tile, bag_list[i].tile_pos, map_axis) < char_visual_range){
@@ -428,13 +428,13 @@ void start_char_move(int connection, int destination, struct ev_loop *loop){
     }
 
     //if char is sitting then stand before moving
-    if(clients.client[connection].frame==sit_down){
+    if(clients.client[connection].frame==frame_sit_idle){
 
-        clients.client[connection].frame=stand_up;
-        broadcast_actor_packet(connection, clients.client[connection].frame, clients.client[connection].map_tile);
+        clients.client[connection].frame=frame_stand;
+        broadcast_actor_packet(connection, actor_cmd_stand_up, clients.client[connection].map_tile);
     }
 
-    //check if the destination is walkable
+    //check if the destination is walkabl
     if(maps.map[map_id]->height_map[destination]<MIN_TRAVERSABLE_VALUE){
 
         sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
