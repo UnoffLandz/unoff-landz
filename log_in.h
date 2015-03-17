@@ -6,20 +6,13 @@ enum { //return values for validate_password function
     PASSWORD_INCORRECT=-1
 };
 
-enum { //char status
-    CHAR_ALIVE,
-    CHAR_DEAD,
-    CHAR_BANNED
-};
-
-/** RESULT  : process client log in
+/** RESULT  : processes a log in request from the client
 
     RETURNS : void
 
-    PURPOSE : reduce size of protocol.c
-
-    USAGE   : protocol.c process_packet
+    PURPOSE : reduce need for code in client_protocol_handler.c
 */
-void process_log_in(int connection, char *text);
+void process_log_in(int connection, unsigned char *data);
+
 
 #endif // LOG_IN_H_INCLUDED

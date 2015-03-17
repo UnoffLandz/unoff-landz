@@ -1,21 +1,20 @@
 #ifndef CHAT_H_INCLUDED
 #define CHAT_H_INCLUDED
 
-#define MAX_CHAN_SLOTS 3
 #define MAX_CHANNELS 10
+#define MAX_CHAN_SLOTS 4
 
-enum { // channel types
-    CHAT_LOCAL,
-    CHAT_PERSONAL,
-    CHAT_GM,
-    CHAT_SERVER,
-    CHAT_MOD,
-    CHAT_CHANNEL1,
-    CHAT_CHANNEL2,
-    CHAT_CHANNEL3,
-    CHAT_MODPM,
-    CHAT_SERVER_PM,
+#define LOCAL_CHAT_RANGE 10
+
+struct channel_node_type{
+
+    enum {CHAN_VACANT, CHAN_SYSTEM, CHAN_PERMANENT, CHAN_GUILD, CHAN_CHAT} chan_type;
+    char channel_name[80];
+    int owner_id; // could be char or guild depending on chan_type
+    char password[80];
+    char description[80];
 };
+struct channel_node_type channel[MAX_CHANNELS];
 
 enum { //return values from process_guild_chat
     GM_INVALID,
@@ -40,42 +39,62 @@ enum { // return values for process_chat function
     CHAN_CHAT_SENT=0
 };
 
-void list_clients_in_chan(int connection, int chan_number);
+/** RESULT  : determines if a player has a chan open
 
-int get_chan_slot(int connection, int channel_number, int *slot);
+    RETURNS : NOT_FOUND(-1) if not in chan or chan slot number
 
-int get_free_chan_slot(int char_id, int *slot);
+    PURPOSE : used by list_clients_in_chan, leave_channel, broadcast_channel_chat
 
-int get_used_chan_slot(int char_id, int *slot);
+    NOTES   :
+**/
+int is_player_in_chan(int connection, int chan);
 
+
+/** RESULT  : joins a chat_channel
+
+    RETURNS : CHANNEL_JOINED/CHANNEL_NOT_JOINED
+
+    PURPOSE :
+
+    NOTES   :
+**/
 int join_channel(int connection, int chan);
 
+
+/** RESULT  : leaves a chat_channel
+
+    RETURNS : CHANNEL_LEFT/CHANNEL_NOT_LEFT
+
+    PURPOSE :
+
+    NOTES   :
+**/
 int leave_channel(int connection, int chan);
 
-int process_chat(int connection, char *text_in);
 
-int process_guild_chat(int connection, char *text_in);
-
-int process_inter_guild_chat(int connection, char *guild_tag, char *message);
-
-int get_guild_number(char *guild_tag, int *guild_id);
-
-void add_client_to_channel(int connection, int chan);
-
-void remove_client_from_channel(int connection, int chan);
-
-void send_pm(int connection, char *receiver_name, char *message);
-
-int get_char_chat_proximity(int connection);
-
-/** RESULT  : instructs client to set/change the active chat chan
+/** RESULT  : send a private message
 
     RETURNS : void
 
-    PURPOSE : allows player to set/change the active chat chan
+    PURPOSE :
 
-    USAGE   : chat.c join_channel, protocol.c process_packet
-*/
-void send_get_active_channels(int connection);
+    NOTES   :
+**/
+void send_pm(int connection, char *receiver_name, char *message);
+
+
+/** RESULT  : lists participants in a chat channel
+
+    RETURNS : void
+
+    PURPOSE : sends a list of channels to channel participants when player joins a channel or
+              sends the #CP command
+
+    NOTES   :
+**/
+void list_characters_in_chan(int connection, int chan);
+
+
+
 
 #endif // CHAT_H_INCLUDED

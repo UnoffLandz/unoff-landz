@@ -1,0 +1,6 @@
+#ifndef SERVER_START_STOP_H_INCLUDED
+#define SERVER_START_STOP_H_INCLUDED
+
+void stop_server();
+
+#endif // SERVER_START_STOP_H_INCLUDED

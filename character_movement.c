@@ -1,128 +1,93 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h> //needed for usec time
-#include <string.h>
-#include <sys/socket.h> //needed for send function
+/******************************************************************************************************************
+	Copyright 2014 UnoffLandz
 
-#include "global.h"
-#include "broadcast.h"
-#include "protocol.h"
-#include "files.h"
+	This file is part of unoff_server_4.
+
+	unoff_server_4 is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	unoff_server_4 is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
+*******************************************************************************************************************/
+
+#include <stdlib.h>     //supports exit function
+#include <stdio.h>      //support sprintf function
+#include <sys/socket.h> //support for send function
+
+#include "logging.h"
+#include "clients.h"
 #include "maps.h"
-#include "protocol.h"
+#include "date_time_functions.h"
+#include "server_protocol_functions.h"
+#include "broadcast_actor_functions.h"
+#include "global.h"
+#include "colour.h"
+#include "server_messaging.h"
+#include "characters.h"
+#include "movement.h"
+#include "character_movement.h"
+#include "db_character_tbl.h"
 #include "pathfinding.h"
-#include "database.h"
-#include "harvesting.h"
+#include "server_start_stop.h"
+#include "database_functions.h"
+#include "game_data.h"
+#include "database_buffer.h"
 
-void send_change_map(int connection, char *elm_filename){
-
-    unsigned char packet[1024];
-
-    int i;
-
-    int filename_length=strlen(elm_filename)+1; // +1 to include null terminator
-    int msb=(filename_length) / 256;
-    int lsb=(filename_length) % 256;
-    lsb++; // +1 as required by EL protocol
-
-    // calculate packet length
-    int packet_length=filename_length+3;
-
-    // construct packet header
-    packet[0]=CHANGE_MAP;
-    packet[1]=lsb;
-    packet[2]=msb;
-
-    // add packet content
-    for(i=3; i<3+filename_length; i++){
-        packet[i]=elm_filename[i-3];
-    }
-
-    send(connection, packet, packet_length, 0);
-}
-
-int get_move_command_vector(int cmd, int tile_pos, int map_axis){
-
-    //returns the new tile position after a move_cmd from tile_pos
-
-    int i=0;
-
-    for(i=0; i<8; i++){
-         if(cmd==vector[i].move_cmd) return tile_pos+vector[i].x + (vector[i].y*map_axis);
-    }
-
-    return 0;
-}
+#define DEBUG_MOVEMENT 0
 
 int get_move_command(int tile_pos, int tile_dest, int map_axis){
 
-    //returns the char movement command to move from tile_pos to tile_dest
+    /** RESULT  : calculates the move command based on the current and destination tile
+
+        RETURNS : move command
+
+        PURPOSE :
+
+        NOTES   :
+    */
 
     int i=0;
-    int move=0;
-    int move_x=0, move_y=0;
-    char text_out[1024]="";
+    int move=tile_dest-tile_pos;
 
-    move=tile_dest-tile_pos;
+    if(move==map_axis) i=0;
 
-    if(move==map_axis) {
-        move_x=0;
-        move_y=1;
+    else if(move==map_axis+1) i=1;
+
+    else if(move==map_axis-1) i=7;
+
+    else if(move==(map_axis*-1)) i=4;
+
+    else if(move==(map_axis*-1)+1) i=3;
+
+    else if(move==(map_axis*-1)-1) i=5;
+
+    else if(move==1) i=2;
+
+    else if(move==-1) i=6;
+
+    else {
+        log_event(EVENT_MOVE_ERROR, "illegal move in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_text(EVENT_MOVE_ERROR, "current tile [%i] destination tile [%i] move distance [%i]", tile_pos, tile_dest, move);
+        stop_server();
     }
 
-    if(move==map_axis+1) {
-        move_x=1;
-        move_y=1;
-    }
-
-    if(move==map_axis-1) {
-        move_x=-1;
-        move_y=1;
-    }
-
-    if(move==(map_axis*-1)) {
-        move_x=0;
-        move_y=-1;
-    }
-
-    if(move==(map_axis*-1)+1) {
-        move_x=1;
-        move_y=-1;
-    }
-
-    if(move==(map_axis*-1)-1) {
-        move_x=-1;
-        move_y=-1;
-    }
-
-    if(move==1) {
-        move_x=1;
-        move_y=0;
-    }
-
-    if(move==-1) {
-        move_x=-1;
-        move_y=0;
-    }
-
-    for(i=0; i<8; i++){
-
-        if(vector[i].x==move_x && vector[i].y==move_y){
-             return vector[i].move_cmd;
-        }
-    }
-
-    sprintf(text_out, "illegal move in function get_move_command position[%i] destination[%i] move[%i]", tile_pos, tile_dest, move);
-    log_event(EVENT_MOVE_ERROR, text_out);
-    exit(EXIT_FAILURE);
-
-    return 0;
+    return vector[i].move_cmd;
 }
+
 
 void process_char_move(int connection, time_t current_utime){
 
+    /** public function - see header **/
+
     int map_id=clients.client[connection].map_id;
-    int map_axis=maps.map[map_id]->map_axis;
+    int map_axis=maps.map[map_id].map_axis;
     int current_tile=clients.client[connection].map_tile;
     int next_tile=0;
     int move_cmd=0;
@@ -144,7 +109,7 @@ void process_char_move(int connection, time_t current_utime){
             // filter out moves where position and destination are the same
             if(current_tile!=next_tile){
 
-                #ifdef DEBUG
+                #if DEBUG_MOVEMENT==1
                 printf("move char [%s] from tile [%i] to tile [%i]\n", clients.client[connection].char_name, current_tile, next_tile);
                 #endif
 
@@ -158,316 +123,205 @@ void process_char_move(int connection, time_t current_utime){
 
                 //update char current position and save
                 clients.client[connection].map_tile=next_tile;
-                update_db_char_position(connection);
-             }
+
+                //update_db_char_position(connection);
+                char sql[MAX_SQL_LEN]="";
+                snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i;",next_tile, map_id, clients.client[connection].character_id);
+                db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
+            }
         }
     }
 }
+
 
 int remove_char_from_map(int connection){
 
-    /** RESULT  : Removes actor from map
-
-        RETURNS : 0=sucess / -1=fail
-
-        PURPOSE : Consolidate all required operations into a resuable function that can be called
-                  at login and on map change
-
-        USAGE   : protocol.c process_packet
-    */
+    /** public function - see header **/
 
     int map_id=clients.client[connection].map_id;
-    char text_out[1024]="";
 
     //check for illegal map
-    if(map_id>maps.max || map_id<START_MAP_ID) return ILLEGAL_MAP;
+    if(map_id>MAX_MAPS || map_id<1){
+
+        log_event(EVENT_MOVE_ERROR, "attempt to remove char from illegal map (id[%i] map name [%s]) in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        return REMOVE_MAP_ILLEGAL;
+    }
 
     //broadcast actor removal to other chars on map
     broadcast_remove_actor_packet(connection);
+    log_event(EVENT_SESSION, "char %s removed from map %s", clients.client[connection].char_name, maps.map[map_id].map_name);
 
-    //remove from local map list
-    remove_client_from_map(connection, map_id);
-
-    sprintf(text_out, "char %s removed from map %s", clients.client[connection].char_name, maps.map[map_id]->map_name);
-    log_event(EVENT_SESSION, text_out);
-
-    return LEGAL_MAP;
+    return REMOVE_MAP_SUCESS;
 }
 
-int is_map_tile_occupied(int map_id, int map_tile){
-
-    /**  RESULT  : finds nearest unoccupied tile
-
-        RETURNS : MAP_TILE_UNOCCUPIED / MAP_TILE_OCCUPIED /MAP_TILE_UNTRAVERSABLE
-
-        PURPOSE : To ensure that actors don't jump to occupied tiles
-
-        USAGE   : protocol.c add_char_to_map
-    */
-
-    int i=0;
-    int client_id=0;
-
-    // return if tile is not traversable
-    if(maps.map[map_id]->height_map[map_tile]<MIN_TRAVERSABLE_VALUE) {
-        return TILE_NON_TRAVERSABLE;
-    }
-
-    //cycle through actors on map list and see if any are on tile
-    for(i=0; i<maps.map[map_id]->client_list_count; i++){
-
-        client_id=maps.map[map_id]->client_list[i];
-
-        if(clients.client[client_id].map_tile==map_tile) return TILE_OCCUPIED;
-    }
-
-    return TILE_UNOCCUPIED;
-}
-
-int get_nearest_unoccupied_tile(int map_id, int map_tile){
-
-    /** public function - see header */
-
-    int i=0, j=0;
-    int next_tile=0;
-    int map_axis=maps.map[map_id]->map_axis;
-
-    if(is_map_tile_occupied(map_id, map_tile)==TILE_UNOCCUPIED) {
-        return map_tile;
-    }
-
-    do{
-
-        //examine all adjacent tiles
-        for(i=0; i<8; i++){
-
-            next_tile=map_tile+vector[i].x+(vector[i].y * map_axis * j);
-
-            // keep with bounds of map
-            if(next_tile>0 && next_tile<maps.map[map_id]->height_map_size) {
-
-                //check next best tile
-                if(is_map_tile_occupied(map_id, next_tile)==TILE_UNOCCUPIED) {
-                    return next_tile;
-                }
-            }
-        }
-
-        //widen search of unoccupied tile
-        j++;
-
-    } while(j<10);// give up if no unoccupied tiles within 10 tiles of target
-
-    log_event(EVENT_ERROR, "no unoccupied tile within 10 tiles of target tile");
-    exit(EXIT_FAILURE);
-
-    return 0; //Dummy. we should never reach here
-}
 
 void send_actors_to_client(int connection){
 
-    /** RESULT  : make other actors visible to this client
+    /** RESULT  : make this actor and other actors visible to this client
 
-       RETURNS : void
+        RETURNS : void
 
-       PURPOSE : ensures our actor can see other actors after log on or a map jump
-
-       USAGE   : protocol.c process_packet
-    */
+        PURPOSE : used by add_char_to_map function
+    **/
 
     int i;
     unsigned char packet[1024];
     int packet_length;
+
     int map_id=clients.client[connection].map_id;
-    int char_tile=clients.client[connection].map_tile;
-    int map_axis=maps.map[map_id]->map_axis;
+    int map_tile=clients.client[connection].map_tile;
     int char_visual_range=get_char_visual_range(connection);
 
-    int other_client_id;
-    int other_char_tile;
+    for(i=0; i<MAX_CLIENTS; i++){
 
-    for(i=0; i<maps.map[map_id]->client_list_count; i++){
+        //restrict to characters on the same map
+        if(map_id==clients.client[i].map_id){
 
-        other_client_id=maps.map[map_id]->client_list[i];
-        other_char_tile=clients.client[other_client_id].map_tile;
+            //restrict to characters within visual range of this character
+            if(get_proximity(map_tile, clients.client[i].map_tile, maps.map[map_id].map_axis)<=char_visual_range){
 
-        // restrict to characters other than self
-        if(connection!=other_client_id){
-
-            //restrict to characters within visual proximity
-            if(get_proximity(char_tile, other_char_tile, map_axis)<char_visual_range){
-
-                printf("**send actors to client\n");
-                add_new_enhanced_actor_packet(connection, packet, &packet_length);
+                //send actors within visual proximity to this char
+                add_new_enhanced_actor_packet(i, packet, &packet_length);
                 send(connection, packet, packet_length, 0);
             }
         }
     }
 }
 
-void send_bags_to_client(int connection){
 
-   /** RESULT  : makes existing bags visible to this client
+int add_char_to_map(int connection, int map_id, int map_tile){
 
-       RETURNS : void
-
-       PURPOSE : ensures our actor can see existing bags after log on or a map jump
-
-       USAGE   :
-   */
-
-    int i;
-    int map_id=clients.client[connection].map_id;
-    int char_tile=clients.client[connection].map_tile;
-    int map_axis=maps.map[map_id]->map_axis;
-    int char_visual_range=get_char_visual_range(connection);
-
-    for(i=0; i<MAX_BAGS; i++){
-
-        if(bag_list[i].map_id==map_id && bag_list[i].mode!=BAG_UNUSED){
-
-            //restrict to bags within chars visual proximity
-            if(get_proximity(char_tile, bag_list[i].tile_pos, map_axis) < char_visual_range){
-
-               send_get_new_bag(connection, i);
-            }
-        }
-    }
-}
-
-int add_char_to_map(int connection, int new_map_id, int map_tile){
-
-    /** public function - see header */
-
-    char text_out[1024]="";
+    /** public function - see header **/
 
     //check for illegal maps
-    if(new_map_id>maps.max || new_map_id<START_MAP_ID) {
-        sprintf(text_out, "attempt to access illegal map (id[%i] map name [%s]) in function add_char_to_map", new_map_id, maps.map[new_map_id]->map_name);
-        log_event(EVENT_MOVE_ERROR, text_out);
-        return ILLEGAL_MAP;
+    if(map_id>MAX_MAPS || map_id<0) {
+
+        log_event(EVENT_MOVE_ERROR, "illegal map (id[%i] name [%s]) in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        return ADD_MAP_ILLEGAL;
     }
 
-    //if tile is occupied get nearest unoccupied tile
-    clients.client[connection].map_tile=get_nearest_unoccupied_tile(new_map_id, map_tile);
+    //get nearest unoccupied tile to the clients position
+    int unoccupied_tile=get_nearest_unoccupied_tile(map_id, map_tile);
 
-    //update map
-    clients.client[connection].map_id=new_map_id;
+    if(unoccupied_tile==0){
 
-    //send new char map to client
-    send_change_map(connection, maps.map[new_map_id]->elm_filename);
+        log_event(EVENT_MOVE_ERROR, "Unable to find unoccupied tile within [%i] tiles on map (id[%i] name [%s]) in function %s: module %s: line %i", MAX_UNOCCUPIED_TILE_SEARCH, map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        return ADD_MAP_UNREACHABLE;
+    }
 
-    //add client to local map list
-    add_client_to_map(connection, clients.client[connection].map_id); //***************
+    clients.client[connection].map_tile=unoccupied_tile;
 
-    // add in-game chars to this client
+    //send map to client
+    send_change_map(connection, maps.map[map_id].elm_filename);
+
+    //make scene visible to this client
     send_actors_to_client(connection);
 
-    // add in-game bags to this client
-    send_bags_to_client(connection);
+    //send existing bags on map to client
+    //send_bags_to_client(connection);
 
-    // add this char to each connected client
-    broadcast_add_new_enhanced_actor_packet(connection); //***********
+    //add this char to other connected clients on this map
+    broadcast_add_new_enhanced_actor_packet(connection);
 
-    sprintf(text_out, "char [%s] added to map [%s]", clients.client[connection].char_name, maps.map[new_map_id]->map_name);
-    log_event(EVENT_SESSION, text_out);
+    log_event(EVENT_SESSION, "char [%s] added to map [%s] at tile [%i]", clients.client[connection].char_name, maps.map[map_id].map_name, clients.client[connection].map_tile);
 
-    return LEGAL_MAP;
+    return ADD_MAP_SUCESS;
 }
+
 
 void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
 
     /** public function - see header */
 
-    int old_map_id=clients.client[connection].map_id;
-    char text_out[1024]="";
-
     //check to see if old map is legal and, if not, transport char to Isla Prima
     if(remove_char_from_map(connection)==ILLEGAL_MAP) {
 
-        sprintf(text_out, "attempt to leave illegal map (id[%i] map name [%s]) in function remove_char_from_map", old_map_id, maps.map[old_map_id]->map_name);
-        log_event(EVENT_MOVE_ERROR, text_out);
-
-        new_map_id=START_MAP_ID;
-        new_map_tile=START_MAP_TILE;
+        new_map_id=game_data.beam_map_id;
+        new_map_tile=game_data.beam_map_tile;
     }
 
-    //check to see if new map is legal and, if not, return char to old map
-    if(add_char_to_map(connection, new_map_id, new_map_tile)==ILLEGAL_MAP){
+    //check to see if new map is legal and, if not, transport char tp Isla Prima
+    if(add_char_to_map(connection, new_map_id, new_map_tile)!=ADD_MAP_SUCESS){
 
-         sprintf(text_out, "attempt to join illegal map (id[%i] map name [%s]) in function remove_char_from_map", new_map_id, maps.map[new_map_id]->map_name);
-        log_event(EVENT_ERROR, text_out);
-
-        if(add_char_to_map(connection, old_map_id, clients.client[connection].map_tile)==ILLEGAL_MAP){
-
-            //if old map and new map are illegal, close down the server
-            log_event(EVENT_MOVE_ERROR, "severe map error in function move_char_between_maps - shutting down server");
-            exit(EXIT_FAILURE);
-            //#TODO simply remove client rather than crash server
-        }
-
+        new_map_id=game_data.beam_map_id;
+        new_map_tile=game_data.beam_map_tile;
     }
 
     //save char map id and position
-    update_db_char_position(connection);
+    char sql[MAX_SQL_LEN]="";
+    snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i;", new_map_tile, new_map_id, clients.client[connection].character_id);
+    db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
 }
 
-void start_char_move(int connection, int destination, struct ev_loop *loop){
 
-    int i=0;
-    char text_out[80]="";
+//void start_char_move(int connection, int destination, struct ev_loop *loop){
+void start_char_move(int connection, int destination){
+
+    /** public function - see header */
+
+    char text_out[1024]="";
 
     int map_id=clients.client[connection].map_id;
     int current_tile=clients.client[connection].map_tile;
 
+/*
     //if char is harvesting then stop
     if(clients.client[connection].harvest_flag==TRUE){
 
         stop_harvesting2(connection, loop);
         return;
     }
+*/
 
     //if char is sitting then stand before moving
-    if(clients.client[connection].frame==frame_sit_idle){
+    if(clients.client[connection].frame==frame_sit){
 
         clients.client[connection].frame=frame_stand;
         broadcast_actor_packet(connection, actor_cmd_stand_up, clients.client[connection].map_tile);
+
+        char sql[MAX_SQL_LEN]="";
+        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i;",clients.client[connection].frame, clients.client[connection].character_id);
+        db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
     }
 
-    //check if the destination is walkabl
-    if(maps.map[map_id]->height_map[destination]<MIN_TRAVERSABLE_VALUE){
+    //check if the destination is walkable
+    if(maps.map[map_id].height_map[destination]<MIN_TRAVERSABLE_VALUE){
 
         sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
-        send_server_text(connection, CHAT_SERVER, text_out);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
         return;
     }
 
     //check for zero length path
     if(current_tile==destination){
 
-        #ifdef DEBUG
+        #if DEBUG_MOVEMENT==1
         printf("current tile = destination (ignored)\n");
         #endif
 
         return;
     }
 
+    //get path
     if(get_astar_path(connection, current_tile, destination)==NOT_FOUND){
 
-        sprintf(text_out, "path not found in function process_packet: module protocol.c");
-        log_event(EVENT_ERROR, text_out);
+        log_event(EVENT_ERROR, "path not found in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
     }
 
+/*
     //if standing on a bag, close the bag grid
     if(clients.client[connection].bag_open==TRUE){
 
         clients.client[connection].bag_open=FALSE;
         send_s_close_bag(connection);
     }
+*/
 
-    #ifdef DEBUG
+    #if DEBUG_MOVEMENT==1
     printf("character [%s] got a new path...\n", clients.client[connection].char_name);
 
+    int i=0;
     for(i=0; i<clients.client[connection].path_count; i++){
         printf("%i %i\n", i, clients.client[connection].path[i]);
     }
@@ -476,3 +330,4 @@ void start_char_move(int connection, int destination, struct ev_loop *loop){
     //reset time of last move to zero so the movement is processed without delay
     clients.client[connection].time_of_last_move=0;
 }
+
