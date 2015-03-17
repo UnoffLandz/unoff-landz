@@ -1,52 +1,69 @@
 #ifndef CHARACTER_MOVEMENT_H_INCLUDED
 #define CHARACTER_MOVEMENT_H_INCLUDED
 
-int get_move_command_vector(int cmd, int tile_pos, int map_axis);
+#include <ev.h>         // evlib event library
 
-int get_heading(int tile_pos, int tile_dest, int map_axis);
+#define PATH_MAX 100    // maximum tiles of precalculated character movement
 
-void process_char_move(int connection, time_t current_time);
+enum{//return values add_char_to_map
+    ADD_MAP_ILLEGAL,
+    ADD_MAP_UNREACHABLE,
+    ADD_MAP_SUCESS
+};
 
-/** RESULT  : Move a char between maps
 
-    RETURNS : void
+enum{//return values remove_char_from_map
+    REMOVE_MAP_ILLEGAL,
+    REMOVE_MAP_SUCESS
+};
 
-    PURPOSE : Consolidate all required operations into a resuable function that can be called
-              to move a char between maps
 
-    USAGE   : protocol.c process_packet
-*/
-void move_char_between_maps(int connection, int new_map_id, int new_map_tile);
+/** RESULT  : Removes actor from map
 
-/** RESULT  : if the target tile is occupied, finds nearest unoccupied tile
+    RETURNS : REMOVE_MAP_ILLEGAL - map doesn't exist
+              REMOVE_MAP_SUCCESS - character was removed from map
 
-    RETURNS : address of the nearest unoccupied tile
+    PURPOSE : used at log-out to remove a char from map. Also on map jumps
+**/
+int remove_char_from_map(int connection);
 
-    PURPOSE : To ensure that actors don't move to occupied tiles
 
-    USAGE   : protocol.c add_char_to_map / hash_commands.c process_hash_command
-*/
-int get_nearest_unoccupied_tile(int map_id, int map_tile);
+/** RESULT  : adds a character to a map
 
-/** RESULT  : sends actor to map
+    RETURNS : ADD_MAP_ILLEGAL - map doesn't exist
+              ADD_MAP_FAILED  - no unoccupied tiles on map
+              ADD_MAP_SUCCESS - character was added to map
 
-    RETURNS : LEGAL_MAP / ILLEGAL_MAP
-
-    PURPOSE : Consolidate all required operations into a resuable function that can be called
-              at login and on map change
-
-    USAGE   : protocol.c process_packet
-*/
+    PURPOSE : used at log-in to add a char to a map. Also by function move_char_between_maps
+**/
 int add_char_to_map(int connection, int new_map_id, int map_tile);
 
-/** RESULT  : initiates char movement
+
+/** RESULT  : moves a character between maps
 
     RETURNS : void
 
-    PURPOSE : Consolidate all required operations into a reusable function
+    PURPOSE : supports map jumps
+**/
+void move_char_between_maps(int connection, int new_map_id, int new_map_tile);
 
-    USAGE   : protocol.c process_packet(MOVE_TO), protocol.c process_packet(INSPECT_BAG)
-*/
-void start_char_move(int connection, int destination, struct ev_loop *loop);
+
+/** RESULT  : moves a character one step along the path
+
+    RETURNS : void
+
+    PURPOSE : makes the character move
+**/
+void process_char_move(int connection, time_t current_utime);
+
+
+/** RESULT  : starts the character moving
+
+    RETURNS : void
+
+    PURPOSE : makes the character move
+**/
+//void start_char_move(int connection, int destination, struct ev_loop *loop);
+void start_char_move(int connection, int destination);
 
 #endif // CHARACTER_MOVEMENT_H_INCLUDED

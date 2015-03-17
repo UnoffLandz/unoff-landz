@@ -1,28 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio.h> //support for sprintf function
+#include <stdlib.h> //support for exit function
 
 #include "global.h"
-#include "files.h"
 #include "pathfinding.h"
-#include "protocol.h"
-
-#define PATH_STACK_MAX 25
-
-enum{ //nodes for explore/path arrays
-    TILE,
-    VALUE,
-    STATUS
-};
-
-enum{ // values for explore_stack/path_stack STATUS (used in functions explore_path and get_astar_path)
-    UNEXPLORED,
-    EXPLORED
-};
-
-enum{ //return values for functions add_tile_to_explore_stack and add_adjacent_tiles_to_explore_stack
-    ADD_TILE_ABORT,
-    ADD_TILE_COMPLETE
-};
+#include "client_protocol.h"
+#include "maps.h"
+#include "logging.h"
+#include "movement.h"
+#include "colour.h"
+#include "server_messaging.h"
+#include "server_protocol_functions.h"
+#include "server_start_stop.h"
 
 int add_tile_to_explore_stack(int new_value, int new_tile, int *explore_stack_count, int explore_stack[][3]){
 
@@ -41,7 +29,6 @@ int add_tile_to_explore_stack(int new_value, int new_tile, int *explore_stack_co
     int insert_value=0;
     int insert_tile=0;
     int insert_status=0;
-    char text_out[1024];
     int new_status=UNEXPLORED;
 
     //parse the stack
@@ -83,9 +70,8 @@ int add_tile_to_explore_stack(int new_value, int new_tile, int *explore_stack_co
     if(*explore_stack_count>HEIGHT_MAP_MAX-1){
 
         //if stack array is exceeded then pass message to calling function to recover gracefully rather than crash
-        sprintf(text_out, "explore stack array exceeded in function add_tile_to_explore_stack\n");
-        log_event(EVENT_MOVE_ERROR, text_out);
-        exit(EXIT_FAILURE);// have to stop server
+        log_event(EVENT_MOVE_ERROR, "explore stack array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
     }
 
     return ADD_TILE_COMPLETE;
@@ -102,7 +88,7 @@ int get_heuristic_value(int tile, int dest_tile, int map_id){
         USAGE   : pathfinding.c add_adjacent_tiles_to_path explore_path
     */
 
-    int map_axis=maps.map[map_id]->map_axis;
+    int map_axis=maps.map[map_id].map_axis;
     int tile_x=tile % map_axis;
     int tile_y=tile / map_axis;
     int dest_tile_x=dest_tile % map_axis;
@@ -122,7 +108,7 @@ int is_tile_in_lateral_bounds(int tile, int next_tile, int map_id){
         USAGE   : pathfinding.c get_astar_path / add_ajacent_tiles
     */
 
-    int map_axis=maps.map[map_id]->map_axis;
+    int map_axis=maps.map[map_id].map_axis;
     int tile_x=tile % map_axis;
     int next_tile_x=next_tile % map_axis;
     int vector_x=next_tile_x-tile_x;
@@ -146,7 +132,7 @@ int is_tile_adjacent(int tile, int test_tile, int map_id){
 
     int i=0;
     int adj_tile=0;
-    int map_axis=maps.map[map_id]->map_axis;
+    int map_axis=maps.map[map_id].map_axis;
 
     for(i=0; i<8; i++){
 
@@ -172,7 +158,7 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
 
     int i=0;
     int adj_tile=0;
-    int map_axis=maps.map[map_id]->map_axis;
+    int map_axis=maps.map[map_id].map_axis;
     int heuristic_value=0;
 
     for(i=0; i<8; i++){
@@ -184,12 +170,13 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
         if(is_tile_in_lateral_bounds(target_tile, adj_tile, map_id)==TRUE){
 
             //ensure adjacent tile is traversable
-            if(maps.map[map_id]->height_map[adj_tile]>=MIN_TRAVERSABLE_VALUE) {
+            if(maps.map[map_id].height_map[adj_tile]>=MIN_TRAVERSABLE_VALUE) {
 
                 //calculate heuristic distance from adjacent tile to destination
                 heuristic_value=get_heuristic_value(adj_tile, dest_tile, map_id);
 
                 if(add_tile_to_explore_stack(heuristic_value, adj_tile, explore_stack_count, explore_stack)==ADD_TILE_ABORT) {
+
                     //if something went wrong in the last function then abort this function
                     return ADD_TILE_ABORT;
                 }
@@ -233,7 +220,7 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
     if(add_tile_to_explore_stack(heuristic_value, start_tile, &explore_stack_count, explore_stack)==ADD_TILE_ABORT) {
 
         //if something went wrong in sub function then pass message to calling function to recover gracefully rather than crash
-        log_event(EVENT_MOVE_ERROR, "abort in function add_tile_to_explore module pathfinding.c");
+        log_event(EVENT_MOVE_ERROR, "abort in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         return NOT_FOUND;
     }
 
@@ -245,7 +232,7 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
 
         if(add_adjacent_tiles_to_explore_stack(explore_stack[node][TILE], destination_tile, map_id, &explore_stack_count, explore_stack)==ADD_TILE_ABORT){
 
-            log_event(EVENT_MOVE_ERROR, "abort in function add_adjacent_tiles_to_explore_stack module: pathfinding.c");
+            log_event(EVENT_MOVE_ERROR, "abort in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
             return NOT_FOUND;
         }
 
@@ -265,10 +252,8 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
         if(found==FALSE) {
 
             sprintf(text_out, "%cthat destination is unreachable", c_red1+127);
-            send_server_text(connection, CHAT_PERSONAL, text_out);
-
-            sprintf(text_out, "destination unreachable - no explorable tiles left in stack");
-            log_event(EVENT_MOVE_ERROR, text_out);
+            send_raw_text(connection, CHAT_PERSONAL, text_out);
+            log_event(EVENT_MOVE_ERROR, "destination unreachable - no explorable tiles left in stack in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
 
             return NOT_FOUND;
         }
@@ -310,9 +295,7 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
     char text_out[1024]="";
     int found=FALSE;
 
-    if(explore_path(connection, destination_tile, &path_stack_count, path_stack)==NOT_FOUND){
-        return NOT_FOUND;
-    }
+    if(explore_path(connection, destination_tile, &path_stack_count, path_stack)==NOT_FOUND) return NOT_FOUND;
 
     //start path at destination tile
     next_tile=destination_tile;
@@ -348,7 +331,7 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
         if(found==FALSE) {
 
             sprintf(text_out, "%cthat destination is unreachable", c_red1+127);
-            send_server_text(connection, CHAT_PERSONAL, text_out);
+            send_raw_text(connection, CHAT_PERSONAL, text_out);
             return NOT_FOUND;
         }
 
@@ -359,9 +342,8 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
 
         if(clients.client[connection].path_count>PATH_MAX-1) {
 
-            sprintf(text_out, "client path array exceeded in function get_astar_path\n");
-            log_event(EVENT_MOVE_ERROR, text_out);
-            exit(EXIT_FAILURE);
+            log_event(EVENT_MOVE_ERROR, "client path array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            stop_server();
         }
 
         clients.client[connection].path[ clients.client[connection].path_count-1]=next_tile;

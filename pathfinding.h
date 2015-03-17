@@ -1,15 +1,22 @@
-#ifndef PATHINDING_H_INCLUDED
-#define PATHINDING_H_INCLUDED
+#ifndef PATHFINDING_H_INCLUDED
+#define PATHFINDING_H_INCLUDED
 
-enum{//tile bounds returned from check_tile_bounds function
-    TILE_OUTSIDE_BOUNDS=-2,
-    TILE_NON_TRAVERSABLE=-1,
-    TILE_TRAVERSABLE=0
+#define PATH_STACK_MAX 25 //maximum size of the stack that is used to determine the path
+
+enum{ //nodes for explore/path arrays
+    TILE,
+    VALUE,
+    STATUS
 };
 
-enum {// return values for is_map_tile_occupied
-    TILE_OCCUPIED,
-    TILE_UNOCCUPIED
+enum{ // values for explore_stack/path_stack STATUS (used in functions explore_path and get_astar_path)
+    UNEXPLORED,
+    EXPLORED
+};
+
+enum{ //return values for functions add_tile_to_explore_stack and add_adjacent_tiles_to_explore_stack
+    ADD_TILE_ABORT,
+    ADD_TILE_COMPLETE
 };
 
 /** RESULT  : fills client path array with an a-star path
@@ -25,4 +32,5 @@ enum {// return values for is_map_tile_occupied
 */
 int get_astar_path(int connection, int start_tile, int destination_tile);
 
-#endif // PATHINDING_H_INCLUDED
+
+#endif // PATHFINDING_H_INCLUDED

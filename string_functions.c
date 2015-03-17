@@ -1,11 +1,36 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <stdio.h> //support for vsprintf and sprintf
+#include <string.h> //support for strlen
+#include <ctype.h> // support for isspace
+#include <stdarg.h> // support for args
 
 #include "string_functions.h"
+#include "logging.h"
+#include "server_start_stop.h"
+
+
+void ssnprintf(int max_len, char *str, char *fmt, ...){
+
+    /** public function - see header */
+
+    va_list args;
+
+    va_start(args, fmt);
+
+    int i=vsprintf(str, fmt, args);
+
+    if(i>max_len-1){
+
+        log_event(EVENT_ERROR, "ssnprint overrun with string [%s] in function %s: module %s: line %i", str, __func__, __FILE__, __LINE__);
+        log_text(EVENT_ERROR, "attempt to write string length [%i] to buffer length [%i]", i, max_len);
+        stop_server();
+    }
+
+    va_end(args);
+}
 
 void str_trim_right(char *str_in){
+
+    /** public function - see header */
 
     int i=0;
     int len=strlen(str_in)-1;
@@ -17,10 +42,11 @@ void str_trim_right(char *str_in){
     str_in[i+1]='\0';
 
     return;
-
 }
 
 void str_trim_left(char *str_in){
+
+     /** public function - see header */
 
     int i=0;
     int len=strlen(str_in);
@@ -37,6 +63,8 @@ void str_trim_left(char *str_in){
 
 void str_conv_lower(char *str_in){
 
+     /** public function - see header */
+
     int i;
 
     for(i=0; i<(int) strlen(str_in); i++){
@@ -47,6 +75,8 @@ void str_conv_lower(char *str_in){
 }
 
 void str_conv_upper(char *str_in){
+
+     /** public function - see header */
 
     int i;
 
@@ -59,6 +89,8 @@ void str_conv_upper(char *str_in){
 
 void str_remove_underscores(char *str_in){
 
+    /** public function - see header */
+
     int i;
 
     for(i=0; i<(int) strlen(str_in); i++){
@@ -69,6 +101,8 @@ void str_remove_underscores(char *str_in){
 }
 
 int count_str_island(char *str_in) {
+
+    /** public function - see header */
 
     int i=0, j=0;
     int last_char=32;
@@ -90,6 +124,8 @@ int count_str_island(char *str_in) {
 }
 
 void get_str_island(char *str_in, char *str_out, int island_no) {
+
+     /** public function - see header */
 
     int i=0, j=0;
     int last_char=32;
@@ -133,13 +169,20 @@ void get_str_island(char *str_in, char *str_out, int island_no) {
 
 void extract_file_name(char *str_in, char *str_out){
 
-    int file_len=strlen(str_in);
+    /** public function - see header */
+
+    int len=strlen(str_in);
     int i=0;
 
-    for(i=file_len; str_in[i]!='/'; i--){
-        if(i==0) break;
+    for(i=len; i>0; i--){
+
+        if(str_in[i]=='/'){
+
+            sprintf(str_out, "%s", str_in+i+1);
+            return;
+        }
     }
 
-    sprintf(str_out, "%s", str_in+i+1);
+    sprintf(str_out, "%s", str_in+i);
 }
 

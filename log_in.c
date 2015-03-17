@@ -1,73 +1,23 @@
 #include <stdio.h>
-#include <stdlib.h> // needed for EXIT_FAILURE
-#include <sys/socket.h> //needed for send function
-#include <sys/time.h> //needed for usec time
+#include <stdlib.h>
 #include <string.h>
-#include <time.h>//needed for time function
+#include <time.h>
 
-#include "global.h"
-#include "protocol.h"
 #include "log_in.h"
-#include "maps.h"
+#include "colour.h"
+#include "server_protocol_functions.h"
 #include "string_functions.h"
-#include "character_movement.h"
-#include "files.h"
-#include "chat.h"
-#include "broadcast.h"
-#include "database.h"
-#include "character_inventory.h"
-
-void send_login_ok(int connection){
-
-    unsigned char packet[3];
-
-    packet[0]=250;
-    packet[1]=1;
-    packet[2]=0;
-
-    send(connection, packet, 3, 0);
-}
-
-void send_login_not_ok(int connection){
-
-    unsigned char packet[3];
-
-    packet[0]=251;
-    packet[1]=1;
-    packet[2]=0;
-
-    send(connection, packet, 3, 0);
-}
-
-void send_you_dont_exist(int connection){
-
-    unsigned char packet[3];
-
-    packet[0]=249;
-    packet[1]=1;
-    packet[2]=0;
-
-    send(connection, packet, 3, 0);
-}
-
-void send_you_are(int connection){
-
-    unsigned char packet[5];
-    int id_msb=connection / 256;
-    int id_lsb=connection % 256;
-
-    packet[0]=3;
-    packet[1]=3;
-    packet[2]=0;
-    packet[3]=id_lsb;
-    packet[4]=id_msb;
-
-    send(connection, packet, 5, 0);
-}
+#include "logging.h"
+#include "server_messaging.h"
+#include "global.h"
+#include "clients.h"
+#include "characters.h"
+#include "db_character_tbl.h"
+#include "maps.h"
+#include "server_start_stop.h"
+#include "game_data.h"
 
 void load_char_data_into_connection(int connection){
-
-    int i=0;
 
     clients.client[connection].character_id=character.character_id;
     strcpy(clients.client[connection].char_name, character.char_name);
@@ -83,7 +33,6 @@ void load_char_data_into_connection(int connection){
     clients.client[connection].map_tile=character.map_tile;
     clients.client[connection].guild_id=character.guild_id;
     clients.client[connection].char_type=character.char_type;
-    clients.client[connection].race_type=character_type[character.char_type].race_id;
     clients.client[connection].skin_type=character.skin_type;
     clients.client[connection].hair_type=character.hair_type;
     clients.client[connection].shirt_type=character.shirt_type;
@@ -97,9 +46,10 @@ void load_char_data_into_connection(int connection){
     clients.client[connection].frame=character.frame;
     clients.client[connection].max_health=character.max_health;
     clients.client[connection].current_health=character.current_health;
-    clients.client[connection].last_in_game=character.last_in_game;
     clients.client[connection].char_created=character.char_created;
     clients.client[connection].joined_guild=character.joined_guild;
+
+    int i=0;
 
     for(i=0; i<MAX_INVENTORY_SLOTS; i++){
         clients.client[connection].client_inventory[i].image_id=character.client_inventory[i].image_id;
@@ -110,57 +60,68 @@ void load_char_data_into_connection(int connection){
     clients.client[connection].harvest_exp=character.harvest_exp;
 }
 
-void process_log_in(int connection, char *text) {
 
-    char char_name[1024]="";
-    char password[1024]="";
+void process_log_in(int connection, unsigned char *packet){
+
+    /** public function - see header **/
+
+    char text[1024]="";
     char text_out[1024]="";
-    int char_id=0;
     int map_id=0;
-    int guild_id=0;
-    int chan_colour=0;
+    //int chan_colour=0;
+
+    int packet_length=packet[1]+(packet[2]*256)-1+3;
+
     int i=0;
+    for(i=3; i<packet_length; i++){
+        text[i-3]=packet[i];
+        if(packet[i]==ASCII_NULL) break;
+    }
 
     //check that the login packet is correct
     if(count_str_island(text)!=2){
 
         sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
-        send_server_text(connection, CHAT_SERVER, text_out);
+        send_raw_text(connection, CHAT_SERVER, text_out);
 
         send_login_not_ok(connection);
+        log_event(EVENT_ERROR, "malformed login attempt [%s]", text);
 
-        sprintf(text_out, "malformed login attempt for existing char name [%s] password [%s]\n", char_name, password);
-        log_event(EVENT_ERROR, text_out);
         return;
     }
 
     //Extract the char name and password from the login packet
+    char char_name[1024]="";
+    char password[1024]="";
+
     get_str_island(text, char_name, 1);
     get_str_island(text, password, 2);
 
-    sprintf(text_out, "login char name [%s] password [%s]\n", char_name, password);
-    log_event(EVENT_SESSION, text_out);
+    log_event(EVENT_SESSION, "login attempt char name [%s] password [%s]", char_name, password);
 
     //get the char_id corresponding to the char name
-    char_id=get_char_data_from_db(char_name);
+    int char_id=get_db_char_data(char_name);
 
     if(char_id==NOT_FOUND) {
 
         send_you_dont_exist(connection);
-        log_event(EVENT_SESSION, "login rejected - unknown char name\n");
-        send_server_text(connection, CHAT_SERVER, "unknown character name");
+        send_raw_text(connection, CHAT_SERVER, "unknown character name");
+
+        log_event(EVENT_SESSION, "login rejected - unknown char name");
+
         return;
     }
 
-    //the get_char_data function loads the char data into a temporary struct, so now we use the load_char_data function
-    //to transfer that data into the connection struct
+    //the get_char_data function loads the char data into a temporary struct, so now we use the load_char_data
+    //function to transfer that data into the client struct
     load_char_data_into_connection(connection);
 
     //check we have the correct password for our char
     if(strcmp(password, clients.client[connection].password)==PASSWORD_INCORRECT){
 
         send_login_not_ok(connection);
-        log_event(EVENT_SESSION, "login rejected - incorrect password\n");
+        log_event(EVENT_SESSION, "login rejected - incorrect password");
+
         return;
     }
 
@@ -170,15 +131,15 @@ void process_log_in(int connection, char *text) {
         switch(clients.client[connection].char_status){
 
             case CHAR_DEAD:
-            log_event(EVENT_SESSION, "login rejected - dead char\n");
+            log_event(EVENT_SESSION, "login rejected - dead char");
             break;
 
             case CHAR_BANNED:
-            log_event(EVENT_SESSION, "login rejected - banned char\n");
+            log_event(EVENT_SESSION, "login rejected - banned char");
             break;
 
             default:
-            log_event(EVENT_ERROR, "login rejected - unknown char status\n");
+            log_event(EVENT_ERROR, "login rejected - unknown char status");
         }
 
         send_login_not_ok(connection);
@@ -189,26 +150,22 @@ void process_log_in(int connection, char *text) {
     for(i=1; i<MAX_CLIENTS; i++){
 
         if(clients.client[connection].character_id==clients.client[i].character_id \
-           && clients.client[connection].status==LOGGED_IN \
+           && clients.client[connection].client_status==LOGGED_IN \
            && i!=connection){
 
             send_login_not_ok(connection);
+            log_event(EVENT_SESSION, "concurrent login attempt for char [%s]", char_name);
 
-            sprintf(text_out, "concurrent login attempt for char [%s]\n", char_name);
-            log_event(EVENT_SESSION, text_out);
             return;
         }
     }
 
-    clients.client[connection].status=LOGGED_IN;
+    clients.client[connection].client_status=LOGGED_IN;
+    log_event(EVENT_SESSION, "login accepted");
 
-    //add char to local channel lists
-    for(i=0; i<3; i++){
-        if(clients.client[connection].chan[i]>0) add_client_to_channel(connection, clients.client[connection].chan[i]);
-    }
-
+/*
     // notify guild that char has logged on
-    guild_id=clients.client[connection].guild_id;
+    int guild_id=clients.client[connection].guild_id;
 
     if(guild_id>0) {
 
@@ -216,17 +173,17 @@ void process_log_in(int connection, char *text) {
         sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, clients.client[connection].char_name);
         broadcast_guild_channel_chat(guild_id, text_out);
     }
-
-    //add char to local map list
+*/
+    //add char to map (makes scene visible in client)
     map_id=clients.client[connection].map_id;
 
     if(add_char_to_map(connection, map_id, clients.client[connection].map_tile)==ILLEGAL_MAP){
-        sprintf(text_out, "cannot add char [%s] to map [%s] in function process_packet", char_name, maps.map[map_id]->map_name);
-        log_event(EVENT_ERROR, text_out);
-        exit(EXIT_FAILURE);
+
+        log_event(EVENT_ERROR, "cannot add char [%s] to map [%s] in function %s: module %s: line %i", char_name, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        stop_server();
     }
 
-    //record time session commenced so we can calculate time in-game
+    //record when session commenced so we can calculate time in-game
     clients.client[connection].session_commenced=time(NULL);
 
     send_login_ok(connection);
@@ -234,7 +191,5 @@ void process_log_in(int connection, char *text) {
     send_get_active_channels(connection);
     send_here_your_stats(connection);
     send_here_your_inventory(connection);
-
-    sprintf(text_out, "login succesful char [%s]\n", char_name);
-    log_event(EVENT_SESSION, text_out);
+    send_new_minute(connection, game_data.game_minutes);
 }
