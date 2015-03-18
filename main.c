@@ -571,13 +571,16 @@ int main(int argc, char *argv[]){
         }
         else if(argv[1][1]=='L'){//add or update map
 
-            if(get_db_map_exists((int)argv[2])==TRUE){
+            //use uintptr_t to prevent int truncation issues when compiled as 64bit
+            if(get_db_map_exists((uintptr_t)argv[2])==TRUE){
 
-                add_db_map((int)argv[2], (char*)argv[3], (char*)argv[4]);
+                //use uintptr_t to prevent int truncation issues when compiled as 64bit
+                add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
             }
             else {
 
-                add_db_map((int)argv[2], (char*)argv[3], (char*)argv[4]);
+                //use uintptr_t to prevent int truncation issues when compiled as 64bit
+                add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
             }
         }
         else if(argv[1][1]=='C'){ // create database
