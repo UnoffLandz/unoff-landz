@@ -17,9 +17,8 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h> //support for snprintf
+#include <string.h> //support for memset strcpy
 
 #include "database_functions.h"
 #include "clients.h"

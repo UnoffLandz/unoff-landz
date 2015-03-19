@@ -17,7 +17,6 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-
 #include <stdio.h> //support for vsprintf and sprintf
 #include <string.h> //support for strlen
 #include <ctype.h> // support for isspace

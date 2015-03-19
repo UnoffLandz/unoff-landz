@@ -250,7 +250,6 @@ void start_server(char *db_filename){
     }
 
     ev_timer_init(timeout_watcher, timeout_cb, 0.05, 0.05);
-    //ev_timer_init(timeout_watcher, timeout_cb, 0.00, 0.00);
     ev_timer_start(loop, timeout_watcher);
 
     ev_timer_init(timeout_watcher2, timeout_cb2, GAME_MINUTE_INTERVAL, GAME_MINUTE_INTERVAL);
@@ -347,7 +346,6 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         stop_server();
     }
 
-    //socket recv
     read = recv(watcher->fd, buffer, 1024, 0); // read stream to buffer
 
     if (read ==-1) {

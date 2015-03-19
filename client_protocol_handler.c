@@ -17,11 +17,9 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <ev.h>              // evlib event library
-#include <string.h>
-#include <time.h>
+#include <stdio.h>  //support for sprintf
+#include <ev.h>     // evlib event library
+#include <string.h> //support for memcpy strlen strcpy
 
 #include "client_protocol.h"
 #include "clients.h"

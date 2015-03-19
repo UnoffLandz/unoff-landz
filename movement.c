@@ -17,8 +17,6 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#include <stdlib.h>
-
 #include "maps.h"
 #include "movement.h"
 #include "logging.h"

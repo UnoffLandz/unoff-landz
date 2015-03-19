@@ -17,7 +17,6 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-
 #include <stdio.h> //supports sprintf function
 #include <string.h> //supports strcmp function
 

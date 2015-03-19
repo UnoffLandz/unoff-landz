@@ -17,8 +17,7 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-//#include <stdlib.h> //support for NULL
-#include <stdio.h>  //support for printf
+#include <stdio.h>  //support for NULL snprintf printf
 
 #include "database_functions.h"
 #include "logging.h"

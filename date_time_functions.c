@@ -17,9 +17,7 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <time.h> //support for time_t datatype
 
 void get_time_stamp_str(time_t raw_time, char *buffer){
 

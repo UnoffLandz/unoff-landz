@@ -17,10 +17,8 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-
 #include "clients.h"
 #include "character_type.h"
-
 
 int get_char_race_id(int connection){
 

@@ -17,7 +17,6 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-
 #include <stdio.h> //supports printf function
 #include <stdlib.h> //supports exit function and EXIT_FAILURE definition
 

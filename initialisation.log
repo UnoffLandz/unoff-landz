@@ -1,39 +1,39 @@
-SERVER BOOT-UP at 22:03:25 on Tuesday 17 March 2015
+SERVER BOOT-UP at 10:03:27 on Wednesday 18 March 2015
 
 initialising log files...
-[17:03:2015][22:03:25] cleared file [initialisation.log]
-[17:03:2015][22:03:25] cleared file [error.log]
-[17:03:2015][22:03:25] cleared file [character.log]
-[17:03:2015][22:03:25] cleared file [session.log]
-[17:03:2015][22:03:25] cleared file [chat.log]
-[17:03:2015][22:03:25] cleared file [move.log]
-[17:03:2015][22:03:25] cleared file [map_load.log]
+[18:03:2015][10:03:27] cleared file [initialisation.log]
+[18:03:2015][10:03:27] cleared file [error.log]
+[18:03:2015][10:03:27] cleared file [character.log]
+[18:03:2015][10:03:27] cleared file [session.log]
+[18:03:2015][10:03:27] cleared file [chat.log]
+[18:03:2015][10:03:27] cleared file [move.log]
+[18:03:2015][10:03:27] cleared file [map_load.log]
 
-[17:03:2015][22:03:25] [11] Database tables detected
+[18:03:2015][10:03:27] [11] Database tables detected
 
-[17:03:2015][22:03:25] loading maps...
-[17:03:2015][22:03:25] loaded [1] [Isla Prima]
+[18:03:2015][10:03:27] loading maps...
+[18:03:2015][10:03:27] loaded [1] [Isla Prima]
 
-[17:03:2015][22:03:25] loading races...
-[17:03:2015][22:03:25] loaded [1] [Human]
+[18:03:2015][10:03:27] loading races...
+[18:03:2015][10:03:27] loaded [1] [Human]
 
-[17:03:2015][22:03:25] loading gender...
-[17:03:2015][22:03:25] loaded [1] [Male]
-[17:03:2015][22:03:25] loaded [2] [Female]
+[18:03:2015][10:03:27] loading gender...
+[18:03:2015][10:03:27] loaded [1] [Male]
+[18:03:2015][10:03:27] loaded [2] [Female]
 
-[17:03:2015][22:03:25] loading character types...
-[17:03:2015][22:03:25] loaded [0] Human Female
-[17:03:2015][22:03:25] loaded [1] Human Male
+[18:03:2015][10:03:27] loading character types...
+[18:03:2015][10:03:27] loaded [0] Human Female
+[18:03:2015][10:03:27] loaded [1] Human Male
 
-[17:03:2015][22:03:25] loading attribute ...
-[17:03:2015][22:03:25] loaded [1] [day vision]
-[17:03:2015][22:03:25] loaded [2] [night vision]
-[17:03:2015][22:03:25] loaded [3] [carry capacity]
+[18:03:2015][10:03:27] loading attribute ...
+[18:03:2015][10:03:27] loaded [1] [day vision]
+[18:03:2015][10:03:27] loaded [2] [night vision]
+[18:03:2015][10:03:27] loaded [3] [carry capacity]
 
-[17:03:2015][22:03:25] loading channels...
-[17:03:2015][22:03:25] loaded [1] [Nub Chan]
+[18:03:2015][10:03:27] loading channels...
+[18:03:2015][10:03:27] loaded [1] [Nub Chan]
 
-[17:03:2015][22:03:25] loading game data...
+[18:03:2015][10:03:27] loading game data...
 
-[17:03:2015][22:03:25] setting up server socket on address [0.0.0.0]: port [5555]
-[17:03:2015][22:03:25] server initialisation complete
+[18:03:2015][10:03:27] setting up server socket on address [0.0.0.0]: port [5555]
+[18:03:2015][10:03:27] server initialisation complete

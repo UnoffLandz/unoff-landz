@@ -17,7 +17,6 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-
 #include <stdio.h> //support for sprintf function
 #include <stdlib.h> //support for exit function
 

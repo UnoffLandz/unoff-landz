@@ -17,7 +17,6 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-//#include <stdlib.h>
 #include <string.h> //support strcpy
 #include <stdio.h> //support snprintf
 

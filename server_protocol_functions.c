@@ -17,10 +17,7 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <string.h> //support for memmove strlen
 #include <sys/socket.h> //needed for send function
 
 #include "server_protocol.h"
