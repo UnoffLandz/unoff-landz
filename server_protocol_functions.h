@@ -20,7 +20,18 @@
 #ifndef SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED
 #define SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED
 
-#include <stdlib.h>
+#include <stdlib.h> //support for int16_t data type
+
+
+/** RESULT  : sends packet from the server
+
+    RETURNS : void
+
+    PURPOSE : groups all server communications so as packets sent from server can be monitored
+              from a single source
+*/
+void send_packet(int connection, unsigned char *packet, int packet_length);
+
 
 /** RESULT  : sends the log_in_ok packet to the client
 

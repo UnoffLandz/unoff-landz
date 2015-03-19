@@ -18,7 +18,7 @@
 *******************************************************************************************************************/
 
 #include <stdio.h> //support for printf
-#include <sys/socket.h> //support for send function
+//#include <sys/socket.h> //support for send function
 
 #include "clients.h"
 #include "maps.h"
@@ -68,7 +68,8 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
                     //restrict to those chars that can see the broadcasting char
                     if(get_proximity(char_tile, receiver_char_tile, map_axis) < receiver_char_visual_range){
 
-                        send(i, packet, packet_length, 0);
+                        //send(i, packet, packet_length, 0);
+                        send_packet(i, packet, packet_length);
                     }
                 }
             }
@@ -110,7 +111,8 @@ void broadcast_remove_actor_packet(int connection) {
                     //restrict to those chars that can see the broadcasting char
                     if(get_proximity(char_tile, receiver_char_tile, map_axis) < receiver_char_visual_range){
 
-                        send(i, packet, packet_length, 0);
+                        //send(i, packet, packet_length, 0);
+                        send_packet(connection, packet, packet_length);
                     }
                 }
             }
@@ -173,7 +175,8 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                         printf("char [%i] sees sending char [%i] added\n", i, connection);
                         #endif
 
-                        send(i, packet2, packet2_length, 0);
+                        //send(i, packet2, packet2_length, 0);
+                        send_packet(i, packet2, packet2_length);
                     }
                     else if(proximity_before_move<=receiver_visual_range && proximity_after_move>receiver_visual_range){
 
@@ -182,7 +185,8 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                         printf("char [%i] sees sending char [%i] removed\n", i, connection);
                         #endif
 
-                        send(i, packet3, packet3_length, 0);
+                        //send(i, packet3, packet3_length, 0);
+                        send_packet(i, packet3, packet3_length);
                     }
                     else if(proximity_before_move<=receiver_visual_range && proximity_after_move<=receiver_visual_range){
 
@@ -191,7 +195,8 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                         printf("char [%i] sees sending char [%i] move\n", i, connection);
                         #endif
 
-                        send(i, packet1, packet1_length, 0);
+                        //send(i, packet1, packet1_length, 0);
+                        send_packet(i, packet1, packet1_length);
                     }
                     else {
                         #if DEBUG_BROADCAST==1
@@ -209,7 +214,8 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                     #endif
 
                     add_new_enhanced_actor_packet(i, packet, &packet_length);
-                    send(connection, packet, packet_length, 0);
+                    //send(connection, packet, packet_length, 0);
+                    send_packet(connection, packet, packet_length);
                 }
                 else if(proximity_before_move<=sender_visual_range && proximity_after_move>sender_visual_range){
 
@@ -219,7 +225,8 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                     #endif
 
                     remove_actor_packet(i, packet, &packet_length);
-                    send(connection, packet, packet_length, 0);
+                    //send(connection, packet, packet_length, 0);
+                    send_packet(connection, packet, packet_length);
                 }
                 else if(proximity_before_move<=sender_visual_range && proximity_after_move<=sender_visual_range){
 
@@ -243,7 +250,8 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                         add_actor_packet(i, 0, packet, &packet_length);
                     }
 
-                    send(connection, packet, packet_length, 0);
+                    send_packet(connection, packet, packet_length);
+                    //send(connection, packet, packet_length, 0);
                 }
             }
         }

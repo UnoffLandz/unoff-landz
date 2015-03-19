@@ -27,6 +27,7 @@
 #define MOVE_LOG_FILE_NAME           "move.log"
 #define INITIALISATION_LOG_FILE_NAME "initialisation.log"
 #define MAP_LOAD_LOG_FILE_NAME       "map_load.log"
+#define PACKET_LOG_FILE_NAME         "packet.log"
 
 enum { //log events
     EVENT_NEW_CHAR,
@@ -36,6 +37,7 @@ enum { //log events
     EVENT_MOVE_ERROR,
     EVENT_INITIALISATION,
     EVENT_MAP_LOAD,
+    EVENT_PACKET,
 };
 
 /** RESULT  : logs formatted text entries to log files

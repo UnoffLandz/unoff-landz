@@ -19,13 +19,35 @@
 
 #include <string.h> //support for memmove strlen
 #include <sys/socket.h> //needed for send function
+#include <stdio.h>
 
 #include "server_protocol.h"
 #include "character_inventory.h"
 #include "clients.h"
 #include "maps.h"
+#include "logging.h"
+
+void send_packet(int connection, unsigned char *packet, int packet_length){
+
+    /** public function - see header */
+
+    char text[1024]="";
+
+    int i=0;
+    for(i=0; i<packet_length; i++){
+
+        sprintf(text, "%s %i", text, packet[i]);
+    }
+
+    log_event(EVENT_PACKET, "send to [%i]%s", connection, text);
+
+    send(connection, packet, packet_length, 0);
+}
+
 
 void send_new_minute(int16_t connection, int minute){
+
+    /** public function - see header */
 
     unsigned char packet[5];
 
@@ -55,7 +77,8 @@ void send_login_ok(int connection){
     packet[1]=1;
     packet[2]=0;
 
-    send(connection, packet, 3, 0);
+    //send(connection, packet, 3, 0);
+    send_packet(connection, packet, 3);
 }
 
 void send_login_not_ok(int connection){
@@ -68,7 +91,8 @@ void send_login_not_ok(int connection){
     packet[1]=1;
     packet[2]=0;
 
-    send(connection, packet, 3, 0);
+    //send(connection, packet, 3, 0);
+    send_packet(connection, packet, 3);
 }
 
 void send_you_dont_exist(int connection){
@@ -81,7 +105,8 @@ void send_you_dont_exist(int connection){
     packet[1]=1;
     packet[2]=0;
 
-    send(connection, packet, 3, 0);
+    //send(connection, packet, 3, 0);
+    send_packet(connection, packet, 3);
 }
 
 void send_you_are(int connection){
@@ -98,7 +123,8 @@ void send_you_are(int connection){
     packet[3]=id_lsb;
     packet[4]=id_msb;
 
-    send(connection, packet, 5, 0);
+    //send(connection, packet, 5, 0);
+    send_packet(connection, packet, 5);
 }
 
 
@@ -112,7 +138,8 @@ void send_create_char_ok(int connection){
     packet[1]=1;
     packet[2]=0;
 
-    send(connection, packet, 3, 0);
+    //send(connection, packet, 3, 0);
+    send_packet(connection, packet, 3);
 }
 
 void send_create_char_not_ok(int connection){
@@ -125,7 +152,8 @@ void send_create_char_not_ok(int connection){
     packet[1]=1;
     packet[2]=0;
 
-    send(connection, packet, 3, 0);
+    //send(connection, packet, 3, 0);
+    send_packet(connection, packet, 3);
 }
 
 void send_raw_text(int connection, int channel, char *text){
@@ -149,7 +177,8 @@ void send_raw_text(int connection, int channel, char *text){
 
     packet_length=message_length+2; // add 1 for the protocol byte and 1 for the lsb byte
 
-    send(connection, packet, packet_length, 0);
+    //send(connection, packet, packet_length, 0);
+    send_packet(connection, packet, packet_length);
 }
 
 void send_here_your_inventory(int connection){
@@ -184,7 +213,8 @@ void send_here_your_inventory(int connection){
         packet[j+7]=0; //flags
     }
 
-    send(connection, packet, (MAX_INVENTORY_SLOTS*8)+4, 0);
+    //send(connection, packet, (MAX_INVENTORY_SLOTS*8)+4, 0);
+    send_packet(connection, packet, (MAX_INVENTORY_SLOTS*8)+4);
 }
 
 void send_get_active_channels(int connection){
@@ -209,7 +239,8 @@ void send_get_active_channels(int connection){
         packet[j+7]=clients.client[connection].chan[i]/256/256/256 % 256;
     }
 
-    send(connection, packet, 16, 0);
+    //send(connection, packet, 16, 0);
+    send_packet(connection, packet, 16);
 }
 
 void send_here_your_stats(int connection){
@@ -407,9 +438,10 @@ void send_here_your_stats(int connection){
     packet[167]=clients.client[connection].max_book_time % 256;
     packet[168]=clients.client[connection].max_book_time / 256;
 
-   //packet[169]=10; summoning lvl
+    //packet[169]=10; summoning lvl
 
-    send(connection, packet, 229, 0);
+    //send(connection, packet, 229, 0);
+    send_packet(connection, packet, 229);
 }
 
 void send_change_map(int connection, char *elm_filename){
@@ -440,7 +472,8 @@ void send_change_map(int connection, char *elm_filename){
         packet[i]=elm_filename[i-3];
     }
 
-    send(connection, packet, packet_length, 0);
+    //send(connection, packet, packet_length, 0);
+    send_packet(connection, packet, packet_length);
 }
 
 void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *packet_length){

@@ -115,6 +115,7 @@ void get_event_log_file(int event_type, char *file_name){
         case EVENT_MOVE_ERROR: strcpy(file_name, MOVE_LOG_FILE_NAME); break;
         case EVENT_INITIALISATION: strcpy(file_name, INITIALISATION_LOG_FILE_NAME); break;
         case EVENT_MAP_LOAD:strcpy(file_name, MAP_LOAD_LOG_FILE_NAME); break;
+        case EVENT_PACKET:strcpy(file_name, PACKET_LOG_FILE_NAME); break;
 
         //direct any unknown events to error log
         default: strcpy(file_name, ERROR_LOG_FILE_NAME); break;
@@ -207,6 +208,10 @@ void log_event(int event_type, char *fmt, ...){
             sprintf(text_out, "[%s][%s] %s", date_stamp_str, time_stamp_str, text_in);
         break;
 
+        case EVENT_PACKET:
+            sprintf(text_out, "%s", text_in);
+        break;
+
         default:
             //we should never reach here as unknown events are directed by function get_event_log_file to the
             //the error log. However, just in case the unthinkable occurs, we capture it here and terminate the
@@ -268,6 +273,7 @@ void initialise_logs(){
     clear_file(CHAT_LOG_FILE_NAME);
     clear_file(MOVE_LOG_FILE_NAME);
     clear_file(MAP_LOAD_LOG_FILE_NAME);
+    clear_file(PACKET_LOG_FILE_NAME);
 
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");

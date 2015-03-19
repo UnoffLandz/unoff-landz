@@ -48,6 +48,7 @@
 
 #define DEBUG_PACKET 0//set debug mode
 
+
 void process_packet(int connection, unsigned char *packet){
 
     /** public function - see header */
@@ -63,10 +64,17 @@ void process_packet(int connection, unsigned char *packet){
     //int amount=0;
     //int move_to_slot=0, move_from_slot=0, bag_id=0, bag_slot=0, inventory_slot=0;
 
-    //extract data from packet
     int data_length=lsb+(msb*256)-1;
 
+    //packet logging
     int i=0;
+    for(i=0; i<data_length+2; i++){
+        sprintf(text_out, "%s %i", text_out, packet[i]);
+    }
+
+    log_event(EVENT_PACKET,"Receive from [%i]%s", connection, text_out);
+
+    //extract data from packet
     for(i=0; i<data_length; i++){
 
         data[i]=packet[i+3]; // unsigned char array for bit manipulation
