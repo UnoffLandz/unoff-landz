@@ -205,3 +205,19 @@ void extract_file_name(char *str_in, char *str_out){
     sprintf(str_out, "%s", str_in+i);
 }
 
+/*
+void filter_str_range(char *str_in, int min_ascii, int max_ascii){
+
+    int i=0;
+    int clean=0;
+
+    for(i=0; i<(int)strlen(str_in); i++){
+
+        str_in[i-clean]=str_in[i];
+
+        if(str_in[i]<min_ascii || str_in[i]>max_ascii) clean++;
+
+    }
+    str_in[i-clean]='\0';
+}
+*/

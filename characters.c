@@ -58,13 +58,27 @@ int char_in_game(char *char_name){
 
     /** public function - see header */
 
-    int i;
+    //convert char name to upper case
+    char target_name[80]="";
+    strcpy(target_name, char_name);
+    str_conv_upper(target_name);
 
+    char compare_name[80]="";
+
+    int i=0;
     for(i=0; i<MAX_CLIENTS; i++){
 
-        if(strcmp(clients.client[i].char_name, char_name)==0){
+        if(clients.client[i].client_status==LOGGED_IN){
 
-            if(clients.client[i].client_status==LOGGED_IN) return i;
+            //convert compare name to upper case
+            strcpy(compare_name, clients.client[i].char_name);
+            str_conv_upper(compare_name);
+
+            //compare the target name and compare name
+            if(strcmp(target_name, compare_name)==0) {
+
+                return i;
+            }
         }
     }
 

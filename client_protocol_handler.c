@@ -69,6 +69,7 @@ void process_packet(int connection, unsigned char *packet){
     //packet logging
     int i=0;
     for(i=0; i<data_length+2; i++){
+
         sprintf(text_out, "%s %i", text_out, packet[i]);
     }
 
@@ -80,6 +81,11 @@ void process_packet(int connection, unsigned char *packet){
         data[i]=packet[i+3]; // unsigned char array for bit manipulation
         text[i]=packet[i+3]; // signed char array for text manipulation
     }
+
+    //printf("[%s]\n", text);
+
+    //remove colour codes from text
+    //filter_str_range(text, MIN_PRINTABLE_ASCII, MAX_PRINTABLE_ASCII);
 
     /*when the client connects to the server, it will send a SIT_DOWN message if there is a delay in logging in which
     unless trapped, results in a floating point error exception that causes the server to crash.*/
@@ -197,25 +203,18 @@ void process_packet(int connection, unsigned char *packet){
         printf("SEND_PM %i %i %s\n", lsb, msb, text);
         #endif
 
-        //check that pm packet is properly formed
-        if(count_str_island(text)<3) {
-
-            sprintf(text_out, "%cno text in message", c_red1+127);
-            send_raw_text(connection, CHAT_PERSONAL, text_out);
-            return;
-        }
-
         //extract target name and message from pm packet
-        char target_name[80]="";
+        char char_name[80]="";
+        get_str_island(text, char_name, 1);
 
-        get_str_island(text, target_name, 2);
-        get_str_island(text, text_out, 3);
+        char msg[1024]="";
+        get_str_island(text, msg, 2);
 
         //log the event here as the send_pm function adds a log entry if the target char is not found
-        log_event(EVENT_CHAT, "send pm from [%s] to [%s] %s", clients.client[connection].char_name, target_name, text_out);
+        log_event(EVENT_CHAT, "send pm from [%s] to [%s] %s", clients.client[connection].char_name, char_name, msg);
 
         //send the message
-        send_pm(connection, target_name, text_out);
+        send_pm(connection, char_name, msg);
     }
 /***************************************************************************************************/
 

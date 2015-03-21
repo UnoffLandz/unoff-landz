@@ -43,13 +43,12 @@ void process_hash_commands(int connection, char *text){
 
     /** public function - see header */
 
-    char hash_command[80]="";
-    char hash_command_tail[80]="";
+
     char text_out[1024]="";
-    //char guild_tag[80]="";
 
+    //grab the first part of the text string as this should contain the command name
+    char hash_command[80]="";
     int command_parts=count_str_island(text);
-
     get_str_island(text, hash_command, 1);
     str_conv_upper(hash_command);
 
@@ -60,6 +59,22 @@ void process_hash_commands(int connection, char *text){
     if(strcmp(hash_command, "#MOTD")==0){
 
         send_motd_file(connection);
+    }
+/***************************************************************************************************/
+
+    else if(strcmp(hash_command, "#PM")==0){
+
+        //get character name
+        char char_name[1024]="";
+        get_str_island(text, char_name, 2);
+        str_conv_upper(char_name);
+
+        //get message
+        char msg[1024]="";
+        get_str_island(text, msg, 3);
+
+        //send pm
+        send_pm(connection, char_name, msg);
     }
 /***************************************************************************************************/
 
@@ -132,10 +147,11 @@ void process_hash_commands(int connection, char *text){
             return;
         }
 
-        get_str_island(text, hash_command_tail, 2);
+        char char_name[1024]="";
+        get_str_island(text, char_name, 2);
 
         //check that the char is in game
-        int char_connection=char_in_game(hash_command_tail);
+        int char_connection=char_in_game(char_name);
 
         if(char_connection==NOT_FOUND){
 
@@ -236,11 +252,12 @@ void process_hash_commands(int connection, char *text){
             return;
         }
 
-        // split the #JC command into channel number element
-        get_str_island(text, hash_command_tail, 2);
+        //get the chan number
+        char chan_str[1024]="";
+        get_str_island(text, chan_str, 2);
 
         //convert channel number into an integer value
-        int chan_id=atoi(hash_command_tail);
+        int chan_id=atoi(chan_str);
 
         //join the channel
         join_channel(connection, chan_id);
@@ -259,10 +276,11 @@ void process_hash_commands(int connection, char *text){
         }
 
         // split the #LC command into channel number element
-        get_str_island(text, hash_command_tail, 2);
+        char chan_str[1024]="";
+        get_str_island(text, chan_str, 2);
 
         //convert channel number into an integer value
-        int chan_id=atoi(hash_command_tail);
+        int chan_id=atoi(chan_str);
 
         //leave the channel
         leave_channel(connection, chan_id);

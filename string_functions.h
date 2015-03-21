@@ -26,6 +26,11 @@
 #define ASCII_HASH 35
 #define ASCII_NULL 0
 
+//#define MIN_PRINTABLE_ASCII 32
+//#define MAX_PRINTABLE_ASCII 125
+
+//void filter_str_range(char *str_in, int min_ascii, int max_ascii);
+
 
 /** RESULT  : adds text and data to string
 
