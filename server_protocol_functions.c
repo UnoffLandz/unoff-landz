@@ -45,7 +45,7 @@ void send_packet(int connection, unsigned char *packet, int packet_length){
 }
 
 
-void send_new_minute(int16_t connection, int minute){
+void send_new_minute(int connection, int16_t minute){
 
     /** public function - see header */
 
@@ -64,7 +64,8 @@ void send_new_minute(int16_t connection, int minute){
     packet[3]=convert.buf[0];
     packet[4]=convert.buf[1];
 
-    send(connection, packet, 5, 0);
+    //send(connection, packet, 5, 0);
+    send_packet(connection, packet, 5);
 }
 
 void send_login_ok(int connection){
