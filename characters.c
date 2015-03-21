@@ -88,6 +88,8 @@ int char_in_game(char *char_name){
 
 int char_age(int connection){
 
+    /** public function - see header */
+
     int age=(clients.client[connection].time_of_last_minute - clients.client[connection].char_created) / (60*60*24);
 
     return age;
