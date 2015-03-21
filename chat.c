@@ -255,15 +255,12 @@ void send_pm(int connection, char *target_name, char *message) {
 
     if(target_connection==NOT_FOUND){
 
-        sprintf(text_out, "%ccharacter is not currently logged on. To send a letter use #LETTER [name] [message]", c_red2+127);
-        send_raw_text(connection, CHAT_PERSONAL, text_out);
-
-        log_text(EVENT_CHAT, "target character not logged in");
+         log_text(EVENT_CHAT, "target character not logged in");
 
         return;
     }
 
-    sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, clients.client[connection].char_name, message);
+    sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, target_name, message);
     send_raw_text(target_connection, CHAT_PERSONAL, text_out);
 
     return;

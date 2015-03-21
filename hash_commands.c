@@ -67,7 +67,6 @@ void process_hash_commands(int connection, char *text){
         //get character name
         char char_name[1024]="";
         get_str_island(text, char_name, 2);
-        str_conv_upper(char_name);
 
         //get message
         char msg[1024]="";
