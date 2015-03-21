@@ -122,13 +122,13 @@ void process_packet(int connection, unsigned char *packet){
             int chan=clients.client[connection].chan[active_chan_slot];
 
             //broadcast to self
-            sprintf(text_out, "%c[%s@%i]: %s", c_grey1+127, clients.client[connection].char_name, chan, text);
+            sprintf(text_out, "%c[%s @ %i]: %s", c_grey1+127, clients.client[connection].char_name, chan, text);
             send_raw_text(connection, CHAT_SERVER, text_out);
 
             //broadcast to others
             broadcast_channel_chat(chan, connection, text);
 
-            log_event(EVENT_CHAT, "broadcast channel [%s@%i]: %s", clients.client[connection].char_name, chan, text);
+            log_event(EVENT_CHAT, "broadcast channel [%s @% i]: %s", clients.client[connection].char_name, chan, text);
 
             #if DEBUG_PACKET==1
             printf("channel chat by [%s] on chan [%i] %s\n", clients.client[connection].char_name, chan, text);
