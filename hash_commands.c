@@ -190,9 +190,6 @@ void process_hash_commands(int connection, char *text){
         sprintf(text_out, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
         send_raw_text(connection, CHAT_SERVER, text_out);
 */
-
-        sprintf(text_out, "\n");
-        send_raw_text(connection, CHAT_SERVER, text_out);
     }
 
 /***************************************************************************************************/
