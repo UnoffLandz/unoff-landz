@@ -87,7 +87,7 @@ void add_db_race(int race_id, char *race_name, char *race_description){
         "RACE_ID," \
         "RACE_NAME," \
         "RACE_DESCRIPTION" \
-        ") VALUES( %i, %s, %s)", race_id, race_name, race_description);
+        ") VALUES(%i, '%s', '%s')", race_id, race_name, race_description);
 
     process_sql(sql);
 
@@ -95,44 +95,3 @@ void add_db_race(int race_id, char *race_name, char *race_description){
 
     log_event(EVENT_SESSION, "Added race [%i] [%s] to RACE_TABLE", race_id, race_name);
 }
-
-/*
-void add_db_race(int race_id, char *race_name, char *race_description){
-
-    int rc;
-    sqlite3_stmt *stmt;
-
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO RACE_TABLE("  \
-        "RACE_ID," \
-        "RACE_NAME," \
-        "RACE_DESCRIPTION" \
-        ") VALUES( ?, ?, ?, ?)");
-
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    sqlite3_bind_int(stmt, 1, race_id);
-    sqlite3_bind_text(stmt, 2, race_name, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, race_description, -1, SQLITE_STATIC);
-
-    rc = sqlite3_step(stmt);
-
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    log_event(EVENT_SESSION, "Added race [%i] [%s] to RACE_TABLE", race_id, race_name);
-}
-*/

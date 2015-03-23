@@ -95,7 +95,7 @@ void add_db_gender(int gender_id, char *gender_name){
         "INSERT INTO GENDER_TABLE("  \
         "GENDER_ID," \
         "GENDER_NAME"  \
-        ") VALUES(%i, %s)", gender_id, gender_name);
+        ") VALUES(%i, '%s')", gender_id, gender_name);
 
     process_sql(sql);
 

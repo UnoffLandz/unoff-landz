@@ -87,10 +87,10 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO CHARACTER_TYPE_TABLE("  \
-        "CHAR_TYPE_ID," \
+        "CHARACTER_TYPE_ID," \
         "RACE_ID," \
-        "GENDER_ID" \
-        ") VALUES( %i, %i, %i)", char_type_id, race_id, gender_id);
+        "SEX_ID" \
+        ") VALUES(%i, %i, %i)", char_type_id, race_id, gender_id);
 
     process_sql(sql);
 
@@ -98,43 +98,3 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
 
     log_event(EVENT_SESSION, "Added character type [%i] to CHARACTER_TYPE_TABLE", char_type_id);
 }
-
-/*
-void add_db_char_type(int char_type_id, int race_id, int gender_id){
-
-    int rc;
-    sqlite3_stmt *stmt;
-
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO CHARACTER_TYPE_TABLE("  \
-        "CHAR_TYPE_ID," \
-        "RACE_ID," \
-        "GENDER_ID" \
-        ") VALUES( ?, ?, ?)");
-
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    sqlite3_bind_int(stmt, 1, char_type_id);
-    sqlite3_bind_int(stmt, 2, race_id);
-    sqlite3_bind_int(stmt, 3, gender_id);
-
-    rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    log_event(EVENT_SESSION, "Added character typer [%i] to CHARACTER_TYPE_TABLE", char_type_id);
-}
-*/

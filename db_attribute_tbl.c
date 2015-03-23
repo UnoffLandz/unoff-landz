@@ -147,7 +147,6 @@ void add_db_attribute(int attribute_id, char *attribute_description, int race_id
 
     /** public function - see header */
 
-
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO ATTRIBUTE_TABLE("  \
@@ -155,7 +154,9 @@ void add_db_attribute(int attribute_id, char *attribute_description, int race_id
         "ATTRIBUTE_DESCRIPTION,"  \
         "RACE_ID," \
         "ATTRIBUTE_TYPE_ID" \
-        ") VALUES( %i, %s, %i, %i)", attribute_id, attribute_description, race_id, attribute_type_id);
+        ") VALUES( %i, '%s', %i, %i)", attribute_id, attribute_description, race_id, attribute_type_id);
+
+    process_sql(sql);
 
     printf("Attribute [%s] added successfully\n", attribute_description);
 
