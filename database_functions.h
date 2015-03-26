@@ -17,6 +17,19 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
+//Explanation of database table relationships
+//
+//CHARACTER_TYPE_TABLE     RACE_TABLE             ATTRIBUTE_TABLE            ATTRIBUTE VALUE TABLE
+//character_type_id   +--> race_id >--------+     attribute_id >--------+    attribute_value_id
+//race_id >-----------+    race_name        +     attribute_description +--> attribute_id
+//sex_id  >-----------+    race_description +     attribute_type_id**        attribute_type_id**
+//                    +                     +-->  race_id                    pickpoints
+//                    +    GENDER_TABLE           max_pickpoints             attribute_value
+//                    +--> gender_id
+//                         gender_name
+//
+// ** attribute_type_id is required because ???
+
 #ifndef DATABASE_FUNCTIONS_H_INCLUDED
 #define DATABASE_FUNCTIONS_H_INCLUDED
 

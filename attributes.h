@@ -38,5 +38,4 @@ enum{
     ATTR_NIGHT_VISION=3,
 };
 
-
 #endif // ATTRIBUTES_H_INCLUDED

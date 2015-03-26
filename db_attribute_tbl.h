@@ -23,15 +23,16 @@
 #define ATTRIBUTE_TABLE_SQL "CREATE TABLE ATTRIBUTE_TABLE( \
         ATTRIBUTE_ID            INTEGER PRIMARY KEY     NOT NULL,  \
         ATTRIBUTE_DESCRIPTION   TEXT, \
-        RACE_ID                 INT, \
-        ATTRIBUTE_TYPE_ID       INT)"
+        ATTRIBUTE_TYPE_ID       INT, \
+        RACE_ID                 INT)"
 
 #define ATTRIBUTE_VALUE_TABLE_SQL "CREATE TABLE ATTRIBUTE_VALUE_TABLE( \
-        ATTRIBUTE_VALUE_ID  INTEGER PRIMARY KEY AUTOINCREMENT     NOT NULL,  \
+        ATTRIBUTE_VALUE_ID  INTEGER PRIMARY KEY        NOT NULL,  \
         ATTRIBUTE_ID        INT, \
         ATTRIBUTE_TYPE_ID   INT, \
         PICKPOINTS          INT, \
         ATTRIBUTE_VALUE     INT)"
+
 
 /** RESULT   : adds an attribute to the database
 
@@ -41,7 +42,6 @@
 
     NOTES    :
 **/
-
 void add_db_attribute(int attribute_id, char *attribute_description, int race_id, int attribute_type_id);
 
 
@@ -53,7 +53,7 @@ void add_db_attribute(int attribute_id, char *attribute_description, int race_id
 
     NOTES    :
 **/
-void add_db_attribute_value (int attribute_id, int attribute_type_id, int pickpoints, int attribute_value);
+void add_db_attribute_value (int attribute_value_id, int attribute_id, int attribute_type_id, int pickpoints, int attribute_value);
 
 
 /** RESULT   : loads attributes and associated attribute values from the database to memory array

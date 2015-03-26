@@ -91,7 +91,6 @@ void start_server(char *db_filename){
 
     struct ev_io *socket_watcher = (struct ev_io*)malloc(sizeof(struct ev_io));
     struct ev_idle *idle_watcher=(struct ev_idle*)malloc(sizeof(struct ev_idle));
-
     struct ev_timer *timeout_watcher = (struct ev_timer*)malloc(sizeof(struct ev_timer));
     struct ev_timer *timeout_watcher2 = (struct ev_timer*)malloc(sizeof(struct ev_timer));
 
@@ -121,7 +120,7 @@ void start_server(char *db_filename){
     }
     else open_database(db_filename);
 
-    //check the database table count and, if no tables, create a a new table structure
+    //check the database table count
     int tbl_count=database_table_count();
     log_event(EVENT_INITIALISATION, "[%i] Database tables detected", tbl_count);
 
@@ -131,11 +130,93 @@ void start_server(char *db_filename){
         stop_server();
     }
 
+
+    /*
+    add_db_race(1, "Human", "tall");
+    add_db_race(2, "Dwarf", "short");
+    add_db_race(3, "Elf", "short");
+    add_db_race(4, "Gnome", "short");
+    add_db_race(5, "Orchan", "tall");
+    add_db_race(6, "Dragoni", "tall");
+    exit(1);
+    */
+
+    /*
+    add_db_gender(1, "Male");
+    add_db_gender(2, "Female");
+    exit(1);
+    */
+
+    /*
+    add_db_char_type(0, 1, 2);
+    add_db_char_type(1, 1, 1);
+    add_db_char_type(2, 3, 2);
+    add_db_char_type(3, 3, 1);
+    add_db_char_type(4, 2, 2);
+    add_db_char_type(5, 2, 1);
+    add_db_char_type(37, 4, 2);
+    add_db_char_type(38, 4, 1);
+    add_db_char_type(39, 5, 2);
+    add_db_char_type(40, 5, 1);
+    add_db_char_type(41, 6, 2);
+    add_db_char_type(42, 6, 1);
+    exit(1);
+    */
+    /*
+    int j=0, k=0, l=0;
+    float attribute_value;
+
+    for(i=1; i<=6; i++){
+
+        j++;
+        add_db_attribute(j, "day vision", i, ATTR_DAY_VISION);
+
+        attribute_value=10.0f;
+
+        for(k=1; k<=50; k++){
+
+            add_db_attribute_value (l, j, ATTR_DAY_VISION, k, attribute_value);
+            attribute_value=attribute_value + 0.20f;
+            l++;
+        }
+    }
+
+    for(i=1; i<=6; i++){
+
+        j++;
+        add_db_attribute(j, "night vision", i, ATTR_NIGHT_VISION);
+
+        attribute_value=10.0f;
+
+        for(k=1; k<=50; k++){
+
+            add_db_attribute_value (l, j, ATTR_NIGHT_VISION, k, attribute_value);
+            attribute_value=attribute_value + 0.20f;
+            l++;
+        }
+    }
+
+    for(i=1; i<=6; i++){
+
+        j++;
+        add_db_attribute(j, "carry capacity", i, ATTR_CARRY_CAPACITY);
+
+        attribute_value=100.0f;
+
+        for(k=1; k<=50; k++){
+
+            add_db_attribute_value (l, j, ATTR_CARRY_CAPACITY, k, attribute_value);
+            attribute_value=attribute_value + 18.0f;
+            l++;
+        }
+    }
+    exit(1);
+    */
+
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //load maps from database
     loaded=load_db_maps();
-
     if(loaded==0){
 
         log_event(EVENT_ERROR, "no maps found in database", loaded);
@@ -144,7 +225,6 @@ void start_server(char *db_filename){
 
     //load races from database
     loaded=load_db_char_races();
-
     if(loaded==0){
 
         log_event(EVENT_ERROR, "no races found in database", loaded);
@@ -153,7 +233,6 @@ void start_server(char *db_filename){
 
     //load genders from database
     loaded=load_db_genders();
-
     if(loaded==0){
 
         log_event(EVENT_ERROR, "no genders found in database", loaded);
@@ -162,7 +241,6 @@ void start_server(char *db_filename){
 
     //load char types from database
     loaded=load_db_char_types();
-
     if(loaded==0){
 
         log_event(EVENT_ERROR, "no character types found in database", loaded);
@@ -171,16 +249,15 @@ void start_server(char *db_filename){
 
     //load attribute types from database
     loaded=load_db_attributes();
-
     if(loaded==0){
 
-        log_event(EVENT_ERROR, "no attribute types found in database", loaded);
+        log_event(EVENT_ERROR, "no attributes found in database", loaded);
         stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+    }
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //load chat channels from database
     loaded=load_db_channels();
-
     if(loaded==0){
 
         log_event(EVENT_ERROR, "no chat channels found in database", loaded);
@@ -189,7 +266,6 @@ void start_server(char *db_filename){
 
     //load game data from database
     loaded=load_db_game_data();
-
     if(loaded!=1){
 
         log_event(EVENT_ERROR, "no game data found in database", loaded);

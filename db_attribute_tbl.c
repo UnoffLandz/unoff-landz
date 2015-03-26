@@ -19,14 +19,16 @@
 
 #include <stdlib.h> //support for NULL
 #include <stdio.h> //support for printf
+#include <string.h>
 
 #include "database_functions.h"
 #include "logging.h"
 #include "server_start_stop.h"
 #include "attributes.h"
+#include "server_start_stop.h"
 
 
-void load_db_attribute_values(int attribute_id, int attribute_type_id, int race_id){
+int load_db_attribute_values(int attribute_id, int race_id, int attribute_type_id){
 
     /** RESULT   : loads attribute values
 
@@ -39,9 +41,10 @@ void load_db_attribute_values(int attribute_id, int attribute_type_id, int race_
 
     int rc;
     sqlite3_stmt *stmt;
+    int i=0;
 
     char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM ATTRIBUTE_VALUE_TABLE WHERE ATTRIBUTE_ID=%i AND ATTRIBUTE_TYPE_ID=%i", attribute_id, attribute_type_id);
+    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM ATTRIBUTE_VALUE_TABLE WHERE ATTRIBUTE_ID=%i", attribute_id);
 
     rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
@@ -51,9 +54,8 @@ void load_db_attribute_values(int attribute_id, int attribute_type_id, int race_
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        int attribute_type_id=sqlite3_column_int(stmt, 2);
-        int pickpoints=sqlite3_column_int(stmt, 3);
-        int attribute_value=sqlite3_column_int(stmt,4);
+        int pickpoints=sqlite3_column_int(stmt, 2);
+        int attribute_value=sqlite3_column_int(stmt, 3);
 
         switch(attribute_type_id){
 
@@ -74,6 +76,8 @@ void load_db_attribute_values(int attribute_id, int attribute_type_id, int race_
             stop_server();
             break;
         }
+
+        i++;
     }
 
     if (rc!= SQLITE_DONE) {
@@ -87,6 +91,8 @@ void load_db_attribute_values(int attribute_id, int attribute_type_id, int race_
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
+
+    return i;
 }
 
 
@@ -96,8 +102,9 @@ int load_db_attributes(){
 
     int rc;
     sqlite3_stmt *stmt;
+    char attribute_description[80]="";
+    int i=0;
 
-    //prepare the sql statement
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN, "SELECT * FROM ATTRIBUTE_TABLE");
 
@@ -107,25 +114,40 @@ int load_db_attributes(){
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading attribute ...");
-
-    //read the sql query result into the attribute array
-    int i=0;
-
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        int attribute_id=sqlite3_column_int(stmt,0);
-        int race_id=sqlite3_column_int(stmt, 2);
+        int attribute_id=sqlite3_column_int(stmt, 0);
+        strcpy(attribute_description, (char*)sqlite3_column_text(stmt, 1));
+        int race_id=sqlite3_column_int(stmt,2);
         int attribute_type_id=sqlite3_column_int(stmt,3);
 
-        load_db_attribute_values(attribute_id, attribute_type_id, race_id);
+        //check attribute bounds
+        if(attribute_type_id<1 || attribute_type_id>3){
 
-        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", attribute_id, (char*)sqlite3_column_text(stmt, 1));
+            log_event(EVENT_ERROR, "attempt to load unknown attribute type [%i] in function %s: module %s: line %i", attribute_type_id, __func__, __FILE__, __LINE__);
+            stop_server();
+        }
+
+        //check race_id bounds
+        if(race_id<0 || race_id>MAX_RACES){
+
+            log_event(EVENT_ERROR, "attempt to load attribute for unknown race type [%i] in function %s: module %s: line %i", race_id, __func__, __FILE__, __LINE__);
+            stop_server();
+        }
+
+        //load attribute values
+        int loaded=load_db_attribute_values(attribute_id, race_id, attribute_type_id);
+        if(loaded==0){
+
+            log_event(EVENT_ERROR, "no attribute values found attribute [%i] in function %s: module %s: line %i", attribute_id, __func__, __FILE__, __LINE__);
+            stop_server();
+        }
+
+        log_event(EVENT_INITIALISATION, "loaded attribute [%i] [%s] with [%i] values", attribute_id, attribute_description, loaded);
 
         i++;
     }
 
-    //test that we were able to read all the rows in the query result
     if (rc!= SQLITE_DONE) {
 
         log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -138,7 +160,6 @@ int load_db_attributes(){
          log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    //return the number of query rows we were able to read
     return i;
 }
 
@@ -163,116 +184,24 @@ void add_db_attribute(int attribute_id, char *attribute_description, int race_id
     log_event(EVENT_SESSION, "Added attribute [%s] to ATTRIBUTE_TABLE", attribute_description);
 }
 
-/*
-void add_db_attribute(int attribute_id, char *attribute_description, int race_id, int attribute_type_id){
 
-    int rc;
-    sqlite3_stmt *stmt;
-
-    //prepare the sql statement
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO ATTRIBUTE_TABLE("  \
-        "ATTRIBUTE_ID," \
-        "ATTRIBUTE_DESCRIPTION,"  \
-        "RACE_ID," \
-        "ATTRIBUTE_TYPE_ID" \
-        ") VALUES( ?, ?, ?, ?);");
-
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
-     }
-
-    //bind the data to be added to the table
-    sqlite3_bind_int(stmt, 1, attribute_id);
-    sqlite3_bind_text(stmt, 2, attribute_description, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, race_id);
-    sqlite3_bind_int(stmt, 4, attribute_type_id);
-
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    printf("Attribute [%s] added successfully\n", attribute_description);
-
-    log_event(EVENT_SESSION, "Added attribute [%s] to ATTRIBUTE_TABLE", attribute_description);
-}
-*/
-
-
-void add_db_attribute_value (int attribute_id, int attribute_type_id, int pickpoints, int attribute_value){
+void add_db_attribute_value (int attribute_value_id, int attribute_id, int attribute_type_id, int pickpoints, int attribute_value){
 
     /** public function - see header */
 
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO ATTRIBUTE_VALUE_TABLE("  \
+        "ATTRIBUTE_VALUE_ID," \
         "ATTRIBUTE_ID," \
         "ATTRIBUTE_TYPE_ID,"  \
         "PICKPOINTS," \
         "ATTRIBUTE_VALUE" \
-        ") VALUES(%i, %i, %i, %i);", attribute_id, attribute_type_id, pickpoints, attribute_value);
+        ") VALUES(%i, %i, %i, %i, %i);", attribute_value_id, attribute_id, attribute_type_id, pickpoints, attribute_value);
 
     process_sql(sql);
 
-    printf("Attribute value [%i] added successfully\n", attribute_value);
+    printf("Attribute value [%i] for pickpoints [%i] added successfully\n", attribute_value, pickpoints);
 
-    log_event(EVENT_SESSION, "Added value attribute [%i] to ATTRIBUTE_VALUE_TABLE", attribute_value);
+    log_event(EVENT_SESSION, "Added attribute value [%i] for pickpoints [%i] to ATTRIBUTE_VALUE_TABLE", attribute_value, pickpoints);
 }
-
-
-/*
-void add_db_attribute_value (int attribute_id, int attribute_type_id, int pickpoints, int attribute_value){
-
-    int rc;
-    sqlite3_stmt *stmt;
-
-    //prepare the sql statement
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO ATTRIBUTE_VALUE_TABLE("  \
-        "ATTRIBUTE_ID," \
-        "ATTRIBUTE_TYPE_ID,"  \
-        "PICKPOINTS," \
-        "ATTRIBUTE_VALUE"
-        ") VALUES(?, ?, ?, ?)");
-
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
-     }
-
-    //bind the data to be added to the table
-    sqlite3_bind_int(stmt, 1, attribute_id);
-    sqlite3_bind_int(stmt, 2, attribute_type_id);
-    sqlite3_bind_int(stmt, 3, pickpoints);
-    sqlite3_bind_int(stmt, 4, attribute_value);
-
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    printf("Attribute value [%i] added successfully\n", attribute_value);
-
-    log_event(EVENT_SESSION, "Added value attribute [%i] to ATTRIBUTE_VALUE_TABLE", attribute_value);
-}
-*/

@@ -50,6 +50,9 @@ int get_char_visual_range(int connection){
         visual_proximity = attribute[race_id].night_vision[clients.client[connection].instinct_pp];
     }
 
+    //prevents problems that arise where visual range attributes are zero
+    if(visual_proximity<3) visual_proximity=3;
+
     return visual_proximity;
 }
 
