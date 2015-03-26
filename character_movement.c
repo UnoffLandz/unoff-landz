@@ -126,8 +126,9 @@ void process_char_move(int connection, time_t current_utime){
 
                 //update_db_char_position(connection);
                 char sql[MAX_SQL_LEN]="";
-                snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i;",next_tile, map_id, clients.client[connection].character_id);
+                snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i",next_tile, map_id, clients.client[connection].character_id);
                 db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
+
             }
         }
     }
@@ -280,7 +281,7 @@ void start_char_move(int connection, int destination){
         broadcast_actor_packet(connection, actor_cmd_stand_up, clients.client[connection].map_tile);
 
         char sql[MAX_SQL_LEN]="";
-        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i;",clients.client[connection].frame, clients.client[connection].character_id);
+        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i", clients.client[connection].frame, clients.client[connection].character_id);
         db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
     }
 

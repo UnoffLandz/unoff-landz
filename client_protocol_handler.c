@@ -45,8 +45,45 @@
 #include "server_start_stop.h"
 #include "database_functions.h"
 #include "database_buffer.h"
+#include "test.h"
 
 #define DEBUG_PACKET 0//set debug mode
+
+int get_name_and_password_from_newchar_packet(unsigned char *packet, char *char_name, char *password){
+
+    /** public function - see header */
+
+    int packet_length=packet[1]+(packet[2]*256)-1+3;
+
+    int i=0;
+    for(i=3; i<packet_length; i++){
+
+        if(packet[i]==ASCII_SPACE){
+
+            // terminate with NULL to make this a valid text string
+            char_name[i-3]=ASCII_NULL;
+            break;
+        }
+
+        char_name[i-3]=packet[i];
+    }
+
+    //abort if a ascii space is not found
+    if(i==packet_length-1) return NOT_FOUND;
+
+    i++;
+
+    int j=0;
+    for(j=i; j<packet_length; j++){
+
+        password[j-i]=packet[j];
+    }
+
+    // terminate with NULL to make this a valid text string
+    password[j-i+1]=ASCII_NULL;
+
+    return FOUND;
+}
 
 
 void process_packet(int connection, unsigned char *packet){
@@ -189,11 +226,8 @@ void process_packet(int connection, unsigned char *packet){
 
         start_char_move(connection, tile_dest);
 
-        char map_name[80]="";
-        strcpy(map_name, maps.map[clients.client[connection].map_id].map_name);
-
         log_event(EVENT_SESSION, "Protocol MOVE_TO by [%s]...", clients.client[connection].char_name);
-        log_text(EVENT_SESSION, "Map [%s] x[%i] y[%i]", map_name, x_dest, y_dest);
+        log_text(EVENT_SESSION, "Map [%s] x[%i] y[%i]", maps.map[clients.client[connection].map_id].map_name, x_dest, y_dest);
     }
 /***************************************************************************************************/
 
@@ -637,7 +671,7 @@ void process_packet(int connection, unsigned char *packet){
 
         process_log_in(connection, packet);
         //db_push_buffer("", connection, DB_BUFFER_PROCESS_LOGIN, packet);
-    }
+      }
 /***************************************************************************************************/
 
     else if(protocol==CREATE_CHAR){
@@ -657,12 +691,12 @@ void process_packet(int connection, unsigned char *packet){
             stop_server();
         }
 
-        char char_name[1024]="";
-        char password[1024]="";
+        //db_push_buffer("", connection, DB_BUFFER_PROCESS_CHECK_NEWCHAR, packet);
 
         //get the char name and password from the packet
-        get_str_island(text, char_name, 1);
-        get_str_island(text, password, 2);
+        char char_name[80]="";
+        char password[80]="";
+        get_name_and_password_from_newchar_packet(packet, char_name, password);
 
         //check if char name is already used
         if(get_db_char_data(char_name)==FOUND){

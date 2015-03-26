@@ -27,6 +27,8 @@
 #include "maps.h"
 #include "logging.h"
 
+#define DEBUG_SEND 0
+
 void send_packet(int connection, unsigned char *packet, int packet_length){
 
     /** public function - see header */
@@ -156,6 +158,7 @@ void send_create_char_not_ok(int connection){
     //send(connection, packet, 3, 0);
     send_packet(connection, packet, 3);
 }
+
 
 void send_raw_text(int connection, int channel, char *text){
 
@@ -472,6 +475,12 @@ void send_change_map(int connection, char *elm_filename){
 
         packet[i]=elm_filename[i-3];
     }
+
+    #if DEBUG_SEND==1
+
+    printf("CHANGE MAP connection [%i] map [%s]\n", connection, elm_filename);
+
+    #endif
 
     //send(connection, packet, packet_length, 0);
     send_packet(connection, packet, packet_length);

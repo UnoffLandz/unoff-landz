@@ -239,7 +239,6 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                         #endif
 
                         add_actor_packet(i, move, packet, &packet_length);
-
                     }
                     else{
 
