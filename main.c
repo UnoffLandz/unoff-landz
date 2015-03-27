@@ -620,7 +620,7 @@ void idle_cb (struct ev_loop *loop, struct ev_idle *watcher, int revents){
 
 int main(int argc, char *argv[]){
 
-	printf("UnoffLandz Server - version %s\n\n", VERSION);
+  	printf("UnoffLandz Server - version %s\n\n", VERSION);
 
     if(argc==1){
 

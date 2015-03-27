@@ -90,7 +90,6 @@ void str_conv_lower(char *str_in){
 
         if(str_in[i]>=65 && str_in[i]<=90) str_in[i]+=32;
     }
-
 }
 
 void str_conv_upper(char *str_in){
@@ -103,7 +102,6 @@ void str_conv_upper(char *str_in){
 
         if(str_in[i]>=97 && str_in[i]<=122)str_in[i]-=32;
     }
-
 }
 
 void str_remove_underscores(char *str_in){
@@ -116,7 +114,6 @@ void str_remove_underscores(char *str_in){
 
         if(str_in[i]==ASCII_UNDERSCORE) str_in[i]=ASCII_SPACE;
     }
-
 }
 
 int count_str_island(char *str_in) {
@@ -183,7 +180,6 @@ void get_str_island(char *str_in, char *str_out, int island_no) {
     else {
         str_out[0]='\0';
     }
-
 }
 
 void extract_file_name(char *str_in, char *str_out){

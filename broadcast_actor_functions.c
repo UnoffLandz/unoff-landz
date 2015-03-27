@@ -270,11 +270,14 @@ void broadcast_local_chat(int connection, char *text_in){
 
     for(i=0; i<MAX_CLIENTS; i++){
 
-        if(map_id==clients.client[i].map_id) {
+        if(clients.client[i].client_status==LOGGED_IN){
 
-            if(get_proximity(clients.client[connection].map_tile, clients.client[i].map_tile, map_axis)<LOCAL_CHAT_RANGE){
+            if(map_id==clients.client[i].map_id) {
 
-                if(connection!=i) send_raw_text(i, CHAT_LOCAL, text_in);
+                if(get_proximity(clients.client[connection].map_tile, clients.client[i].map_tile, map_axis)<LOCAL_CHAT_RANGE){
+
+                    if(connection!=i) send_raw_text(i, CHAT_LOCAL, text_in);
+                }
             }
         }
     }
@@ -291,25 +294,28 @@ void broadcast_channel_chat(int chan, int connection, char *text_in){
 
     for(i=0; i<MAX_CLIENTS; i++){
 
-        //don't echo to self
-        if(connection!=i){
+        if(clients.client[i].client_status==LOGGED_IN){
 
-            //filter out players who are not in this chan
-            if(is_player_in_chan(i,chan)!=NOT_FOUND){
+            //don't echo to self
+            if(connection!=i){
 
-                int active_chan=clients.client[i].chan[clients.client[i].active_chan-1];
+                //filter out players who are not in this chan
+                if(is_player_in_chan(i,chan)!=NOT_FOUND){
 
-                //show non-active chan in darker grey
-                if(active_chan==chan){
+                    int active_chan=clients.client[i].chan[clients.client[i].active_chan-1];
 
-                    sprintf(text_out, "%c[%s@%i]: %s", c_grey1+127, clients.client[connection].char_name, chan, text_in);
+                    //show non-active chan in darker grey
+                    if(active_chan==chan){
+
+                        sprintf(text_out, "%c[%s@%i]: %s", c_grey1+127, clients.client[connection].char_name, chan, text_in);
+                    }
+                    else {
+
+                        sprintf(text_out, "%c[%s@%i]: %s", c_grey2+127, clients.client[connection].char_name, chan, text_in);
+                    }
+
+                    send_raw_text(i, CHAT_SERVER, text_out);
                 }
-                else {
-
-                    sprintf(text_out, "%c[%s@%i]: %s", c_grey2+127, clients.client[connection].char_name, chan, text_in);
-                }
-
-                send_raw_text(i, CHAT_SERVER, text_out);
             }
         }
     }
@@ -323,25 +329,28 @@ void broadcast_channel_event(int chan, int connection, char *text_in){
 
     for(i=0; i<MAX_CLIENTS; i++){
 
-        //don't echo to self
-        if(connection!=i){
+        if(clients.client[i].client_status==LOGGED_IN){
 
-            //filter out clients who are not in chan
-            int in_chan=FALSE;
-            int j=0;
+            //don't echo to self
+            if(connection!=i){
 
-            for(j=0; j<MAX_CHAN_SLOTS; j++){
+                //filter out clients who are not in chan
+                int in_chan=FALSE;
+                int j=0;
 
-                if(clients.client[i].chan[j]==chan){
+                for(j=0; j<MAX_CHAN_SLOTS; j++){
 
-                    in_chan=TRUE;
-                    break;
+                    if(clients.client[i].chan[j]==chan){
+
+                        in_chan=TRUE;
+                        break;
+                    }
                 }
-            }
 
-            if(in_chan==TRUE){
+                if(in_chan==TRUE){
 
-                send_raw_text(i, CHAT_SERVER, text_in);
+                    send_raw_text(i, CHAT_SERVER, text_in);
+                }
             }
         }
     }
