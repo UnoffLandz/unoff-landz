@@ -104,15 +104,35 @@ void db_process_buffer(){
 
         if(db_buffer.buffer[1].process_type==DB_BUFFER_PROCESS_CHECK_NEWCHAR){
 
+            //When a new character is created, check name first
             char char_name[80]="";
             char password[80]="";
+            int data_length=packet[1] + (packet[2] * 256);
 
-            if(get_name_and_password_from_newchar_packet(packet, char_name, password)==NOT_FOUND){
+            //place the packet in a union so we can extract individual bytes
+            union {
+                unsigned char buf[packet_length];
 
-                //if ascii space cannot be found in data, the new char packet is malformed
-                log_event(EVENT_ERROR, "malformed new character packet in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-                stop_server();
-            }
+                struct {
+                    unsigned char protocol;
+                    unsigned char lsb;
+                    unsigned char msb;
+                    char name_and_password[data_length-8];
+                    unsigned char skin;
+                    unsigned char hair;
+                    unsigned char shirt;
+                    unsigned char pants;
+                    unsigned char boots;
+                    unsigned char type;
+                    unsigned char head;
+                }output;
+
+            }convert;
+
+            memcpy(convert.buf, packet, packet_length);
+
+            get_str_island(convert.output.name_and_password, char_name, 1);
+            get_str_island(convert.output.name_and_password, password, 2);
 
             if(get_db_char_data(char_name)==FOUND){
 
@@ -123,7 +143,7 @@ void db_process_buffer(){
 
                 send_create_char_not_ok(connection);
 
-                log_event(EVENT_SESSION, "Attempt to create new char with existing char name [%s]\n", char_name);
+                log_event(EVENT_SESSION, "Attempt to create new char with existing char name [%s]", char_name);
             }
             else {
 
@@ -135,10 +155,8 @@ void db_process_buffer(){
 
         else if(db_buffer.buffer[1].process_type==DB_BUFFER_PROCESS_ADD_NEWCHAR){
 
+            //when a new character is created, after name has been checked, add to game
             int data_length=packet[1] + (packet[2] * 256);
-            int packet_length=data_length+2;
-
-            //test_create_char_packet(packet);
 
             //place the packet in a union so we can extract individual bytes
             union {

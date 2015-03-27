@@ -21,18 +21,6 @@
 #define CLIENT_PROTOCOL_HANDLER_H_INCLUDED
 
 
-/** RESULT  : gets the character name and password from the create_char packet
-
-    RETURNS : void
-
-    PURPOSE : used in DB_BUFFER_PROCESS_ADD_NEWCHAR and DB_BUFFER_PROCESS_CHECK_NEWCHAR sections
-              of the db_process_buffer function
-
-    NOTES   :
-*/
-int get_name_and_password_from_newchar_packet(unsigned char *packet, char *char_name, char *password);
-
-
 /** RESULT  : processes a data packet received from the client
 
     RETURNS : void
@@ -42,6 +30,5 @@ int get_name_and_password_from_newchar_packet(unsigned char *packet, char *char_
     NOTES   :
 */
 void process_packet(int connection, unsigned char *packet);
-//void process_packet(int connection, unsigned char *packet, struct ev_loop *loop);
 
 #endif // CLIENT_PROTOCOL_HANDLER_H_INCLUDED

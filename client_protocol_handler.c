@@ -49,43 +49,6 @@
 
 #define DEBUG_PACKET 0//set debug mode
 
-int get_name_and_password_from_newchar_packet(unsigned char *packet, char *char_name, char *password){
-
-    /** public function - see header */
-
-    int packet_length=packet[1]+(packet[2]*256)-1+3;
-
-    int i=0;
-    for(i=3; i<packet_length; i++){
-
-        if(packet[i]==ASCII_SPACE){
-
-            // terminate with NULL to make this a valid text string
-            char_name[i-3]=ASCII_NULL;
-            break;
-        }
-
-        char_name[i-3]=packet[i];
-    }
-
-    //abort if a ascii space is not found
-    if(i==packet_length-1) return NOT_FOUND;
-
-    i++;
-
-    int j=0;
-    for(j=i; j<packet_length; j++){
-
-        password[j-i]=packet[j];
-    }
-
-    // terminate with NULL to make this a valid text string
-    password[j-i+1]=ASCII_NULL;
-
-    return FOUND;
-}
-
-
 void process_packet(int connection, unsigned char *packet){
 
     /** public function - see header */
@@ -669,8 +632,8 @@ void process_packet(int connection, unsigned char *packet){
         //in a logical order
         log_event(EVENT_SESSION, "Protocol LOG_IN by [%i]...", connection);
 
-        process_log_in(connection, packet);
-        //db_push_buffer("", connection, DB_BUFFER_PROCESS_LOGIN, packet);
+        //process_log_in(connection, packet);
+        db_push_buffer("", connection, DB_BUFFER_PROCESS_LOGIN, packet);
       }
 /***************************************************************************************************/
 
@@ -691,8 +654,9 @@ void process_packet(int connection, unsigned char *packet){
             stop_server();
         }
 
-        //db_push_buffer("", connection, DB_BUFFER_PROCESS_CHECK_NEWCHAR, packet);
+        db_push_buffer("", connection, DB_BUFFER_PROCESS_CHECK_NEWCHAR, packet);
 
+/*
         //get the char name and password from the packet
         char char_name[80]="";
         char password[80]="";
@@ -763,6 +727,7 @@ void process_packet(int connection, unsigned char *packet){
 
         //log character creation event
         log_event(EVENT_NEW_CHAR, "[%s] password [%s]\n", char_name, password);
+*/
     }
 /***************************************************************************************************/
 
