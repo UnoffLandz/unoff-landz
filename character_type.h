@@ -20,7 +20,7 @@
 #ifndef CHARACTER_TYPE_H_INCLUDED
 #define CHARACTER_TYPE_H_INCLUDED
 
-#define MAX_CHARACTER_TYPES 7
+#define MAX_CHARACTER_TYPES 42 //the highest character type code used by the client
 
 struct character_type_type{
     int race_id;
