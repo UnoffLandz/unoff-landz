@@ -22,7 +22,7 @@
 
 #define MAX_CHANNELS 10
 #define MAX_CHAN_SLOTS 4
-
+#define MAX_ACTIVE_CHANNELS 33
 #define LOCAL_CHAT_RANGE 10
 
 struct channel_node_type{

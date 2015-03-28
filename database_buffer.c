@@ -196,7 +196,7 @@ void db_process_buffer(){
             character.char_created=time(NULL);
 
             //set starting channel
-            character.active_chan=1;
+            character.active_chan=32; // slot 0
             character.chan[0]=1; //nub chan
 
             //set starting map and tile

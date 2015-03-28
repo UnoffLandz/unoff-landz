@@ -231,7 +231,7 @@ void send_get_active_channels(int connection){
     packet[0]=GET_ACTIVE_CHANNELS;
     packet[1]=14;
     packet[2]=0;
-    packet[3]=clients.client[connection].active_chan;
+    packet[3]=MAX_ACTIVE_CHANNELS-clients.client[connection].active_chan;
 
     for(i=0; i<MAX_CHAN_SLOTS; i++){
 

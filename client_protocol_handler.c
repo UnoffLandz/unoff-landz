@@ -47,7 +47,7 @@
 #include "database_buffer.h"
 #include "test.h"
 
-#define DEBUG_PACKET 0//set debug mode
+#define DEBUG_PACKET 1//set debug mode
 
 void process_packet(int connection, unsigned char *packet){
 
@@ -118,8 +118,9 @@ void process_packet(int connection, unsigned char *packet){
             }
 
             // get the chan number
-            int active_chan_slot=clients.client[connection].active_chan-31;
+            int active_chan_slot=clients.client[connection].active_chan-1;
             int chan=clients.client[connection].chan[active_chan_slot];
+            printf("active chan slot %i  chan %i\n", active_chan_slot, chan);
 
             //broadcast to self
             sprintf(text_out, "%c[%s @ %i]: %s", c_grey1+127, clients.client[connection].char_name, chan, text);
@@ -611,11 +612,11 @@ void process_packet(int connection, unsigned char *packet){
         #endif
 
         //set the active channel
-        clients.client[connection].active_chan=data[0]-32;
+        clients.client[connection].active_chan=MAX_ACTIVE_CHANNELS-data[0];
 
         //update the database
         char sql[MAX_SQL_LEN]="";
-        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", data[0], clients.client[connection].character_id);
+        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", data[0], clients.client[connection].character_id);
         db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
 
         log_event(EVENT_SESSION, "Protocol SET_ACTIVE_CHANNEL by [%s]...", clients.client[connection].char_name);

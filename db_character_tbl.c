@@ -55,7 +55,10 @@ int get_db_char_data(char *char_name){
         strcpy(character.char_name, (char*) sqlite3_column_text(stmt, 1));
         strcpy(character.password, (char*) sqlite3_column_text(stmt,2));
         character.char_status=sqlite3_column_int(stmt, 3);
-        character.active_chan=sqlite3_column_int(stmt, 4);
+
+
+        character.active_chan=MAX_ACTIVE_CHANNELS-sqlite3_column_int(stmt, 4);
+
         character.chan[0]=sqlite3_column_int(stmt, 5);
         character.chan[1]=sqlite3_column_int(stmt, 6);
         character.chan[2]=sqlite3_column_int(stmt, 7);
@@ -267,7 +270,7 @@ int add_db_char_data(struct client_node_type character){
 
     sqlite3_bind_text(stmt, 1, character.char_name, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, character.password, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, CHAR_ALIVE); // char status
+    sqlite3_bind_int(stmt, 3, CHAR_ALIVE);
     sqlite3_bind_int(stmt, 4, character.active_chan);
     sqlite3_bind_int(stmt, 5, character.chan[0]);
     sqlite3_bind_int(stmt, 6, character.chan[1]);
