@@ -82,8 +82,6 @@ void process_packet(int connection, unsigned char *packet){
         text[i]=packet[i+3]; // signed char array for text manipulation
     }
 
-    //printf("[%s]\n", text);
-
     //remove colour codes from text
     //filter_str_range(text, MIN_PRINTABLE_ASCII, MAX_PRINTABLE_ASCII);
 
@@ -635,7 +633,7 @@ void process_packet(int connection, unsigned char *packet){
 
         //process_log_in(connection, packet);
         db_push_buffer("", connection, DB_BUFFER_PROCESS_LOGIN, packet);
-      }
+    }
 /***************************************************************************************************/
 
     else if(protocol==CREATE_CHAR){
@@ -771,6 +769,6 @@ void process_packet(int connection, unsigned char *packet){
         #endif
 
         // catch unknown protocols
-        log_event(EVENT_ERROR, "unknown protocol [%i]\n", protocol);
+        log_event(EVENT_ERROR, "unknown protocol [%i]", protocol);
     }
 }
