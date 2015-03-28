@@ -163,7 +163,7 @@ void send_create_char_not_ok(int connection){
 void send_raw_text(int connection, int channel, char *text){
 
     /** public function - see header */
-
+/*
     unsigned char packet[1024];
     int text_length;
     int message_length;
@@ -183,6 +183,30 @@ void send_raw_text(int connection, int channel, char *text){
 
     //send(connection, packet, packet_length, 0);
     send_packet(connection, packet, packet_length);
+*/
+
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        unsigned char channel;
+        char text[strlen(text)+1];
+    }packet_data;
+
+    int packet_length=sizeof(packet_data)-1;
+
+    union {
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
+
+    packet.in.protocol=RAW_TEXT;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+    packet.in.channel=channel;
+    strcpy(packet.in.text, text);
+
+    send_packet(connection, packet.out, packet_length);
 }
 
 void send_here_your_inventory(int connection){
@@ -451,7 +475,7 @@ void send_here_your_stats(int connection){
 void send_change_map(int connection, char *elm_filename){
 
     /** public function - see header */
-
+/*
     unsigned char packet[1024];
 
     int i;
@@ -484,12 +508,34 @@ void send_change_map(int connection, char *elm_filename){
 
     //send(connection, packet, packet_length, 0);
     send_packet(connection, packet, packet_length);
+*/
+
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        char text[strlen(elm_filename)+1];
+    }packet_data;
+
+    int packet_length=sizeof(packet_data)-1;
+
+    union {
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
+
+    packet.in.protocol=CHANGE_MAP;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+    strcpy(packet.in.text, elm_filename);
+
+    send_packet(connection, packet.out, packet_length);
 }
 
 void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *packet_length){
 
     /** public function - see header */
-
+/*
     int i=0,j=0;
     int data_length=0;
     //int guild_id=clients.client[connection].guild_id;
@@ -541,18 +587,18 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
             packet[i++]=clients.client[connection].char_name[j];
 	}
 
-/*
+
     // add guild name
-	if(guild_id>0) {
+//	if(guild_id>0) {
 
-        packet[i++]=ASCII_SPACE;
-        packet[i++]=guilds.guild[guild_id]->tag_colour;
+//        packet[i++]=ASCII_SPACE;
+//        packet[i++]=guilds.guild[guild_id]->tag_colour;
 
-        for(j=0; j< (int)strlen(guilds.guild[guild_id]->guild_tag); j++){
-	        packet[i++]=guilds.guild[guild_id]->guild_tag[j];
-        }
-	}
-*/
+//        for(j=0; j< (int)strlen(guilds.guild[guild_id]->guild_tag); j++){
+//	        packet[i++]=guilds.guild[guild_id]->guild_tag[j];
+//        }
+//	}
+
     packet[i++]='\0';
 
 	packet[i++]=0; // unknown
@@ -568,6 +614,109 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     // now we know our data length we can will in the proper values for our lsb/msb
     packet[1]=data_length % 256;
     packet[2]=data_length / 256;
+*/
+
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        unsigned char connection_lsb;
+        unsigned char connection_msb;
+        unsigned char x_axis_lsb;
+        unsigned char x_axis_msb;
+        unsigned char y_axis_lsb;
+        unsigned char y_axis_msb;
+        unsigned char z_axis_lsb;
+        unsigned char z_axis_msb;
+        unsigned char rotation_lsb;
+        unsigned char rotation_msb;
+        unsigned char char_type;
+        unsigned char unused;
+        unsigned char skin_type;
+        unsigned char hair_type;
+        unsigned char shirt_type;
+        unsigned char pants_type;
+        unsigned char boots_type;
+        unsigned char head_type;
+        unsigned char shield_type;
+        unsigned char weapon_type;
+        unsigned char cape_type;
+        unsigned char helmet_type;
+        unsigned char frame;
+        unsigned char max_health_lsb;
+        unsigned char max_health_msb;
+        unsigned char current_health_lsb;
+        unsigned char current_health_msb;
+        unsigned char special;
+
+        char char_name[strlen(clients.client[connection].char_name)+1];
+        char unknown;
+        char char_height; // min=2 max=127
+        char riding; // none=255  brown horse=200
+        char neck_attachment; //none=64
+    }packet_data;
+
+    *packet_length=sizeof(packet_data)-1;
+
+    union {
+        unsigned char out[*packet_length];
+        packet_data in;
+    }p;
+
+    p.in.protocol=ADD_NEW_ENHANCED_ACTOR;
+
+    p.in.lsb=(*packet_length-2) % 256;
+    p.in.msb=(*packet_length-2) / 256;
+
+    p.in.connection_lsb=connection % 256;
+    p.in.connection_msb=connection / 256;
+
+    int map_id=clients.client[connection].map_id;
+    int map_axis=maps.map[map_id].map_axis;
+    int x=clients.client[connection].map_tile % map_axis;
+    p.in.x_axis_lsb=x % 256;
+    p.in.x_axis_msb=x / 256;
+
+    int y=clients.client[connection].map_tile / map_axis;
+    p.in.y_axis_lsb=y % 256;
+    p.in.y_axis_msb=y / 256;
+
+    int z=0;
+    p.in.z_axis_lsb=z % 256;
+    p.in.z_axis_msb=z / 256;
+
+    int rotation=45;
+    p.in.rotation_lsb=rotation % 256;
+    p.in.rotation_msb=rotation / 256;
+
+    p.in.char_type=clients.client[connection].char_type;
+    p.in.unused=0;
+    p.in.skin_type=clients.client[connection].skin_type;
+    p.in.hair_type=clients.client[connection].hair_type;
+    p.in.shirt_type=clients.client[connection].shirt_type;
+    p.in.pants_type=clients.client[connection].pants_type;
+    p.in.boots_type=clients.client[connection].boots_type;
+    p.in.head_type=clients.client[connection].head_type;
+    p.in.shield_type=clients.client[connection].shield_type;
+    p.in.weapon_type=clients.client[connection].weapon_type;
+    p.in.cape_type=clients.client[connection].cape_type;
+    p.in.helmet_type=clients.client[connection].helmet_type;
+    p.in.frame=clients.client[connection].frame;
+
+    p.in.max_health_lsb=clients.client[connection].max_health % 256;
+    p.in.max_health_msb=clients.client[connection].max_health / 256;
+    p.in.current_health_lsb=clients.client[connection].current_health % 256;
+    p.in.current_health_msb=clients.client[connection].current_health / 256;
+    p.in.special=1; //HUMAN / NPC
+
+    strcpy(p.in.char_name, clients.client[connection].char_name);
+
+    p.in.unknown=0;
+    p.in.char_height=64; // min=2 max=127
+    p.in.riding=255; // none=255  brown horse=200
+    p.in.neck_attachment=64; //none=64
+
+    memcpy(packet, p.out, *packet_length);
 }
 
 void remove_actor_packet(int connection, unsigned char *packet, int *packet_length){
