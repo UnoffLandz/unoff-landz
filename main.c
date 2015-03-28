@@ -33,6 +33,7 @@ To compile server, link with the following libraries :
     libsqlite3.so           - sqlite database library
 
 *******************************************************************************************************************/
+#define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
 #include <stdio.h>      //supports printf function
 #include <stdlib.h>     //supports free function
 #include <string.h>     //supports memset and strcpy functions
@@ -410,6 +411,7 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
     send_raw_text(client_sd, CHAT_SERVER, "\nHit any key to continue...\n");
 }
 
+
 void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int revents) {
 
     unsigned char buffer[1024];
@@ -422,8 +424,10 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         stop_server();
     }
 
-    read = recv(watcher->fd, buffer, 1024, 0); // read stream to buffer
+    //read = recv(watcher->fd, buffer, 1024, 0); // read stream to buffer
 
+    //wrapping recv in this macro prevents connection reset by peer errors
+    read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 1024, 0));
     if (read ==-1) {
 
         int errnum=errno;
