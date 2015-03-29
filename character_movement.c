@@ -38,7 +38,7 @@
 #include "server_start_stop.h"
 #include "database_functions.h"
 #include "game_data.h"
-#include "database_buffer.h"
+#include "idle_buffer.h"
 
 #define DEBUG_MOVEMENT 0
 
@@ -127,7 +127,7 @@ void process_char_move(int connection, time_t current_utime){
                 //update_db_char_position(connection);
                 char sql[MAX_SQL_LEN]="";
                 snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i",next_tile, map_id, clients.client[connection].character_id);
-                db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
+                db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 
             }
         }
@@ -251,7 +251,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
     //save char map id and position
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i;", new_map_tile, new_map_id, clients.client[connection].character_id);
-    db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
+    db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 }
 
 
@@ -282,7 +282,7 @@ void start_char_move(int connection, int destination){
 
         char sql[MAX_SQL_LEN]="";
         snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i", clients.client[connection].frame, clients.client[connection].character_id);
-        db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
+        db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
     }
 
     //check if the destination is walkable

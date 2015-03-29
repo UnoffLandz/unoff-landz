@@ -31,6 +31,7 @@
 #include "db_chat_channel_tbl.h"
 #include "db_attribute_tbl.h"
 #include "server_start_stop.h"
+#include "attributes.h"
 
 void open_database(char *database_name){
 
@@ -132,31 +133,6 @@ void create_database_table(char *sql){
     log_event(EVENT_INITIALISATION, "Created table [%s]", table_name);
 }
 
-void create_new_database() {
-
-    /** public function - see header **/
-
-    //create logical divider in log file
-    log_text(EVENT_INITIALISATION, "\nCreating database tables...");
-
-    //create database tables
-    create_database_table(CHARACTER_TABLE_SQL);
-    create_database_table(INVENTORY_TABLE_SQL);
-    create_database_table(GENDER_TABLE_SQL);
-    //create_database_table(ITEM_TABLE_SQL);
-    //create_database_table(THREED_OBJECT_TABLE_SQL);
-    create_database_table(MAP_TABLE_SQL);
-    create_database_table(CHANNEL_TABLE_SQL);
-    create_database_table(RACE_TABLE_SQL);
-    //create_database_table(GUILD_TABLE_SQL);
-    create_database_table(CHARACTER_TYPE_TABLE_SQL);
-    create_database_table(ATTRIBUTE_TABLE_SQL);
-    create_database_table(ATTRIBUTE_VALUE_TABLE_SQL);
-
-    // inserts a blank line to create a logical separator with subsequent log entries
-    log_text(EVENT_INITIALISATION, "");
-}
-
 void process_sql(char *sql_str){
 
     /** public function - see header **/
@@ -180,5 +156,102 @@ void process_sql(char *sql_str){
     if(rc != SQLITE_OK){
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql_str);
+    }
+}
+
+
+void create_default_database(){
+
+    /** public function - see header **/
+
+    //create logical divider in log file
+    log_text(EVENT_INITIALISATION, "\nCreating database tables...");
+
+    //create database tables
+    create_database_table(CHARACTER_TABLE_SQL);
+    create_database_table(INVENTORY_TABLE_SQL);
+    create_database_table(GENDER_TABLE_SQL);
+    //create_database_table(ITEM_TABLE_SQL);
+    //create_database_table(THREED_OBJECT_TABLE_SQL);
+    create_database_table(MAP_TABLE_SQL);
+    create_database_table(CHANNEL_TABLE_SQL);
+    create_database_table(RACE_TABLE_SQL);
+    //create_database_table(GUILD_TABLE_SQL);
+    create_database_table(CHARACTER_TYPE_TABLE_SQL);
+    create_database_table(ATTRIBUTE_TABLE_SQL);
+    create_database_table(ATTRIBUTE_VALUE_TABLE_SQL);
+
+    // inserts a blank line to create a logical separator with subsequent log entries
+    log_text(EVENT_INITIALISATION, "");
+
+    add_db_race(1, "Human", "tall");
+    add_db_race(2, "Dwarf", "short");
+    add_db_race(3, "Elf", "short");
+    add_db_race(4, "Gnome", "short");
+    add_db_race(5, "Orchan", "tall");
+    add_db_race(6, "Dragoni", "tall");
+
+    add_db_gender(1, "Male");
+    add_db_gender(2, "Female");
+
+    add_db_char_type(0, 1, 2);
+    add_db_char_type(1, 1, 1);
+    add_db_char_type(2, 3, 2);
+    add_db_char_type(3, 3, 1);
+    add_db_char_type(4, 2, 2);
+    add_db_char_type(5, 2, 1);
+    add_db_char_type(37, 4, 2);
+    add_db_char_type(38, 4, 1);
+    add_db_char_type(39, 5, 2);
+    add_db_char_type(40, 5, 1);
+    add_db_char_type(41, 6, 2);
+    add_db_char_type(42, 6, 1);
+
+    int i=0, j=0, k=0, l=0;
+    float attribute_value;
+
+    for(i=1; i<=6; i++){
+
+        j++;
+        add_db_attribute(j, "day vision", i, ATTR_DAY_VISION);
+
+        attribute_value=10.0f;
+
+        for(k=1; k<=50; k++){
+
+            add_db_attribute_value (l, j, ATTR_DAY_VISION, k, attribute_value);
+            attribute_value=attribute_value + 0.20f;
+            l++;
+        }
+    }
+
+    for(i=1; i<=6; i++){
+
+        j++;
+        add_db_attribute(j, "night vision", i, ATTR_NIGHT_VISION);
+
+        attribute_value=10.0f;
+
+        for(k=1; k<=50; k++){
+
+            add_db_attribute_value (l, j, ATTR_NIGHT_VISION, k, attribute_value);
+            attribute_value=attribute_value + 0.20f;
+            l++;
+        }
+    }
+
+    for(i=1; i<=6; i++){
+
+        j++;
+        add_db_attribute(j, "carry capacity", i, ATTR_CARRY_CAPACITY);
+
+        attribute_value=100.0f;
+
+        for(k=1; k<=50; k++){
+
+            add_db_attribute_value (l, j, ATTR_CARRY_CAPACITY, k, attribute_value);
+            attribute_value=attribute_value + 18.0f;
+            l++;
+        }
     }
 }

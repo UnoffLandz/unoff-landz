@@ -17,12 +17,12 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef DATABASE_BUFFER_H_INCLUDED
-#define DATABASE_BUFFER_H_INCLUDED
+#ifndef IDLE_BUFFER_H_INCLUDED
+#define IDLE_BUFFER_H_INCLUDED
 
 #include "database_functions.h" //access to MAX_SQL_LEN
 
-#define DB_BUFFER_MAX 100
+#define IDLE_BUFFER_MAX 100
 #define MAX_PROTOCOL_PACKET_SIZE 160
 
 struct buffer_node_type{
@@ -36,16 +36,16 @@ struct buffer_node_type{
 struct buffer_list_type {
 
     int buffer_count;
-    struct buffer_node_type buffer[DB_BUFFER_MAX];
+    struct buffer_node_type buffer[IDLE_BUFFER_MAX];
 };
-struct buffer_list_type db_buffer;
+struct buffer_list_type idle_buffer;
 
 enum{//database buffer processing types
-    DB_BUFFER_PROCESS_SQL,
-    DB_BUFFER_PROCESS_HASH_DETAILS,
-    DB_BUFFER_PROCESS_CHECK_NEWCHAR,
-    DB_BUFFER_PROCESS_ADD_NEWCHAR,
-    DB_BUFFER_PROCESS_LOGIN,
+    IDLE_BUFFER_PROCESS_SQL,
+    IDLE_BUFFER_PROCESS_HASH_DETAILS,
+    IDLE_BUFFER_PROCESS_CHECK_NEWCHAR,
+    IDLE_BUFFER_PROCESS_ADD_NEWCHAR,
+    IDLE_BUFFER_PROCESS_LOGIN,
 };
 
 /** RESULT  : pushes items on the database buffer
@@ -69,4 +69,4 @@ void db_push_buffer(char *sql, int connection, int process_type, unsigned char *
 **/
 void db_process_buffer();
 
-#endif // DATABASE_BUFFER_H_INCLUDED
+#endif // IDLE_BUFFER_H_INCLUDED

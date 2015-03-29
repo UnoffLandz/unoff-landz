@@ -67,11 +67,9 @@ To compile server, link with the following libraries :
 #include "attributes.h"
 #include "chat.h"
 #include "characters.h"
-#include "database_buffer.h"
+#include "idle_buffer.h"
 #include "file_functions.h"
 
-//#include "maps.h" // for adding maps only, otherwise comment out
-//#include "database_functions.h" //for adding tables only, otherwise comment out
 #define DEBUG_MAIN 1
 #define VERSION "4"
 
@@ -80,13 +78,22 @@ struct ev_io *libevlist[MAX_CLIENTS] = {NULL};
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 
+//declare prototypes
 void timeout_cb(EV_P_ struct ev_timer* timer, int revents);
 void timeout_cb2(EV_P_ struct ev_timer* timer, int revents);
 void idle_cb(EV_P_ struct ev_idle *watcher, int revents);
-
 void close_connection_slot(int connection);
 
 void start_server(char *db_filename){
+
+    /** RESULT   : starts the server
+
+        RETURNS  : void
+
+        PURPOSE  :
+
+        NOTES    :
+    **/
 
     struct ev_loop *loop = ev_default_loop(0);
 
@@ -130,89 +137,6 @@ void start_server(char *db_filename){
         log_event(EVENT_ERROR, "no tables in database");
         stop_server();
     }
-
-
-    /*
-    add_db_race(1, "Human", "tall");
-    add_db_race(2, "Dwarf", "short");
-    add_db_race(3, "Elf", "short");
-    add_db_race(4, "Gnome", "short");
-    add_db_race(5, "Orchan", "tall");
-    add_db_race(6, "Dragoni", "tall");
-    exit(1);
-    */
-
-    /*
-    add_db_gender(1, "Male");
-    add_db_gender(2, "Female");
-    exit(1);
-    */
-
-    /*
-    add_db_char_type(0, 1, 2);
-    add_db_char_type(1, 1, 1);
-    add_db_char_type(2, 3, 2);
-    add_db_char_type(3, 3, 1);
-    add_db_char_type(4, 2, 2);
-    add_db_char_type(5, 2, 1);
-    add_db_char_type(37, 4, 2);
-    add_db_char_type(38, 4, 1);
-    add_db_char_type(39, 5, 2);
-    add_db_char_type(40, 5, 1);
-    add_db_char_type(41, 6, 2);
-    add_db_char_type(42, 6, 1);
-    exit(1);
-    */
-    /*
-    int j=0, k=0, l=0;
-    float attribute_value;
-
-    for(i=1; i<=6; i++){
-
-        j++;
-        add_db_attribute(j, "day vision", i, ATTR_DAY_VISION);
-
-        attribute_value=10.0f;
-
-        for(k=1; k<=50; k++){
-
-            add_db_attribute_value (l, j, ATTR_DAY_VISION, k, attribute_value);
-            attribute_value=attribute_value + 0.20f;
-            l++;
-        }
-    }
-
-    for(i=1; i<=6; i++){
-
-        j++;
-        add_db_attribute(j, "night vision", i, ATTR_NIGHT_VISION);
-
-        attribute_value=10.0f;
-
-        for(k=1; k<=50; k++){
-
-            add_db_attribute_value (l, j, ATTR_NIGHT_VISION, k, attribute_value);
-            attribute_value=attribute_value + 0.20f;
-            l++;
-        }
-    }
-
-    for(i=1; i<=6; i++){
-
-        j++;
-        add_db_attribute(j, "carry capacity", i, ATTR_CARRY_CAPACITY);
-
-        attribute_value=100.0f;
-
-        for(k=1; k<=50; k++){
-
-            add_db_attribute_value (l, j, ATTR_CARRY_CAPACITY, k, attribute_value);
-            attribute_value=attribute_value + 18.0f;
-            l++;
-        }
-    }
-    exit(1);
-    */
 
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
@@ -347,6 +271,15 @@ void start_server(char *db_filename){
 
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents) {
 
+    /** RESULT   : handles socket accept event
+
+        RETURNS  : void
+
+        PURPOSE  : handles new client connections
+
+        NOTES    :
+    **/
+
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
     int client_sd;
@@ -386,7 +319,6 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
         return;
     }
 
-
     #if DEBUG_MAIN==1
     printf("client [%i] connected\n", client_sd);
     #endif
@@ -414,6 +346,15 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
 
 void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int revents) {
 
+    /** RESULT   : handles socket read event
+
+        RETURNS  : void
+
+        PURPOSE  : handles existing client connections
+
+        NOTES    :
+    **/
+
     unsigned char buffer[1024];
     unsigned char packet[1024];
     ssize_t read;
@@ -425,9 +366,8 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
     }
 
     //read = recv(watcher->fd, buffer, 1024, 0); // read stream to buffer
-
-    //wrapping recv in this macro prevents connection reset by peer errors
     read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 1024, 0));
+    //wrapping recv in this macro prevents connection reset by peer errors
     if (read ==-1) {
 
         int errnum=errno;
@@ -510,6 +450,15 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 
 void close_connection_slot(int connection){
 
+    /** RESULT   : closes a client connection
+
+        RETURNS  : void
+
+        PURPOSE  : used in socket_accept_callback and socket_read_callback
+
+        NOTES    :
+    **/
+
     if(clients.client[connection].client_status==LOGGED_IN){
 
         //broadcast to local
@@ -520,7 +469,7 @@ void close_connection_slot(int connection){
 
         char sql[MAX_SQL_LEN]="";
         snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[connection].time_of_last_minute, clients.client[connection].character_id);
-        db_push_buffer(sql, 0, DB_BUFFER_PROCESS_SQL, NULL);
+        db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
     }
 
     close(connection);
@@ -528,6 +477,15 @@ void close_connection_slot(int connection){
 
 
 void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
+
+    /**     RESULT   : handles timeout event
+
+            RETURNS  : void
+
+            PURPOSE  : handles game time updates
+
+            NOTES    :
+    **/
 
     (void)(timer);//removes unused parameter warning
     (void)(loop);
@@ -544,6 +502,15 @@ void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
 
 
 void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
+
+    /** RESULT   : handles timeout event
+
+        RETURNS  : void
+
+        PURPOSE  : handles fixed interval processing tasks
+
+        NOTES    :
+    **/
 
     (void)(timer);//removes unused parameter warning
     (void)(loop);
@@ -596,7 +563,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                     //update database with time char was last in game
                     char sql[MAX_SQL_LEN]="";
                     snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[i].time_of_last_minute, clients.client[i].character_id);
-                    db_push_buffer(sql, i, DB_BUFFER_PROCESS_SQL, NULL);
+                    db_push_buffer(sql, i, IDLE_BUFFER_PROCESS_SQL, NULL);
                 }
 
                 //process any char movements
@@ -608,6 +575,15 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
 
 void idle_cb (struct ev_loop *loop, struct ev_idle *watcher, int revents){
+
+    /** RESULT   : handles server idle event
+
+        RETURNS  : void
+
+        PURPOSE  : enables idle event to be used for low priority processing tasks
+
+        NOTES    :
+    **/
 
     (void)(loop);
     (void)(watcher);
@@ -623,6 +599,15 @@ void idle_cb (struct ev_loop *loop, struct ev_idle *watcher, int revents){
 
 
 int main(int argc, char *argv[]){
+
+    /** RESULT   : handles command line arguments
+
+        RETURNS  : dummy
+
+        PURPOSE  : allows program to be started in different modes
+
+        NOTES    :
+    **/
 
   	printf("UnoffLandz Server - version %s\n\n", VERSION);
 
@@ -668,7 +653,7 @@ int main(int argc, char *argv[]){
                 open_database(argv[2]);
             }else open_database(DATABASE_FILE_NAME);
 
-            create_new_database();
+            create_default_database();
         }
         else { //unknown command line option
 

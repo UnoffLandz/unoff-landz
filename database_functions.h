@@ -46,6 +46,8 @@ sqlite3 *db; // database handle which is set when function open_database is call
     RETURNS : void
 
     PURPOSE : Reduces the need to open and close the database each time a query is used
+
+    NOTES   :
 **/
 void open_database(char *database_name);
 
@@ -55,17 +57,11 @@ void open_database(char *database_name);
     RETURNS : The number of tables in the database
 
     PURPOSE : To determine if a database table structure needs to be created.
+
+    NOTES   :
 **/
 int database_table_count();
 
-
-/** RESULT  : creates a new database table structure and populates it with data
-
-    RETURNS : void
-
-    PURPOSE : To create a new database
-**/
-void create_new_database();
 
 /** RESULT  : creates a database table
 
@@ -73,6 +69,8 @@ void create_new_database();
 
     PURPOSE  : used by function create_new_database. Made public so that individual tables can be
                added from main.c during development
+
+    NOTES    :
 **/
 void create_database_table(char *sql);
 
@@ -81,8 +79,21 @@ void create_database_table(char *sql);
 
     RETURNS  : void
 
-    PURPOSE  : used by function db_buffer to execute sql to update or add to database.
+    PURPOSE  : used by function idle_buffer to execute sql to update or add to database.
+
+    NOTES    :
 **/
 void process_sql(char *sql_str);
+
+
+/** RESULT   : creates the default database
+
+    RETURNS  : void
+
+    PURPOSE  :
+
+    NOTES    :
+**/
+void create_default_database();
 
 #endif // DATABASE_FUNCTIONS_H_INCLUDED
