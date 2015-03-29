@@ -184,6 +184,8 @@ void create_default_database(){
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");
 
+    add_db_channel(1, 0, CHAN_PERMANENT, "", "Main Channel", "A channel for chatting");
+
     add_db_race(1, "Human", "tall");
     add_db_race(2, "Dwarf", "short");
     add_db_race(3, "Elf", "short");
@@ -254,4 +256,6 @@ void create_default_database(){
             l++;
         }
     }
+
+
 }

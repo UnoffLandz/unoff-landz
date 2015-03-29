@@ -55,13 +55,12 @@ int get_db_char_data(char *char_name){
         strcpy(character.char_name, (char*) sqlite3_column_text(stmt, 1));
         strcpy(character.password, (char*) sqlite3_column_text(stmt,2));
         character.char_status=sqlite3_column_int(stmt, 3);
-
-
-        character.active_chan=MAX_ACTIVE_CHANNELS-sqlite3_column_int(stmt, 4);
+        character.active_chan=sqlite3_column_int(stmt, 4);
 
         character.chan[0]=sqlite3_column_int(stmt, 5);
         character.chan[1]=sqlite3_column_int(stmt, 6);
         character.chan[2]=sqlite3_column_int(stmt, 7);
+
         character.gm_permission=sqlite3_column_int(stmt, 8);
         character.ig_permission=sqlite3_column_int(stmt, 9);
         character.map_id=sqlite3_column_int(stmt, 10);

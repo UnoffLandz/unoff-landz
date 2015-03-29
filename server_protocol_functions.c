@@ -248,14 +248,14 @@ void send_here_your_inventory(int connection){
 void send_get_active_channels(int connection){
 
     /** public function - see header */
-
+/*
     unsigned char packet[1024];
     int i=0, j=0;
 
     packet[0]=GET_ACTIVE_CHANNELS;
     packet[1]=14;
     packet[2]=0;
-    packet[3]=MAX_ACTIVE_CHANNELS-clients.client[connection].active_chan;
+    packet[3]=clients.client[connection].active_chan;
 
     for(i=0; i<MAX_CHAN_SLOTS; i++){
 
@@ -269,6 +269,37 @@ void send_get_active_channels(int connection){
 
     //send(connection, packet, 16, 0);
     send_packet(connection, packet, 16);
+*/
+
+    typedef struct {
+
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        unsigned char active_channel;
+        int channel_slot[MAX_CHAN_SLOTS];
+    }packet_data;
+
+    int packet_length=sizeof(packet_data)-1;
+
+    union {
+
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
+
+    packet.in.protocol=GET_ACTIVE_CHANNELS;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+    packet.in.active_channel=clients.client[connection].active_chan;
+
+    int i=0;
+    for(i=0; i<MAX_CHAN_SLOTS; i++){
+
+        packet.in.channel_slot[i]=clients.client[connection].chan[i];
+    }
+
+    send_packet(connection, packet.out, packet_length);
 }
 
 void send_here_your_stats(int connection){

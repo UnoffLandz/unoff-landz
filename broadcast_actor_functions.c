@@ -18,7 +18,6 @@
 *******************************************************************************************************************/
 
 #include <stdio.h> //support for printf
-//#include <sys/socket.h> //support for send function
 
 #include "clients.h"
 #include "maps.h"
@@ -302,19 +301,20 @@ void broadcast_channel_chat(int chan, int connection, char *text_in){
                 //filter out players who are not in this chan
                 if(is_player_in_chan(i,chan)!=NOT_FOUND){
 
-                    int active_chan=clients.client[i].chan[clients.client[i].active_chan-1];
+                    int active_chan_slot=clients.client[i].active_chan;
+                    int active_chan=clients.client[i].chan[active_chan_slot-1];
 
                     //show non-active chan in darker grey
                     if(active_chan==chan){
 
-                        sprintf(text_out, "%c[%s@%i]: %s", c_grey1+127, clients.client[connection].char_name, chan, text_in);
+                        sprintf(text_out, "%c[%s]: %s", c_grey1+127, clients.client[connection].char_name, text_in);
                     }
                     else {
 
-                        sprintf(text_out, "%c[%s@%i]: %s", c_grey2+127, clients.client[connection].char_name, chan, text_in);
+                        sprintf(text_out, "%c[%s]: %s", c_grey2+127, clients.client[connection].char_name, text_in);
                     }
 
-                    send_raw_text(i, CHAT_SERVER, text_out);
+                    send_raw_text(i, CHAT_CHANNEL0 + active_chan_slot, text_out);
                 }
             }
         }
@@ -334,22 +334,12 @@ void broadcast_channel_event(int chan, int connection, char *text_in){
             //don't echo to self
             if(connection!=i){
 
-                //filter out clients who are not in chan
-                int in_chan=FALSE;
-                int j=0;
+                //filter out players who are not in this chan
+                if(is_player_in_chan(i,chan)!=NOT_FOUND){
 
-                for(j=0; j<MAX_CHAN_SLOTS; j++){
+                    int active_chan_slot=clients.client[i].active_chan;
 
-                    if(clients.client[i].chan[j]==chan){
-
-                        in_chan=TRUE;
-                        break;
-                    }
-                }
-
-                if(in_chan==TRUE){
-
-                    send_raw_text(i, CHAT_SERVER, text_in);
+                    send_raw_text(i, CHAT_CHANNEL0 + active_chan_slot, text_in);
                 }
             }
         }

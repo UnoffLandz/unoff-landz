@@ -22,7 +22,6 @@
 
 #define MAX_CHANNELS 10
 #define MAX_CHAN_SLOTS 4
-#define MAX_ACTIVE_CHANNELS 33
 #define LOCAL_CHAT_RANGE 10
 
 struct channel_node_type{
@@ -41,7 +40,6 @@ enum { //return values from process_guild_chat
     GM_NO_PERMISSION,
     GM_SENT
 };
-
 
 enum { //return values for join_channel
     CHANNEL_JOINED,
@@ -112,8 +110,5 @@ void send_pm(int connection, char *receiver_name, char *message);
     NOTES   :
 **/
 void list_characters_in_chan(int connection, int chan);
-
-
-
 
 #endif // CHAT_H_INCLUDED

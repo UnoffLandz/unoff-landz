@@ -23,17 +23,17 @@
 #define MOTD_FILE "motd.msg"
 #define SERVER_WELCOME_MSG "\nWELCOME TO THE UNOFF SERVER\n--------------------------------------------------------------------------------------------"
 
+#define CHAT_CHANNEL_START 5
+
 enum { // channel types
-    CHAT_LOCAL,
-    CHAT_PERSONAL,
-    CHAT_GM,
-    CHAT_SERVER,
-    CHAT_MOD,
-    CHAT_CHANNEL1,
-    CHAT_CHANNEL2,
-    CHAT_CHANNEL3,
-    CHAT_MODPM,
-    CHAT_SERVER_PM,
+    CHAT_LOCAL     =0,
+    CHAT_PERSONAL  =1,
+    CHAT_GM        =2,
+    CHAT_SERVER    =3,
+    CHAT_MOD       =4,
+    CHAT_MODPM     =8,
+    CHAT_SERVER_PM =9,
+    CHAT_CHANNEL0  =31,
 };
 
 /** RESULT  : sends the motd header to connection

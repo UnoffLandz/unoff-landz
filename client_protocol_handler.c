@@ -115,14 +115,19 @@ void process_packet(int connection, unsigned char *packet){
                 return;
             }
 
-            // get the chan number
-            int active_chan_slot=clients.client[connection].active_chan-1;
-            int chan=clients.client[connection].chan[active_chan_slot];
-            printf("active chan slot %i  chan %i\n", active_chan_slot, chan);
+            //chat channels run from 32 (channel 1) to 63 (channel 32)
+            int active_chan_slot=clients.client[connection].active_chan - CHAT_CHANNEL0;
+
+            //channel slots run from zero. Hence, we need to subtract 1 from the active_chan slot value
+            int chan=clients.client[connection].chan[active_chan_slot-1];
+
+            #if DEBUG_PACKET==1
+            printf("active chan slot %i  chan %i\n", active_chan_slot-1, chan);
+            #endif
 
             //broadcast to self
-            sprintf(text_out, "%c[%s @ %i]: %s", c_grey1+127, clients.client[connection].char_name, chan, text);
-            send_raw_text(connection, CHAT_SERVER, text_out);
+            sprintf(text_out, "%c[%s]: %s", c_grey1+127, clients.client[connection].char_name, text);
+            send_raw_text(connection, CHAT_CHANNEL0 + active_chan_slot, text_out);
 
             //broadcast to others
             broadcast_channel_chat(chan, connection, text);
@@ -610,7 +615,7 @@ void process_packet(int connection, unsigned char *packet){
         #endif
 
         //set the active channel
-        clients.client[connection].active_chan=MAX_ACTIVE_CHANNELS-data[0];
+        clients.client[connection].active_chan=data[0];
 
         //update the database
         char sql[MAX_SQL_LEN]="";
