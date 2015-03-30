@@ -15,7 +15,7 @@
 
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************************************************************/
+******************************************************************************************************************/
 
 #ifndef CHAT_H_INCLUDED
 #define CHAT_H_INCLUDED
