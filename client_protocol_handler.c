@@ -18,7 +18,6 @@
 *******************************************************************************************************************/
 
 #include <stdio.h>  //support for sprintf
-#include <ev.h>     // evlib event library
 #include <string.h> //support for memcpy strlen strcpy
 
 #include "client_protocol.h"
@@ -34,7 +33,6 @@
 #include "character_race.h"
 #include "db_character_tbl.h"
 #include "game_data.h"
-#include "chat_channels.h"
 #include "log_in.h"
 #include "maps.h"
 #include "character_movement.h"
@@ -45,7 +43,6 @@
 #include "server_start_stop.h"
 #include "database_functions.h"
 #include "idle_buffer.h"
-//#include "test.h"
 
 #define DEBUG_PACKET 1//set debug mode
 
@@ -57,14 +54,14 @@ void process_packet(int connection, unsigned char *packet){
     char text[1024]="";
     char text_out[1024]="";
 
-    int protocol=packet[0], lsb=packet[1], msb=packet[2];
+    int protocol=packet[0];
     //int map_object_id=0;
     //int use_with_position=0;
     //int image_id=0;
     //int amount=0;
     //int move_to_slot=0, move_from_slot=0, bag_id=0, bag_slot=0, inventory_slot=0;
 
-    int data_length=lsb+(msb*256)-1;
+    int data_length=packet[1]+(packet[2]*256)-1;
 
     //packet logging
     int i=0;
@@ -74,6 +71,19 @@ void process_packet(int connection, unsigned char *packet){
     }
 
     log_event(EVENT_PACKET,"Receive from [%i]%s", connection, text_out);
+
+
+
+    struct{
+        unsigned char protocol;
+        unsigned char data_length[2];//dummy
+        unsigned char data[data_length-1];
+    }test;
+
+    memcpy(&test, packet, data_length+2);
+
+
+
 
     //extract data from packet
     for(i=0; i<data_length; i++){
@@ -201,7 +211,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==SEND_PM) {
 
         #if DEBUG_PACKET==1
-        printf("SEND_PM %i %i %s\n", lsb, msb, text);
+        printf("SEND_PM %i %i %s\n", packet[1], packet[2], text);
         #endif
 
         //extract target name and message from pm packet
@@ -300,7 +310,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==SEND_ME_MY_ACTORS){
 
         #if DEBUG_PACKET==1
-        printf("SEND_ME_MY_ACTORS %i %i \n", lsb, msb);
+        printf("SEND_ME_MY_ACTORS %i %i\n", packet[1], packet[2]);
         #endif
 
         log_event(EVENT_ERROR, "Protocol SEND_ME_MY_ACTORS by [%s]", clients.client[connection].char_name);
@@ -310,7 +320,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==SEND_OPENING_SCREEN){
 
         #if DEBUG_PACKET==1
-        printf("SEND OPENING SCREEN %i %i \n", lsb, msb);
+        printf("SEND OPENING SCREEN %i %i \n", packet[1], packet[2]);
         #endif
 
         log_event(EVENT_SESSION, "Protocol SEND_OPENING_SCREEN by [%s]...", clients.client[connection].char_name);
@@ -320,7 +330,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==SEND_VERSION){
 
         #if DEBUG_PACKET==1
-        printf("SEND_VERSION %i %i\n", lsb, msb);
+        printf("SEND_VERSION %i %i\n", packet[1], packet[2]);
         #endif
 
         int first_digit=Uint16_to_dec(data[0], data[1]);
@@ -335,16 +345,6 @@ void process_packet(int connection, unsigned char *packet){
         int host4=(int)data[11];
         int port=((int)data[12] *256)+(int)data[13];
 
-        #if DEBUG_PACKET==1
-        printf("maj [%i] min [%i] version [%i.%i.%i.%i]\n",
-               first_digit, second_digit,
-               major, minor,
-               release,
-               patch);
-
-        printf("server host [%i.%i.%i.%i] port [%i]\n", host1, host2, host3, host4, port);
-        #endif
-
         log_event(EVENT_SESSION, "Protocol SEND_VERSION by [%s]...", clients.client[connection].char_name);
         log_text(EVENT_SESSION, "first digit [%i] second digit [%i]", first_digit, second_digit);
         log_text(EVENT_SESSION, "major [%i] minor [%i] release [%i] patch [%i]", major, minor, release, patch);
@@ -355,7 +355,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==HEARTBEAT){
 
         #if DEBUG_PACKET==1
-        printf("HEARTBEAT %i %i \n", lsb, msb);
+        printf("HEARTBEAT %i %i \n", packet[1], packet[2]);
         #endif
 
         //no need to do anything on this message as any data receipt updates the heartbeat
@@ -365,7 +365,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==USE_OBJECT){
 
         #if DEBUG_PACKET==1
-        printf("USE_OBJECT %i %i \n", lsb, msb);
+        printf("USE_OBJECT %i %i \n", packet[1], packet[2]);
         #endif
 
 /*
@@ -400,7 +400,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==LOOK_AT_INVENTORY_ITEM){
 
         #if DEBUG_PACKET==1
-        printf("LOOK_AT_INVENTORY_ITEM %i %i \n", lsb, msb);
+        printf("LOOK_AT_INVENTORY_ITEM %i %i \n", packet[1], packet[2]);
         #endif
 
 /*
@@ -424,7 +424,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==MOVE_INVENTORY_ITEM){
 
         #if DEBUG_PACKET==1
-        printf("MOVE_INVENTORY_ITEM %i %i \n", lsb, msb);
+        printf("MOVE_INVENTORY_ITEM %i %i \n", packet[1], packet[2]);
         #endif
 
 /*
@@ -465,7 +465,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==HARVEST){
 
         #if DEBUG_PACKET==1
-        printf("HARVEST %i %i \n", lsb, msb);
+        printf("HARVEST %i %i \n", packet[1], packet[2]);
         #endif
 
 /*
@@ -487,7 +487,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==DROP_ITEM){
 
         #if DEBUG_PACKET==1
-        printf("DROP_ITEM %i %i \n", lsb, msb);
+        printf("DROP_ITEM %i %i \n", packet[1], packet[2]);
         #endif
 
 /*
@@ -511,7 +511,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==PICK_UP_ITEM){
 
         #if DEBUG_PACKET==1
-        printf("PICK_UP_ITEM %i %i \n", lsb, msb);
+        printf("PICK_UP_ITEM %i %i \n", packet[1], packet[2]);
         #endif
 
 /*
@@ -534,7 +534,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==INSPECT_BAG){
 
         #if DEBUG_PACKET==1
-        printf("INSPECT_BAG %i %i \n", lsb, msb);
+        printf("INSPECT_BAG %i %i \n", packet[1], packet[2]);
         #endif
 
 /*
@@ -567,7 +567,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==LOOK_AT_MAP_OBJECT){
 
         #if DEBUG_PACKET==1
-        printf("LOOK_AT_MAP_OBJECT %i %i \n", lsb, msb);
+        printf("LOOK_AT_MAP_OBJECT %i %i \n", packet[1], packet[2]);
         #endif
 
 /*
@@ -601,7 +601,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==PING_RESPONSE){
 
         #if DEBUG_PACKET==1
-        printf("PING_RESPONSE %i %i \n", lsb, msb);
+        printf("PING_RESPONSE %i %i \n", packet[1], packet[2]);
         #endif
 
         log_event(EVENT_SESSION, "Protocol PING_RESPONSE by [%s]...", clients.client[connection].char_name);
@@ -629,7 +629,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==LOG_IN){
 
         #if DEBUG_PACKET==q
-        printf("LOG_IN connection [%i] lsb [%i] msb [%i]\n", connection, lsb, msb);
+        printf("LOG_IN connection [%i] lsb [%i] msb [%i]\n", connection, packet[1], packet[2]);
         #endif
 
         //place log event before process so the log entries from the process_log_in function follow
@@ -644,7 +644,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==CREATE_CHAR){
 
         #if DEBUG_PACKET==1
-        printf("CREATE_CHAR connection [%i] lsb [%i] msb [%i]\n", connection, lsb, msb);
+        printf("CREATE_CHAR connection [%i] lsb [%i] msb [%i]\n", connection, packet[1], packet[2]);
         #endif
 
         //place log event before process so the following are in a logical order
@@ -738,7 +738,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==GET_DATE){
 
         #if DEBUG_PACKET==1
-        printf("GET DATE %i %i \n", lsb, msb);
+        printf("GET DATE %i %i \n", packet[1], packet[2]);
         #endif
 
         log_event(EVENT_SESSION, "Protocol GET_DATE by [%s]...", clients.client[connection].char_name);
@@ -748,8 +748,11 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==GET_TIME){
 
         #if DEBUG_PACKET==1
-        printf("GET TIME %i %i\n", lsb, msb);
+        printf("GET TIME %i %i\n", packet[1], packet[2]);
         #endif
+
+        sprintf(text_out, "Time %02i:%02i",  game_data.game_minutes / 60, game_data.game_minutes % 60);
+        send_raw_text(connection, CHAT_SERVER, text_out);
 
         log_event(EVENT_SESSION, "Protocol GET_TIME by [%s]...", clients.client[connection].char_name);
     }
@@ -758,7 +761,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==SERVER_STATS){
 
         #if DEBUG_PACKET==1
-        printf("SERVER_STATS %i %i \n", lsb, msb);
+        printf("SERVER_STATS %i %i \n", packet[1], packet[2]);
         #endif
 
         send_motd_header(connection);
@@ -770,7 +773,7 @@ void process_packet(int connection, unsigned char *packet){
     else {
 
         #if DEBUG_PACKET==1
-        printf("UNKNOWN PROTOCOL %i %i \n", lsb, msb);
+        printf("UNKNOWN PROTOCOL %i %i \n", packet[1], packet[2]);
         #endif
 
         // catch unknown protocols
