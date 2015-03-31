@@ -365,16 +365,35 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         stop_server();
     }
 
-    //read = recv(watcher->fd, buffer, 1024, 0); // read stream to buffer
-    read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 1024, 0));
+    read = recv(watcher->fd, buffer, 512, 0); // read stream to buffer
+
     //wrapping recv in this macro prevents connection reset by peer errors
-    if (read ==-1) {
+    //read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
+
+    if (read <0) {
 
         int errnum=errno;
 
         log_event(EVENT_ERROR, "read failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]", watcher->fd, errnum, strerror(errnum));
-        stop_server();
+
+        #if DEBUG_MAIN==1
+        printf("read failed for client [%i] with error [%i] [%s]\n", watcher->fd, errnum, strerror(errnum));
+        #endif
+
+        log_event(EVENT_SESSION, "closing client [%i] following read error", watcher->fd);
+
+        close_connection_slot(watcher->fd);
+
+        ev_io_stop(loop, libevlist[watcher->fd]);
+        free(libevlist[watcher->fd]);
+        libevlist[watcher->fd] = NULL;
+
+        //zero the struct
+        bzero(&clients.client[watcher->fd], sizeof(clients.client[watcher->fd]));
+        //memset(&clients.client[connection], '\0', sizeof(clients.client));
+
+        return;
     }
 
     if (read == 0) {
@@ -394,7 +413,6 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
             //zero the struct
             bzero(&clients.client[watcher->fd], sizeof(clients.client[watcher->fd]));
             //memset(&clients.client[connection], '\0', sizeof(clients.client));
-
         }
         return;
     }
