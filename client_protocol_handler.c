@@ -44,7 +44,7 @@
 #include "database_functions.h"
 #include "idle_buffer.h"
 
-#define DEBUG_PACKET 1//set debug mode
+#define DEBUG_PACKET 0//set debug mode
 
 void process_packet(int connection, unsigned char *packet){
 
@@ -71,8 +71,6 @@ void process_packet(int connection, unsigned char *packet){
     }
 
     log_event(EVENT_PACKET,"Receive from [%i]%s", connection, text_out);
-
-
 
     struct{
         unsigned char protocol;
@@ -303,7 +301,7 @@ void process_packet(int connection, unsigned char *packet){
         sprintf(text_out, "You see %s", clients.client[other_connection].char_name);
         send_raw_text(connection, CHAT_SERVER, text_out);
 
-        log_event(EVENT_ERROR, "Protocol GET_PLAYER_INFO by [%s] (%s)", clients.client[connection].char_name, clients.client[other_connection].char_name);
+        log_event(EVENT_SESSION, "Protocol GET_PLAYER_INFO by [%s] (%s)", clients.client[connection].char_name, clients.client[other_connection].char_name);
    }
 /***************************************************************************************************/
 
