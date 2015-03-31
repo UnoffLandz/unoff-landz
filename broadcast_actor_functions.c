@@ -107,11 +107,18 @@ void broadcast_remove_actor_packet(int connection) {
                     int receiver_char_visual_range=get_char_visual_range(i);
                     int receiver_char_tile=clients.client[i].map_tile;
 
+                    #if DEBUG_BROADCAST==1
+                    printf("remove actor packet connection %i proximity %i visual range %i\n", i, receiver_char_visual_range, get_proximity(char_tile, receiver_char_tile, map_axis));
+                    #endif
+
                     //restrict to those chars that can see the broadcasting char
                     if(get_proximity(char_tile, receiver_char_tile, map_axis) < receiver_char_visual_range){
 
-                        //send(i, packet, packet_length, 0);
-                        send_packet(connection, packet, packet_length);
+                        #if DEBUG_BROADCAST==1
+                        printf("connection %i remove actor packet sent\n", i);
+                        #endif
+
+                        send_packet(i, packet, packet_length);
                     }
                 }
             }
