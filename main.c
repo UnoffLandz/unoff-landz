@@ -365,10 +365,10 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         stop_server();
     }
 
-    read = recv(watcher->fd, buffer, 512, 0); // read stream to buffer
+    //read = recv(watcher->fd, buffer, 512, 0); // read stream to buffer
 
     //wrapping recv in this macro prevents connection reset by peer errors
-    //read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
+    read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
 
     if (read <0) {
 
