@@ -240,9 +240,9 @@ void process_packet(int connection, unsigned char *packet){
         //ADD_ENHANCED_ACTOR packet. When using the ADD_ACTOR packet, command 13=sit down and command 14=stand up. When
         //using the ADD_ENHANCED_ACTOR packet, command 12=sit, command 13=stand and command 14=stand idle.
 
-        switch(clients.client[connection].frame){
+        switch(data[0]){
 
-            case frame_sit:
+            case 0://stand
 
                 #if DEBUG_PACKET==1
                 printf("Stand\n");
@@ -260,7 +260,7 @@ void process_packet(int connection, unsigned char *packet){
                 log_event(EVENT_SESSION, "Protocol SIT_DOWN by [%s] (stand)", clients.client[connection].char_name);
                 break;
 
-            case frame_stand:
+            case 1://sit
 
                 #if DEBUG_PACKET==1
                 printf("Sit\n");
@@ -280,11 +280,8 @@ void process_packet(int connection, unsigned char *packet){
 
             default:
 
-                #if DEBUG_PACKET==1
-                printf("Unknown sit stand command [%i]\n", data[0]);
-                #endif
-
-                log_event(EVENT_ERROR, "Protocol SIT_DOWN by [%s] (unknown)", clients.client[connection].char_name);
+                log_event(EVENT_ERROR, "Protocol SIT_DOWN by [%s] unknown frame [%i])", clients.client[connection].char_name, clients.client[connection].frame);
+                stop_server();
                 break;
         }
      }
@@ -775,6 +772,6 @@ void process_packet(int connection, unsigned char *packet){
         #endif
 
         // catch unknown protocols
-        log_event(EVENT_ERROR, "unknown protocol [%i]", protocol);
+        log_event(EVENT_SESSION, "unknown protocol [%i]", protocol);
     }
 }
