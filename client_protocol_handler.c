@@ -50,17 +50,8 @@ void process_packet(int connection, unsigned char *packet){
 
     /** public function - see header */
 
-    unsigned char data[1024];
-    char text[1024]="";
     char text_out[1024]="";
-
     int protocol=packet[0];
-    //int map_object_id=0;
-    //int use_with_position=0;
-    //int image_id=0;
-    //int amount=0;
-    //int move_to_slot=0, move_from_slot=0, bag_id=0, bag_slot=0, inventory_slot=0;
-
     int data_length=packet[1]+(packet[2]*256)-1;
 
     //packet logging
@@ -72,34 +63,12 @@ void process_packet(int connection, unsigned char *packet){
 
     log_event(EVENT_PACKET,"Receive from [%i]%s", connection, text_out);
 
-    struct{
-        unsigned char protocol;
-        unsigned char data_length[2];//dummy
-        unsigned char data[data_length-1];
-    }test;
-
-    memcpy(&test, packet, data_length+2);
-
-
-
-
-    //extract data from packet
-    for(i=0; i<data_length; i++){
-
-        data[i]=packet[i+3]; // unsigned char array for bit manipulation
-        text[i]=packet[i+3]; // signed char array for text manipulation
-    }
-
-    //remove colour codes from text
-    //filter_str_range(text, MIN_PRINTABLE_ASCII, MAX_PRINTABLE_ASCII);
-
-    /*when the client connects to the server, it will send a SIT_DOWN message if there is a delay in logging in which
-    unless trapped, results in a floating point error exception that causes the server to crash.*/
-    //if(clients.client[connection].client_status==CONNECTED && protocol ==SIT_DOWN) return;
-
 /***************************************************************************************************/
 
     if(protocol==RAW_TEXT) {
+
+        char text[1024]="";
+        memcpy(text, packet+3, data_length);
 
         #if DEBUG_PACKET==1
         printf("RAW_TEXT [%s]\n", text);
@@ -186,6 +155,9 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==MOVE_TO) {
 
+        unsigned char data[1024]={0};
+        memcpy(data, packet+3, data_length);
+
         #if DEBUG_PACKET==1
         printf("MOVE_TO %i %s\n", connection, clients.client[connection].char_name);
         #endif
@@ -208,6 +180,9 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==SEND_PM) {
 
+        char text[1024]="";
+        memcpy(text, packet+3, data_length);
+
         #if DEBUG_PACKET==1
         printf("SEND_PM %i %i %s\n", packet[1], packet[2], text);
         #endif
@@ -228,6 +203,9 @@ void process_packet(int connection, unsigned char *packet){
 /***************************************************************************************************/
 
     else if(protocol==SIT_DOWN){
+
+        unsigned char data[1024]={0};
+        memcpy(data, packet+3, data_length);
 
         char sql[MAX_SQL_LEN]="";
 
@@ -289,6 +267,9 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==GET_PLAYER_INFO){
 
+        unsigned char data[1024]={0};
+        memcpy(data, packet+3, data_length);
+
         int other_connection=Uint32_to_dec(data[0], data[1], data[2], data[3]);
 
         #if DEBUG_PACKET==1
@@ -323,6 +304,9 @@ void process_packet(int connection, unsigned char *packet){
 /***************************************************************************************************/
 
     else if(protocol==SEND_VERSION){
+
+        unsigned char data[1024]={0};
+        memcpy(data, packet+3, data_length);
 
         #if DEBUG_PACKET==1
         printf("SEND_VERSION %i %i\n", packet[1], packet[2]);
@@ -605,6 +589,9 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==SET_ACTIVE_CHANNEL){
 
+        unsigned char data[1024]={0};
+        memcpy(data, packet+3, data_length);
+
         #if DEBUG_PACKET==1
         printf("SET_ACTIVE_CHANNEL [%s] [%i]\n", clients.client[connection].char_name, data[0]);
         #endif
@@ -623,7 +610,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==LOG_IN){
 
-        #if DEBUG_PACKET==q
+        #if DEBUG_PACKET==1
         printf("LOG_IN connection [%i] lsb [%i] msb [%i]\n", connection, packet[1], packet[2]);
         #endif
 
@@ -645,88 +632,7 @@ void process_packet(int connection, unsigned char *packet){
         //place log event before process so the following are in a logical order
         log_event(EVENT_SESSION, "Protocol CREATE_CHAR by [%i]...", connection);
 
-        //detect and handle malformed packet
-        if(count_str_island(text)!=2){
-
-            send_create_char_not_ok(connection);
-            log_event(EVENT_ERROR, "malformed login attempt for new char");
-            stop_server();
-        }
-
         db_push_buffer("", connection, IDLE_BUFFER_PROCESS_CHECK_NEWCHAR, packet);
-
-/*
-        //get the char name and password from the packet
-        char char_name[80]="";
-        char password[80]="";
-        get_name_and_password_from_newchar_packet(packet, char_name, password);
-
-        //check if char name is already used
-        if(get_db_char_data(char_name)==FOUND){
-
-            //sends message to create char window on client
-            sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
-            send_create_char_not_ok(connection);
-            log_event(EVENT_SESSION, "Attempt to create new char with existing char name [%s]\n", char_name);
-
-            return;
-        }
-
-        clients.client[connection].client_status=LOGGED_IN;
-
-        //extract data from the create_char packet
-        strcpy(character.char_name, char_name);
-        strcpy(character.password, password);
-        i=strlen(char_name)+strlen(password)+2;
-
-        character.skin_type=data[i++];
-        character.hair_type=data[i++];
-        character.shirt_type=data[i++];
-        character.pants_type=data[i++];
-        character.boots_type=data[i++];
-        character.char_type=data[i++];
-        character.head_type=data[i++];
-
-        //set the char to stand
-        character.frame=frame_stand;
-
-        //set the char creation time
-        character.char_created=time(NULL);
-
-        //set starting channel
-        character.active_chan=1;
-        character.chan[0]=1; //nub chan
-
-        //set starting map and tile
-        character.map_id=game_data.beam_map_id;
-        character.map_tile=game_data.beam_map_tile;
-
-        //add character entry to database and get the record id
-        clients.client[connection].character_id=add_db_char_data(character);
-
-        //add initial items to inventory
-        //int slot=0;
-        //add_item_to_inventory(connection, 612, 1, &slot);
-        //add_item_to_inventory(connection, 613, 1, &slot);
-        //add_item_to_inventory(connection, 216, 1, &slot);
-        //add_item_to_inventory(connection, 217, 1, &slot);
-
-        //update game data
-        race[character.char_type].char_count++;
-        game_data.char_count++;
-        strcpy(game_data.name_last_char_created, char_name);
-        game_data.date_last_char_created=character.char_created;
-
-        //notify client that character has been created
-        sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-        send_create_char_ok(connection);
-
-        //log character creation event
-        log_event(EVENT_NEW_CHAR, "[%s] password [%s]\n", char_name, password);
-*/
     }
 /***************************************************************************************************/
 
