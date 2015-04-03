@@ -29,6 +29,7 @@ struct game_data_type {
     time_t date_last_char_created;
     int char_count;
     int game_minutes;
+    int game_days;
     int beam_map_id;
     int beam_map_tile;
     int start_map_id;

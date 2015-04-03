@@ -514,8 +514,20 @@ void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
         stop_server();
     }
 
+    char sql[MAX_SQL_LEN]="";
     game_data.game_minutes++;
-    if(game_data.game_minutes>360)game_data.game_minutes=0;
+
+    if(game_data.game_minutes>360){
+
+        game_data.game_minutes=0;
+        game_data.game_days++;
+
+        snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_DAYS=%i WHERE GAME_DATA_ID=1", game_data.game_days);
+        db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+    }
+
+    snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_MINUTES=%i WHERE GAME_DATA_ID=1", game_data.game_minutes);
+    db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
  }
 
 

@@ -250,7 +250,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
 
     //save char map id and position
     char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i;", new_map_tile, new_map_id, clients.client[connection].character_id);
+    snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", new_map_tile, new_map_id, clients.client[connection].character_id);
     db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 }
 

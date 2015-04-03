@@ -25,7 +25,9 @@
         BEAM_MAP_ID         INT, \
         BEAM_MAP_TILE       INT, \
         START_MAP_ID        INT, \
-        START_MAP_TILE      INT \
+        START_MAP_TILE      INT, \
+        GAME_MINUTES        INT, \
+        GAME_DAYS           INT \
         )"
 
 

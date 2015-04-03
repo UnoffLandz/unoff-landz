@@ -61,6 +61,8 @@ int load_db_game_data(){
         game_data.beam_map_tile=sqlite3_column_int(stmt, 2);
         game_data.start_map_id=sqlite3_column_int(stmt, 3);
         game_data.start_map_tile=sqlite3_column_int(stmt, 4);
+        game_data.game_minutes=sqlite3_column_int(stmt, 5);
+        game_data.game_days=sqlite3_column_int(stmt, 6);
 
         i++;
     }
@@ -103,54 +105,3 @@ void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int 
 
     log_event(EVENT_SESSION, "Added game data to GAME_DATA_TABLE");
 }
-
-
-/*
-void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int start_map_tile){
-
-    int rc;
-    sqlite3_stmt *stmt;
-
-    //prepare the sql statement
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO GAME_DATA_TABLE("  \
-        "GAME_DATA_ID,"  \
-        "BEAM_MAP_ID,"   \
-        "BEAM_MAP_TILE,"  \
-        "START_MAP_ID,"   \
-        "START_MAP_TILE" \
-        ") VALUES(?, ?, ?, ?, ?)");
-
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    //bind the data to be added to the table
-    int id=1;
-    sqlite3_bind_int(stmt, 1, id);
-
-    sqlite3_bind_int(stmt, 2, beam_map_id);
-    sqlite3_bind_int(stmt, 3, beam_map_tile);
-    sqlite3_bind_int(stmt, 4, start_map_id);
-    sqlite3_bind_int(stmt, 5, start_map_tile);
-
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    printf("Game Data added successfully\n");
-
-    log_event(EVENT_SESSION, "Added game data to GAME_DATA_TABLE");
-}
-*/
