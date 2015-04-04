@@ -642,6 +642,9 @@ void process_packet(int connection, unsigned char *packet){
         printf("GET DATE %i %i \n", packet[1], packet[2]);
         #endif
 
+        sprintf(text_out, "Date %02i:",  game_data.game_days);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
         log_event(EVENT_SESSION, "Protocol GET_DATE by [%s]...", clients.client[connection].char_name);
     }
 /***************************************************************************************************/

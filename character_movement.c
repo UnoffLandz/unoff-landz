@@ -255,7 +255,6 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
 }
 
 
-//void start_char_move(int connection, int destination, struct ev_loop *loop){
 void start_char_move(int connection, int destination){
 
     /** public function - see header */
