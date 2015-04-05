@@ -27,12 +27,11 @@
 #include "server_start_stop.h"
 
 
-void ssnprintf(int max_len, char *str, char *fmt, ...){
+void ssnprintf(char *str, int max_len, char *fmt, ...){
 
     /** public function - see header */
 
     va_list args;
-
     va_start(args, fmt);
 
     int i=vsprintf(str, fmt, args);

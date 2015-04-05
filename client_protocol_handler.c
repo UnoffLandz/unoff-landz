@@ -43,6 +43,7 @@
 #include "server_start_stop.h"
 #include "database_functions.h"
 #include "idle_buffer.h"
+#include "season.h"
 
 #define DEBUG_PACKET 0//set debug mode
 
@@ -642,8 +643,7 @@ void process_packet(int connection, unsigned char *packet){
         printf("GET DATE %i %i \n", packet[1], packet[2]);
         #endif
 
-        sprintf(text_out, "Date %02i:",  game_data.game_days);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_verbose_date(connection, game_data.game_days % game_data.year_length);
 
         log_event(EVENT_SESSION, "Protocol GET_DATE by [%s]...", clients.client[connection].char_name);
     }

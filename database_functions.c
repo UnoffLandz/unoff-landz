@@ -30,6 +30,8 @@
 #include "db_gender_tbl.h"
 #include "db_chat_channel_tbl.h"
 #include "db_attribute_tbl.h"
+#include "db_game_data_tbl.h"
+#include "db_season_tbl.h"
 #include "server_start_stop.h"
 #include "attributes.h"
 
@@ -180,9 +182,13 @@ void create_default_database(){
     create_database_table(CHARACTER_TYPE_TABLE_SQL);
     create_database_table(ATTRIBUTE_TABLE_SQL);
     create_database_table(ATTRIBUTE_VALUE_TABLE_SQL);
+    create_database_table(GAME_DATA_TABLE_SQL);
+    create_database_table(SEASON_TABLE_SQL);
 
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");
+
+    add_db_game_data(1, 27225, 1, 27225, 360);
 
     add_db_channel(1, 0, CHAN_PERMANENT, "", "Main Channel", "A channel for chatting");
 
@@ -208,6 +214,11 @@ void create_default_database(){
     add_db_char_type(40, 5, 1);
     add_db_char_type(41, 6, 2);
     add_db_char_type(42, 6, 1);
+
+    add_db_season(0, "Winter", "A Winter season", 0, 90);
+    add_db_season(1, "Alddra", "A Spring season", 90, 180);
+    add_db_season(2, "Kiwi", "An Summer season", 180, 270);
+    add_db_season(3, "Butler", "An Autumn season", 270, 360);
 
     int i=0, j=0, k=0, l=0;
     float attribute_value;

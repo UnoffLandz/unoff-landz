@@ -17,40 +17,38 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef DB_GAME_DATA_TBL_H_INCLUDED
-#define DB_GAME_DATA_TBL_H_INCLUDED
+#ifndef DB_SEASON_TBL_H_INCLUDED
+#define DB_SEASON_TBL_H_INCLUDED
 
-#define GAME_DATA_TABLE_SQL "CREATE TABLE GAME_DATA_TABLE( \
-        GAME_DATA_ID        INTEGER PRIMARY KEY     NOT NULL, \
-        BEAM_MAP_ID         INT, \
-        BEAM_MAP_TILE       INT, \
-        START_MAP_ID        INT, \
-        START_MAP_TILE      INT, \
-        GAME_MINUTES        INT, \
-        GAME_DAYS           INT, \
-        YEAR_LENGTH         INT \
+#define SEASON_TABLE_SQL "CREATE TABLE SEASON_TABLE( \
+        SEASON_ID        INTEGER PRIMARY KEY     NOT NULL, \
+        SEASON_NAME         TEXT, \
+        SEASON_DESCRIPTION  TEXT, \
+        START_DAY           INT, \
+        END_DAY             INT \
         )"
 
 
-/** RESULT  : loads data from the game data table into the game data array
+/** RESULT  : loads data from the seasons table into the seasons data array
 
-    RETURNS : number of rows read from the game data table
+    RETURNS : number of rows read from the season data table
 
-    PURPOSE : Loads game data from the database to memory.
+    PURPOSE : Loads season data from the database to memory.
 
     NOTES   :
 **/
-int load_db_game_data();
+int load_db_seasons();
 
 
-/** RESULT  : adds game data to the game data table
+/** RESULT  : adds season data to the season data table
 
     RETURNS : void
 
-    PURPOSE : a test function to load game data to the game data table
+    PURPOSE : a test function to load season data to the season data table
 
     NOTES   : to eventually be outsourced to a separate utility
 **/
-void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int start_map_tile, int year_length);
 
-#endif // DB_GAME_DATA_TBL_H_INCLUDED
+void add_db_season(int season_id, char *season_name, char *season_description, int start_day, int end_day);
+
+#endif // DB_SEASON_TBL_H_INCLUDED

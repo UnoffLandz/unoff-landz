@@ -18,6 +18,10 @@
 *******************************************************************************************************************/
 
 #include <time.h> //support for time_t datatype
+#include <string.h> //support for strcpy
+
+#include "game_data.h"
+
 
 void get_time_stamp_str(time_t raw_time, char *buffer){
 
@@ -66,3 +70,5 @@ void get_time_up_str(time_t raw_time, char *buffer){
 
     strftime (buffer, 15, "%H hrs %M mins", cooked_date);
 }
+
+

@@ -17,25 +17,30 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef GAME_DATA_H_INCLUDED
-#define GAME_DATA_H_INCLUDED
+#ifndef SEASON_H_INCLUDED
+#define SEASON_H_INCLUDED
 
-#include <sys/time.h>   // supports time_t data type
+#define MAX_SEASONS 4
 
-struct game_data_type {
+struct season_type{
 
-    time_t server_start_time;
-    char name_last_char_created[80];
-    time_t date_last_char_created;
-    int char_count;
-    int game_minutes;
-    int game_days;
-    int beam_map_id;
-    int beam_map_tile;
-    int start_map_id;
-    int start_map_tile;
-    int year_length;
+    int season_id;
+    char season_name[80];
+    char season_description[160];
+    int start_day;
+    int end_day;
 };
-struct game_data_type game_data;
+struct season_type season[MAX_SEASONS];
 
-#endif // GAME_DATA_H_INCLUDED
+
+/** RESULT  : sends the verbose date to the client
+
+    RETURNS : void
+
+    PURPOSE : code resuse
+
+    NOTES   :
+**/
+void send_verbose_date(int connection, int game_days);
+
+#endif // SEASON_H_INCLUDED

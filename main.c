@@ -60,6 +60,7 @@ To compile server, link with the following libraries :
 #include "db_chat_channel_tbl.h"
 #include "db_game_data_tbl.h"
 #include "db_attribute_tbl.h"
+#include "db_season_tbl.h"
 #include "date_time_functions.h"
 #include "broadcast_actor_functions.h"
 #include "movement.h"
@@ -194,6 +195,14 @@ void start_server(char *db_filename){
     if(loaded!=1){
 
         log_event(EVENT_ERROR, "no game data found in database", loaded);
+        stop_server();
+    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    //load seasons from database
+    loaded=load_db_seasons();
+    if(loaded==0){
+
+        log_event(EVENT_ERROR, "no seasons found in database", loaded);
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 

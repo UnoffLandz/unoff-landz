@@ -40,7 +40,7 @@
 
     NOTES   : stops server if overrun detected
 */
-void ssnprintf(int max_len, char *str, char *fmt, ...);
+void ssnprintf(char *str, int max_len, char *fmt, ...);
 
 
 /** RESULT  : trims space from the right of a string
