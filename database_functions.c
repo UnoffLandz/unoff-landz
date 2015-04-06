@@ -190,7 +190,7 @@ void create_default_database(){
 
     add_db_game_data(1, 27225, 1, 27225, 360);
 
-    add_db_channel(1, 0, CHAN_PERMANENT, "", "Main Channel", "A channel for chatting");
+    add_db_channel(1, 0, CHAN_PERMANENT, "", "Main Channel", "A channel for chatting", 1);
 
     add_db_race(1, "Human", "tall");
     add_db_race(2, "Dwarf", "short");

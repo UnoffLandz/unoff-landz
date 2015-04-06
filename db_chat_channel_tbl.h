@@ -49,6 +49,6 @@ int load_db_channels();
 
     NOTES   : to eventually be outsourced to a separate utility
 **/
-void add_db_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description);
+void add_db_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description, int new_chars);
 
 #endif // DB_CHAT_CHANNEL_TBL_H_INCLUDED

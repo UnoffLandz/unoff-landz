@@ -300,7 +300,7 @@ void process_packet(int connection, unsigned char *packet){
         printf("SEND OPENING SCREEN %i %i \n", packet[1], packet[2]);
         #endif
 
-        log_event(EVENT_SESSION, "Protocol SEND_OPENING_SCREEN by [%s]...", clients.client[connection].char_name);
+        log_event(EVENT_SESSION, "Protocol SEND_OPENING_SCREEN by [%i]", connection);
     }
 /***************************************************************************************************/
 
@@ -325,7 +325,7 @@ void process_packet(int connection, unsigned char *packet){
         int host4=(int)data[11];
         int port=((int)data[12] *256)+(int)data[13];
 
-        log_event(EVENT_SESSION, "Protocol SEND_VERSION by [%s]...", clients.client[connection].char_name);
+        log_event(EVENT_SESSION, "Protocol SEND_VERSION by [%i]...", connection);
         log_text(EVENT_SESSION, "first digit [%i] second digit [%i]", first_digit, second_digit);
         log_text(EVENT_SESSION, "major [%i] minor [%i] release [%i] patch [%i]", major, minor, release, patch);
         log_text(EVENT_SESSION, "host [%i.%i.%i.%i] port [%i]", host1, host2, host3, host4, port);

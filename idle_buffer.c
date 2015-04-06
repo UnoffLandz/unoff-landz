@@ -196,9 +196,22 @@ void db_process_buffer(){
             //set the char creation time
             character.char_created=time(NULL);
 
-            //set starting channel
-            character.active_chan=32; // slot 0
-            character.chan[0]=1; //nub chan
+            //set starting channels
+            int i=0, j=0;
+            for(i=0; i<MAX_CHANNELS; i++){
+
+                if(channel[i].new_chars==1){
+
+                    if(j<MAX_CHAN_SLOTS){
+
+                        if(j==0) character.active_chan=i-CHAT_CHANNEL0;
+                        character.chan[j]=i;
+                    }
+                }
+            }
+
+            //character.active_chan=32; // slot 0
+            //character.chan[0]=1; //nub chan
 
             //set starting map and tile
             character.map_id=game_data.beam_map_id;

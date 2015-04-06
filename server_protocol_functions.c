@@ -29,6 +29,7 @@
 
 #define DEBUG_SEND 0
 
+
 void send_packet(int connection, unsigned char *packet, int packet_length){
 
     /** public function - see header */
@@ -47,87 +48,166 @@ void send_packet(int connection, unsigned char *packet, int packet_length){
 }
 
 
-void send_new_minute(int connection, int16_t minute){
+void send_new_minute(int connection, int minute){
 
     /** public function - see header */
 
-    unsigned char packet[5];
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        unsigned char minute_lsb;
+        unsigned char minute_msb;
+    }packet_data;
+
+    int packet_length=sizeof(packet_data);
 
     union {
-        unsigned char buf[2];
-        int16_t number;
-	}convert;
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
 
-	convert.number=minute;
+    packet.in.protocol=NEW_MINUTE;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+    packet.in.minute_lsb=minute % 256;
+    packet.in.minute_msb=minute / 256;
 
-    packet[0]=NEW_MINUTE;
-    packet[1]=3;
-    packet[2]=0;
-    packet[3]=convert.buf[0];
-    packet[4]=convert.buf[1];
+    #if DEBUG_SEND==1
+    printf("NEW_MINUTE connection [%i] minute [%i]\n", connection, minute);
+    #endif
 
-    //send(connection, packet, 5, 0);
-    send_packet(connection, packet, 5);
+    log_event(EVENT_SESSION, "NEW_MINUTE connection [%i] minute [%i]", connection, minute);
+
+    send_packet(connection, packet.out, packet_length);
 }
+
 
 void send_login_ok(int connection){
 
     /** public function - see header */
 
-    unsigned char packet[3];
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+    }packet_data;
 
-    packet[0]=LOG_IN_OK;
-    packet[1]=1;
-    packet[2]=0;
+    int packet_length=sizeof(packet_data);
 
-    //send(connection, packet, 3, 0);
-    send_packet(connection, packet, 3);
+    union {
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
+
+    packet.in.protocol=LOG_IN_OK;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+
+    #if DEBUG_SEND==1
+    printf("LOG_IN_OK connection [%i]\n", connection);
+    #endif
+
+    log_event(EVENT_SESSION, "LOG_IN_OK connection [%i]", connection);
+
+    send_packet(connection, packet.out, packet_length);
 }
+
 
 void send_login_not_ok(int connection){
 
     /** public function - see header */
 
-    unsigned char packet[3];
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+    }packet_data;
 
-    packet[0]=LOG_IN_NOT_OK;
-    packet[1]=1;
-    packet[2]=0;
+    int packet_length=sizeof(packet_data);
 
-    //send(connection, packet, 3, 0);
-    send_packet(connection, packet, 3);
+    union {
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
+
+    packet.in.protocol=LOG_IN_NOT_OK;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+
+    #if DEBUG_SEND==1
+    printf("LOG_IN_NOT_OK connection [%i]\n", connection);
+    #endif
+
+    log_event(EVENT_SESSION, "LOG_IN_NOT_OK connection [%i]", connection);
+
+    send_packet(connection, packet.out, packet_length);
 }
+
 
 void send_you_dont_exist(int connection){
 
     /** public function - see header */
 
-    unsigned char packet[3];
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+    }packet_data;
 
-    packet[0]=YOU_DONT_EXIST;
-    packet[1]=1;
-    packet[2]=0;
+    int packet_length=sizeof(packet_data);
 
-    //send(connection, packet, 3, 0);
-    send_packet(connection, packet, 3);
+    union {
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
+
+    packet.in.protocol=YOU_DONT_EXIST;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+
+    #if DEBUG_SEND==1
+    printf("YOU_DONT_EXIST connection [%i]\n", connection);
+    #endif
+
+    log_event(EVENT_SESSION, "YOU_DONT_EXIST connection [%i]", connection);
+
+    send_packet(connection, packet.out, packet_length);
 }
+
 
 void send_you_are(int connection){
 
     /** public function - see header */
 
-    unsigned char packet[5];
-    int id_msb=connection / 256;
-    int id_lsb=connection % 256;
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        unsigned char lsb_connection;
+        unsigned char msb_connection;
+    }packet_data;
 
-    packet[0]=YOU_ARE;
-    packet[1]=3;
-    packet[2]=0;
-    packet[3]=id_lsb;
-    packet[4]=id_msb;
+    int packet_length=sizeof(packet_data);
 
-    //send(connection, packet, 5, 0);
-    send_packet(connection, packet, 5);
+    union {
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
+
+    packet.in.protocol=YOU_ARE;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+    packet.in.lsb_connection=connection % 256;
+    packet.in.msb_connection=connection / 256;
+
+    #if DEBUG_SEND==1
+    printf("YOU_ARE connection [%i]\n", connection);
+    #endif
+
+    log_event(EVENT_SESSION, "YOU_ARE connection [%i]", connection);
+
+    send_packet(connection, packet.out, packet_length);
 }
 
 
@@ -135,55 +215,67 @@ void send_create_char_ok(int connection){
 
     /** public function - see header */
 
-    unsigned char packet[3];
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+    }packet_data;
 
-    packet[0]=CREATE_CHAR_OK;
-    packet[1]=1;
-    packet[2]=0;
+    int packet_length=sizeof(packet_data);
 
-    //send(connection, packet, 3, 0);
-    send_packet(connection, packet, 3);
+    union {
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
+
+    packet.in.protocol=CREATE_CHAR_OK;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+
+    #if DEBUG_SEND==1
+    printf("CREATE_CHAR_OK connection [%i]\n", connection);
+    #endif
+
+    log_event(EVENT_SESSION, "CREATE_CHAR_OK connection [%i]", connection);
+
+    send_packet(connection, packet.out, packet_length);
 }
+
 
 void send_create_char_not_ok(int connection){
 
     /** public function - see header */
 
-    unsigned char packet[3];
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+    }packet_data;
 
-    packet[0]=CREATE_CHAR_NOT_OK;
-    packet[1]=1;
-    packet[2]=0;
+    int packet_length=sizeof(packet_data)-1;
 
-    //send(connection, packet, 3, 0);
-    send_packet(connection, packet, 3);
+    union {
+        unsigned char out[packet_length];
+        packet_data in;
+    }packet;
+
+    packet.in.protocol=CREATE_CHAR_NOT_OK;
+    packet.in.lsb=(packet_length-2) % 256;
+    packet.in.msb=(packet_length-2) / 256;
+
+    #if DEBUG_SEND==1
+    printf("CREATE_CHAR_OK connection [%i]\n", connection);
+    #endif
+
+    log_event(EVENT_SESSION, "CREATE_CHAR_NOT_OK connection [%i]", connection);
+
+    send_packet(connection, packet.out, packet_length);
 }
 
 
 void send_raw_text(int connection, int channel, char *text){
 
     /** public function - see header */
-/*
-    unsigned char packet[1024];
-    int text_length;
-    int message_length;
-    int packet_length;
-
-    text_length=strlen(text);
-    message_length=text_length+2; // add 1 for the channel byte and 1 for the msb byte
-
-    packet[0]=RAW_TEXT;
-    packet[1]=message_length % 256;
-    packet[2]=message_length / 256;
-    packet[3]=channel;
-
-    memmove(packet+4, text, text_length);
-
-    packet_length=message_length+2; // add 1 for the protocol byte and 1 for the lsb byte
-
-    //send(connection, packet, packet_length, 0);
-    send_packet(connection, packet, packet_length);
-*/
 
     typedef struct {
         unsigned char protocol;
@@ -206,8 +298,15 @@ void send_raw_text(int connection, int channel, char *text){
     packet.in.channel=channel;
     strcpy(packet.in.text, text);
 
+    #if DEBUG_SEND==1
+    printf("RAW_TEXT connection [%i] channel [%i] text [%s]\n", connection, channel, text);
+    #endif
+
+    log_event(EVENT_SESSION, "RAW_TEXT connection [%i] channel [%i] text [%s]", connection, channel, text);
+
     send_packet(connection, packet.out, packet_length);
 }
+
 
 void send_here_your_inventory(int connection){
 
@@ -241,35 +340,13 @@ void send_here_your_inventory(int connection){
         packet[j+7]=0; //flags
     }
 
-    //send(connection, packet, (MAX_INVENTORY_SLOTS*8)+4, 0);
     send_packet(connection, packet, (MAX_INVENTORY_SLOTS*8)+4);
 }
+
 
 void send_get_active_channels(int connection){
 
     /** public function - see header */
-/*
-    unsigned char packet[1024];
-    int i=0, j=0;
-
-    packet[0]=GET_ACTIVE_CHANNELS;
-    packet[1]=14;
-    packet[2]=0;
-    packet[3]=clients.client[connection].active_chan;
-
-    for(i=0; i<MAX_CHAN_SLOTS; i++){
-
-        j=i*4;
-
-        packet[j+4]=clients.client[connection].chan[i] % 256;
-        packet[j+5]=clients.client[connection].chan[i]/256 % 256;
-        packet[j+6]=clients.client[connection].chan[i]/256/256 % 256;
-        packet[j+7]=clients.client[connection].chan[i]/256/256/256 % 256;
-    }
-
-    //send(connection, packet, 16, 0);
-    send_packet(connection, packet, 16);
-*/
 
     typedef struct {
 
@@ -299,8 +376,25 @@ void send_get_active_channels(int connection){
         packet.in.channel_slot[i]=clients.client[connection].chan[i];
     }
 
+    #if DEBUG_SEND==1
+    printf("GET_ACTIVE_CHANNELS connection [%i] active_channel slot [%i]\n", connection, clients.client[connection].active_chan);
+
+    for(i=0; i<MAX_CHAN_SLOTS; i++){
+
+        printf("slot [%i] channel [%i]\n", i, clients.client[connection].chan[i]);
+    }
+    #endif
+
+    log_event(EVENT_SESSION, "GET_ACTIVE_CHANNELS connection [%i] active channel slot [%i]", connection, clients.client[connection].active_chan);
+
+    for(i=0; i<MAX_CHAN_SLOTS; i++){
+
+        log_text(EVENT_SESSION, "slot [%i] channel [%i]", i, clients.client[connection].chan[i]);
+    }
+
     send_packet(connection, packet.out, packet_length);
 }
+
 
 void send_here_your_stats(int connection){
 
@@ -499,47 +593,13 @@ void send_here_your_stats(int connection){
 
     //packet[169]=10; summoning lvl
 
-    //send(connection, packet, 229, 0);
     send_packet(connection, packet, 229);
 }
+
 
 void send_change_map(int connection, char *elm_filename){
 
     /** public function - see header */
-/*
-    unsigned char packet[1024];
-
-    int i;
-
-    int filename_length=strlen(elm_filename)+1; // +1 to include null terminator
-    int msb=(filename_length) / 256;
-    int lsb=(filename_length) % 256;
-
-    lsb++; // +1 as required by EL protocol
-
-    // calculate packet length
-    int packet_length=filename_length+3;
-
-    // construct packet header
-    packet[0]=CHANGE_MAP;
-    packet[1]=lsb;
-    packet[2]=msb;
-
-    // add packet content
-    for(i=3; i<3+filename_length; i++){
-
-        packet[i]=elm_filename[i-3];
-    }
-
-    #if DEBUG_SEND==1
-
-    printf("CHANGE MAP connection [%i] map [%s]\n", connection, elm_filename);
-
-    #endif
-
-    //send(connection, packet, packet_length, 0);
-    send_packet(connection, packet, packet_length);
-*/
 
     typedef struct {
         unsigned char protocol;
@@ -560,8 +620,14 @@ void send_change_map(int connection, char *elm_filename){
     packet.in.msb=(packet_length-2) / 256;
     strcpy(packet.in.text, elm_filename);
 
+    #if DEBUG_SEND==1
+    printf("CHANGE MAP connection [%i] map [%s]\n", connection, elm_filename);
+    #endif
+
+    log_event(EVENT_SESSION, "CHANGE_MAP connection [%i] map [%s]", connection, elm_filename);
     send_packet(connection, packet.out, packet_length);
 }
+
 
 void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *packet_length){
 
@@ -687,7 +753,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
         char neck_attachment; //none=64
     }packet_data;
 
-    *packet_length=sizeof(packet_data)-1;
+    *packet_length=sizeof(packet_data);
 
     union {
         unsigned char out[*packet_length];
@@ -750,33 +816,59 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     memcpy(packet, p.out, *packet_length);
 }
 
+
 void remove_actor_packet(int connection, unsigned char *packet, int *packet_length){
 
+/*
     int i;
     int data_length=0;
 
-    i=0;                       /* zero the packet length counter */
-    packet[i++]=REMOVE_ACTOR;             /* protocol       */
-    packet[i++]=0;             /* dummy the lsb (we'll put the proper value in later  */
-    packet[i++]=0;             /* dummy the msb (we'll put the proper value in later  */
-    packet[i++]=connection % 256;      /* char_id lsb    */
-    packet[i++]=connection / 256;      /* char_id msb    */
+    i=0;                       // zero the packet length counter
+    packet[i++]=REMOVE_ACTOR;             // protocol
+    packet[i++]=0;             // dummy the lsb (we'll put the proper value in later
+    packet[i++]=0;             // dummy the msb (we'll put the proper value in later
+    packet[i++]=connection % 256;      // char_id lsb
+    packet[i++]=connection / 256;      // char_id msb
 
     *packet_length=i;
 
-    /* now we know the packet length we can calculate the data length by subtracting 2 */
+    // now we know the packet length we can calculate the data length by subtracting 2
     data_length=i-2;
 
-    /* now we know our data length we can will in the proper values for our lsb/msb */
+    // now we know our data length we can will in the proper values for our lsb/msb
     packet[1]=data_length % 256;
     packet[2]=data_length / 256;
+*/
 
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        unsigned char connection_lsb;
+        unsigned char connection_msb;
+    }packet_data;
+
+    *packet_length=sizeof(packet_data);
+
+    union {
+        unsigned char out[*packet_length];
+        packet_data in;
+    }p;
+
+    p.in.protocol=REMOVE_ACTOR;
+    p.in.lsb=(*packet_length-2) % 256;
+    p.in.msb=(*packet_length-2) / 256;
+    p.in.connection_lsb=connection % 256;
+    p.in.connection_msb=connection / 256;
+
+    memcpy(packet, p.out, *packet_length);
 }
+
 
 void add_actor_packet(int connection, unsigned char move, unsigned char *packet, int *packet_length){
 
     /** public function - see header */
-
+/*
     int data_length=4;
 
     //construct the packet
@@ -789,4 +881,30 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
 
     //return the packet length
     *packet_length=6;
+*/
+
+    typedef struct {
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        unsigned char connection_lsb;
+        unsigned char connection_msb;
+        unsigned char move;
+    }packet_data;
+
+    *packet_length=sizeof(packet_data);
+
+    union {
+        unsigned char out[*packet_length];
+        packet_data in;
+    }p;
+
+    p.in.protocol=ADD_ACTOR;
+    p.in.lsb=(*packet_length-2) % 256;
+    p.in.msb=(*packet_length-2) / 256;
+    p.in.connection_lsb=connection % 256;
+    p.in.connection_msb=connection / 256;
+    p.in.move=move;
+
+    memcpy(packet, p.out, *packet_length);
 }
