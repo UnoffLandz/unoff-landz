@@ -31,6 +31,7 @@ struct channel_node_type{
     int owner_id; // could be char or guild depending on chan_type
     char password[80];
     char description[80];
+    int new_chars;
 };
 struct channel_node_type channel[MAX_CHANNELS];
 

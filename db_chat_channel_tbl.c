@@ -61,6 +61,7 @@ int load_db_channels(){
         strcpy(channel[chan_id].password, (char*)sqlite3_column_text(stmt, 3));
         strcpy(channel[chan_id].channel_name, (char*)sqlite3_column_text(stmt, 4));
         strcpy(channel[chan_id].description, (char*)sqlite3_column_text(stmt, 5));
+        channel[chan_id].new_chars=sqlite3_column_int(stmt, 6);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", chan_id, channel[chan_id].channel_name);
 
@@ -77,7 +78,7 @@ int load_db_channels(){
 }
 
 
-void add_db_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description){
+void add_db_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description, int new_chars){
 
     /** public function - see header */
 
@@ -89,8 +90,9 @@ void add_db_channel(int channel_id, int owner_id, int channel_type, char *passwo
         "TYPE," \
         "PASSWORD," \
         "NAME,"  \
-        "DESCRIPTION" \
-        ") VALUES(%i, %i, %i, %s, %s, %s)", channel_id, owner_id, channel_type, password, channel_name, channel_description);
+        "DESCRIPTION," \
+        "NEW_CHARS " \
+        ") VALUES(%i, %i, %i, %s, %s, %s, %i)", channel_id, owner_id, channel_type, password, channel_name, channel_description, new_chars);
 
     process_sql(sql);
 

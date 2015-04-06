@@ -23,7 +23,7 @@
 #define MOTD_FILE "motd.msg"
 #define SERVER_WELCOME_MSG "\nWELCOME TO THE UNOFF SERVER\n--------------------------------------------------------------------------------------------"
 
-#define CHAT_CHANNEL_START 5
+//#define CHAT_CHANNEL_START 5
 
 enum { // channel types
     CHAT_LOCAL     =0,

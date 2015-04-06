@@ -26,7 +26,9 @@
         OWNER_ID            INT,  \
         PASSWORD            TEXT, \
         NAME                TEXT, \
-        DESCRIPTION         TEXT)"
+        DESCRIPTION         TEXT, \
+        NEw_CHARS           INT \
+        )"
 
 /** RESULT  : loads data from the channel table into the channel array
 
