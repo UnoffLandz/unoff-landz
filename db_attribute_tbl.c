@@ -106,7 +106,7 @@ int load_db_attributes(){
     int i=0;
 
     char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM ATTRIBUTE_TABLE");
+    snprintf(sql, MAX_SQL_LEN, "SELECT ATTRIBUTE_ID,ATTRIBUTE_DESCRIPTION,RACE_ID,ATTRIBUTE_TYPE_ID FROM ATTRIBUTE_TABLE");
 
     rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){

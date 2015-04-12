@@ -92,7 +92,7 @@ void add_db_channel(int channel_id, int owner_id, int channel_type, char *passwo
         "NAME,"  \
         "DESCRIPTION," \
         "NEW_CHARS " \
-        ") VALUES(%i, %i, %i, %s, %s, %s, %i)", channel_id, owner_id, channel_type, password, channel_name, channel_description, new_chars);
+        ") VALUES(%i, %i, %i, '%s','%s', '%s', %i)", channel_id, owner_id, channel_type, password, channel_name, channel_description, new_chars);
 
     process_sql(sql);
 
