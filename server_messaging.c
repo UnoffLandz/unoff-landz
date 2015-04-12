@@ -62,7 +62,7 @@ void send_motd_header(int connection){
     for(i=0; i<MAX_CLIENTS; i++){
 
         if(clients.client[i].client_status==LOGGED_IN){
-            sprintf(chars_in_game_str, "%s %s",  chars_in_game_str, clients.client[connection].char_name);
+            sprintf(chars_in_game_str, "%s %s",  chars_in_game_str, clients.client[i].char_name);
             chars_in_game_count++;
         }
     }
