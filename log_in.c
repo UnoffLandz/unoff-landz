@@ -134,7 +134,7 @@ void process_log_in(int connection, unsigned char *packet){
     load_char_data_into_connection(connection);
 
     //check we have the correct password for our char
-    if(strcmp(password, clients.client[connection].password)==PASSWORD_INCORRECT){
+    if(strcmp(password, clients.client[connection].password)!=0){
 
         send_login_not_ok(connection);
         log_event(EVENT_SESSION, "login rejected - incorrect password");
