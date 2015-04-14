@@ -1,0 +1,488 @@
+2015-Apr-07: Release 1.9.4
+From http://www.eternal-lands.com/forum/index.php?showtopic=59112
+
+Client Improvements and New Features:
+
+* Summoning filter, option to ignore "(name) summoned a (critter)" mesages (Mar 31, 2012)
+* When using just @ to post to active channel, channel gets underlined (Apr 01, 2012)
+* Various improvements to the Manu window Recipe saving (Apr 04, 2012 and later)
+* Added video modes for 1366x768 (Apr 10, 2012)
+* #research command ETA adjusted to take fast reading into account (May 04, 2012)
+* Added actions to desktop icon for easy access to test/pk servers (Jun 02, 2012)
+* Various improvements to the Item List window (Jun 05, 2012 and later)
+* Sound when opening a dialogue added (Jun 05, 2012)
+* Accelerated zooming when holding CTRL while using mouse wheel (Jun 05, 2012)
+* Astro window: Option to always print details to console (Jun 26, 2012)
+* Show Ranging stats with right-click option on right-side HUD (Jun 26, 2012)
+* Option on "Item Lst" button right-click to set Item List to open left of inventory instead of right (Jul 04, 2012)
+* "repeat spell" works everywhere, not just in game window (Jul 07, 2012)
+* "your position" on map view made more visible (Jul 15, 2012)
+* No longer stop mapwalking if you click on the HUD (Oct 27, 2012)
+* Found Pears added to the Events counters (Nov 12, 2012)
+* User-defined channel colors (Dec 04, 2012)
+* Option for darker channel-text color on bright maps (Jan 01, 2013)
+* Customizable icon window (Jan 01-02, 2013)
+* Various improvements and fixes to the Quest Log window (Jan 11, 2013 and later)
+* Added command #reload_icons for customizable icon window (Feb 11, 2013)
+* Added Trade Logging (Feb 11, 2013)
+* Option to disable weather special effects (Feb 14, 2013)
+* Print Counters to console (Feb 28, 2013)
+* #session_counters command, prints all session counts to console (Mar 03, 2013)
+* #save is triggered automatically if no save done in the past 5000 seconds (Apr 11, 2013)
+* Item descriptions added to items quickbar (Jun 26, 2013)
+* Additional storage window sounds (Jun 27, 2013)
+* New option on NPC dialogue, set a map mark using the NPC name (Jun 27, 2013)
+* Named Color support, configured in xml data file (Jun 29, 2013)
+* Holding Ctrl/Alt while hovering over inv items shows larger quantity text (Jul 21, 2013)
+* Max/Last experience added to session window, including row highlighting with mouse click (Jul 25, 2013)
+* Mouse-click highlighting added to other windows such as Knowledge, Counters... (Jul 28, 2013)
+* Disable Ranging Lock when fighting option (Aug 18, 2013)
+* HUD countdown/stopwatch timer added (Aug 26, 2013)
+* Auto-remove extra spaces between name and start of message for PMs and such (Nov 01, 2013)
+* Added context menu to control hud timer, minor refracting. (Nov 23, 2013)
+* Suppress *You are too far away. Get closer* messages within a 5 second window, but highlight the actor with an orange cross. (Dec 22, 2013)
+* Option to not display console messages for mixed items when other windows are closed (Dec 29, 2013)
+* Add ctrl/alt zoom for storage item numbers. (Dec 30, 2013)
+* Added keys #K_COUNTERS #K_HELPSKILLS but unassigned to keyboard by default. Unassigned keys can be assigned in keys.ini and using #keypress. (Dec 30, 2013)
+* Add minimal status indicators window to hud.  For day, harvesting and poison states. (Jan 3, 2014)
+* Added 'Heal Allies' to spells.xml (Jan 7, 2014)
+* Do not auto-save while fighting to prevent lags (Feb 1, 2014)
+* Allow full game window keys for #keypress and Icon window simulated key presses. (Feb 2, 2014)
+* Forum #56640 and #59274: Option for ctrl/alt click actions in inventory window. (Mar 10, 2014)
+* Add 'Mother Nature taking a dump' to the events counters. (May 7, 2014)
+* Added server specified spell/buff durations. You can now see how long a spell will last. (May 30, 2014)
+* Added invisibility poisoning to buff count trigger. (Jun 20 2014)
+* Add option to storage title menu, to disable item filter. (Jul 13 2014)
+* Added item description filter within storage category.  Type text, filter items. Non matching items are grayed out. (Jul 6 2014)
+* Added HUD tab option to always enlarge text where pressing ctrl or alt would be the only trigger previously. (Aug 1 2014)
+* Add enlarge text option to ground bag quantities. (Aug 1 2014)
+* Add enlarge text option to trade window quantities. (Aug 1 2014)
+* Add enlarge text option to quickbar window quantities. (Aug 1 2014)
+* Client version based on git labels (Aug 10 2014)
+* Add a *distance* measure to the session window. Just counts changes of x,y coordinates. (Aug 18 2014)
+* Add hud timer option to keep the time and running state of the timer when changing mode. (Aug 18 2014)
+* Add non MC message *...already fighting with someone...* to spam suppression list. (Sep 20 2014)
+* Move Clear button to the left side of the manu window. (Oct 20 2014)
+* Support for different eye-colors. (Oct 31 2014)
+* Add #relogin command: tests server connection and moves to disconnected state if the test fails. (Dec 22 2014)
+* Zoom-in increased to allow to better see eyes (Jan 20 2015)
+* Use the same selected/hightlighed colours for storage category as elsewhere in the UI. (Feb 12 2015)
+* The "You'd need to use binoculars" server message when you've opened a book and switch maps won't show anymore if the book is closed. (Feb 24 2015)
+
+Bug Fixes and internal tweaks (sampling of the "big ones", there are many more):
+
+* Sound crash due to incorrect array indices (Mar 13, 2012)
+* Fix for offline buddies in buddy list (Apr 11, 2012)
+* Many memory leak fixes (Jun 15, 2012 and later - Feb 2013 had many)
+* Various map editor fixes (Jun 28, 2012 and later)
+* Fixes to console text, "dead lines" in the console (Jun 28, 2012)
+* Tweak to work with next Cal3D version (Jul 01, 2012)
+* chat log rotation tweaks (Jul 04, 2012)
+* Kill count improvements (Jul 07, 2012)
+* Fixes to Eye Candy handling (Oct 14, 2012)
+* Only rotate camera/advance/turn when in game window (Jan 23 & Feb 10, 2013)
+* Check if Ency exists in selected language, fallback to English if not (Jan 26, 2013)
+* Fix of spell regeant confusion on non-unique images (#item_uid issue) (Feb 16, 2013)
+* Improvements to hover-over descriptions of items (Feb 17, 2013)
+* Support use of libxml2 > 2.8.x (Mar 08, 2013)
+* number of cache-items added to the #mem command (Mar 14, 2013)
+* Add handling of when max number of mapmarks is reached (Mar 23, 2013)
+* Counter window fix to reset scrollbar when new entries added (May 18, 2013)
+* Fix to handling of missing anims to prevent speedups/resyncs (May 30, 2013)
+* Fix crashing when encyclopedia fails to load (Jun 26, 2013)
+* Fix custom download and update stack smashing issues (Aug 07, 2013)
+* Fixed missing weather sounds (Aug 07, 2013)
+* Initialize new notepad storage when reallocated. (Dec 22, 2013)
+* Fix for Mesa 10.0.1 changed gl.h header (Dec 25, 2013)
+* Fix uninitialized value on EC lamp effect. (Dec 27, 2013)
+* Fix use of inventory mix button before manufacture window has been opened. (Dec 29, 2013)
+* Fixes for sound system. Initialization, thread safety, memory access issues. Can now reliably turn on/of etc. (Jan 6, 2014)
+* Fix various compiler warnings (Jan 6, 2014)
+* More memory cleanup, valgrind complaints (Jan 15, 2014)
+* Fix log-message in #unmark command (Jan 15, 2014)
+* Properly shut down the network on client exit (Jan 19, 2014)
+* Fix middle mouse button handling on Windows and Mac (Feb 2, 2014)
+* Fix truncated user menu help text (Feb 2, 2014)
+* Fix OPT_INT_INI usage (Mar 10, 2014)
+* Trap exceeding MAX_SERVERS reading servers.lst (Mar 13, 2014)
+* Added -lz needed for newer compiler. (Mar 29, 2014)
+* Map editor bug and compiler fixes (Mar/Apr 2014)
+* Linux launcher, work around for Zenity bugs. (Apr 11, 2014)
+* Fix missing last char in a line due to rounding issues with 'strange' zoom factors. (Apr 27, 2014)
+* More than one update thread can cause severe lags on some computers. (Apr 27, 2014)
+* Prevent NPCs wearing custom clothes by accident (May 26, 2014)
+* Move local #save text to Translate module (May 27, 2014)
+* Fix find_var() matching substrings of wanted variable name, leading to unsaved variables. (May 29, 2014)
+* NULL terminate the dark_channeltext config options which should fix a crash on opening the options window. (Jul 6 2014)
+* Fixed missing last page of encyclopedia when using context menu.  Fixed other occurrences of not looping over all the pages. (Jul 28 2014)
+* Players with Overall Level 179 won't gain any OA exp anymore, so the stats window will show exp/min 0.0. (Aug 6 2014)
+* Put *Equipment* text to background in inventory windows. (Aug 10 2014)
+* Fix opacity setting from manu window title menu. (Aug 30 2014)
+* Fix crash when leaving buggy maps. (Sep 4 2014)
+* Change invance channels to current 120-145 and 145-200 (Oct 18 2014)
+* New character: Fixed missing character animations when race or gender changed. (Nov 2 2014)
+* Fix parse_2d0() for NEW_TEXTURES - ground items like skeletons are visible again. (Nov 22 2014)
+* Remove use of Learner's server version of item_info.txt, will be included directly in the client. (Feb 27 2015)
+* Move astrology window deection before ignore list. (Mar 23 2015)
+* Possible fix for client crash due to lack of actors list locking. (Mar 31 2015)
+* Work around for storage corruption due to mis-guessing (empty inv for trade) item_uid setting. (Apr 4 2015)
+* Various compiler warning fixes including use of CLANG compiler, memory init fixes, and fixes to new features.
+
+Maps:
+
+* There are quite a few new caves and buildings, some benign and some designed to be useful. (Won't be discussed as there may be contests to find them and such.)
+* Some old locations that were "removed" have also been tweaked or redesigned to fix the problems and re-added. A couple were just deleted, deemed beyond hope of repair.
+* A couple big changes to current maps as well.
+* Every single map in the game has been gone over with a careful eye multiple times, tweaked and adjusted to be as correct as possible. This includes:
+	- Fixing where you can walk. Areas that shouldn't be walkable like under rocks and such have been removed, while areas that should be walkable (you click but you can't go there) are.
+	- General design fixes (floating objects, items just poorly placed or stuck in other items they shouldn't be stuck in, etc.)
+	- An incredible amount of work has been done to reduce flickering of items seen when the camera is moved. (May never be 100%, but a good chunk of it's fixed.)
+	- Enter locations fixed that cause you to walk in odd directions when you click to use them. Exit drop locations fixed where you end up in an odd corner instead of directly at the entrance door/cave/etc.
+	- Most all harvestables that are in a harvestable area are now actually reachable, where design allowed. (Some placed as decor-only and are not allowed to be harved on that map remain that way.)
+	- Some harvestables stuck inside cave walls and such brought out. (This being a very time-consuming and difficult task, it was not done 100%, but I got to what I could.) This will be why when you visit some harv spots you know, there may be more ores or minerals or such there than were before. Those were always there, just hidden in the walls.
+(While most work done of this nature on current maps won't be visibly noticeable, it will be in some areas. Nothing drastic in these cases, so I call them "easter eggs". ;-) )
+And of course, all reported bugs fixed.
+
+Some minor points that can be discussed (these only go into effect when 1.9.4 is released, not before):
+	- Palon Vertas main map will be multi-combat (currently single)
+	- The Whitestone crafting school will work
+	- Both Zirakinbar schools (manu school on the east side near docks, craft school area near EP exit) work
+	- Trassian Manufacturing school (southwest corner of Trassian) works
+	- The entire inside-the-stands area of the KJ temple arena will be PK, not just an unmarked square in the middle of it.
+	- Mount Sorrow in SRM is harvestable.
+	- The dung portal room has had flags placed above each outhouse indicating where they lead. You can "eye" the flags for specific info, or if you don't know the map flags (shame on you)
+
+Misc:
+
+* Heavily updated (English) Encyclopedia and book/knowledge list
+
+
+
+2012-Feb-06: Release 1.9.3
+
+Client changes:
+* Gé Vissers
+	* Speed improvements & code tidy ups
+	* Add X-style copy to/paste from the primary selection with the
+	middle mouse button for Linux (or other Unices if the client builds
+	on them). Works in console and text widgets, compile with
+	MIDDLE_MOUSE_PASTE to enable
+	* Add a feedback message when saving notes.
+* Tosh
+	* Ranging window
+* pjbroad/bluap
+	* Option to auto select *open storage* npc option
+	* Added floating message for action points
+	* Storage dialogue options on storage title menu too.
+	* Allow resizing of the item list window.
+	* Detect inv window auto size correctly
+	* Added *Print To Console* option on teh ranging window title menu.
+	* Add Date, Time and Coord insert functions to text widget menu.
+	* Code tidy-ups.
+	* Allow double click to unequip even if item swap disabled.
+	* Add alt-click to store all items.
+	* Allow scrolling using the mouse wheel in the buddy window.
+	* Add keypresses K_MARKFILTER and / as shortcut to encyclopedia
+	search.
+	* Remember select tabs for help, stats and info.
+	* Stop the new character icon window being created before the root
+	window, otherwise it is hidden.
+	* Fixed when the buffer fills, old chat shows up in bottom normally
+	blank line.
+	* Do not set use cursor for game window when set on inv/qb windows.
+	* For use_with, allow item reuse in qb and game window (like
+	inv window) when shift+click used.
+	* Bottom HUD. Added action points stats bar. Allow more flexible
+	use of stats and exp bars with variable length.
+	* Add new #keypress command - can be used by user menu to reproduce
+	#K_ defined key presses.
+	* Recipe window changes: Gather store and display names for
+	manufacture recipes. Configurable number of recipes, resizable and
+	scrollable window. Search by name.  Help text.
+* sir_odie
+	* Keep current recipe in manu-window when eat before first mix.
+	* Add L179 to the #calc command.
+	* Added the invance channels to the Channels menu as suggested
+	by the mods.
+	* Don't emulate a 3 button mouse on the Mac, ALT+leftclick
+	doesn't work with the emulation.
+	* Workaround for a Windows bug (at least Vista): tmpfile() needs
+	Administrator privileges there, so it doesn't work for normal
+	users...
+	* Added optional time stamp to chat text (requested by Aislinn)
+	* Added castellan skeleton
+* Vegar
+	* Sort storage categories alphabetically (but made configurable
+	via the title context menu).
+* xaphier
+	* More logging for new update.
+	* Fix for custom updates.
+	* Better debug logging,
+	* Fixed bug that crashed el client when 3dc or latc are supported
+	but not s3tc (texture compression)
+	* Fix for random crashes when eye-candy is used.
+	* Fixed uninitialized size of hardware buffer (vbo).
+* Jeffrey Wilson
+	* Fix for crash on some OS X hardware. Only draw particles if there
+	are particles in buffer to draw
+* Schmurk 
+	* Fixed a bug in the weights of vertices sent to the animation
+	vertex program
+	* Fix for lost shadows when wearing a medallion.
+* kbialowas
+	* instance mode implementation with banners customization
+
+2011-Jun-19: Release 1.9.2
+
+* Minimap open-on-start option, circles + shadows
+* Buddy icon flashes on change
+* Improved new character window
+* Critical fails and poisoning in counters
+* Search and bookmarks for encyclopedia
+* Allow the camera to zoom out more
+* Variable number of quick bar item/spell slots
+* Knowledge window - highlight books matching filter
+* Option to open minimap when the client starts
+* If the mouse is over a stats bar, draw the EXP remaining
+* More NPC dialogue options and function to repeat last selection
+* New item list window
+* Compass shift-click copies location to current channel
+* Mouse over knowledge window progress-bar shows time left
+* Display last recent damage/heal values as hover over health bar
+* #Know command - added -read, -unread and -total options
+* Option to configure the maximum food level shown in the hud bar
+* Restructure options window and reduced size
+* Fixes for hardware_animation_program
+* Rewrite of custom cloths and updates downloads.
+* Added action point attributes
+* Properly centre floating messages
+* Minor quest log fixes and improvements
+* New texture code, now almost everything is DDS
+* Added support for OpenGL multi sampling (FSAA)
+* Performance improvements actor loading, map changing, textures, threading
+* Eye candy speed ups and fixes (requires OpenGL 1.5)
+* Added support for boots meshes
+
+2010-DEC-31: Release 1.9.1
+
+* Support for 512x512 actor textures
+* Item lists can now retrieve items from storage.  List are also editable.
+* More improvements to quest log, including support for server sent quest titles.
+* More activities on horses including fighting.
+* Neck items visible.
+* More emotes.
+* Graphics improvements.
+* Encyclopedia update.
+* Simple improvements for character creation.
+* Player achievements.
+
+2010-APR-02: Release 1.9.0
+
+1. New artwork, most of the objects, animations and textures were improved.
+2. Emotes!
+3. Support for server sent markers, and now the user defined markers will show in the normal view too.
+4. All kind of GUI improvements.
+	* New spell windows
+	* Dropdown manu window with saved recipes
+	* Resizeable ground bag with scroll bar.
+	* User definable menus.
+	* Saved inventory item lists (more to come hopefully).
+	* Rewrite of quest log with new context menu features.
+	* Storage dialogue auto-close and copy of dialogue text to clipboard.
+	* Ranging Lock
+	* Multiple statbars in HUD
+	* Resizable mapmark font
+	* Double click to equip an item.
+	* Make logo link to a URL.
+	* Limit massive healthbars to 110% of normal size.
+	* Variable bag positioning.
+	* Additions to counters.
+	* Show exp per min.
+5. Engine
+	* Increased support for vertex formats.
+	* Added dds image support.
+	* Added support for compressed normals.
+	* Support for new e3d file format.
+	* Support for vertex colors.
+5. Other
+	* New commands: #open_url #show_spell #cast_spell.
+	* Buddy list client-side changes.
+	* Fixes for buddies, knowledge window, notepad, spells, counters, harvest effects, input box mouse copy/paste, name completion.
+	* Announce invasion monsters at login.
+	* Modulo operator for #calc.
+	* OS X Fix for Intel integrated graphics crash relating to rounded buttons.
+	* Tag quest log with player name.
+	* Encyclopedia updates.
+
+
+2009-JAN-10: Release 1.8.0
+
+Here are some of the changes:
+1. Horses and support for running.
+2. A few new items.
+3. Improvements over the UI.
+4. Bug fixes.
+5. Some 2d, 3d and animation artwork improvements (bigger textures, some broken objects fixed, etc.)
+6. Some harvestible resources have been moved around a little.
+
+
+2008-JUL-16: Release 1.7.0
+
+1. Sky/better 3rd person view.
+2. Better minimap (alt+m).
+3. Improved weather effects.
+4. Context menu for many GUI elements (right click on windows, bars, etc.)
+5. Many other smaller improvements and bug fixes.
+6. New weapon and armor (not available in the game yet).
+7. New eye candy effects.
+8. Map bug fixes & a few new additions
+
+
+2008-MAR-29: Release 1.6.0
+
+1. Many bug fixes.
+2. Archery (bows and crossbows). The new archery items will be buyable from the NPC next week, and they will be makable in a few weeks.
+3. Better water reflections, if supported by your hardware.
+4. The player and monster models are now rendered by the GPU, if supported by the hardware.
+5. Many speed improvements, smoother camera and actor animations.
+6. Various GUI improvements (some of them need to be manually activated, unless if you are using the el.ini provided with the download).
+
+
+2007-NOV-26: Release 1.5.0
+
+1. A brand new sound engine, which makes a big difference to the gameplay. The sound pack needs to be downloaded in order to enjoy the sound, but if you like the game, we strongly encourage you to do so.
+2. A new skill, tailoring.
+3. Landmines and caltrops are now working.
+4. Many new books and items.
+5. 300 storage slots (rather than 200)
+6. A brand new file system, which allows for more flexibility and speed.
+7. Many bug fixes, GUI improvements, and so on.
+8. A new server menu system which will allow for better interaction with the environment, once we finish the server side implementation.
+9. Some new NPCs.
+10. Minimap (not fully functional yet). Alt+m
+
+
+2007-JUN-03: Release 1.4.0
+
+1. One new skill (engineering). The new formulas will be posted soon.
+2. Eye candy special effects.
+3. A new 3d file format, should improve the game performance.
+4. Many misc improvements.
+5. Bug fixes.
+6. A new storage category (hazardous items). There are two special storagers that can deal with those items, one in each continent.
+7. New animals and monsters.
+8. A few new maps, and map fixes.
+
+
+2006-AUG-29: Release 1.3.2
+
+1. A new map in the gold cave (Made by Ravenod)
+2. 2 new armors (the augmented leather torso and pants)
+3. Quite a few new items (all the 'new' armors and swords now have a rare version, and the new summoning books)
+4. 3 new summonable monsters (Arctic Chimeran, Yeti and Giant).
+5. The interguild command now requires a guildrank of 6, to prevent abuse.
+6. Fixed a very rare bug where you could die twice if you were poisoned during the last hit. That bug has been there for almost 3 years now, and I just found out about it today.
+7. Some client bugfixes.
+
+
+....
+
+
+09-02-04
+Reduced CPU usage when game is not being dsiplayed (minimized, etc)
+Added additional network polling into draw_scene() and display_actors() to reduce resyncs
+
+06-22-04
+Total revamp of windows handling to use a single window manager interface
+
+04-19-04
+Changes needed to support -DNEW_VERSION better
+
+04-14-04
+The cache option (-DCACHE_SYSTEM) has been working well in combination with VA's and releasing unused memory. VA is still a memory hog, but better.
+Needs more testing by users with & without VA now.
+
+03-30-04
+Added #faq to dump faq.txt to the console
+Changed #mem to work without -DDEBUG if -DCACHE_SYSTEM, but only do detail dumps on debug
+Checked VC vs DevC++ changes
+Have windows use configdir & data dir, but just deault to current
+MD2 with VA now limits how many VA's it'll create in a single frame based on use_vertex_array setting
+
+03-27-04
+Added code for caching with basic LRU support for E3D & MD2
+
+03-25-04
+E3D's dynamically load arrays when displayed instead of at map load (kills map change lag)
+Fixed camera angle memory
+
+03-24-04
+non-Windows clients will now store config and logs in ~/.elc/
+VA support for actors now dynamically build the arrays
+
+03-19-04
+Added caps_filter support
+Memorize camera position, angle, and zoom in el.cfg
+Added version number to el.cfg to prevent problems in version changes
+
+03-18-04
+Added hack to prevent music crashes with high-optimization
+
+03-10-04
+Initial support for VA lists id -DUSE_VERTEXTARRYS defined
+
+03-08-04
+Added music player
+
+03-05-04
+Added sit_lock options to EL.ini to prevent walking if your sitting
+
+03-02-04
+Added username & password to el.ini and disabled by default
+Activated GL error checking in several places when DEBUG defined
+Makefile.linux change to help compiles on 'default' systems
+Added no_alpha_sat flag to reduce GL errors on some broken drivers, automatically set in particles.c
+
+02-24-04
+FreeBSD port
+
+02-12-04
+Trade window now support RightClick to get description
+Made NPC dialog text not click through to playing area
+Manu screen now remembers what you are trying to make
+
+02-05-04
+Added name_text_size and chat_text_size to el.ini to adjust the font sizes
+
+02-02-04
+Fixed name tag & healthbar positioning issues
+Name & healthbar no longer zoom
+Name & healthbar now use the same routine for both actor types
+
+01-29-04
+Added zoom in/out feature.
+
+01-27-04
+Resync reduction for long actions
+
+01-18-04
+Sound engine changed to OpenAL
+
+01-17-04
+Fixed particles  so the aren't visible below ground level or under bridges
+Fixed particle adding in update_ to add correctly and avoid excess looping
+The cursor no longer automatically switched to Fight on a corpse
+Fixed timing issues for actor animation
+SIN()/COS() optimizations for shadows
+
+01-12-04
+Removed excess screen size change message in windowed mode
+
+01-10-04
+Fix console history buffer ofverlow bug
+Fixed another timing issue in particle system, added additional mutexs
+Fixed recent chat scrolling bug
+
+01-07-04
+Added in PM autocomplete
+Added button and ini option to disable FPS display
