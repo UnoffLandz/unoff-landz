@@ -26,18 +26,7 @@
 #include "database_functions.h"
 #include "server_start_stop.h"
 #include "log_in.h"
-#include "db_character_tbl.h"
-#include "string_functions.h"
-#include "global.h"
-#include "colour.h"
-#include "server_protocol_functions.h"
-#include "server_messaging.h"
-#include "server_protocol.h"
-#include "client_protocol_handler.h"
-#include "characters.h"
-#include "game_data.h"
-#include "character_race.h"
-#include "test.h"
+#include "character_creation.h"
 
 void db_push_buffer(char *sql, int connection, int process_type, unsigned char *packet){
 
@@ -85,15 +74,12 @@ void db_process_buffer(){
     //make sure we have something in the buffer to process
     if(idle_buffer.buffer_count>0){
 
-        char text_out[1024]="";
-        int i=0;
-
         int connection=idle_buffer.buffer[1].connection;
         int packet_length=idle_buffer.buffer[1].packet[1] + (idle_buffer.buffer[1].packet[2] * 256) + 2;
 
         unsigned char packet[1024]={0};
 
-        i=0;
+        int i=0;
         for(i=0; i<packet_length; i++){
             packet[i]=idle_buffer.buffer[1].packet[i];
         }
@@ -104,142 +90,18 @@ void db_process_buffer(){
 
         if(idle_buffer.buffer[1].process_type==IDLE_BUFFER_PROCESS_CHECK_NEWCHAR){
 
-            //When a new character is created, check name first
-            int data_length=packet[1] + (packet[2] * 256);
-
-            //place the packet in a union so we can extract individual bytes
-            union {
-                unsigned char buf[packet_length];
-
-                struct {
-                    unsigned char protocol;
-                    unsigned char lsb;
-                    unsigned char msb;
-                    char name_and_password[data_length-8];
-                    unsigned char skin;
-                    unsigned char hair;
-                    unsigned char shirt;
-                    unsigned char pants;
-                    unsigned char boots;
-                    unsigned char type;
-                    unsigned char head;
-                }output;
-
-            }convert;
-
-            memcpy(convert.buf, packet, packet_length);
-
-            char char_name[80]="";
-            char password[80]="";
-            get_str_island(convert.output.name_and_password, char_name, 1);
-            get_str_island(convert.output.name_and_password, password, 2);
-
-            if(get_db_char_data(char_name)==FOUND){
-
-                //if the char name is found, warn about duplicate
-                char text_out[1024]="";
-                sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
-                send_raw_text(connection, CHAT_SERVER, text_out);
-
-                send_create_char_not_ok(connection);
-
-                log_event(EVENT_SESSION, "Attempt to create new char with existing char name [%s]", char_name);
-            }
-            else {
-
-                //if char name not found, add an entry to the database buffer to create a new char
-                db_push_buffer("", connection, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet);
-            }
+            //Checks whether a character name exists in the character_table of the database. If the
+            //name exists, character creation is aborted and a message sent to the client. If the
+            //name does not exist, the character creation packet is placed in the idle buffer with
+            //an instruction for IDLE_BUFFER_PROCESS_ADD_NEWCHAR so as the new character is added to
+            //the database at the next idle event
+            check_new_character(connection, packet);
         }
 /**********************************************************************************************/
 
         else if(idle_buffer.buffer[1].process_type==IDLE_BUFFER_PROCESS_ADD_NEWCHAR){
 
-            //when a new character is created, after name has been checked, add to game
-            int data_length=packet[1] + (packet[2] * 256);
-
-            //place the packet in a union so we can extract individual bytes
-            union {
-                unsigned char buf[packet_length];
-
-                struct {
-                    unsigned char protocol;
-                    unsigned char lsb;
-                    unsigned char msb;
-                    char name_and_password[data_length-8];
-                    unsigned char skin;
-                    unsigned char hair;
-                    unsigned char shirt;
-                    unsigned char pants;
-                    unsigned char boots;
-                    unsigned char type;
-                    unsigned char head;
-                }output;
-
-            }convert;
-
-            memcpy(convert.buf, packet, packet_length);
-
-            get_str_island(convert.output.name_and_password, character.char_name, 1);
-            get_str_island(convert.output.name_and_password, character.password, 2);
-            character.skin_type=convert.output.skin;
-            character.hair_type=convert.output.hair;
-            character.shirt_type=convert.output.shirt;
-            character.pants_type=convert.output.pants;
-            character.boots_type=convert.output.boots;
-            character.char_type=convert.output.type;
-            character.head_type=convert.output.head;
-
-            //set the char to stand
-            character.frame=frame_stand;
-
-            //set the char creation time
-            character.char_created=time(NULL);
-
-            //set starting channels
-            int i=0, j=0;
-            for(i=0; i<MAX_CHANNELS; i++){
-
-                if(channel[i].new_chars==1){
-
-                    if(j<MAX_CHAN_SLOTS){
-
-                        if(j==0) character.active_chan=i-CHAT_CHANNEL0;
-                        character.chan[j]=i;
-                    }
-                }
-            }
-
-            //character.active_chan=32; // slot 0
-            //character.chan[0]=1; //nub chan
-
-            //set starting map and tile
-            character.map_id=game_data.beam_map_id;
-            character.map_tile=game_data.beam_map_tile;
-
-            //add character entry to database and get the record id
-            clients.client[connection].character_id=add_db_char_data(character);
-
-            //add initial items to inventory
-            //int slot=0;
-            //add_item_to_inventory(connection, 612, 1, &slot);
-            //add_item_to_inventory(connection, 613, 1, &slot);
-            //add_item_to_inventory(connection, 216, 1, &slot);
-            //add_item_to_inventory(connection, 217, 1, &slot);
-
-            //update game data
-            race[character.char_type].char_count++;
-            game_data.char_count++;
-            strcpy(game_data.name_last_char_created, character.char_name);
-            game_data.date_last_char_created=character.char_created;
-
-            //notify client that character has been created
-            sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-            send_create_char_ok(connection);
-
-            //log character creation event
-            log_event(EVENT_NEW_CHAR, "[%s] password [%s]\n", character.char_name, character.password);
+            add_new_character(connection, packet);
         }
 /**********************************************************************************************/
 
