@@ -222,7 +222,8 @@ void start_server(char *db_filename){
         stop_server();
     }
 
-    bzero(&server_addr, sizeof(server_addr));
+    //clear struct
+    memset(&server_addr, 0, sizeof(server_addr));
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -398,9 +399,8 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         free(libevlist[watcher->fd]);
         libevlist[watcher->fd] = NULL;
 
-        //zero the struct
-        bzero(&clients.client[watcher->fd], sizeof(clients.client[watcher->fd]));
-        //memset(&clients.client[connection], '\0', sizeof(clients.client));
+        //clear the struct
+        memset(&clients.client[watcher->fd], '\0', sizeof(clients.client[watcher->fd]));
 
         return;
     }
@@ -419,9 +419,8 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
             free(libevlist[watcher->fd]);
             libevlist[watcher->fd] = NULL;
 
-            //zero the struct
-            bzero(&clients.client[watcher->fd], sizeof(clients.client[watcher->fd]));
-            //memset(&clients.client[connection], '\0', sizeof(clients.client));
+            //clear the struct
+            memset(&clients.client[watcher->fd], '\0', sizeof(clients.client[watcher->fd]));
         }
         return;
     }
@@ -586,8 +585,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                 free(libevlist[i]);
                 libevlist[i] = NULL;
 
-                //memset(&clients.client[i], '\0', sizeof(clients.client[i]));
-                bzero(&clients.client[i], sizeof(clients.client[i]));
+                memset(&clients.client[i], '\0', sizeof(clients.client[i]));
             }
 
             //restrict to clients that are logged on
