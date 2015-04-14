@@ -17,6 +17,7 @@ ENDIF()
 find_package(LibEV REQUIRED)
 find_package(SQLite3 REQUIRED)
 set(SRC broadcast_actor_functions.c
+character_creation.c
 character_inventory.c
 character_movement.c
 character_race.c
