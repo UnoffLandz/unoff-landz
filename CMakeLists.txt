@@ -10,6 +10,7 @@ IF(CMAKE_BUILD_TOOL MATCHES "(msdev|devenv|nmake)")
 ELSE()
 #-D_GLIBCXX_DEBUG
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=c++11") #-Weverything -Wno-padded -Wno-c++98-compat-pedantic
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic -std=c99")
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} "  ) #--coverage
 ENDIF()
 
