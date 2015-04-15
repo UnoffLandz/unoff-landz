@@ -18,16 +18,13 @@
 *******************************************************************************************************************/
 
 #include <stdio.h>  //support for NULL snprintf printf
-#include <string.h> //support for strcpy
 
 #include "database_functions.h"
-#include "logging.h"
-#include "server_start_stop.h"
-#include "game_data.h"
-#include "season.h"
-#include "string_functions.h"
+#include "../logging.h"
+#include "../server_start_stop.h"
+#include "../game_data.h"
 
-int load_db_seasons(){
+int load_db_game_data(){
 
     /** public function - see header */
 
@@ -36,7 +33,7 @@ int load_db_seasons(){
 
     //prepare the sql statement
     char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM SEASON_TABLE");
+    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM GAME_DATA_TABLE");
 
     rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
@@ -44,7 +41,7 @@ int load_db_seasons(){
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading season data...");
+    log_event(EVENT_INITIALISATION, "loading game data...");
 
     //read the sql query result into the game data array
     int i=0;
@@ -54,10 +51,19 @@ int load_db_seasons(){
         //get the game data id and check that there is only one set
         int id=sqlite3_column_int(stmt,0);
 
-        strcpy(season[id].season_name, (char*)sqlite3_column_text(stmt, 1));
-        strcpy(season[id].season_description, (char*)sqlite3_column_text(stmt, 2));
-        season[id].start_day=sqlite3_column_int(stmt, 3);
-        season[id].end_day=sqlite3_column_int(stmt, 4);
+        if(id!=1){
+
+            log_event(EVENT_ERROR, "game data has incorrect id [%i] in function %s: module %s: line %i", id, __func__, __FILE__, __LINE__);
+            stop_server();
+        }
+
+        game_data.beam_map_id=sqlite3_column_int(stmt, 1);
+        game_data.beam_map_tile=sqlite3_column_int(stmt, 2);
+        game_data.start_map_id=sqlite3_column_int(stmt, 3);
+        game_data.start_map_tile=sqlite3_column_int(stmt, 4);
+        game_data.game_minutes=sqlite3_column_int(stmt, 5);
+        game_data.game_days=sqlite3_column_int(stmt, 6);
+        game_data.year_length=sqlite3_column_int(stmt, 7);
 
         i++;
     }
@@ -80,23 +86,24 @@ int load_db_seasons(){
 }
 
 
-void add_db_season(int season_id, char *season_name, char *season_description, int start_day, int end_day){
+void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int start_map_tile, int year_length){
 
    /** public function - see header */
 
     char sql[MAX_SQL_LEN]="";
-    ssnprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO SEASON_TABLE("  \
-        "SEASON_ID,"   \
-        "SEASON_NAME,"    \
-        "SEASON_DESCRIPTION,"  \
-        "START_DAY,"   \
-        "END_DAY" \
-        ") VALUES(%i, '%s', '%s', %i, %i)", season_id, season_name, season_description, start_day, end_day);
+    snprintf(sql, MAX_SQL_LEN,
+        "INSERT INTO GAME_DATA_TABLE("  \
+        "GAME_DATA_ID,"   \
+        "BEAM_MAP_ID,"    \
+        "BEAM_MAP_TILE,"  \
+        "START_MAP_ID,"   \
+        "START_MAP_TILE," \
+        "YEAR_LENGTH"     \
+        ") VALUES(%i, %i, %i, %i, %i, %i)", 1, beam_map_id, beam_map_tile, start_map_id, start_map_tile, year_length);
 
     process_sql(sql);
 
-    printf("Season [%s] added successfully\n", season_name);
+    printf("Game Data added successfully\n");
 
-    log_event(EVENT_SESSION, "Added season [%s] to SEASON_TABLE", season_name);
+    log_event(EVENT_SESSION, "Added game data to GAME_DATA_TABLE");
 }

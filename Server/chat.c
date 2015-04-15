@@ -28,7 +28,7 @@
 #include "logging.h"
 #include "characters.h"
 #include "global.h"
-#include "database_functions.h"
+#include "db/database_functions.h"
 #include "idle_buffer.h"
 
 int is_player_in_chan(int connection, int chan){

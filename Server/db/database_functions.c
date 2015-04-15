@@ -21,7 +21,7 @@
 #include <string.h> //supports strlen
 
 #include "database_functions.h"
-#include "logging.h"
+#include "../logging.h"
 #include "db_character_tbl.h"
 #include "db_map_tbl.h"
 #include "db_character_type_tbl.h"
@@ -32,8 +32,9 @@
 #include "db_attribute_tbl.h"
 #include "db_game_data_tbl.h"
 #include "db_season_tbl.h"
-#include "server_start_stop.h"
-#include "attributes.h"
+#include "../server_start_stop.h"
+#include "../attributes.h"
+#include "../chat.h"
 
 void open_database(char *database_name){
 

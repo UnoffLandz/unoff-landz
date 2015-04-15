@@ -33,10 +33,10 @@
 #include "characters.h"
 #include "movement.h"
 #include "character_movement.h"
-#include "db_character_tbl.h"
+#include "db/db_character_tbl.h"
 #include "pathfinding.h"
 #include "server_start_stop.h"
-#include "database_functions.h"
+#include "db/database_functions.h"
 #include "game_data.h"
 #include "idle_buffer.h"
 

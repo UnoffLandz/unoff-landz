@@ -22,10 +22,10 @@
 #include <string.h>
 
 #include "database_functions.h"
-#include "logging.h"
-#include "server_start_stop.h"
-#include "attributes.h"
-#include "server_start_stop.h"
+#include "../logging.h"
+#include "../server_start_stop.h"
+#include "../attributes.h"
+#include "../server_start_stop.h"
 
 
 int load_db_attribute_values(int attribute_id, int race_id, int attribute_type_id){

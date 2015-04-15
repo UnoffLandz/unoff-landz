@@ -19,14 +19,15 @@
 
 #include <stdio.h> //support for snprintf
 #include <stdlib.h> //support for NULL data type
-#include <string.h> //support for strcpy function
 
 #include "database_functions.h"
-#include "logging.h"
-#include "character_race.h"
-#include "server_start_stop.h"
+#include "../logging.h"
+#include "../character_type.h"
+#include "../server_start_stop.h"
+#include "../character_race.h"
+#include "../gender.h"
 
-int load_db_char_races(){
+int load_db_char_types(){
 
     /** public function - see header */
 
@@ -34,32 +35,32 @@ int load_db_char_races(){
     sqlite3_stmt *stmt;
 
     char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM RACE_TABLE");
-
+    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TYPE_TABLE");
     rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading races...");
+    log_event(EVENT_INITIALISATION, "loading character types...");
 
     int i=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        int race_id=sqlite3_column_int(stmt, 0);
+        int char_type_id=sqlite3_column_int(stmt, 0);
 
-        if(race_id>MAX_RACES) {
+        if(char_type_id>MAX_CHARACTER_TYPES) {
 
-            log_event(EVENT_ERROR, "race_id [%i] exceeds max [%i] in function %s: module %s: line %i", race_id, MAX_RACES, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "character_type_id [%i] exceeds max [%i] in function %s: module %s: line %i", char_type_id, MAX_CHARACTER_TYPES, __func__, __FILE__, __LINE__);
             stop_server();
         }
 
-        strcpy(race[race_id].race_name, (char*)sqlite3_column_text(stmt, 1));
-        strcpy(race[race_id].race_description, (char*)sqlite3_column_text(stmt, 2));
+        character_type[char_type_id].race_id=sqlite3_column_int(stmt, 1);
+        character_type[char_type_id].gender_id=sqlite3_column_int(stmt, 2);
 
-        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", race_id, race[race_id].race_name);
+        log_event(EVENT_INITIALISATION, "loaded [%i] %s %s", char_type_id, race[character_type[char_type_id].race_id].race_name, gender[character_type[char_type_id].gender_id].gender_name);
 
         i++;
     }
@@ -69,8 +70,8 @@ int load_db_char_races(){
         log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    sqlite3_finalize(stmt);
-    if (rc != SQLITE_DONE) {
+    rc=sqlite3_finalize(stmt);
+    if (rc != SQLITE_OK) {
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
@@ -79,19 +80,21 @@ int load_db_char_races(){
 }
 
 
-void add_db_race(int race_id, char *race_name, char *race_description){
+void add_db_char_type(int char_type_id, int race_id, int gender_id){
+
+    /** public function - see header */
 
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO RACE_TABLE("  \
+        "INSERT INTO CHARACTER_TYPE_TABLE("  \
+        "CHARACTER_TYPE_ID," \
         "RACE_ID," \
-        "RACE_NAME," \
-        "RACE_DESCRIPTION" \
-        ") VALUES(%i, '%s', '%s')", race_id, race_name, race_description);
+        "SEX_ID" \
+        ") VALUES(%i, %i, %i)", char_type_id, race_id, gender_id);
 
     process_sql(sql);
 
-    printf("Race [%s] added successfully\n", race_name);
+    printf("Character type [%i] added successfully\n", char_type_id);
 
-    log_event(EVENT_SESSION, "Added race [%i] [%s] to RACE_TABLE", race_id, race_name);
+    log_event(EVENT_SESSION, "Added character type [%i] to CHARACTER_TYPE_TABLE", char_type_id);
 }
