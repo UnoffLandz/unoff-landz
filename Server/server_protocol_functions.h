@@ -183,7 +183,7 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
 
     NOTES   : used to set client game time
 */
-void send_new_minute(int connection, int16_t minute);
+void send_new_minute(int connection, int minute);
 
 
 /** RESULT  : sends the active channels packet

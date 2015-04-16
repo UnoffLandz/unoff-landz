@@ -22,8 +22,7 @@
 
 To compile server, set the following compiler flags :
 
-    -fno-strict-aliasing    - removes warning: dereferencing type-punned pointer will break strict-aliasing rules
-
+    -std=c99                - target c99 compliance
 
                                     LINKING INFORMATION
 
