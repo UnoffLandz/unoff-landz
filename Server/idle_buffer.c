@@ -23,7 +23,7 @@
 
 #include "idle_buffer.h"
 #include "logging.h"
-#include "database_functions.h"
+#include "db/database_functions.h"
 #include "server_start_stop.h"
 #include "log_in.h"
 #include "character_creation.h"

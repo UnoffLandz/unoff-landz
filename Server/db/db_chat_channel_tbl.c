@@ -21,9 +21,9 @@
 #include <stdio.h> //support for snprintf
 
 #include "database_functions.h"
-#include "logging.h"
-#include "chat.h"
-#include "server_start_stop.h"
+#include "../logging.h"
+#include "../chat.h"
+#include "../server_start_stop.h"
 
 
 int load_db_channels(){

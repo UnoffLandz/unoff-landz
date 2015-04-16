@@ -22,6 +22,7 @@
 
 #include <stdlib.h> //support for int16_t data type
 
+#include <stdint.h>
 
 /** RESULT  : sends packet from the server
 

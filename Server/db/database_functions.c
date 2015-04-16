@@ -21,7 +21,7 @@
 #include <string.h> //supports strlen
 
 #include "database_functions.h"
-#include "logging.h"
+#include "../logging.h"
 #include "db_character_tbl.h"
 #include "db_map_tbl.h"
 #include "db_character_type_tbl.h"
@@ -32,21 +32,65 @@
 #include "db_attribute_tbl.h"
 #include "db_game_data_tbl.h"
 #include "db_season_tbl.h"
-#include "server_start_stop.h"
-#include "attributes.h"
+#include "../server_start_stop.h"
+#include "../attributes.h"
+#include "../chat.h"
 
+sqlite3 *db;
+
+int current_database_version();
+static int prepare_query(const char *sql,sqlite3_stmt **stmt,const char *_func,int line)
+{
+    int rc=sqlite3_prepare_v2(db, sql, -1, stmt, NULL);
+    if(rc!=SQLITE_OK) {
+        log_sqlite_error("sqlite3_prepare_v2 failed", _func, __FILE__, line, rc, sql);
+        return -1;
+    }
+    return 0;
+}
 void open_database(char *database_name){
 
    /** public function - see header **/
 
-    int rc;
+    int rc = sqlite3_open(database_name, &db);
 
-    rc = sqlite3_open(database_name, &db);
-
-    if( rc ){
+    if( rc !=SQLITE_OK ){
 
         log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
     }
+}
+static int column_exists(const char *table,const char *column) {
+    sqlite3_stmt *stmt;
+    char sql[256];
+    int rc;
+    int name_column_idx=-1;
+
+    snprintf(sql,256,"PRAGMA table_info(%s)",table);
+
+    if(-1==prepare_query(sql,&stmt,__func__,__LINE__))
+        return 0;
+
+    for (int i=0; i<sqlite3_column_count(stmt); i++) {
+        if(strcmp("name",sqlite3_column_name(stmt,i))==0) {
+            name_column_idx = i;
+            break;
+    }
+    }
+
+    if(name_column_idx==-1) {
+        sqlite3_finalize(stmt);
+        return 0; //TODO: log information about strange table_info layout ?
+    }
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        if(0==strcmp(column,(const char *)sqlite3_column_text(stmt, name_column_idx))) {
+            sqlite3_finalize(stmt);
+            return 1;
+        }
+    }
+    sqlite3_finalize(stmt);
+    return 0;
 }
 
 int database_table_count(){
@@ -60,12 +104,8 @@ int database_table_count(){
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN, "SELECT count(*) FROM sqlite_master WHERE type='table';");
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
+    if(-1==prepare_query(sql,&stmt,__func__,__LINE__))
+        return 0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -94,12 +134,8 @@ void create_database_table(char *sql){
     int rc;
     sqlite3_stmt *stmt;
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
+    if(-1==prepare_query(sql,&stmt,__func__,__LINE__))
+        return;
 
     rc = sqlite3_step(stmt);
 
@@ -142,11 +178,8 @@ void process_sql(char *sql_str){
     int rc=0;
     sqlite3_stmt *stmt;
 
-    rc=sqlite3_prepare_v2(db, sql_str, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql_str);
-    }
+    if(-1==prepare_query(sql_str,&stmt,__func__,__LINE__))
+        return;
 
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
@@ -160,7 +193,33 @@ void process_sql(char *sql_str){
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql_str);
     }
 }
+int current_database_version() {
+    sqlite3_stmt *selectStmt;
+    const char *sql_str = "SELECT db_version FROM GAME_DATA_TABLE";
+    int rc = 0;
 
+    if(0==column_exists("GAME_DATA_TABLE","db_version"))
+        return 0;
+
+    if(-1==prepare_query(sql_str,&selectStmt,__func__,__LINE__))
+        return -1;
+
+    rc = sqlite3_step(selectStmt);
+    if (rc == SQLITE_DONE) {
+        log_event(EVENT_ERROR,"Database is missing GAME_DATA_TABLE contents.");
+        return -1;
+    }
+    else if (rc != SQLITE_ROW) {
+        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql_str);
+    }
+    else {
+        return sqlite3_column_int(selectStmt, 0);
+    }
+    rc = sqlite3_finalize(selectStmt);
+
+    return 0;
+
+}
 
 void create_default_database(){
 

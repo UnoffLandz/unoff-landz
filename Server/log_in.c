@@ -29,7 +29,7 @@
 #include "global.h"
 #include "clients.h"
 #include "characters.h"
-#include "db_character_tbl.h"
+#include "db/db_character_tbl.h"
 #include "maps.h"
 #include "server_start_stop.h"
 #include "game_data.h"

@@ -21,11 +21,11 @@
 #include <string.h> //support for strcpy and memcpy
 
 #include "database_functions.h"
-#include "logging.h"
-#include "maps.h"
-#include "server_start_stop.h"
-#include "file_functions.h"
-#include "global.h"
+#include "../logging.h"
+#include "../maps.h"
+#include "../server_start_stop.h"
+#include "../file_functions.h"
+#include "../global.h"
 
 int load_db_maps(){
 

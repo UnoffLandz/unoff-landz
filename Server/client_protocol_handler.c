@@ -31,7 +31,7 @@
 #include "server_protocol_functions.h"
 #include "characters.h"
 #include "character_race.h"
-#include "db_character_tbl.h"
+#include "db/db_character_tbl.h"
 #include "game_data.h"
 #include "log_in.h"
 #include "maps.h"
@@ -41,7 +41,7 @@
 #include "chat.h"
 #include "hash_commands.h"
 #include "server_start_stop.h"
-#include "database_functions.h"
+#include "db/database_functions.h"
 #include "idle_buffer.h"
 #include "season.h"
 

@@ -31,7 +31,7 @@
 #include "maps.h"
 #include "global.h"
 #include "movement.h"
-#include "db_character_tbl.h"
+#include "db/db_character_tbl.h"
 #include "date_time_functions.h"
 #include "server_protocol_functions.h"
 #include "gender.h"

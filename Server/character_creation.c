@@ -28,7 +28,7 @@
 #include "logging.h"
 #include "server_messaging.h"
 #include "idle_buffer.h"
-#include "db_character_tbl.h"
+#include "db/db_character_tbl.h"
 #include "characters.h"
 #include "game_data.h"
 #include "character_race.h"

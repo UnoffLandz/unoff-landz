@@ -38,7 +38,7 @@
 
 #include <sqlite3.h>
 
-sqlite3 *db; // database handle which is set when function open_database is called
+extern sqlite3 *db; // database handle which is set when function open_database is called
 
 /** RESULT  : Opens sqlite database file and creates the handle [db] which can then be called by other
               database functions.

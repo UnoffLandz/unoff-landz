@@ -2,6 +2,30 @@
 find_package(LibEV REQUIRED)
 find_package(SQLite3 REQUIRED)
 
+set(DB_SRC
+    db/db_attribute_tbl.c
+    db/db_character_race_tbl.c
+    db/db_character_tbl.c
+    db/db_character_type_tbl.c
+    db/db_chat_channel_tbl.c
+    db/db_game_data_tbl.c
+    db/db_gender_tbl.c
+    db/db_map_tbl.c
+    db/db_season_tbl.c
+    db/db_attribute_tbl.h
+    db/db_character_inventory_tbl.h
+    db/db_character_race_tbl.h
+    db/db_character_tbl.h
+    db/db_character_type_tbl.h
+    db/db_chat_channel_tbl.h
+    db/db_game_data_tbl.h
+    db/db_gender_tbl.h
+    db/db_map_tbl.h
+    db/db_season_tbl.h
+
+    db/database_functions.c
+    db/database_functions.h
+)
 set(SRC broadcast_actor_functions.c
 character_creation.c
 character_inventory.c
@@ -10,17 +34,7 @@ character_race.c
 characters.c
 chat.c
 client_protocol_handler.c
-database_functions.c
 date_time_functions.c
-db_attribute_tbl.c
-db_character_race_tbl.c
-db_character_tbl.c
-db_character_type_tbl.c
-db_chat_channel_tbl.c
-db_game_data_tbl.c
-db_gender_tbl.c
-db_map_tbl.c
-db_season_tbl.c
 file_functions.c
 gender.c
 hash_commands.c
@@ -53,18 +67,7 @@ set(INCLUDES
     client_protocol_handler.h
     clients.h
     colour.h
-    database_functions.h
     date_time_functions.h
-    db_attribute_tbl.h
-    db_character_inventory_tbl.h
-    db_character_race_tbl.h
-    db_character_tbl.h
-    db_character_type_tbl.h
-    db_chat_channel_tbl.h
-    db_game_data_tbl.h
-    db_gender_tbl.h
-    db_map_tbl.h
-    db_season_tbl.h
     file_functions.h
     game_data.h
     gender.h
@@ -88,5 +91,5 @@ set(INCLUDES
     string_functions.h
 )
 include_directories(${LIBEV_INCLUDE_DIR})
-add_executable(unoff ${SRC} ${INCLUDES})
+add_executable(unoff ${SRC} ${INCLUDES} ${DB_SRC})
 target_link_libraries(unoff ${LIBEV_LIBRARY} ${SQLITE3_LIBRARIES})

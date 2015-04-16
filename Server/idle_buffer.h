@@ -20,7 +20,7 @@
 #ifndef IDLE_BUFFER_H_INCLUDED
 #define IDLE_BUFFER_H_INCLUDED
 
-#include "database_functions.h" //access to MAX_SQL_LEN
+#include "db/database_functions.h" //access to MAX_SQL_LEN
 
 #define IDLE_BUFFER_MAX 100
 #define MAX_PROTOCOL_PACKET_SIZE 160

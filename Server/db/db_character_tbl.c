@@ -21,12 +21,12 @@
 #include <string.h> //support for memset strcpy
 
 #include "database_functions.h"
-#include "clients.h"
-#include "global.h"
-#include "characters.h"
-#include "logging.h"
-#include "game_data.h"
-#include "server_start_stop.h"
+#include "../clients.h"
+#include "../global.h"
+#include "../characters.h"
+#include "../logging.h"
+#include "../game_data.h"
+#include "../server_start_stop.h"
 
 int get_db_char_data(char *char_name){
 

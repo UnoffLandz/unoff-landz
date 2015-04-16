@@ -21,9 +21,9 @@
 #include <stdio.h> //support snprintf
 
 #include "database_functions.h"
-#include "logging.h"
-#include "gender.h"
-#include "server_start_stop.h"
+#include "../logging.h"
+#include "../gender.h"
+#include "../server_start_stop.h"
 
 int load_db_genders(){
 
