@@ -32,6 +32,7 @@
 #include "characters.h"
 #include "game_data.h"
 #include "character_race.h"
+#include "db/db_character_inventory_tbl.h"
 
 
 void check_new_character(int connection, unsigned char *packet){
@@ -154,20 +155,18 @@ void add_new_character(int connection, unsigned char *packet){
     character.map_id=game_data.beam_map_id;
     character.map_tile=game_data.beam_map_tile;
 
-    //we use the add_db_char_data function to add character to the database. This function returns
-    //an integer corresponding to the character_table id for the new record which, we'll need to
-    //link to corresponding entries for the character in the inventory table
-    clients.client[connection].character_id=add_db_char_data(character);
+    //add character data to the database and retrieve the database entry for the character
+    character.character_id=add_db_char_data(character);
 
-    //add initial items to inventory
-    //int slot=0;
-    //add_item_to_inventory(connection, 612, 1, &slot);
-    //add_item_to_inventory(connection, 613, 1, &slot);
-    //add_item_to_inventory(connection, 216, 1, &slot);
-    //add_item_to_inventory(connection, 217, 1, &slot);
+/*
+    //TEST-- add initial items to inventory
+    character.client_inventory[0].slot=1; //slots run from 1
+    character.client_inventory[0].image_id=612;
+    character.client_inventory[0].amount=10;
+*/
+    add_db_char_inventory(character);
 
-    //update game data
-    race[character.char_type].char_count++;
+    //update game details
     game_data.char_count++;
     strcpy(game_data.name_last_char_created, character.char_name);
     game_data.date_last_char_created=character.char_created;

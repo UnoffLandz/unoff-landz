@@ -27,5 +27,30 @@
         IMAGE_ID            INT, \
         AMOUNT              INT)"
 
+/** RESULT  :   creates a record of inventory contents for a new character in the inventory table
+
+    RETURNS :   void
+
+    PURPOSE :   creates a series of entries on the inventory_table corresponding to the value of
+                each element in the client_inventory array contained within the character struct
+
+    NOTES   :   1) Requires the character_id element of the character struct to be set in order for
+                   the inventory slot entries to be linked to a character record. This is set by the
+                   add_db_char_data function which, should be used before this function is called
+
+                2) Inventory information is taken from the client_inventory element of the character
+**/
+void add_db_char_inventory(struct client_node_type character);
+
+
+/** RESULT  : loads inventory data from the inventory table into the character struct
+
+    RETURNS : void
+
+    PURPOSE : Loads inventory data from the database to memory.
+
+    NOTES   :
+**/
+void get_db_char_inventory(int character_id);
 
 #endif // DB_CHARACTER_INVENTORY_TBL_H_INCLUDED

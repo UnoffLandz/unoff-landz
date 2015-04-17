@@ -58,7 +58,7 @@
         OVERALL_EXP         INT, \
         HARVEST_EXP         INT)"
 
-typedef struct client_node_type client_node_type;
+#include "../clients.h"
 
 /** RESULT  : loads data from the character table into the client array
 
