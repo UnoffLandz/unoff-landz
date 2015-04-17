@@ -82,6 +82,6 @@ void initialise_logs();
 
     NOTES   :
 */
-void log_sqlite_error(char *error_type, const char *function_name, const char *module_name, int line_number, int return_code, char *sql_stmt);
+void log_sqlite_error(char *error_type, const char *function_name, const char *module_name, int line_number, int return_code, const char *sql_stmt);
 
 #endif // LOGGING_H_INCLUDED

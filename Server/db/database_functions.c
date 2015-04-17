@@ -39,15 +39,19 @@
 sqlite3 *db;
 
 int current_database_version();
-static int prepare_query(const char *sql,sqlite3_stmt **stmt,const char *_func,int line)
-{
+
+static int prepare_query(const char *sql,sqlite3_stmt **stmt,const char *_func,int line){
+
     int rc=sqlite3_prepare_v2(db, sql, -1, stmt, NULL);
+
     if(rc!=SQLITE_OK) {
         log_sqlite_error("sqlite3_prepare_v2 failed", _func, __FILE__, line, rc, sql);
         return -1;
     }
+
     return 0;
 }
+
 void open_database(char *database_name){
 
    /** public function - see header **/
