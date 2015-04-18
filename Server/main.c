@@ -36,7 +36,7 @@ To compile server, link with the following libraries :
 #include <stdio.h>      //supports printf function
 #include <stdlib.h>     //supports free function
 #include <string.h>     //supports memset and strcpy functions
-#include <errno.h>      //supports errno function support
+#include <errno.h>      //supports errno function
 #include <unistd.h>     //supports close function
 #include <arpa/inet.h>  //supports recv and accept function
 #include <ev.h>         //supports ev event library
@@ -75,10 +75,10 @@ To compile server, link with the following libraries :
 
 struct ev_io *libevlist[MAX_CLIENTS] = {NULL};
 
+//declare prototypes
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 
-//declare prototypes
 void timeout_cb(EV_P_ struct ev_timer* timer, int revents);
 void timeout_cb2(EV_P_ struct ev_timer* timer, int revents);
 void idle_cb(EV_P_ struct ev_idle *watcher, int revents);
@@ -90,7 +90,7 @@ void start_server(char *db_filename){
 
         RETURNS  : void
 
-        PURPOSE  :
+        PURPOSE  : code modularisation
 
         NOTES    :
     **/
@@ -209,6 +209,7 @@ void start_server(char *db_filename){
     get_db_last_char_created(); //loads details of the last char created from the database into the game_data struct
     game_data.char_count=get_db_char_count();
 
+    //fill movement vector array so we can directly translate x/y coordinates into actor cmd codes
     initialise_movement_vectors();
 
     //create server socket & bind it to socket address
@@ -221,16 +222,19 @@ void start_server(char *db_filename){
         stop_server();
     }
 
-    //clear struct
+    //clear struct and fill with server socket data
     memset(&server_addr, 0, sizeof(server_addr));
-
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     server_addr.sin_port = htons(PORT);
 
     log_event(EVENT_INITIALISATION, "setting up server socket on address [%s]: port [%i]", inet_ntoa(server_addr.sin_addr), PORT);
 
+    //allow the server socket to be reused so that, if we stop the server and restart, we're not
+    //being told the socket is already bound
     int bReuseaddr = 1;
+
+    /*
     if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char*) &bReuseaddr, sizeof(bReuseaddr)) != 0) {
 
         int errnum=errno;
@@ -239,6 +243,7 @@ void start_server(char *db_filename){
         log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
         stop_server();
     }
+    */
 
     //bind the server socket to an address
     if(bind(sd, (struct sockaddr*) &server_addr, sizeof(server_addr))==-1){
