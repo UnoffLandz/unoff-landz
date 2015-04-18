@@ -747,10 +747,10 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
         unsigned char special;
 
         char char_name[strlen(clients.client[connection].char_name)+1];
-        char unknown;
-        char char_height; // min=2 max=127
-        char riding; // none=255  brown horse=200
-        char neck_attachment; //none=64
+        unsigned char unknown;
+        unsigned char char_height; // min=2 max=127
+        unsigned char riding; // none=255  brown horse=200
+        unsigned char neck_attachment; //none=64
     }packet_data;
 
     *packet_length=sizeof(packet_data);
