@@ -56,7 +56,7 @@ enum{//database buffer processing types
 
     NOTES    :
 **/
-void db_push_buffer(char *sql, int connection, int process_type, unsigned char *packet);
+void push_idle_buffer(char *sql, int connection, int process_type, unsigned char *packet);
 
 
 /** RESULT  : processes an item from the database buffer
@@ -67,6 +67,6 @@ void db_push_buffer(char *sql, int connection, int process_type, unsigned char *
 
     NOTES    :
 **/
-void db_process_buffer();
+void process_idle_buffer();
 
 #endif // IDLE_BUFFER_H_INCLUDED

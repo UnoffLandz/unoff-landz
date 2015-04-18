@@ -28,7 +28,7 @@
 #include "log_in.h"
 #include "character_creation.h"
 
-void db_push_buffer(char *sql, int connection, int process_type, unsigned char *packet){
+void push_idle_buffer(char *sql, int connection, int process_type, unsigned char *packet){
 
     /** public function - see header **/
 
@@ -67,7 +67,7 @@ void db_push_buffer(char *sql, int connection, int process_type, unsigned char *
 
 }
 
-void db_process_buffer(){
+void process_idle_buffer(){
 
     /** public function - see header **/
 

@@ -143,13 +143,13 @@ int join_channel(int connection, int chan){
 
             char sql[MAX_SQL_LEN]="";
             snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", i, chan, clients.client[connection].character_id);
-            db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+            push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 
             clients.client[connection].active_chan=i+31;
             send_get_active_channels(connection);
 
             snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
-            db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+            push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 
             //echo back to player which channel was just joined and its description etc
             sprintf(text_out, "%cYou joined channel %s", c_green3+127, channel[chan].channel_name);
@@ -204,7 +204,7 @@ int leave_channel(int connection, int chan){
     clients.client[connection].chan[slot]=0;
 
     snprintf(sql, MAX_SQL_LEN,"UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", slot, chan, clients.client[connection].character_id);
-    db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+    push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 
     // need to echo back to player which channel was just joined and its description etc
     sprintf(text_out, "%cyou left channel %s", c_green3+127, channel[chan].channel_name);
@@ -230,7 +230,7 @@ int leave_channel(int connection, int chan){
     send_get_active_channels(connection);
 
     sprintf(sql, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
-    db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+    push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 
     if(clients.client[connection].active_chan==0){
 

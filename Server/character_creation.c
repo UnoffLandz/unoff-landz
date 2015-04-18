@@ -84,7 +84,7 @@ void check_new_character(int connection, unsigned char *packet){
     else {
 
         //if char name does not exist, tell idle buffer to create a new character with that name
-        db_push_buffer("", connection, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet);
+        push_idle_buffer("", connection, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet);
     }
 }
 

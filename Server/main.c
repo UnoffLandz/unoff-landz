@@ -230,11 +230,8 @@ void start_server(char *db_filename){
 
     log_event(EVENT_INITIALISATION, "setting up server socket on address [%s]: port [%i]", inet_ntoa(server_addr.sin_addr), PORT);
 
-    //allow the server socket to be reused so that, if we stop the server and restart, we're not
-    //being told the socket is already bound
+    //allow the socket to be immediately reused
     int bReuseaddr = 1;
-
-    /*
     if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char*) &bReuseaddr, sizeof(bReuseaddr)) != 0) {
 
         int errnum=errno;
@@ -243,7 +240,6 @@ void start_server(char *db_filename){
         log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
         stop_server();
     }
-    */
 
     //bind the server socket to an address
     if(bind(sd, (struct sockaddr*) &server_addr, sizeof(server_addr))==-1){
@@ -255,6 +251,7 @@ void start_server(char *db_filename){
         stop_server();
     }
 
+    //listen for incoming client connections
     if(listen(sd, 5)==-1){
 
         int errnum=errno;
@@ -264,6 +261,7 @@ void start_server(char *db_filename){
         stop_server();
     }
 
+    //start the event watchers
     ev_timer_init(timeout_watcher, timeout_cb, 0.05, 0.05);
     ev_timer_start(loop, timeout_watcher);
 
@@ -379,8 +377,6 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         stop_server();
     }
 
-    //read = recv(watcher->fd, buffer, 512, 0); // read stream to buffer
-
     //wrapping recv in this macro prevents connection reset by peer errors
     read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
 
@@ -475,7 +471,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
             } while(1);
         }
     }
- }
+}
 
 
 void close_connection_slot(int connection){
@@ -499,7 +495,7 @@ void close_connection_slot(int connection){
 
         char sql[MAX_SQL_LEN]="";
         snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[connection].time_of_last_minute, clients.client[connection].character_id);
-        db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+        push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
     }
 
     close(connection);
@@ -529,17 +525,18 @@ void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
     char sql[MAX_SQL_LEN]="";
     game_data.game_minutes++;
 
+    //update game time
     if(game_data.game_minutes>360){
 
         game_data.game_minutes=0;
         game_data.game_days++;
 
         snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_DAYS=%i WHERE GAME_DATA_ID=1", game_data.game_days);
-        db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+        push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
     }
 
     snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_MINUTES=%i WHERE GAME_DATA_ID=1", game_data.game_minutes);
-    db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+    push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
  }
 
 
@@ -604,7 +601,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                     //update database with time char was last in game
                     char sql[MAX_SQL_LEN]="";
                     snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[i].time_of_last_minute, clients.client[i].character_id);
-                    db_push_buffer(sql, i, IDLE_BUFFER_PROCESS_SQL, NULL);
+                    push_idle_buffer(sql, i, IDLE_BUFFER_PROCESS_SQL, NULL);
                 }
 
                 //process any char movements
@@ -635,7 +632,7 @@ void idle_cb (struct ev_loop *loop, struct ev_idle *watcher, int revents){
         stop_server();
     }
 
-    db_process_buffer();
+    process_idle_buffer();
 }
 
 

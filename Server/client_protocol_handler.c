@@ -234,7 +234,7 @@ void process_packet(int connection, unsigned char *packet){
                 //update database here else, if we do it after the switch structure, an unknown frame value
                 //could end up being updated to the database
                 snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i;",clients.client[connection].frame, clients.client[connection].character_id);
-                db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+                push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 
                 log_event(EVENT_SESSION, "Protocol SIT_DOWN by [%s] (stand)", clients.client[connection].char_name);
                 break;
@@ -252,7 +252,7 @@ void process_packet(int connection, unsigned char *packet){
                 //update database here else, if we do it after the switch structure, an unknown frame value
                 //could end up being updated to the database
                 sprintf(sql, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i;",clients.client[connection].frame, clients.client[connection].character_id);
-                db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+                push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 
                 log_event(EVENT_SESSION, "Protocol SIT_DOWN by [%s] (sit)", clients.client[connection].char_name);
                 break;
@@ -603,7 +603,7 @@ void process_packet(int connection, unsigned char *packet){
         //update the database
         char sql[MAX_SQL_LEN]="";
         snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", data[0], clients.client[connection].character_id);
-        db_push_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+        push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
 
         log_event(EVENT_SESSION, "Protocol SET_ACTIVE_CHANNEL by [%s]...", clients.client[connection].char_name);
     }
@@ -620,7 +620,7 @@ void process_packet(int connection, unsigned char *packet){
         log_event(EVENT_SESSION, "Protocol LOG_IN by [%i]...", connection);
 
         //process_log_in(connection, packet);
-        db_push_buffer("", connection, IDLE_BUFFER_PROCESS_LOGIN, packet);
+        push_idle_buffer("", connection, IDLE_BUFFER_PROCESS_LOGIN, packet);
     }
 /***************************************************************************************************/
 
@@ -633,7 +633,7 @@ void process_packet(int connection, unsigned char *packet){
         //place log event before process so the following are in a logical order
         log_event(EVENT_SESSION, "Protocol CREATE_CHAR by [%i]...", connection);
 
-        db_push_buffer("", connection, IDLE_BUFFER_PROCESS_CHECK_NEWCHAR, packet);
+        push_idle_buffer("", connection, IDLE_BUFFER_PROCESS_CHECK_NEWCHAR, packet);
     }
 /***************************************************************************************************/
 
