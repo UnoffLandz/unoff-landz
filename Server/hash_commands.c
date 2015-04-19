@@ -18,6 +18,7 @@
 *******************************************************************************************************************/
 
 #include <stdio.h> //supports sprintf function
+#include <stdlib.h> //support atoi function
 #include <string.h> //supports strcmp function
 
 #include "string_functions.h"
@@ -38,6 +39,7 @@
 #include "character_type.h"
 #include "chat.h"
 #include "game_data.h"
+#include "guilds.h"
 
 void process_hash_commands(int connection, char *text){
 
@@ -146,7 +148,7 @@ void process_hash_commands(int connection, char *text){
             return;
         }
 
-        char char_name[1024]="";
+        char char_name[80]="";
         get_str_island(text, char_name, 2);
 
         //check that the char is in game
@@ -181,15 +183,26 @@ void process_hash_commands(int connection, char *text){
 
         sprintf(text_out, "%cCharacter Age:%i", c_green3+127, char_age(char_connection));
         send_raw_text(connection, CHAT_SERVER, text_out);
-/*
-        sprintf(text_out, "%cGuild        :%s", c_green3+127, guilds.guild[character.guild_id]->guild_name);
-        send_raw_text(connection, CHAT_SERVER, text_out);
 
-        get_time_stamp_str(character.joined_guild, time_stamp_str);
-        get_date_stamp_str(character.joined_guild, date_stamp_str);
-        sprintf(text_out, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-*/
+        if(character.guild_id==0){
+
+            sprintf(text_out, "%cGuild        :guildless player", c_green3+127);
+            send_raw_text(connection, CHAT_SERVER, text_out);
+
+            sprintf(text_out, "%cJoined       :n/a", c_green3+127);
+            send_raw_text(connection, CHAT_SERVER, text_out);
+        }
+        else {
+
+            sprintf(text_out, "%cGuild        :%s", c_green3+127, guilds.guild[character.guild_id].guild_name);
+            send_raw_text(connection, CHAT_SERVER, text_out);
+
+            get_time_stamp_str(character.joined_guild, time_stamp_str);
+            get_date_stamp_str(character.joined_guild, date_stamp_str);
+
+            sprintf(text_out, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+            send_raw_text(connection, CHAT_SERVER, text_out);
+        }
     }
 
 /***************************************************************************************************/

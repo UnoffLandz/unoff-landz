@@ -20,9 +20,6 @@
 #ifndef SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED
 #define SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED
 
-#include <stdlib.h> //support for int16_t data type
-
-#include <stdint.h>
 
 /** RESULT  : sends packet from the server
 
@@ -143,37 +140,70 @@ void send_here_your_stats(int connection);
 void send_change_map(int connection, char *elm_filename);
 
 
-/** RESULT  : creates the add_new_enhanced_actor_packet to client
+/** RESULT  : creates an add_new_enhanced_actor_packet
 
     RETURNS : void
 
-    PURPOSE :
+    PURPOSE : enables a packet to be created once which can then be sent multiple times
 
-    NOTES   : used by broadcast_add_new_enhanced_actor_packet function
+    NOTES   :
 */
 void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *packet_length);
+
+
+/** RESULT  : sends an add_new_enhanced_actor_packet
+
+    RETURNS : void
+
+    PURPOSE : enables logging and local debugging of protocol
+
+    NOTES   :
+*/
+void send_add_new_enhanced_actor_packet(int connection, unsigned char *packet, int packet_length);
 
 
 /** RESULT  : creates the remove actor_packet to client
 
     RETURNS : void
 
-    PURPOSE :
+    PURPOSE : enables a packet to be created once which can then be sent multiple times
 
-    NOTES   : used by broadcast_remove_actor_packet function
+    NOTES   :
 */
 void remove_actor_packet(int connection, unsigned char *packet, int *packet_length);
+
+
+/** RESULT  : sends a remove_actor_packet
+
+    RETURNS : void
+
+    PURPOSE : enables logging and local debugging of protocol
+
+    NOTES   :
+*/
+void send_remove_actor_packet(int connection, unsigned char *packet, int packet_length);
 
 
 /** RESULT  : creates the add_actor_packet
 
     RETURNS : void
 
-    PURPOSE :
+    PURPOSE : enables a packet to be created once which can then be sent multiple times
 
-    NOTES   : used by broadcast_actor_packet function
+    NOTES   :
 */
 void add_actor_packet(int connection, unsigned char move, unsigned char *packet, int *packet_length);
+
+
+/** RESULT  : sends an add_actor_packet
+
+    RETURNS : void
+
+    PURPOSE : enables logging and local debugging of protocol
+
+    NOTES   :
+*/
+void send_add_actor_packet(int connection, unsigned char *packet, int packet_length);
 
 
 /** RESULT  : sends the new_minute packet

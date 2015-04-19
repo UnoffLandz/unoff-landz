@@ -205,7 +205,7 @@ void start_server(char *db_filename){
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    //set global data
+    //gather initial stats
     get_db_last_char_created(); //loads details of the last char created from the database into the game_data struct
     game_data.char_count=get_db_char_count();
 

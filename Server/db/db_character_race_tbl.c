@@ -95,3 +95,4 @@ void add_db_race(int race_id, char *race_name, char *race_description){
 
     log_event(EVENT_SESSION, "Added race [%i] [%s] to RACE_TABLE", race_id, race_name);
 }
+

@@ -30,7 +30,8 @@
 #include "global.h"
 #include "logging.h"
 
-#define DEBUG_BROADCAST 0
+#define DEBUG_BROADCAST_ACTOR_FUNCTIONS 0
+
 
 void broadcast_add_new_enhanced_actor_packet(int connection){
 
@@ -67,14 +68,14 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
                     //restrict to those chars that can see the broadcasting char
                     if(get_proximity(char_tile, receiver_char_tile, map_axis) < receiver_char_visual_range){
 
-                        //send(i, packet, packet_length, 0);
-                        send_packet(i, packet, packet_length);
+                        send_add_new_enhanced_actor_packet(i, packet, packet_length);
                     }
                 }
             }
         }
     }
 }
+
 
 void broadcast_remove_actor_packet(int connection) {
 
@@ -107,24 +108,26 @@ void broadcast_remove_actor_packet(int connection) {
                     int receiver_char_visual_range=get_char_visual_range(i);
                     int receiver_char_tile=clients.client[i].map_tile;
 
-                    #if DEBUG_BROADCAST==1
+                    #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                     printf("remove actor packet connection %i proximity %i visual range %i\n", i, receiver_char_visual_range, get_proximity(char_tile, receiver_char_tile, map_axis));
                     #endif
 
                     //restrict to those chars that can see the broadcasting char
                     if(get_proximity(char_tile, receiver_char_tile, map_axis) < receiver_char_visual_range){
 
-                        #if DEBUG_BROADCAST==1
+                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                         printf("connection %i remove actor packet sent\n", i);
                         #endif
 
-                        send_packet(i, packet, packet_length);
+                        //send_packet(i, packet, packet_length);
+                        send_remove_actor_packet(i, packet, packet_length);
                     }
                 }
             }
         }
     }
 }
+
 
 void broadcast_actor_packet(int connection, unsigned char move, int sender_destination_tile){
 
@@ -177,35 +180,32 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                     if(proximity_before_move>receiver_visual_range && proximity_after_move<=receiver_visual_range){
 
                         //sending char moves into visual proximity of receiving char
-                        #if DEBUG_BROADCAST==1
+                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                         printf("char [%i] sees sending char [%i] added\n", i, connection);
                         #endif
 
-                        //send(i, packet2, packet2_length, 0);
-                        send_packet(i, packet2, packet2_length);
+                        send_add_new_enhanced_actor_packet(i, packet2, packet2_length);
                     }
                     else if(proximity_before_move<=receiver_visual_range && proximity_after_move>receiver_visual_range){
 
                         //sending char moves out of visual proximity of receiving char
-                        #if DEBUG_BROADCAST==1
+                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                         printf("char [%i] sees sending char [%i] removed\n", i, connection);
                         #endif
 
-                        //send(i, packet3, packet3_length, 0);
-                        send_packet(i, packet3, packet3_length);
+                        send_remove_actor_packet(i, packet3, packet3_length);
                     }
                     else if(proximity_before_move<=receiver_visual_range && proximity_after_move<=receiver_visual_range){
 
                         //sending char moving within visual proximity of receiving char
-                        #if DEBUG_BROADCAST==1
+                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                         printf("char [%i] sees sending char [%i] move\n", i, connection);
                         #endif
 
-                        //send(i, packet1, packet1_length, 0);
-                        send_packet(i, packet1, packet1_length);
+                        send_add_actor_packet(i, packet1, packet1_length);
                     }
                     else {
-                        #if DEBUG_BROADCAST==1
+                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                         printf("char [%i] can't see sending char [%i]\n", i, connection);
                         #endif
                     }
@@ -215,24 +215,22 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                 if(proximity_before_move>sender_visual_range && proximity_after_move<=sender_visual_range){
 
                     //sending char moves into visual proximity of receiving char
-                    #if DEBUG_BROADCAST==1
+                    #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                     printf("sending char [%i] sees another char [%i] added\n", connection, i);
                     #endif
 
                     add_new_enhanced_actor_packet(i, packet, &packet_length);
-                    //send(connection, packet, packet_length, 0);
-                    send_packet(connection, packet, packet_length);
+                    send_add_new_enhanced_actor_packet(connection, packet, packet_length);
                 }
                 else if(proximity_before_move<=sender_visual_range && proximity_after_move>sender_visual_range){
 
                     //sending char moves out of visual proximity of receiving char
-                    #if DEBUG_BROADCAST==1
+                    #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                     printf("sending char [%i] sees another char [%i] removed\n", connection, i);
                     #endif
 
                     remove_actor_packet(i, packet, &packet_length);
-                    //send(connection, packet, packet_length, 0);
-                    send_packet(connection, packet, packet_length);
+                    send_remove_actor_packet(connection, packet, packet_length);
                 }
                 else if(proximity_before_move<=sender_visual_range && proximity_after_move<=sender_visual_range){
 
@@ -240,7 +238,7 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                     if(i==connection) {
 
                         // sending char sees itself move
-                        #if DEBUG_BROADCAST==1
+                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                         printf("sending char [%i] sees itself move\n", i);
                         #endif
 
@@ -249,15 +247,14 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                     else{
 
                         // sending char sees itself stationery
-                        #if DEBUG_BROADCAST==1
+                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
                         printf("sending char [%i] sees itself stationary\n", i);
                         #endif
 
                         add_actor_packet(i, 0, packet, &packet_length);
                     }
 
-                    send_packet(connection, packet, packet_length);
-                    //send(connection, packet, packet_length, 0);
+                    send_add_actor_packet(connection, packet, packet_length);
                 }
             }
         }
@@ -288,6 +285,7 @@ void broadcast_local_chat(int connection, char *text_in){
         }
     }
 }
+
 
 void broadcast_channel_chat(int chan, int connection, char *text_in){
 
@@ -327,6 +325,7 @@ void broadcast_channel_chat(int chan, int connection, char *text_in){
         }
     }
 }
+
 
 void broadcast_channel_event(int chan, int connection, char *text_in){
 

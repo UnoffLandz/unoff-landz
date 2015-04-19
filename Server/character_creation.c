@@ -21,7 +21,6 @@
 #include <string.h> //support for memcpy
 #include <stdio.h> //support for sprintf
 
-#include "string_functions.h"
 #include "global.h"
 #include "colour.h"
 #include "server_protocol_functions.h"
@@ -33,42 +32,59 @@
 #include "game_data.h"
 #include "character_race.h"
 #include "db/db_character_inventory_tbl.h"
+#include "packet.h"
+#include "character_race.h"
+#include "character_type.h"
+#include "gender.h"
 
+#define DEBUG_CHARACTER_CREATION 0
 
 void check_new_character(int connection, unsigned char *packet){
 
-    int packet_length=packet[1] + (packet[2] * 256) + 2;
+    /** public function - see header */
 
-    //create a union so we can convert the packet array into easily accessible individual data elements
-    union {
+    struct packet_element_type element[11];
 
-        unsigned char buf[packet_length];
+    element[0].data_type=PROTOCOL;
+    element[1].data_type=DATA_LENGTH;
+    element[2].data_type=STRING_SPACE; //char name
+    element[3].data_type=STRING_NULL; //password
+    element[4].data_type=BYTE; //skin
+    element[5].data_type=BYTE; //hair
+    element[6].data_type=BYTE; //shirt
+    element[7].data_type=BYTE; //pants
+    element[8].data_type=BYTE; //boots
+    element[9].data_type=BYTE; //type
+    element[10].data_type=BYTE; //head
 
-        struct {
-            unsigned char protocol;
-            unsigned char lsb;
-            unsigned char msb;
-            char name_and_password[packet_length-10];
-            unsigned char skin;
-            unsigned char hair;
-            unsigned char shirt;
-            unsigned char pants;
-            unsigned char boots;
-            unsigned char type;
-            unsigned char head;
-        }output;
+    read_packet(element, 11, packet);
 
-    }convert;
+    #if DEBUG_CHARACTER_CREATION==1
 
-    //copy the packet into the union
-    memcpy(convert.buf, packet, packet_length);
+    int pl1=packet[1]+(packet[2]*256)+2;
 
-    //extract the character name from the union
-    char char_name[80]="";
-    get_str_island(convert.output.name_and_password, char_name, 1);
+    printf("***Debug check_new_character function***\n");
+    printf("packet data...");
+
+    int i1=0;
+    for(i1=0; i1<pl1; i1++) printf("%i ", packet[i1]);
+
+    printf("\npacket bytes read...\n");
+    printf("protocol     %i\n", element[0].data.numeric);
+    printf("data length  %i\n", element[1].data.numeric);
+    printf("name         %s\n", element[2].data.string);
+    printf("password     %s\n", element[3].data.string);
+    printf("skin  %i\n", element[4].data.numeric);
+    printf("hair  %i\n", element[5].data.numeric);
+    printf("shirt %i\n", element[6].data.numeric);
+    printf("pants  %i\n", element[7].data.numeric);
+    printf("boots  %i\n", element[8].data.numeric);
+    printf("type %i\n", element[9].data.numeric);
+    printf("head %i\n", element[9].data.numeric);
+    #endif
 
     //check if the character name already exists
-    if(get_db_char_data(char_name)==FOUND){
+    if(get_db_char_data(element[2].data.string)==FOUND){
 
         //if the char name exists, abort character creation and send warning to client
         char text_out[1024]="";
@@ -77,59 +93,75 @@ void check_new_character(int connection, unsigned char *packet){
 
         send_create_char_not_ok(connection);
 
-        log_event(EVENT_SESSION, "Attempt to create new char with existing char name [%s]", char_name);
-
-        return;
+        log_event(EVENT_NEW_CHAR, "new character name [%s] rejected", element[2].data.string);
     }
     else {
 
         //if char name does not exist, tell idle buffer to create a new character with that name
         push_idle_buffer("", connection, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet);
+
+        log_event(EVENT_NEW_CHAR, "new character name [%s] accepted. Proceed to add to db", element[2].data.string);
     }
 }
 
 
 void add_new_character(int connection, unsigned char *packet){
 
-    int packet_length=packet[1] + (packet[2] * 256) + 2;
+    /** public function - see header */
 
-    //create a union so we can convert the packet array into easily accessible individual data elements
-    union {
+    struct packet_element_type element[11];
 
-        unsigned char buf[packet_length];
+    element[0].data_type=PROTOCOL;
+    element[1].data_type=DATA_LENGTH;
+    element[2].data_type=STRING_SPACE; //char name
+    element[3].data_type=STRING_NULL; //password
+    element[4].data_type=BYTE; //skin
+    element[5].data_type=BYTE; //hair
+    element[6].data_type=BYTE; //shirt
+    element[7].data_type=BYTE; //pants
+    element[8].data_type=BYTE; //boots
+    element[9].data_type=BYTE; //type
+    element[10].data_type=BYTE; //head
 
-        struct {
-            unsigned char protocol;
-            unsigned char lsb;
-            unsigned char msb;
-            char name_and_password[packet_length-10];
-            unsigned char skin;
-            unsigned char hair;
-            unsigned char shirt;
-            unsigned char pants;
-            unsigned char boots;
-            unsigned char type;
-            unsigned char head;
-        }output;
+    read_packet(element, 11, packet);
 
-    }convert;
+    #if DEBUG_CHARACTER_CREATION==1
 
-    //copy the packet into the union
-    memcpy(convert.buf, packet, packet_length);
+    int pl2=packet[1]+(packet[2]*256)+2;
+
+    printf("***Debug add_new_character function***\n");
+    printf("packet data...");
+
+    int i2=0;
+    for(i2=0; i2<pl2; i2++) printf("%i ", packet[i2]);
+
+    printf("\npacket bytes read...\n");
+    printf("protocol     %i\n", element[0].data.numeric);
+    printf("data length  %i\n", element[1].data.numeric);
+    printf("name         %s\n", element[2].data.string);
+    printf("password     %s\n", element[3].data.string);
+    printf("skin  %i\n", element[4].data.numeric);
+    printf("hair  %i\n", element[5].data.numeric);
+    printf("shirt %i\n", element[6].data.numeric);
+    printf("pants  %i\n", element[7].data.numeric);
+    printf("boots  %i\n", element[8].data.numeric);
+    printf("type %i\n", element[9].data.numeric);
+    printf("head %i\n", element[9].data.numeric);
+    #endif
 
     //We pass character data to the database via the character struct, so lets clear it first
     memset(&character, 0, sizeof(character));
 
     //extract character data from the union and place in the character struct
-    get_str_island(convert.output.name_and_password, character.char_name, 1);
-    get_str_island(convert.output.name_and_password, character.password, 2);
-    character.skin_type=convert.output.skin;
-    character.hair_type=convert.output.hair;
-    character.shirt_type=convert.output.shirt;
-    character.pants_type=convert.output.pants;
-    character.boots_type=convert.output.boots;
-    character.char_type=convert.output.type;
-    character.head_type=convert.output.head;
+    strcpy(character.char_name, element[2].data.string);
+    strcpy(character.password, element[3].data.string);
+    character.skin_type=element[4].data.numeric;
+    character.hair_type=element[5].data.numeric;
+    character.shirt_type=element[6].data.numeric;
+    character.pants_type=element[7].data.numeric;
+    character.boots_type=element[8].data.numeric;
+    character.char_type=element[9].data.numeric;
+    character.head_type=element[10].data.numeric;
 
     //set the char to stand
     character.frame=frame_stand;
@@ -159,7 +191,7 @@ void add_new_character(int connection, unsigned char *packet){
     character.character_id=add_db_char_data(character);
 
 /*
-    //TEST-- add initial items to inventory
+    //TEST CODE -- add initial items to inventory
     character.client_inventory[0].slot=1; //slots run from 1
     character.client_inventory[0].image_id=612;
     character.client_inventory[0].amount=10;
@@ -171,6 +203,13 @@ void add_new_character(int connection, unsigned char *packet){
     strcpy(game_data.name_last_char_created, character.char_name);
     game_data.date_last_char_created=character.char_created;
 
+    //update game stats
+    int race_id=character_type[character.char_type].race_id;
+    race[race_id].char_count++;
+
+    int gender_id=character_type[character.char_type].gender_id;
+    gender[gender_id].char_count++;
+
     //notify client that character has been created
     char text_out[160]="";
     sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
@@ -178,5 +217,5 @@ void add_new_character(int connection, unsigned char *packet){
     send_create_char_ok(connection);
 
     //log character creation event
-    log_event(EVENT_NEW_CHAR, "[%s] password [%s]\n", character.char_name, character.password);
+    log_event(EVENT_NEW_CHAR, "new character created: name [%s] password [%s]", character.char_name, character.password);
 }

@@ -395,3 +395,13 @@ void get_db_last_char_created(){
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 }
+
+void load_char_race_stats(){
+
+    //TODO
+}
+
+void load_char_gender_stats(){
+
+    //TODO
+}

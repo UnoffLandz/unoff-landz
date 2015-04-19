@@ -16,31 +16,23 @@
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
-#include <stdlib.h> //supports abs function
 
-#include "maps.h"
-#include "logging.h"
-#include "server_protocol_functions.h"
-#include "movement.h"
-#include "string_functions.h"
-#include "numeric_functions.h"
-#include "global.h"
-#include "broadcast_actor_functions.h"
-#include "server_start_stop.h"
+#ifndef GUILD_H_INCLUDED
+#define GUILD_H_INCLUDED
 
-int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
+#define MAX_GUILDS 10
 
-    /** RESULT  : calculates the distance between two entities on a map
+struct guild_node_type {
 
-    RETURNS : the distance
+    char guild_name[80];
+    int guild_tag_colour;
+    time_t date_created;
+};
 
-    PURPOSE : required by broadcast_add_new_enhanced_actor_packet
+struct guild_list_type {
 
-    NOTES   :
-    */
+    struct guild_node_type guild[MAX_GUILDS];
+};
+struct guild_list_type guilds;
 
-    int x_diff=abs((tile_pos_1 % map_axis) - (tile_pos_2 % map_axis));
-    int y_diff=abs((tile_pos_1 / map_axis) - (tile_pos_2 / map_axis));
-
-    if(x_diff>y_diff) return x_diff; else return y_diff;
-}
+#endif // GUILD_H_INCLUDED

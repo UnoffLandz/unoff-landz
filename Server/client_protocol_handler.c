@@ -45,7 +45,7 @@
 #include "idle_buffer.h"
 #include "season.h"
 
-#define DEBUG_PACKET 0//set debug mode
+#define DEBUG_PACKET 1//set debug mode
 
 void process_packet(int connection, unsigned char *packet){
 

@@ -24,6 +24,7 @@
 
 struct gender_type{
     char gender_name[20];
+    char char_count;
 };
 struct gender_type gender[MAX_GENDER];
 
