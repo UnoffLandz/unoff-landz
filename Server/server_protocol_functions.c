@@ -373,38 +373,36 @@ void send_get_active_channels(int connection){
 
     /** public function - see header */
 
-    typedef struct {
+    struct packet_element_type element[3+MAX_CHAN_SLOTS];
+    unsigned char packet[1024]={0};
 
-        unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-        unsigned char active_channel;
-        int channel_slot[MAX_CHAN_SLOTS];
-    }packet_data;
+    element[0].data_type=PROTOCOL;
+    element[0].data.numeric=GET_ACTIVE_CHANNELS;
 
-    //define the packet length as this allows the use of a calculated field within a union
-    //without creating a compiler warning so that we have the flexibility to compile for
-    //variable numbers of channel slots simply by changing the value of MAX_CHAN_SLOTS
-    #define GET_ACTIVE_CHANNELS_PACKET_LENGTH MAX_CHAN_SLOTS+2
+    element[1].data_type=DATA_LENGTH;
 
-    union {
+    //active channel
+    element[2].data_type=BYTE;
+    element[2].data.numeric=(int)channel;
 
-        unsigned char out[GET_ACTIVE_CHANNELS_PACKET_LENGTH];
-        packet_data in;
-    }packet;
-
-    packet.in.protocol=GET_ACTIVE_CHANNELS;
-    packet.in.lsb=(GET_ACTIVE_CHANNELS_PACKET_LENGTH-2) % 256;
-    packet.in.msb=(GET_ACTIVE_CHANNELS_PACKET_LENGTH-2) / 256;
-    packet.in.active_channel=clients.client[connection].active_chan;
-
+    //channel numbers
     int i=0;
     for(i=0; i<MAX_CHAN_SLOTS; i++){
 
-        packet.in.channel_slot[i]=clients.client[connection].chan[i];
+        element[i+3].data_type=UINT32;
+        element[i+3].data.numeric=clients.client[connection].chan[i];
     }
 
-    send_packet(connection, packet.out, GET_ACTIVE_CHANNELS_PACKET_LENGTH);
+    //add one to the total elements as packet length runs from zero
+    int packet_length=build_packet(element, 3+MAX_CHAN_SLOTS, packet);
+
+    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
+    printf("GET_ACTIVE_CHANNELS connection [%i]\n", connection);
+    #endif
+
+    log_event(EVENT_SESSION, "GET_ACTIVE_CHANNELS connection [%i]", connection);
+
+    send_packet(connection, packet, packet_length);
 }
 
 
@@ -748,7 +746,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     sprintf(banner, "%s %c%s",
         clients.client[connection].char_name,
         127+guild_tag_colour,
-        guilds.guild[clients.client[connection].guild_id].guild_name);
+        guilds.guild[clients.client[connection].guild_id].guild_tag);
 
     element[23].data_type=STRING_NULL;
     strcpy(element[23].data.string, banner);

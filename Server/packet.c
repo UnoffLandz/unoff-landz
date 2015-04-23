@@ -67,6 +67,15 @@ int build_packet(struct packet_element_type *element, int element_count, unsigne
             count=count+2;
         }
 
+        else if(element[i].data_type==UINT32){
+
+            packet[count]=element[i].data.numeric % 256;
+            packet[count+1]=element[i].data.numeric / 256 % 256;
+            packet[count+2]=element[i].data.numeric / 256 / 256 % 256;
+            packet[count+4]=element[i].data.numeric / 256 / 256 / 256 % 256;
+            count=count+2;
+        }
+
         else if(element[i].data_type==STRING_NULL){
 
             memcpy(packet+count, element[i].data.string, strlen(element[i].data.string)+1);
@@ -123,6 +132,12 @@ void read_packet(struct packet_element_type *element, int element_count, unsigne
 
             element[i].data.numeric = packet[count] + (packet[count+1] * 256);
             count=count+2;
+        }
+
+        else if(element[i].data_type==UINT32){
+
+            element[i].data.numeric= packet[count] + (packet[count+1] * 256^1) + (packet[count+2] * 256^2) + (packet[count+3] * 256^3);
+            count=count+4;
         }
 
         else if(element[i].data_type==STRING_NULL){

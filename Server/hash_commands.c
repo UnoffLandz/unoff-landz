@@ -197,6 +197,9 @@ void process_hash_commands(int connection, char *text){
             sprintf(text_out, "%cGuild        :%s", c_green3+127, guilds.guild[character.guild_id].guild_name);
             send_raw_text(connection, CHAT_SERVER, text_out);
 
+            sprintf(text_out, "%cGuild tag    :%s", c_green3+127, guilds.guild[character.guild_id].guild_tag);
+            send_raw_text(connection, CHAT_SERVER, text_out);
+
             get_time_stamp_str(character.joined_guild, time_stamp_str);
             get_date_stamp_str(character.joined_guild, date_stamp_str);
 

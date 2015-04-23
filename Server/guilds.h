@@ -25,6 +25,7 @@
 struct guild_node_type {
 
     char guild_name[80];
+    char guild_tag[5];
     int guild_tag_colour;
     time_t date_created;
 };
