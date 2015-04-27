@@ -63,7 +63,9 @@ void open_database(char *database_name){
         log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
     }
 }
+
 static int column_exists(const char *table,const char *column) {
+
     sqlite3_stmt *stmt;
     char sql[256];
     int rc;
@@ -75,10 +77,11 @@ static int column_exists(const char *table,const char *column) {
         return 0;
 
     for (int i=0; i<sqlite3_column_count(stmt); i++) {
+
         if(strcmp("name",sqlite3_column_name(stmt,i))==0) {
             name_column_idx = i;
             break;
-    }
+        }
     }
 
     if(name_column_idx==-1) {
@@ -198,6 +201,7 @@ void process_sql(char *sql_str){
     }
 }
 int current_database_version() {
+
     sqlite3_stmt *selectStmt;
     const char *sql_str = "SELECT db_version FROM GAME_DATA_TABLE";
     int rc = 0;
@@ -330,6 +334,4 @@ void create_default_database(){
             l++;
         }
     }
-
-
 }

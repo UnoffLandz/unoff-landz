@@ -44,6 +44,7 @@
 #include "db/database_functions.h"
 #include "idle_buffer.h"
 #include "season.h"
+#include "map_objects.h"
 
 #define DEBUG_PACKET 1//set debug mode
 
@@ -444,23 +445,16 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==HARVEST){
 
-        #if DEBUG_PACKET==1
-        printf("HARVEST %i %i \n", packet[1], packet[2]);
-        #endif
-
-/*
         //returns a integer corresponding to the id of an object in the map 3d object list
-
-        map_object_id=Uint16_to_dec(data[0], data[1]);
+        int map_object_id=Uint16_to_dec(packet[3], packet[4]);
 
         #if DEBUG_PACKET==1
         printf("HARVEST object_id %i\n", map_object_id);
         #endif
 
-        start_harvesting2(connection, map_object_id, loop);
+        //start_harvesting2(connection, map_object_id, loop);
 
-        log_event(EVENT_SESSION, "Protocol HARVEST by [%s]...", clients.client[connection].char_name);
-*/
+        log_event(EVENT_SESSION, "Protocol HARVEST map object [%i] by character [%s]", map_object_id, clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
@@ -546,35 +540,28 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==LOOK_AT_MAP_OBJECT){
 
-        #if DEBUG_PACKET==1
-        printf("LOOK_AT_MAP_OBJECT %i %i \n", packet[1], packet[2]);
-        #endif
-
-/*
         //returns a Uint32 indicating the object_id of the item looked at
-
-        map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
-
-
-        //populate the map_object struct with data from the map_object
-        get_map_object(map_object_id, map_id);
+        int map_object_number=Uint32_to_dec(packet[3], packet[4], packet[5], packet[6]);
+        int map_id=clients.client[connection].map_id;
+        int item_id=maps.map[map_id].threed_object_lookup[map_object_number].item_id;
 
         //tell the client what the map object is
-        if(map_object.image_id>0){
-            sprintf(text_out, "%c%s", c_green3+127, item[map_object.image_id].item_name);
+        if (item_id>0){
+
+            sprintf(text_out, "%cyou see a %s", c_green3+127, map_object[item_id].object_name);
         }
         else {
-            sprintf(text_out, "%cUnknown item", c_green3+127);
+
+            sprintf(text_out, "%cyou see an unknown item", c_green3+127);
         }
 
-        send_server_text(connection, CHAT_SERVER, text_out);
+        send_raw_text(connection, CHAT_SERVER, text_out);
 
         #if DEBUG_PACKET==1
-        printf("LOOK_AT_MAP_OBJECT - map object [%i] [%s]\n", map_object_id, item[map_object.image_id].item_name);
+        printf("LOOK_AT_MAP_OBJECT - map object [%i] item id [%i] object [%s]\n", map_object_number, item_id, map_object[item_id].object_name);
         #endif
 
         log_event(EVENT_SESSION, "Protocol LOOK_AT_MAP_OBJECT by [%s]...", clients.client[connection].char_name);
-*/
     }
 /***************************************************************************************************/
 

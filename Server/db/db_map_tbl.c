@@ -26,6 +26,8 @@
 #include "../server_start_stop.h"
 #include "../file_functions.h"
 #include "../global.h"
+#include "../string_functions.h"
+#include "../map_objects.h"
 
 int load_db_maps(){
 
@@ -308,6 +310,31 @@ int load_db_maps(){
 
             maps.map[map_id].threed_object_map[k]=elm_file.byte[j];
             k++;
+        }
+
+        //fill the struct that links the item_id to the map_object number
+        char e3d_path_and_file_name[80]="";
+        int m=0;
+
+        for(j=elm_file.elm_header.threed_object_offset; j<elm_file.elm_header.twod_object_offset; j+=maps.map[map_id].threed_object_structure_len){
+
+            //extract the path and filename from the elm file
+            memcpy(e3d_path_and_file_name, &elm_file.byte[j], 80);
+
+            //remove the path and place filename in struct
+            extract_file_name(e3d_path_and_file_name, maps.map[map_id].threed_object_lookup[m].e3d_file_name);
+
+            //find the image id for this e3d file
+            int l=0;
+            for(l=0; l<MAX_MAP_OBJECTS; l++){
+
+                if(strcmp(maps.map[map_id].threed_object_lookup[m].e3d_file_name, map_object[l].e3d_file_name)==0) {
+
+                    maps.map[map_id].threed_object_lookup[m].item_id=l;
+                    break;
+                }
+            }
+            m++;
         }
 
         //load 2d object map

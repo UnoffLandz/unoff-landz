@@ -17,6 +17,8 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 #include <stdlib.h> //supports abs function
+#include <stdio.h> //supports printf (testing)
+#include <string.h> //supports memcpy (testing)
 
 #include "maps.h"
 #include "logging.h"
@@ -44,3 +46,8 @@ int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
 
     if(x_diff>y_diff) return x_diff; else return y_diff;
 }
+
+
+
+
+

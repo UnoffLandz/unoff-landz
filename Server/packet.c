@@ -73,7 +73,7 @@ int build_packet(struct packet_element_type *element, int element_count, unsigne
             packet[count+1]=element[i].data.numeric / 256 % 256;
             packet[count+2]=element[i].data.numeric / 256 / 256 % 256;
             packet[count+4]=element[i].data.numeric / 256 / 256 / 256 % 256;
-            count=count+2;
+            count=count+4;
         }
 
         else if(element[i].data_type==STRING_NULL){
@@ -85,6 +85,7 @@ int build_packet(struct packet_element_type *element, int element_count, unsigne
         else {
 
             log_event(EVENT_ERROR, "Unknown packet element in Protocol [%i]", packet[0]);
+            log_text(EVENT_ERROR, "packet element data type [%i] element number [%i]", element[i].data_type, i);
             stop_server();
         }
     }

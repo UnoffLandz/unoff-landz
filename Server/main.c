@@ -69,6 +69,7 @@ To compile server, link with the following libraries :
 #include "characters.h"
 #include "idle_buffer.h"
 #include "file_functions.h"
+#include "map_objects.h"
 
 #define DEBUG_MAIN 1
 #define VERSION "4"
@@ -139,6 +140,91 @@ void start_server(char *db_filename){
     }
 
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    //temporary load map object data
+    strcpy(map_object[1].e3d_file_name, "cabbage.e3d");
+    strcpy(map_object[1].object_name, "cabbage");
+    map_object[1].object_id=405;
+
+    strcpy(map_object[2].e3d_file_name, "tomatoeplant1.e3d");
+    strcpy(map_object[2].object_name, "tomato");
+    map_object[2].object_id=407;
+
+    strcpy(map_object[3].e3d_file_name, "tomatoeplant2.e3d");
+    strcpy(map_object[3].object_name, "tomato");
+    map_object[3].object_id=407;
+
+    strcpy(map_object[4].e3d_file_name, "foodtomatoe.e3d");
+    strcpy(map_object[4].object_name, "tomato");
+    map_object[4].object_id=407;
+
+    strcpy(map_object[5].e3d_file_name, "food_carrot.e3d");
+    strcpy(map_object[5].object_name, "carrot");
+    map_object[5].object_id=408;
+
+    strcpy(map_object[6].e3d_file_name, "log1.e3d");
+    strcpy(map_object[6].object_name, "log");
+    map_object[6].object_id=408;
+
+    strcpy(map_object[7].e3d_file_name, "log2.e3d");
+    strcpy(map_object[7].object_name, "log");
+    map_object[7].object_id=408;
+
+    strcpy(map_object[8].e3d_file_name, "flowerpink1.e3d");
+    strcpy(map_object[8].object_name, "Chrysanthemum");
+    map_object[8].object_id=28;
+
+    strcpy(map_object[9].e3d_file_name, "branch1.e3d");
+    strcpy(map_object[9].object_name, "sticks");
+    map_object[9].object_id=140;
+
+    strcpy(map_object[10].e3d_file_name, "branch2.e3d");
+    strcpy(map_object[10].object_name, "sticks");
+    map_object[10].object_id=140;
+
+    strcpy(map_object[11].e3d_file_name, "branch3.e3d");
+    strcpy(map_object[11].object_name, "sticks");
+    map_object[11].object_id=140;
+
+    strcpy(map_object[12].e3d_file_name, "branch4.e3d");
+    strcpy(map_object[12].object_name, "sticks");
+    map_object[12].object_id=140;
+
+    strcpy(map_object[13].e3d_file_name, "branch5.e3d");
+    strcpy(map_object[13].object_name, "sticks");
+    map_object[13].object_id=140;
+
+    strcpy(map_object[14].e3d_file_name, "branch6.e3d");
+    strcpy(map_object[14].object_name, "sticks");
+    map_object[14].object_id=140;
+
+    strcpy(map_object[14].e3d_file_name, "flowerorange1.e3d");
+    strcpy(map_object[14].object_name, "tiger lily");
+    map_object[15].object_id=29;
+
+    strcpy(map_object[14].e3d_file_name, "flowerorange2.e3d");
+    strcpy(map_object[14].object_name, "tiger lily");
+    map_object[16].object_id=29;
+
+    strcpy(map_object[14].e3d_file_name, "flowerorange3.e3d");
+    strcpy(map_object[14].object_name, "tiger lily");
+    map_object[17].object_id=29;
+
+    strcpy(map_object[14].e3d_file_name, "flowerwhite1.e3d");
+    strcpy(map_object[14].object_name, "tiger lily");
+    map_object[15].object_id=29;
+
+    strcpy(map_object[14].e3d_file_name, "flowewhite2.e3d");
+    strcpy(map_object[14].object_name, "tiger lily");
+    map_object[16].object_id=29;
+
+    strcpy(map_object[14].e3d_file_name, "flowerwhite3.e3d");
+    strcpy(map_object[14].object_name, "tiger lily");
+    map_object[17].object_id=29;
+
+
+
+
 
     //load maps from database
     loaded=load_db_maps();
@@ -211,6 +297,7 @@ void start_server(char *db_filename){
 
     //fill movement vector array so we can directly translate x/y coordinates into actor cmd codes
     initialise_movement_vectors();
+
 
     //create server socket & bind it to socket address
     if((sd = socket(AF_INET, SOCK_STREAM, 0))==-1){

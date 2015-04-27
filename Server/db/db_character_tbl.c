@@ -370,7 +370,7 @@ void get_db_last_char_created(){
     sqlite3_stmt *stmt;
 
     char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT CHAR_NAME, CHAR_CREATED FROM CHARACTER_TABLE ORDER BY CHAR_CREATED LIMIT 1;");
+    snprintf(sql, MAX_SQL_LEN, "SELECT CHAR_NAME, CHAR_CREATED FROM CHARACTER_TABLE ORDER BY CHAR_CREATED DESC LIMIT 1;");
 
     rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){

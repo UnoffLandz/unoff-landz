@@ -79,6 +79,12 @@ struct map_node_type{
     int threed_object_structure_len;
     int threed_object_count;
 
+    //translation table from map object number to image_id
+    struct{
+        char e3d_file_name[80];
+        int item_id;
+    }threed_object_lookup[2000];
+
     unsigned char twod_object_map[TWOD_OBJECT_MAP_MAX];
     int twod_object_map_size;
     int twod_object_structure_len;
@@ -106,6 +112,7 @@ struct map_list_type maps;
     NOTES   :
 */
 int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis);
+
 
 
 #endif // MAPS_H_INCLUDED

@@ -190,12 +190,12 @@ void add_new_character(int connection, unsigned char *packet){
     //add character data to the database and retrieve the database entry for the character
     character.character_id=add_db_char_data(character);
 
-/*
+
     //TEST CODE -- add initial items to inventory
     character.client_inventory[0].slot=1; //slots run from 1
     character.client_inventory[0].image_id=612;
     character.client_inventory[0].amount=10;
-*/
+
     add_db_char_inventory(character);
 
     //update game details
