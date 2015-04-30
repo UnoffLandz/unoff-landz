@@ -23,6 +23,9 @@ set(DB_SRC
     db/db_map_tbl.h
     db/db_season_tbl.h
 
+    db/db_upgrade.h
+    db/db_upgrade.c
+
     db/database_functions.c
     db/database_functions.h
 )
