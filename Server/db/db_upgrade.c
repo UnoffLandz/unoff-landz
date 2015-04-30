@@ -1,5 +1,6 @@
 #include "database_functions.h"
 
+
 #include <sqlite3.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -59,10 +60,16 @@ static char *create_backup_name(const char *dbname,int ver) {
     return res;
 }
 static int create_backup(const char *dbname,int ver) {
-    char *bak_fname;
-    bak_fname = create_backup_name(dbname,ver);
-    if(-1==fcopy(dbname,bak_fname))
+    int copy_result;
+    char *bak_fname = create_backup_name(dbname,ver);
+
+    printf("UPGRADE [v%d]: Creating database backup - %s\n",ver,bak_fname);
+    copy_result = fcopy(dbname,bak_fname);
+    free(bak_fname);
+    if(-1==copy_result) {
+        printf("UPGRADE [v%d]: Copying existing db to backup failed\n",ver);
         return -1;
+    }
     return 0;
 }
 static int callback(void *unused, int argc, char **argv, char **azColName){
@@ -106,12 +113,13 @@ static int upgrade_v0_to_v1(const char *dbname) {
     }
     rc = sqlite3_exec(db,"ALTER TABLE GAME_DATA_TABLE ADD COLUMN db_version int",callback,0,&err_msg);
     if( rc != SQLITE_OK ){
-        fprintf(stderr, "SQL error: %s\n", err_msg);
+        fprintf("UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
         sqlite3_free(err_msg);
         sqlite3_close(db);
         return -1;
     }
     set_db_version(db,1);
+    fprintf("UPGRADE [v%d]: Success\n",1);
     return 0;
 }
 

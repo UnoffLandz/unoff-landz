@@ -1,20 +1,20 @@
 /******************************************************************************************************************
-	Copyright 2014 UnoffLandz
+    Copyright 2014 UnoffLandz
 
-	This file is part of unoff_server_4.
+    This file is part of unoff_server_4.
 
-	unoff_server_4 is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    unoff_server_4 is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	unoff_server_4 is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    unoff_server_4 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 /******************************************************************************************************************
 
@@ -734,30 +734,33 @@ int main(int argc, char *argv[]){
         NOTES    :
     **/
 
-  	printf("UnoffLandz Server - version %s\n\n", VERSION);
+    printf("UnoffLandz Server - version %s\n\n", VERSION);
 
     if(argc==1){
 
         printf("command line options...\n");
         printf("-C optional [""database file name""]      ...create database\n");
         printf("-S optional [""database file name""]      ...start server\n");
+        printf("-U optional [""database file name""]      ...upgrade database\n");
         printf("-L [map id] [""map name""] [""map file""]     ...load map\n");
         printf("-B [map id] [map tile]                ...character start location\n");
         printf("-E [map_id] [map tile]                ...beam me target\n");
 
-		exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
-	if (argv[1][0] == '-') {
+    if (argv[1][0] == '-') {
 
-        if(argv[1][1]=='S'){//start server
+        switch(argv[1][1]) {
+        case 'S': {//start server
 
             if(argc>2){
 
                 start_server(argv[2]);
             }else start_server(DATABASE_FILE_NAME);
+            break;
         }
-        else if(argv[1][1]=='L'){//add or update map
+        case 'L': {//add or update map
 
             //use uintptr_t to prevent int truncation issues when compiled as 64bit
             if(get_db_map_exists((uintptr_t)argv[2])==TRUE){
@@ -770,8 +773,9 @@ int main(int argc, char *argv[]){
                 //use uintptr_t to prevent int truncation issues when compiled as 64bit
                 add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
             }
+            break;
         }
-        else if(argv[1][1]=='C'){ // create database
+        case 'C': { // create database
 
             if(argc>1){
 
@@ -779,13 +783,20 @@ int main(int argc, char *argv[]){
             }else open_database(DATABASE_FILE_NAME);
 
             create_default_database();
+            break;
         }
-        else { //unknown command line option
+        case 'U': { // upgrade database
+            const char *db_filename = (argc>1) ? argv[2] : DATABASE_FILE_NAME;
+            // perform upgrade
+            return upgrade_database(db_filename);
+        }
+        default: { //unknown command line option
 
             printf("unknown command line option [%s]\n", (char*)argv[1]);
         }
-	}
+        }
+    }
 
-	return 0; //otherwise we get 'control reaches end of non-void function
+    return 0; //otherwise we get 'control reaches end of non-void function
 }
 
