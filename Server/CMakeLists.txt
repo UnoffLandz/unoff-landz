@@ -4,18 +4,19 @@ find_package(SQLite3 REQUIRED)
 
 set(DB_SRC
     db/db_attribute_tbl.c
-    db/db_character_race_tbl.c
+    db/db_attribute_tbl.h
     db/db_character_tbl.c
+    db/db_character_tbl.h
+    db/db_character_race_tbl.c
+    db/db_character_race_tbl.h
+    db/db_character_inventory_tbl.c
+    db/db_character_inventory_tbl.h
     db/db_character_type_tbl.c
     db/db_chat_channel_tbl.c
     db/db_game_data_tbl.c
     db/db_gender_tbl.c
     db/db_map_tbl.c
     db/db_season_tbl.c
-    db/db_attribute_tbl.h
-    db/db_character_inventory_tbl.h
-    db/db_character_race_tbl.h
-    db/db_character_tbl.h
     db/db_character_type_tbl.h
     db/db_chat_channel_tbl.h
     db/db_game_data_tbl.h
@@ -47,9 +48,11 @@ logging.c
 log_in.c
 main.c
 maps.c
+map_objects.c
 movement.c
 numeric_functions.c
 pathfinding.c
+packet.c
 season.c
 server_messaging.c
 server_protocol_functions.c
@@ -63,6 +66,7 @@ set(INCLUDES
     character_movement.h
     character_race.h
     character_race_tbl.h
+
     characters.h
     character_type.h
     chat.h
@@ -82,9 +86,11 @@ set(INCLUDES
     logging.h
     log_in.h
     maps.h
+    map_objects.h
     movement.h
     numeric_functions.h
     pathfinding.h
+    packet.h
     season.h
     server_messaging.h
     server_parameters.h
