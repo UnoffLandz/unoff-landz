@@ -38,9 +38,9 @@
 
 sqlite3 *db;
 
-int current_database_version();
+int current_database_version(const char * dbaname);
 
-static int prepare_query(const char *sql,sqlite3_stmt **stmt,const char *_func,int line){
+static int prepare_query(sqlite3 *db,const char *sql,sqlite3_stmt **stmt,const char *_func,int line){
 
     int rc=sqlite3_prepare_v2(db, sql, -1, stmt, NULL);
 
@@ -64,7 +64,7 @@ void open_database(char *database_name){
     }
 }
 
-static int column_exists(const char *table,const char *column) {
+static int column_exists(sqlite3 *db,const char *table,const char *column) {
 
     sqlite3_stmt *stmt;
     char sql[256];
@@ -73,7 +73,7 @@ static int column_exists(const char *table,const char *column) {
 
     snprintf(sql,256,"PRAGMA table_info(%s)",table);
 
-    if(-1==prepare_query(sql,&stmt,__func__,__LINE__))
+    if(-1==prepare_query(db,sql,&stmt,__func__,__LINE__))
         return 0;
 
     for (int i=0; i<sqlite3_column_count(stmt); i++) {
@@ -111,7 +111,7 @@ int database_table_count(){
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN, "SELECT count(*) FROM sqlite_master WHERE type='table';");
 
-    if(-1==prepare_query(sql,&stmt,__func__,__LINE__))
+    if(-1==prepare_query(db,sql,&stmt,__func__,__LINE__))
         return 0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -141,7 +141,7 @@ void create_database_table(char *sql){
     int rc;
     sqlite3_stmt *stmt;
 
-    if(-1==prepare_query(sql,&stmt,__func__,__LINE__))
+    if(-1==prepare_query(db,sql,&stmt,__func__,__LINE__))
         return;
 
     rc = sqlite3_step(stmt);
@@ -185,7 +185,7 @@ void process_sql(char *sql_str){
     int rc=0;
     sqlite3_stmt *stmt;
 
-    if(-1==prepare_query(sql_str,&stmt,__func__,__LINE__))
+    if(-1==prepare_query(db,sql_str,&stmt,__func__,__LINE__))
         return;
 
     rc = sqlite3_step(stmt);
@@ -200,16 +200,23 @@ void process_sql(char *sql_str){
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql_str);
     }
 }
-int current_database_version() {
+int current_database_version(const char *dbaname) {
 
+    sqlite3 *db_tmp;
+    int rc = sqlite3_open(dbaname, &db_tmp);
     sqlite3_stmt *selectStmt;
     const char *sql_str = "SELECT db_version FROM GAME_DATA_TABLE";
-    int rc = 0;
 
-    if(0==column_exists("GAME_DATA_TABLE","db_version"))
+    if( rc !=SQLITE_OK ){
+
+        log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
+    }
+
+
+    if(0==column_exists(db_tmp,"GAME_DATA_TABLE","db_version"))
         return 0;
 
-    if(-1==prepare_query(sql_str,&selectStmt,__func__,__LINE__))
+    if(-1==prepare_query(db_tmp,sql_str,&selectStmt,__func__,__LINE__))
         return -1;
 
     rc = sqlite3_step(selectStmt);
@@ -225,6 +232,7 @@ int current_database_version() {
     }
     rc = sqlite3_finalize(selectStmt);
 
+    sqlite3_close(db_tmp);
     return 0;
 
 }
