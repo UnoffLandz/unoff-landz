@@ -14,6 +14,7 @@ ELSE()
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} "  ) #--coverage
 ENDIF()
 
-#add_subdirectory(Common)
+add_subdirectory(Client)
+add_subdirectory(Common)
 add_subdirectory(Server)
 
