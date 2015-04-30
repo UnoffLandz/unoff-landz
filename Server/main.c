@@ -124,6 +124,7 @@ void start_server(char *db_filename){
     //open database
     if(file_exists(db_filename)==FALSE){
 
+        printf("database file [%s] not found\n", db_filename);
         log_event(EVENT_ERROR, "database file [%s] not found", db_filename);
         stop_server();
     }
