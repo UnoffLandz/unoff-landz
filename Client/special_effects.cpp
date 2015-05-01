@@ -39,7 +39,7 @@ typedef struct {
 	int type;		// type of effect / spell that was cast
 	int active;	
 	int caster;		//is this caster or target, static effects will be set to STATIC_SFX
-	Uint32 last_time;	//for timing length of effect especially while in console
+	uint32_t last_time;	//for timing length of effect especially while in console
 } special_effect;
 
 special_effect sfx_markers[NUMBER_OF_SPECIAL_EFFECTS];
@@ -62,9 +62,9 @@ special_effect *get_free_special_effect() {
 }
 
 // Initialize a new special effect
-void add_sfx(special_effect_enum effect, Uint16 playerid, int caster)
+void add_sfx(special_effect_enum effect, uint16_t playerid, int caster)
 {
-	Uint8 str[70];
+	uint8_t str[70];
 	actor *this_actor = get_actor_ptr_from_id(playerid);
 	special_effect *m = get_free_special_effect();
 	if (m == NULL) 
@@ -535,17 +535,17 @@ CHECK_GL_ERRORS();
 }
 
 //send server data packet to appropriate method depending on desired effect
-void parse_special_effect(special_effect_enum sfx, const Uint16 *data)
+void parse_special_effect(special_effect_enum sfx, const uint16_t *data)
 {
 #ifdef DEBUG
-	Uint8 str[100];
+	uint8_t str[100];
 #endif
 	int offset = 0;
 	int need_target = 0;
 #ifdef NEW_SOUND
 	int sfx_sound = -1;
 #endif // NEW_SOUND
-	Uint16 var_a = 0, var_b = 0;
+	uint16_t var_a = 0, var_b = 0;
 	actor* caster = NULL;
 	actor* target = NULL;
 	float x = 0.0f, y = 0.0f;
@@ -566,7 +566,7 @@ void parse_special_effect(special_effect_enum sfx, const Uint16 *data)
 			{
 				if (!use_eye_candy)
 				{
-				 	var_a = SDL_SwapLE16 (*((Uint16 *)(&data[offset])));
+				 	var_a = SDL_SwapLE16 (*((uint16_t *)(&data[offset])));
 					add_sfx(sfx,var_a,1);
 					break;
 				}
@@ -594,7 +594,7 @@ void parse_special_effect(special_effect_enum sfx, const Uint16 *data)
 		case	SPECIAL_EFFECT_UNINVIZIBILIZER_GOES_BOOM:
 		case	SPECIAL_EFFECT_MAGIC_IMMUNITY_REMOVAL_GOES_BOOM:
 			{
-			 	var_a = SDL_SwapLE16 (*((Uint16 *)(&data[offset])));
+			 	var_a = SDL_SwapLE16 (*((uint16_t *)(&data[offset])));
 			}
 			break;
 		case	SPECIAL_EFFECT_SUMMON_RABBIT:
@@ -634,9 +634,9 @@ void parse_special_effect(special_effect_enum sfx, const Uint16 *data)
 		case	SPECIAL_EFFECT_SUMMON_SPIDER:
 		case	SPECIAL_EFFECT_SUMMON_TIGER:
 			{
-			 	var_a = SDL_SwapLE16 (*((Uint16 *)(&data[offset])));
-			 	x = (float)SDL_SwapLE16 (*((Uint16 *)(&data[offset+1])));
-			 	y = (float)SDL_SwapLE16 (*((Uint16 *)(&data[offset+2])));
+			 	var_a = SDL_SwapLE16 (*((uint16_t *)(&data[offset])));
+			 	x = (float)SDL_SwapLE16 (*((uint16_t *)(&data[offset+1])));
+			 	y = (float)SDL_SwapLE16 (*((uint16_t *)(&data[offset+2])));
 			}
 			break;
 		//player to player, var_a is caster, var_b is recipient/target
@@ -645,8 +645,8 @@ void parse_special_effect(special_effect_enum sfx, const Uint16 *data)
 		case	SPECIAL_EFFECT_HARM:
 		case	SPECIAL_EFFECT_MANA_DRAIN:
 			{
-				var_a = SDL_SwapLE16 (*((Uint16 *)(&data[offset])));
-				var_b = SDL_SwapLE16 (*((Uint16 *)(&data[offset+1])));
+				var_a = SDL_SwapLE16 (*((uint16_t *)(&data[offset])));
+				var_b = SDL_SwapLE16 (*((uint16_t *)(&data[offset+1])));
 				need_target = 1;
 				if (use_eye_candy)
 				{
@@ -659,8 +659,8 @@ void parse_special_effect(special_effect_enum sfx, const Uint16 *data)
 		case	SPECIAL_EFFECT_INVASION_BEAMING:
 		case	SPECIAL_EFFECT_TELEPORT_TO_RANGE:
 			{
-				var_a = SDL_SwapLE16 (*((Uint16 *)(&data[offset])));
-				var_b = SDL_SwapLE16 (*((Uint16 *)(&data[offset+1])));
+				var_a = SDL_SwapLE16 (*((uint16_t *)(&data[offset])));
+				var_b = SDL_SwapLE16 (*((uint16_t *)(&data[offset+1])));
 				need_target = 1;
 #ifdef DEBUG
 				safe_snprintf ((char*)str, sizeof (str), "effect %d,  x pos=%d, y pos=%d",sfx,var_a,var_b);	

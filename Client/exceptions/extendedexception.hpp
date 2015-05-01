@@ -24,12 +24,12 @@ namespace eternal_lands
 	class ExtendedException: public std::exception
 	{
 		private:
-			Uint32 m_number;
+			uint32_t m_number;
 			std::string m_description;
 			std::string m_type;
 			std::string m_file;
 			std::string m_function;
-			Uint32 m_line;
+			uint32_t m_line;
 			mutable std::string m_full_description;
 
 		protected:
@@ -59,7 +59,7 @@ namespace eternal_lands
 			/**
 			 * Default constructor.
 			 */
-			inline ExtendedException(const Uint32 number, const std::string &description,
+			inline ExtendedException(const uint32_t number, const std::string &description,
 				const char* type): m_number(number), m_description(description),
 				m_type(type), m_file(""), m_function(""), m_line(0)
 			{
@@ -68,9 +68,9 @@ namespace eternal_lands
 			/**
 			 * Advanced constructor.
 			 */
-			ExtendedException(const Uint32 number, const std::string &description,
+			ExtendedException(const uint32_t number, const std::string &description,
 				const char* type, const char* file, const char* function,
-				const Uint32 line);
+				const uint32_t line);
 
 			/**
 			 * Copy constructor.
@@ -97,7 +97,7 @@ namespace eternal_lands
 			/**
 			 * Gets the error code.
 			 */
-			virtual Uint32 get_number() const throw()
+			virtual uint32_t get_number() const throw()
 			{
 				return m_number;
 			}
@@ -121,7 +121,7 @@ namespace eternal_lands
 			/**
 			 * Gets the line number.
 			 */
-			virtual inline Uint32 get_line() const throw()
+			virtual inline uint32_t get_line() const throw()
 			{
 				return m_line;
 			}
@@ -149,7 +149,7 @@ namespace eternal_lands
 	/**
 	 * Template struct which creates a distinct type for each exception code.
 	 */
-	template <Uint32 num>
+	template <uint32_t num>
 	struct ExceptionCodeType
 	{
 		enum

@@ -16,7 +16,7 @@ extern "C" {
 struct http_get_struct {
 	char   server[128];
 	char   path[256];
-	Uint8  *md5;
+	uint8_t  *md5;
 	FILE   *fp;
 	int    event;
 	int    status;
@@ -76,7 +76,7 @@ int    do_threaded_update(void *ptr);
  *
  *      The functions adds a file to the download queue so that it can be downloaded
  */
- void   add_to_download(const char *filename, const Uint8 *md5);
+ void   add_to_download(const char *filename, const uint8_t *md5);
  
 /*!
  * \ingroup	update
@@ -99,7 +99,7 @@ void    handle_file_download(struct http_get_struct *get);
  * \param	fp The file you're saving the file to...
  * \param   event The SDL event to issue when the download is complete
  */
-void http_threaded_get_file(char *server, char *path, FILE *fp, Uint8 *md5, Uint32 event);
+void http_threaded_get_file(char *server, char *path, FILE *fp, uint8_t *md5, uint32_t event);
 
 /*!
  * \ingroup	update

@@ -27,13 +27,13 @@ namespace ec
 			{
 			}
 
-			virtual bool idle(const Uint64 delta_t);
+			virtual bool idle(const uint64_t delta_t);
 #ifdef	NEW_TEXTURES
-			virtual Uint32 get_texture();
+			virtual uint32_t get_texture();
 			virtual float get_burn() const;
 #else	/* NEW_TEXTURES */
-			virtual GLuint get_texture(const Uint16 res_index);
-			virtual void draw(const Uint64 usec);
+			virtual GLuint get_texture(const uint16_t res_index);
+			virtual void draw(const uint64_t usec);
 #endif	/* NEW_TEXTURES */
 			virtual light_t estimate_light_level() const
 			{
@@ -58,7 +58,7 @@ namespace ec
 			FountainEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 				const color_t _hue_adjust, const color_t _saturation_adjust,
 				const bool _backlight, const coord_t _base_height,
-				const float _scale, const Uint16 _LOD);
+				const float _scale, const uint16_t _LOD);
 			~FountainEffect();
 
 			virtual EffectEnum get_type()
@@ -66,12 +66,12 @@ namespace ec
 				return EC_FOUNTAIN;
 			}
 			;
-			bool idle(const Uint64 usec);
+			bool idle(const uint64_t usec);
 			virtual void request_LOD(const float _LOD)
 			{
 				if (fabs(_LOD - (float)LOD) < 1.0)
 					return;
-				const Uint16 rounded_LOD = (Uint16)round(_LOD);
+				const uint16_t rounded_LOD = (uint16_t)round(_LOD);
 				if (rounded_LOD <= desired_LOD)
 					LOD = rounded_LOD;
 				else
@@ -95,7 +95,7 @@ namespace ec
 			float sqrt_scale;
 			coord_t max_size;
 			coord_t size_scalar;
-			Uint32 count_scalar;
+			uint32_t count_scalar;
 	};
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -42,12 +42,12 @@ namespace ec
 			0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f
 		};
 
-		const float* get_texture_coordinates(const Uint32 texture, const Uint32 index)
+		const float* get_texture_coordinates(const uint32_t texture, const uint32_t index)
 		{
 			return &texture_coordinates[texture * 8 + index * 2];
 		}
 
-		Uint32 get_texture_index(const TextureEnum type)
+		uint32_t get_texture_index(const TextureEnum type)
 		{
 			switch (type)
 			{
@@ -112,18 +112,18 @@ namespace ec
 		clear();
 	}
 
-	GLuint Texture::get_texture(const Uint16 res_index) const
+	GLuint Texture::get_texture(const uint16_t res_index) const
 	{
 		return (GLuint)get_texture(res_index, randint(texture_ids[res_index].size()));
 	}
 
-	GLuint Texture::get_texture(const Uint16 res_index, const int frame) const
+	GLuint Texture::get_texture(const uint16_t res_index, const int frame) const
 	{
 		return texture_ids[res_index][frame];
 	}
 
-	GLuint Texture::get_texture(const Uint16 res_index, const Uint64 born,
-		const Uint64 changerate) const
+	GLuint Texture::get_texture(const uint16_t res_index, const uint64_t born,
+		const uint64_t changerate) const
 	{
 		return (GLuint)get_texture(res_index,
 			((get_time() - born) / changerate) % texture_ids[res_index].size());
@@ -206,12 +206,12 @@ namespace ec
 	}
 #else	/* NEW_TEXTURES */
 	void Effect::draw_particle(const coord_t size,
-		const Uint32 texture, const color_t r, const color_t g,
+		const uint32_t texture, const color_t r, const color_t g,
 		const color_t b, const alpha_t alpha, const Vec3 pos,
 		const alpha_t burn)
 	{
 		Vec3 corner[4];
-		Uint32 i, index;
+		uint32_t i, index;
 
 		corner[0] = Vec3(pos - base->corner_offset1 * size);
 		corner[1] = Vec3(pos + base->corner_offset2 * size);
@@ -237,11 +237,11 @@ namespace ec
 		particle_count++;
 	}
 
-	void Effect::build_particle_buffer(const Uint64 time_diff)
+	void Effect::build_particle_buffer(const uint64_t time_diff)
 	{
 		std::map<Particle*, bool>::const_iterator iter;
 		const Vec3 center(base->center);
-		Uint32 size;
+		uint32_t size;
 
 		particle_count = 0;
 
@@ -372,9 +372,9 @@ namespace ec
 
 		if (base->poor_transparency_resolution)
 #ifdef X86_64
-			srand((Uint32)(Uint64)(void*)this);
+			srand((uint32_t)(uint64_t)(void*)this);
 #else
-			srand((Uint32)(void*)this);
+			srand((uint32_t)(void*)this);
 #endif
 		glBegin(GL_TRIANGLES);
 		{
@@ -423,7 +423,7 @@ namespace ec
 		float* vertices;
 		float* normals;
 		GLushort* facets;
-		Uint32 size;
+		uint32_t size;
 #endif	/* NEW_TEXTURES */
 		radius = _radius;
 		start = _start;
@@ -556,7 +556,7 @@ namespace ec
 		float* vertices;
 		float* normals;
 		GLushort* facets;
-		Uint32 size;
+		uint32_t size;
 #endif	/* NEW_TEXTURES */
 		radius = _radius;
 		start = _start;
@@ -732,7 +732,7 @@ namespace ec
 		float* vertices;
 		float* normals;
 		GLushort* facets;
-		Uint32 size;
+		uint32_t size;
 #endif	/* NEW_TEXTURES */
 		radius = _radius;
 		pos = _pos;
@@ -895,7 +895,7 @@ namespace ec
 		GLushort* facets;
 		Vec3 start, end, pos, color;
 		float radius, alpha;
-		Uint32 idx, count, face_index, vertex_index, size;
+		uint32_t idx, count, face_index, vertex_index, size;
 
 		base = _base;
 
@@ -1333,7 +1333,7 @@ namespace ec
 	;
 
 #ifdef	NEW_TEXTURES
-	void Particle::draw(const Uint64 usec)
+	void Particle::draw(const uint64_t usec)
 	{
 		alpha_t burn = get_burn();
 		alpha_t tempalpha = alpha;
@@ -1347,7 +1347,7 @@ namespace ec
 		assert(std::isfinite(size));
 		assert(std::isfinite(tempsize));
 
-		Uint32 texture = get_texture(); // Always hires, since we're not checking distance.
+		uint32_t texture = get_texture(); // Always hires, since we're not checking distance.
 
 		effect->draw_particle(tempsize, texture, color[0], color[1],
 			color[2], tempalpha, pos, burn);
@@ -1379,7 +1379,7 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	void Particle::draw(const Uint64 usec)
+	void Particle::draw(const uint64_t usec)
 	{
 		switch (base->draw_method)
 		{
@@ -1608,7 +1608,7 @@ namespace ec
 		return nonpreserving_vec_shift(src, dest, percent);
 	}
 
-	void GradientMover::move(Particle& p, Uint64 usec)
+	void GradientMover::move(Particle& p, uint64_t usec)
 	{
 		const coord_t scalar = usec / 1000000.0;
 		Vec3 gradient_velocity = p.velocity + get_force_gradient(p) * scalar;
@@ -1740,7 +1740,7 @@ namespace ec
 		gravity_center_ptr = _gravity_center;
 	}
 
-	void GravityMover::move(Particle& p, Uint64 usec)
+	void GravityMover::move(Particle& p, uint64_t usec)
 	{
 		old_gravity_center = gravity_center;
 		gravity_center = *gravity_center_ptr;
@@ -2155,7 +2155,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 EyeCandy::get_texture(const TextureEnum type) const
+	uint32_t EyeCandy::get_texture(const TextureEnum type) const
 	{
 		return get_texture_index(type);
 	}
@@ -2521,7 +2521,7 @@ namespace ec
 		start_draw();
 
 #ifdef	NEW_TEXTURES
-		Uint32 i, count;
+		uint32_t i, count;
 
 		count = effects.size();
 
@@ -2625,7 +2625,7 @@ namespace ec
 			if (ec_error_status)
 			return;
 
-			const Uint64 cur_time = get_time();
+			const uint64_t cur_time = get_time();
 			if (time_diff < 10)
 			time_diff = 10;
 
@@ -2861,12 +2861,12 @@ namespace ec
 				else
 				i++;
 			}
-			last_forced_LOD = (Uint16)round(change_LOD);
+			last_forced_LOD = (uint16_t)round(change_LOD);
 
 			//  allowable_particles_to_add = 1 + (int)(particles.size() * 0.00005 * time_diff / 1000000.0 * (max_particles - particles.size()) * change_LOD);
 			//  std::cout << "Current: " << particles.size() << "; Allowable new: " << allowable_particles_to_add << std::endl;
 #ifdef	NEW_TEXTURES
-			Uint32 i, count;
+			uint32_t i, count;
 
 			count = effects.size();
 
@@ -3006,12 +3006,12 @@ namespace ec
 
 		// F U N C T I O N S //////////////////////////////////////////////////////////
 
-		Uint64 get_time()
+		uint64_t get_time()
 		{
 #if defined(_WIN32) || defined(_WIN64)
 			FILETIME ft;
 			GetSystemTimeAsFileTime(&ft);
-			Uint64 ret = ft.dwHighDateTime;
+			uint64_t ret = ft.dwHighDateTime;
 			ret <<= 32;
 			ret |= ft.dwLowDateTime;
 			ret /= 10;
@@ -3019,7 +3019,7 @@ namespace ec
 #else
 			struct timeval t;
 			gettimeofday(&t, NULL);
-			return ((Uint64)t.tv_sec)*1000000ul + (Uint64)t.tv_usec;
+			return ((uint64_t)t.tv_sec)*1000000ul + (uint64_t)t.tv_usec;
 #endif
 		}
 

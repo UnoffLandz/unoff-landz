@@ -77,7 +77,7 @@
 #include "fsaa/fsaa.h"
 #endif	/* FSAA */
 
-Uint32 cur_time=0, last_time=0;//for FPS
+uint32_t cur_time=0, last_time=0;//for FPS
 
 char version_string[]=VER_STRING;
 int	client_version_major=VER_MAJOR;
@@ -111,7 +111,7 @@ void cleanup_mem(void)
 	/* 3d objects */
 	destroy_all_3d_objects();
 	/* caches */
-	cache_e3d->free_item = &destroy_e3d;
+    cache_e3d->free_item = (void (*)(void *))&destroy_e3d;
 	cache_delete(cache_e3d);
 	cache_e3d = NULL;
 #ifdef NEW_TEXTURES
@@ -144,7 +144,7 @@ int start_rendering()
 {
 	static int done = 0;
 	static void * network_thread_data[2] = { NULL, NULL };
-	static Uint32 last_frame_and_command_update = 0;
+    static uint32_t last_frame_and_command_update = 0;
 
 	SDL_Thread *network_thread;
 	queue_t *message_queue;
@@ -180,7 +180,7 @@ int start_rendering()
 			if(!queue_isempty(message_queue)) {
 				message_t *message;
 
-				while((message = queue_pop(message_queue)) != NULL)
+                while((message = queue_pop_T<message_t>(message_queue)) != NULL)
 				{
 					process_message_from_server(message->data, message->length);
 					free(message->data);
@@ -362,7 +362,7 @@ char * check_server_id_on_command_line()
 
 void check_log_level_on_command_line()
 {
-	Uint32 i;
+    uint32_t i;
 
 	for (i = 1; i < gargc; i++)
 	{

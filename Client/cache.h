@@ -19,9 +19,9 @@ extern "C" {
 typedef struct
 {
 	void	*cache_item;	/*!< pointer to the item we are caching */
-	Uint32	size;			/*!< size of item */
-	Uint32	access_time;	/*!< last time used */
-	Uint32	access_count;	/*!< number of usages since last checkpoint */
+    uint32_t	size;			/*!< size of item */
+    uint32_t	access_time;	/*!< last time used */
+    uint32_t	access_count;	/*!< number of usages since last checkpoint */
 	const char *name;	/*!< original source or name, NOTE: this is NOT free()'d and allows dups! */
 } cache_item_struct;
 
@@ -32,18 +32,18 @@ typedef struct
 {
 	cache_item_struct	**cached_items; /*!< list of cached items */
 	cache_item_struct	*recent_item; /*!< pointer to the last used item */
-	Sint32	num_items;		/*!< the number of active items in the list */
+	int32_t	num_items;		/*!< the number of active items in the list */
 #ifndef FASTER_MAP_LOAD
-	Sint32	max_item;		/*!< the highest slot used */
-	Sint32	first_unused;	/*!< the lowest possible unused slow (might be in use!!) */
+	int32_t	max_item;		/*!< the highest slot used */
+	int32_t	first_unused;	/*!< the lowest possible unused slow (might be in use!!) */
 #endif
-	Sint32	num_allocated;	/*!< the allocated space for the list */
-	Uint32	LRU_time;		/*!< last time LRU processing done */
-	Uint32	total_size;		/*!< total size currently allocated */
-	Uint32	time_limit;		/*!< limit on LRU time before forcing a scan */
-	Uint32	size_limit;		/*!< limit on size before forcing a scan */
-	void	(*free_item)();	/*!< routine to call to free an item */
-	Uint32	(*compact_item)();	/*!< routine to call to reduce memory usage without freeing */
+	int32_t	num_allocated;	/*!< the allocated space for the list */
+    uint32_t	LRU_time;		/*!< last time LRU processing done */
+    uint32_t	total_size;		/*!< total size currently allocated */
+    uint32_t	time_limit;		/*!< limit on LRU time before forcing a scan */
+    uint32_t	size_limit;		/*!< limit on size before forcing a scan */
+    void	(*free_item)(void *);	/*!< routine to call to free an item */
+    uint32_t	(*compact_item)(void *);	/*!< routine to call to reduce memory usage without freeing */
 } cache_struct;
 
 #ifndef	NEW_TEXTURES
@@ -83,7 +83,7 @@ extern cache_struct	*cache_e3d; /*!< e3d cache */
  *
  * \callgraph
  */
-void cache_system_init(Uint32 max_items);
+void cache_system_init(uint32_t max_items);
 
 /*!
  * \ingroup cache
@@ -121,8 +121,8 @@ void cache_dump_sizes(const cache_struct *cache);
  * \retval cache_struct*    a pointer to a newly created cache.
  * \callgraph
  */
-cache_struct *cache_init(const char* name, Uint32 max_items,
-	void (*free_item)());
+cache_struct *cache_init(const char* name, uint32_t max_items,
+    void (*free_item)(void *));
 
 /*!
  * \ingroup cache
@@ -133,7 +133,7 @@ cache_struct *cache_init(const char* name, Uint32 max_items,
  * \param cache         the cache for which to set the compact item handler.
  * \param compact_item  routine to use when items in \a cache get compacted.
  */
-void cache_set_compact(cache_struct *cache, Uint32 (*compact_item)());
+void cache_set_compact(cache_struct *cache, uint32_t (*compact_item)(void *));
 
 /*!
  * \ingroup cache
@@ -144,7 +144,7 @@ void cache_set_compact(cache_struct *cache, Uint32 (*compact_item)());
  * \param cache         the cache for which the time limit should be set.
  * \param time_limit    the max. amount of time to live for items in \a cache.
  */
-void cache_set_time_limit(cache_struct *cache, Uint32 time_limit);
+void cache_set_time_limit(cache_struct *cache, uint32_t time_limit);
 
 /*!
  * \ingroup cache
@@ -155,7 +155,7 @@ void cache_set_time_limit(cache_struct *cache, Uint32 time_limit);
  * \param cache         the cache for which the size limit should be set.
  * \param size_limit    the max. size for items in \a cache (in bytes).
  */
-void cache_set_size_limit(cache_struct *cache, Uint32 size_limit);
+void cache_set_size_limit(cache_struct *cache, uint32_t size_limit);
 
 /*!
  * \ingroup cache
@@ -166,7 +166,7 @@ void cache_set_size_limit(cache_struct *cache, Uint32 size_limit);
  *
  * \param free_item     pointer to the free function
  */
-void cache_set_free(cache_struct *cache, void (*free_item)());
+void cache_set_free(cache_struct *cache, void (*free_item)(void *));
 
 /*!
  * \ingroup cache
@@ -182,7 +182,7 @@ void cache_set_free(cache_struct *cache, void (*free_item)());
  * \callgraph
  */
 cache_item_struct *cache_add_item(cache_struct *cache, const char* name,
-	void *item, Uint32 size);
+    void *item, uint32_t size);
 
 /*!
  * \ingroup cache
@@ -210,7 +210,7 @@ void cache_set_name(cache_struct *cache, const char* name, void *item);
  *
  * \callgraph
  */
-void cache_adj_size(cache_struct *cache, Uint32 size, void *item);
+void cache_adj_size(cache_struct *cache, uint32_t size, void *item);
 
 /*!
  * \ingroup cache

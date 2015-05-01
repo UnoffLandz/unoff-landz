@@ -44,9 +44,9 @@ namespace Item_Info
 			bool is_valid(void) const { return valid; }
 			const std::string &get_description(void) const { return description; }
 			int get_emu(void) const { return emu; }
-			const bool compare(Uint16 the_item_id, int the_image_id) const;
+			const bool compare(uint16_t the_item_id, int the_image_id) const;
 		private:
-			Uint16 item_id;
+			uint16_t item_id;
 			int image_id;
 			int emu;
 			std::string description;
@@ -81,7 +81,7 @@ namespace Item_Info
 
 	//	Return true of the item matches the ids, allowing for unset unique ids
 	//
-	const bool Item::compare(Uint16 the_item_id, int the_image_id) const
+	const bool Item::compare(uint16_t the_item_id, int the_image_id) const
 	{
 		if ((the_item_id == unset_item_uid) && (the_image_id == image_id))
 			return true;
@@ -98,14 +98,14 @@ namespace Item_Info
 		public:
 			List(void) : load_tried(false), shown_help(false), last_item(0) {}
 			~List(void);
-			const std::string &get_description(Uint16 item_id, int image_id);
-			int get_emu(Uint16 item_id, int image_id);
-			int get_count(Uint16 item_id, int image_id);
+			const std::string &get_description(uint16_t item_id, int image_id);
+			int get_emu(uint16_t item_id, int image_id);
+			int get_count(uint16_t item_id, int image_id);
 			bool info_available(void) { if (!load_tried) load(); return !the_list.empty(); }
 			void help_if_needed(void);
-			void filter_by_description(Uint8 *storage_items_filter, const ground_item *storage_items, const char *filter_item_text, int no_storage);
+			void filter_by_description(uint8_t *storage_items_filter, const ground_item *storage_items, const char *filter_item_text, int no_storage);
 		private:
-			Item *get_item(Uint16 item_id, int image_id);
+			Item *get_item(uint16_t item_id, int image_id);
 			void load(void);
 			std::vector<Item *> the_list;
 			static std::string empty_str;
@@ -116,13 +116,13 @@ namespace Item_Info
 			{
 				public:
 					Count(void) : count(-1) {}
-					bool matches(Uint16 item_id, int image_id) const
+					bool matches(uint16_t item_id, int image_id) const
 						{ return ((count >= 0) && (this->item_id == item_id) && (this->image_id == image_id)); }
 					int get_count(void) const { return count; }
-					void set(Uint16 item_id, int image_id, int count)
+					void set(uint16_t item_id, int image_id, int count)
 						{ this->item_id = item_id; this->image_id = image_id; this->count = count; }
 				private:
-					Uint16 item_id; int image_id; int count;
+					uint16_t item_id; int image_id; int count;
 			};
 			Count last_count;
 
@@ -145,7 +145,7 @@ namespace Item_Info
 
 	//	Find and item by the ids
 	//
-	Item *List::get_item(Uint16 item_id, int image_id)
+	Item *List::get_item(uint16_t item_id, int image_id)
 	{
 		info_available();
 		if (last_item && last_item->compare(item_id, image_id))
@@ -162,7 +162,7 @@ namespace Item_Info
 
 	//	Get the description for the specified ids, or return an empty string
 	//
-	const std::string & List::get_description(Uint16 item_id, int image_id)
+	const std::string & List::get_description(uint16_t item_id, int image_id)
 	{
 		Item *matching_item = get_item(item_id, image_id);
 		if (matching_item)
@@ -173,7 +173,7 @@ namespace Item_Info
 
 	//	Get the emu for the specified ids, or return -1
 	//
-	int List::get_emu(Uint16 item_id, int image_id)
+	int List::get_emu(uint16_t item_id, int image_id)
 	{
 		Item *matching_item = get_item(item_id, image_id);
 		if (matching_item)
@@ -184,7 +184,7 @@ namespace Item_Info
 
 	//	Return the number of unique items matching the ids
 	//
-	int List::get_count(Uint16 item_id, int image_id)
+	int List::get_count(uint16_t item_id, int image_id)
 	{
 		info_available();
 		if (last_count.matches(item_id, image_id))
@@ -200,7 +200,7 @@ namespace Item_Info
 	//	Match passed string against specified item descriptions and return details for matches
 	//	Element in results array set to zero if their description matches the passed string
 	//
-	void List::filter_by_description(Uint8 *storage_items_filter, const ground_item *storage_items, const char *filter_item_text, int no_storage)
+	void List::filter_by_description(uint8_t *storage_items_filter, const ground_item *storage_items, const char *filter_item_text, int no_storage)
 	{
 		if (!info_available() || (no_storage<=0) || !storage_items_filter || !storage_items)
 			return;
@@ -273,11 +273,11 @@ static Item_Info::List the_list;
 extern "C"
 {
 	int show_item_desc_text = 1;
-	const char *get_item_description(Uint16 item_id, int image_id) { return the_list.get_description(item_id, image_id).c_str(); }
-	void filter_items_by_description(Uint8 *storage_items_filter, const ground_item *storage_items, const char *filter_item_text, int no_storage)
+	const char *get_item_description(uint16_t item_id, int image_id) { return the_list.get_description(item_id, image_id).c_str(); }
+	void filter_items_by_description(uint8_t *storage_items_filter, const ground_item *storage_items, const char *filter_item_text, int no_storage)
 		{ the_list.filter_by_description(storage_items_filter, storage_items, filter_item_text, no_storage); }
-	int get_item_emu(Uint16 item_id, int image_id) { return the_list.get_emu(item_id, image_id); }
-	int get_item_count(Uint16 item_id, int image_id) { return the_list.get_count(item_id, image_id); }
+	int get_item_emu(uint16_t item_id, int image_id) { return the_list.get_emu(item_id, image_id); }
+	int get_item_count(uint16_t item_id, int image_id) { return the_list.get_count(item_id, image_id); }
 	int item_info_available(void) { return ((the_list.info_available()) ?1: 0); }
 	void item_info_help_if_needed(void) { the_list.help_if_needed(); }
 }

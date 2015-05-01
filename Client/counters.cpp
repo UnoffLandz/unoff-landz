@@ -53,9 +53,9 @@ enum {
 /* Counter structure */
 struct Counter {
 	char *name;
-	Uint32 n_session;
-	Uint32 n_total;
-	Uint32 extra;
+	uint32_t n_session;
+	uint32_t n_total;
+	uint32_t extra;
 };
 
 static struct Counter *counters[NUM_COUNTERS];
@@ -117,13 +117,13 @@ static const char *count_str[] =
 static const int num_search_str = sizeof(count_str)/sizeof(char *);
 static char **search_str = NULL;
 static size_t *search_len = NULL;
-static Uint32 misc_event_time = 0;
+static uint32_t misc_event_time = 0;
 
 static int harvesting_flag = 0;
 int now_harvesting(void) { return harvesting_flag; }
 void clear_now_harvesting(void) { harvesting_flag = 0; }
 void set_now_harvesting(void) { harvesting_flag = 1; }
-Uint32 disconnect_time;
+uint32_t disconnect_time;
 char harvest_name[32] = {0};
 int killed_by_player = 0;
 char last_spell_name[60] = {0};
@@ -134,7 +134,7 @@ int counters_scroll_id = 16;
 void increment_counter(int counter_id, const char *name, int quantity, int extra);
 
 int display_counters_handler(window_info *win);
-int click_counters_handler(window_info *win, int mx, int my, Uint32 extra);
+int click_counters_handler(window_info *win, int mx, int my, uint32_t extra);
 int mouseover_counters_handler(window_info *win, int mx, int my);
 
 static size_t cm_counters = CM_INIT_VALUE;
@@ -147,14 +147,14 @@ int floating_session_counters = 0;				/* persisted in el.ini */
 
 int sort_counter_func(const void *a, const void *b)
 {
-	const struct Counter *ca, *cb;
+    const Counter *ca, *cb;
 
 	if (sort_by[sort_counter_id-1] < 0) {
-		ca = b;
-		cb = a;
+        ca = (const Counter *)b;
+        cb = (const Counter *)a;
 	} else {
-		ca = a;
-		cb = b;
+        ca = (const Counter *)a;
+        cb = (const Counter *)b;
 	}
 	
 	switch (abs(sort_by[sort_counter_id-1])) {
@@ -183,7 +183,7 @@ void sort_counter(int counter_id)
 	}
 }
 
-FILE *open_counters_file(char *mode)
+FILE *open_counters_file(const char *mode)
 {
 	char filename[256], username[16];
 	int i;
@@ -204,10 +204,10 @@ void load_counters()
 {
 	FILE *f;
 	int i, j;
-	Uint8 io_counter_id;
-	Uint8 io_name_len;
-	Uint32 io_extra;
-	Uint32 io_n_total;
+	uint8_t io_counter_id;
+	uint8_t io_name_len;
+	uint32_t io_extra;
+	uint32_t io_n_total;
 	char io_name[64];
 	int fread_ok = 1;
 	
@@ -229,12 +229,12 @@ void load_counters()
 	}
 	
 	/* allocate and set misc event matching strings */
-	search_str = malloc (sizeof (char *) * num_search_str);
-	search_len = malloc (sizeof (size_t) * num_search_str);
+    search_str = (char **)malloc (sizeof (char *) * num_search_str);
+    search_len = (size_t *)malloc (sizeof (size_t) * num_search_str);
 	for (i=0; i<num_search_str; i++)
 	{
 		size_t max_len = strlen (username_str) + strlen (temp_event_string[i]) + 1;
-		search_str[i] = malloc (max_len);
+        search_str[i] = (char *)malloc (max_len);
 		safe_snprintf (search_str[i], max_len, temp_event_string[i], username_str);
 		search_len[i] = strlen (search_str[i]);
 	}
@@ -274,7 +274,7 @@ void load_counters()
 
 		i = io_counter_id - 1;
 		j = entries[i]++;
-		counters[i] = realloc(counters[i], entries[i] * sizeof(struct Counter));
+        counters[i] = (Counter *)realloc(counters[i], entries[i] * sizeof(Counter));
 		counters[i][j].name = strdup(io_name);
 		counters[i][j].n_session = 0;
 		counters[i][j].n_total = io_n_total;
@@ -295,8 +295,8 @@ void flush_counters()
 {
 	FILE *f;
 	int i, j;
-	Uint8 io_counter_id;
-	Uint8 io_name_len;
+	uint8_t io_counter_id;
+	uint8_t io_name_len;
 	
 	if (!counters_initialized) {
 		return;
@@ -397,7 +397,7 @@ void increment_counter(int counter_id, const char *name, int quantity, int extra
 		/* Create a new entry. */
 		j = entries[i]++;
 		last_selected_counter_id = -1;  /* force recalculation of the scrollbar */
-		counters[i] = realloc(counters[i], entries[i] * sizeof(struct Counter));
+        counters[i] = (Counter *)realloc(counters[i], entries[i] * sizeof(struct Counter));
 		counters[i][j].name = strdup(name);
 		counters[i][j].n_session = quantity;
 		counters[i][j].n_total = quantity;
@@ -599,8 +599,8 @@ void fill_counters_win()
 	int idx = selected_counter_id > 0 ? selected_counter_id-1 : 0;
 	
 	set_window_handler(counters_win, ELW_HANDLER_DISPLAY, &display_counters_handler);
-	set_window_handler(counters_win, ELW_HANDLER_CLICK, &click_counters_handler);
-	set_window_handler(counters_win, ELW_HANDLER_MOUSEOVER, &mouseover_counters_handler);
+    set_window_handler(counters_win, ELW_HANDLER_CLICK, (int (*)())&click_counters_handler);
+    set_window_handler(counters_win, ELW_HANDLER_MOUSEOVER, (int (*)())&mouseover_counters_handler);
 
 	multiselect_id = multiselect_add(counters_win, NULL, 8, 2, 104);
 	multiselect_button_add(counters_win, multiselect_id, 0, 0, cat_str[0], 1);
@@ -674,15 +674,15 @@ int display_counters_handler(window_info *win)
 
 	if (mouseover_name) glColor3f(0.6f, 0.6f, 0.6f);
 	else glColor3f(1.0f, 1.0f, 1.0f);
-	draw_string_small(x, y, (unsigned char*)"Name", 1);
+    draw_string_small(x, y, "Name", 1);
 
 	if (mouseover_session) glColor3f(0.6f, 0.6f, 0.6f);
 	else glColor3f(1.0f, 1.0f, 1.0f);
-	draw_string_small(x + 200, y, (unsigned char*)"This Session", 1);
+    draw_string_small(x + 200, y, "This Session", 1);
 
 	if (mouseover_total) glColor3f(0.6f, 0.6f, 0.6f);
 	else glColor3f(1.0f, 1.0f, 1.0f);
-	draw_string_small(x + 370, y, (unsigned char*)"Total", 1);
+    draw_string_small(x + 370, y, "Total", 1);
 
 	if (counters_scroll_id != -1) {
 		scroll = vscrollbar_get_pos(counters_win, counters_scroll_id);
@@ -717,22 +717,22 @@ int display_counters_handler(window_info *win)
 
 		/* draw first so left padding does not overwrite name */
 		safe_snprintf(buffer, sizeof(buffer), "%12d", counters[i][j].n_session);
-		draw_string_small(x + 200, y, (unsigned char*)buffer, 1);
+        draw_string_small(x + 200, y, buffer, 1);
 		safe_snprintf(buffer, sizeof(buffer), "%12d", counters[i][j].n_total);
-		draw_string_small(x + 314, y, (unsigned char*)buffer, 1);
+        draw_string_small(x + 314, y, buffer, 1);
 
 		if (counters[i][j].name) {
 			float max_name_x;
 			float font_ratio = 8.0/12.0;
 			safe_snprintf(buffer, sizeof(buffer), "%d", counters[i][j].n_session);
-			max_name_x = 425.0 - (130.0 + get_string_width((unsigned char*)buffer) * font_ratio);
+            max_name_x = 425.0 - (130.0 + get_string_width(buffer) * font_ratio);
 			/* if the name would overlap the session total, truncate it */
-			if ((get_string_width((unsigned char*)counters[i][j].name) * font_ratio) > max_name_x) {
+            if ((get_string_width(counters[i][j].name) * font_ratio) > max_name_x) {
 				const char *append_str = "... ";
 				size_t dest_max_len = strlen(counters[i][j].name) + strlen(append_str) + 1;
 				char *used_name = (char *)malloc(dest_max_len);
 				truncated_string(used_name, counters[i][j].name, dest_max_len, append_str, max_name_x, font_ratio);
-				draw_string_small(x, y, (unsigned char*)used_name, 1);
+                draw_string_small(x, y, used_name, 1);
 				/* if the mouse is over this line and its truncated, tooltip to full name */
 				if (mouseover_entry_y >= y && mouseover_entry_y < y+16) {
 					show_help(counters[i][j].name, -TAB_MARGIN, win->len_y+10+TAB_MARGIN);
@@ -741,7 +741,7 @@ int display_counters_handler(window_info *win)
 				free(used_name);
 			}
 			else
-				draw_string_small(x, y, (unsigned char*)counters[i][j].name, 1);
+                draw_string_small(x, y, counters[i][j].name, 1);
 		}
 		y += 16;
 	}
@@ -753,7 +753,7 @@ int display_counters_handler(window_info *win)
 
 	glColor3f(1.0f, 1.0f, 1.0f);
 
-	draw_string_small(x, win->len_y - 20, (unsigned char*)"Totals:", 1);
+    draw_string_small(x, win->len_y - 20, "Totals:", 1);
 		
 	for (j = 0, total = 0, session_total = 0; j < entries[i]; j++) {
 		total += counters[i][j].n_total;
@@ -761,17 +761,17 @@ int display_counters_handler(window_info *win)
 	}
 
 	safe_snprintf(buffer, sizeof(buffer), "%12d", session_total);
-	draw_string_small(x + 200, win->len_y - 20, (unsigned char*)buffer, 1);
+    draw_string_small(x + 200, win->len_y - 20, buffer, 1);
 
 	safe_snprintf(buffer, sizeof(buffer), "%5d", total);
-	draw_string_small(x + 370, win->len_y - 20, (unsigned char*)buffer, 1);
+    draw_string_small(x + 370, win->len_y - 20, buffer, 1);
 #ifdef OPENGL_TRACE
 CHECK_GL_ERRORS();
 #endif //OPENGL_TRACE
 	return 1;
 }
 
-int click_counters_handler(window_info *win, int mx, int my, Uint32 extra)
+int click_counters_handler(window_info *win, int mx, int my, uint32_t extra)
 {
 	 if (mx > 120 && my > 25 && my < win->len_y - 25) {
 		if (extra&ELW_WHEEL_UP) {
@@ -1013,7 +1013,7 @@ void increment_death_counter(actor *a)
 /*
  * Called whenever we successfully make something.
  */
-void counters_set_product_info(char *name, int count)
+void counters_set_product_info(const char *name, int count)
 {
 	safe_strncpy(product_name, name, sizeof(product_name));
 	product_count = count;
@@ -1069,7 +1069,7 @@ void counters_set_spell_name(int spell_id, char *name, int len)
 	if (!spell_names[spell_id+1]) {
 		int i, j;
 		
-		spell_names[spell_id+1] = malloc(len+1);
+        spell_names[spell_id+1] = (char *)malloc(len+1);
 		safe_strncpy(spell_names[spell_id + 1], name, len + 1);
 
 		i = SPELLS - 1;
@@ -1093,10 +1093,10 @@ void counters_set_spell_name(int spell_id, char *name, int len)
 void increment_spell_counter(int spell_id)
 {
 	if (!spell_names[spell_id+1]) {
-		Uint8 str[2];
+		uint8_t str[2];
 
 		str[0] = SPELL_NAME;
-		str[1] = (Sint8)spell_id;
+        str[1] = (int8_t)spell_id;
 		my_tcp_send(my_socket, str, 2);
 		requested_spell_id = spell_id;
 
@@ -1157,14 +1157,14 @@ void catch_counters_text(const char* text)
 	if (my_strncompare(text, "Your ", 5))
 	{
 		int i;
-		char *mess_ends[] = {" has been destroyed", " broke, sorry!"};
+        const char *mess_ends[] = {" has been destroyed", " broke, sorry!"};
 		size_t to_count_name_len = 0;
 		const char *item_string = &text[5];
 
 		/* look for one of the endings, if found use it to locate the item name */
 		for (i=0; i<sizeof(mess_ends)/sizeof(char *); i++)
 		{
-			char *located = strstr(item_string, mess_ends[i]);
+            const char *located = strstr(item_string, mess_ends[i]);
 			if (located)
 			{
 				to_count_name_len = (size_t)((located - item_string)/sizeof(char));
@@ -1192,7 +1192,7 @@ void catch_counters_text(const char* text)
 		/* some death messages match so crudely exclude them but catch bags of gold */
 		if (strchr(&text[start_from], ',') != NULL)
 		{
-			char *gold_str = "bag of gold, getting ";
+            const char *gold_str = "bag of gold, getting ";
 			size_t gold_len = strlen(gold_str);
 			if (my_strncompare(&text[start_from], gold_str, gold_len))
 			{

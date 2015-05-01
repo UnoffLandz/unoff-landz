@@ -51,7 +51,7 @@ int read_and_check_elc_header(el_file_ptr file, const magic_number magic, versio
 
 	MD5Open(&md5);
 	size = el_get_size(file) - header_offset;
-	mem = &((Uint8*)el_get_pointer(file))[header_offset];
+	mem = &((uint8_t*)el_get_pointer(file))[header_offset];
 	MD5Digest(&md5, mem, size);
 	MD5Close(&md5, md5_digest);
 

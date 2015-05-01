@@ -47,7 +47,7 @@ namespace ec
 		return 0.0f;
 	}
 #else	/* NEW_TEXTURES */
-	void SmokeParticle::draw(const Uint64 usec)
+	void SmokeParticle::draw(const uint64_t usec)
 	{
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		Vec3 shifted_pos = pos - *(((SmokeEffect*)effect)->pos);
@@ -58,7 +58,7 @@ namespace ec
 	}
 #endif	/* NEW_TEXTURES */
 
-	bool SmokeParticle::idle(const Uint64 delta_t)
+	bool SmokeParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -84,12 +84,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 SmokeParticle::get_texture()
+	uint32_t SmokeParticle::get_texture()
 	{
 		return base->get_texture(EC_SIMPLE);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint SmokeParticle::get_texture(const Uint16 res_index)
+	GLuint SmokeParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexSimple.get_texture(res_index);
 	}
@@ -97,7 +97,7 @@ namespace ec
 
 	SmokeEffect::SmokeEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 		const color_t _hue_adjust, const color_t _saturation_adjust,
-		const float _scale, const Uint16 _LOD)
+		const float _scale, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "SmokeEffect (" << this << ") created (" << *_pos
@@ -145,7 +145,7 @@ namespace ec
 			std::cout << "SmokeEffect (" << this << ") destroyed." << std::endl;
 	}
 
-	bool SmokeEffect::idle(const Uint64 usec)
+	bool SmokeEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 			return false;

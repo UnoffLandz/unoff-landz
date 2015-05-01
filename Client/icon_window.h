@@ -20,7 +20,7 @@ typedef enum { NEW_CHARACTER_ICONS=1, MAIN_WINDOW_ICONS=2 } icon_window_mode; /*
  * \return	always 1
  * \callgraph
  */
-int reload_icon_window(char *text, int len);
+int reload_icon_window(const char *text, int len);
 
 
 /*!
@@ -54,7 +54,7 @@ void init_icon_window(icon_window_mode icon_mode);
  *
  * \callgraph
  */
-void flash_icon(const char* name, Uint32 seconds);
+void flash_icon(const char* name, uint32_t seconds);
 
 #ifdef __cplusplus
 } // extern "C"

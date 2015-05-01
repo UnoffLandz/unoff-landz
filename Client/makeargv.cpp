@@ -24,7 +24,7 @@ static void remove_quotes( char *string )
 
 #define PARSER_MAX_ARGS 512
 
-int makeargv( char *string, char ***argv )
+int makeargv( const char *src_, char ***argv )
 {
 	enum {
 		READ_ARG_CHAR,
@@ -32,6 +32,7 @@ int makeargv( char *string, char ***argv )
 		READ_DELIMITER
 	} state = READ_ARG_CHAR;
 
+    char * string = strdup(src_);
 	char *current_argv[ PARSER_MAX_ARGS ];
 	unsigned int current_token = 0;
 	char *current_token_start = string;
@@ -98,6 +99,7 @@ int makeargv( char *string, char ***argv )
 	/* Allocate */
 	if (current_token==0) {
 		*argv = NULL;
+        free(string);
 		return 0;
 	}
 
@@ -109,6 +111,7 @@ int makeargv( char *string, char ***argv )
 	}
 
 	(*argv)[i] = NULL;
+    free(string);
 	return current_token;
 }
 

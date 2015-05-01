@@ -83,7 +83,7 @@ namespace eternal_lands
 			/**
 			 * This is the size of the buffer in bytes.
 			 */
-			Uint64 m_size;
+			uint64_t m_size;
 
 			/**
 			 * This is the OpenGL buffer id.
@@ -105,7 +105,7 @@ namespace eternal_lands
 			/**
 			 * Returns the size of the buffer in bytes.
 			 */
-			inline Uint64 get_size() const
+			inline uint64_t get_size() const
 			{
 				return m_size;
 			}
@@ -117,7 +117,7 @@ namespace eternal_lands
 			 * @param usage The usage of the buffer.
 			 */
 			void set_size(const HardwareBufferType type,
-				const Uint64 size,
+				const uint64_t size,
 				const HardwareBufferUsageType usage);
 
 			/**

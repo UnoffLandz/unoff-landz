@@ -16,9 +16,9 @@ namespace ec
 		const Vec3 _pos, const Vec3 _velocity, const coord_t _size,
 		const alpha_t _alpha, const color_t red, const color_t green,
 #ifdef	NEW_TEXTURES
-		const color_t blue, TextureEnum _texture, const Uint16 _LOD,
+		const color_t blue, TextureEnum _texture, const uint16_t _LOD,
 #else	/* NEW_TEXTURES */
-		const color_t blue, Texture* _texture, const Uint16 _LOD,
+		const color_t blue, Texture* _texture, const uint16_t _LOD,
 #endif	/* NEW_TEXTURES */
 		const MineEffect::MineType _type) :
 		Particle(_effect, _mover, _pos, _velocity,
@@ -37,13 +37,13 @@ namespace ec
 		state = 0;
 	}
 
-	bool MineParticle::idle(const Uint64 delta_t)
+	bool MineParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
 
 		const interval_t float_time = delta_t / 1000000.0;
-		const Uint64 age = get_time() - born;
+		const uint64_t age = get_time() - born;
 		switch (type)
 		{
 			case MineEffect::DETONATE_MAGIC_IMMUNITY_REMOVAL:
@@ -149,7 +149,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 MineParticle::get_texture()
+	uint32_t MineParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
@@ -172,12 +172,12 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	GLuint MineParticle::get_texture(const Uint16 res_index)
+	GLuint MineParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 
-	void MineParticle::draw(const Uint64 usec)
+	void MineParticle::draw(const uint64_t usec)
 	{
 		if ((type == MineEffect::DETONATE_CALTROP) || (type
 			== MineEffect::DETONATE_CALTROP_POISON) || (type
@@ -214,7 +214,7 @@ namespace ec
 	;
 
 	MineEffect::MineEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
-		const MineType _type, const Uint16 _LOD)
+		const MineType _type, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "MineEffect (" << this << ") created (" << type
@@ -448,7 +448,7 @@ namespace ec
 			std::cout << "MineEffect (" << this << ") destroyed." << std::endl;
 	}
 
-	bool MineEffect::idle(const Uint64 usec)
+	bool MineEffect::idle(const uint64_t usec)
 	{
 		if (particles.size() == 0)
 			return false;
@@ -466,9 +466,9 @@ namespace ec
 		const Vec3 _pos, const Vec3 _velocity, const coord_t _size,
 		const alpha_t _alpha, const color_t red, const color_t green,
 #ifdef	NEW_TEXTURES
-		const color_t blue, TextureEnum _texture, const Uint16 _LOD):
+		const color_t blue, TextureEnum _texture, const uint16_t _LOD):
 #else	/* NEW_TEXTURES */
-		const color_t blue, Texture* _texture, const Uint16 _LOD):
+		const color_t blue, Texture* _texture, const uint16_t _LOD):
 #endif	/* NEW_TEXTURES */
 		Particle(_effect, _mover, _pos, _velocity, _size)
 	{
@@ -484,10 +484,10 @@ namespace ec
 		state = 0;
 	}
 
-	bool MineParticleFire::idle(const Uint64 delta_t)
+	bool MineParticleFire::idle(const uint64_t delta_t)
 	{
 		const interval_t float_time = delta_t / 1000000.0;
-		const Uint64 age = get_time() - born;
+		const uint64_t age = get_time() - born;
 		const float age_f = (float)(age)/1000000.0f;
 		const alpha_t scalar = pow_randfloat(float_time * 2);
 		if (age_f > 1.5)
@@ -499,12 +499,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 MineParticleFire::get_texture()
+	uint32_t MineParticleFire::get_texture()
 	{
 		return base->get_texture(texture);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint MineParticleFire::get_texture(const Uint16 res_index)
+	GLuint MineParticleFire::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
@@ -514,9 +514,9 @@ namespace ec
 		const Vec3 _pos, const Vec3 _velocity, const coord_t _size,
 		const alpha_t _alpha, const color_t red, const color_t green,
 #ifdef	NEW_TEXTURES
-		const color_t blue, TextureEnum _texture, const Uint16 _LOD):
+		const color_t blue, TextureEnum _texture, const uint16_t _LOD):
 #else	/* NEW_TEXTURES */
-		const color_t blue, Texture* _texture, const Uint16 _LOD):
+		const color_t blue, Texture* _texture, const uint16_t _LOD):
 #endif	/* NEW_TEXTURES */
 		Particle(_effect, _mover, _pos, _velocity, _size)
 	{
@@ -532,10 +532,10 @@ namespace ec
 		state = 0;
 	}
 
-	bool MineParticleSmoke::idle(const Uint64 delta_t)
+	bool MineParticleSmoke::idle(const uint64_t delta_t)
 	{
 		if (state == 0) {
-			const Uint64 age = get_time() - born;
+			const uint64_t age = get_time() - born;
 			const float age_f = (float)(age)/1000000.0f;
 			alpha = age_f * 0.125;
 			if (age_f > 0.25) {
@@ -553,7 +553,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 MineParticleSmoke::get_texture()
+	uint32_t MineParticleSmoke::get_texture()
 	{
 		return base->get_texture(texture);
 	}
@@ -563,12 +563,12 @@ namespace ec
 		return 0.0f;
 	}
 #else	/* NEW_TEXTURES */
-	GLuint MineParticleSmoke::get_texture(const Uint16 res_index)
+	GLuint MineParticleSmoke::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 
-	void MineParticleSmoke::draw(const Uint64 usec)
+	void MineParticleSmoke::draw(const uint64_t usec)
 	{
 		glEnable(GL_LIGHTING);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

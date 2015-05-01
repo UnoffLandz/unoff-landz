@@ -7,7 +7,7 @@
 
 #include "half.h"
 
-const Uint32 half_lut[] =
+const uint32_t half_lut[] =
 {
 	0x00000000, 0x33800000, 0x34000000, 0x34400000,
 	0x34800000, 0x34A00000, 0x34C00000, 0x34E00000,
@@ -16399,10 +16399,10 @@ const Uint32 half_lut[] =
 typedef union FloatUint32
 {
 	float m_float;
-	Uint32 m_int;
+	uint32_t m_int;
 } FloatUint32;
 
-float half_to_float(const Uint16 value)
+float half_to_float(const uint16_t value)
 {
 	FloatUint32 tmp;
 
@@ -16411,14 +16411,14 @@ float half_to_float(const Uint16 value)
 	return tmp.m_float;
 }
 
-Uint16 float_to_half(const float value)
+uint16_t float_to_half(const float value)
 {
 	FloatUint32 f;
-	Sint32 new_exponent;
-	Uint32 exponent_value;
-	Uint32 sign;
-	Uint32 mantissa;
-	Uint32 exponent;
+	int32_t new_exponent;
+	uint32_t exponent_value;
+	uint32_t sign;
+	uint32_t mantissa;
+	uint32_t exponent;
 
 	f.m_float = value;
 

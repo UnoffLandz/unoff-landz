@@ -23,7 +23,7 @@ extern "C" {
  * @param alignment The alignment to use for the memory.
  * @callgraph
  */
-void* malloc_aligned(const Uint64 size, const Uint64 alignment);
+void* malloc_aligned(const uint64_t size, const uint64_t alignment);
 
 /**
  * @ingroup misc

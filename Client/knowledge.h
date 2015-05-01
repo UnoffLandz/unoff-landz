@@ -20,10 +20,10 @@ extern "C" {
  */
 typedef struct
 {
-	Uint8 present; /*!< flag, indicating whether this knowledge is present in the knowledge window. */
-	Uint8 mouse_over; /*!< flag, indicating whether the mouse is over an entry in the knowledge window */
+	uint8_t present; /*!< flag, indicating whether this knowledge is present in the knowledge window. */
+	uint8_t mouse_over; /*!< flag, indicating whether the mouse is over an entry in the knowledge window */
 	char name[KNOWLEDGE_NAME_SIZE]; /*!< name of the knowledge */
-	Uint8 has_book; /*!< flag, indicating whether the knowledge item has an assosiated book */
+	uint8_t has_book; /*!< flag, indicating whether the knowledge item has an assosiated book */
 }knowledge;
 
 /*!
@@ -63,7 +63,7 @@ void display_knowledge();
  * \param list  a list of knowledges that are already known by the player.
  *
  */
-void get_knowledge_list (Uint16 size, const char *list);
+void get_knowledge_list (uint16_t size, const char *list);
 
 /*!
  * \ingroup knowledge_window
@@ -76,7 +76,7 @@ void get_knowledge_list (Uint16 size, const char *list);
  * \note This function does not perform any sanity checks on \a idx. This is a possible bug.
  * \bug Possible bug, because this function doesn't do any sanity checks on the parameter \a idx.
  */
-void get_new_knowledge(Uint16 idx);
+void get_new_knowledge(uint16_t idx);
 
 /*! 
  * \ingroup knowledge_window

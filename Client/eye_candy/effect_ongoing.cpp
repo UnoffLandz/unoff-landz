@@ -15,9 +15,9 @@ namespace ec
 		const color_t saturation_adjust, const coord_t _size,
 		const alpha_t _alpha, color_t hue, color_t saturation, color_t value,
 #ifdef	NEW_TEXTURES
-		TextureEnum _texture, const Uint16 _LOD,
+		TextureEnum _texture, const uint16_t _LOD,
 #else	/* NEW_TEXTURES */
-		Texture* _texture, const Uint16 _LOD,
+		Texture* _texture, const uint16_t _LOD,
 #endif	/* NEW_TEXTURES */
 		const OngoingEffect::OngoingType _type) :
 		Particle(_effect, _mover, _pos, _velocity, _size)
@@ -51,9 +51,9 @@ namespace ec
 		const color_t saturation_adjust, const coord_t _size,
 		const alpha_t _alpha, color_t hue, color_t saturation, color_t value,
 #ifdef	NEW_TEXTURES
-		TextureEnum _texture, const Uint16 _LOD,
+		TextureEnum _texture, const uint16_t _LOD,
 #else	/* NEW_TEXTURES */
-		Texture* _texture, const Uint16 _LOD,
+		Texture* _texture, const uint16_t _LOD,
 #endif	/* NEW_TEXTURES */
 		const OngoingEffect::OngoingType _type, const angle_t _angle) :
 		Particle(_effect, _mover, _pos, _velocity, _size)
@@ -84,10 +84,10 @@ namespace ec
 		center = _pos;
 	}
 
-	bool OngoingParticle::idle(const Uint64 delta_t)
+	bool OngoingParticle::idle(const uint64_t delta_t)
 	{
 		const interval_t float_time = delta_t / 1000000.0;
-		const Uint64 age = get_time() - born;
+		const uint64_t age = get_time() - born;
 		switch (type)
 		{
 			case OngoingEffect::OG_MAGIC_PROTECTION:
@@ -157,7 +157,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 OngoingParticle::get_texture()
+	uint32_t OngoingParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
@@ -174,12 +174,12 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	GLuint OngoingParticle::get_texture(const Uint16 res_index)
+	GLuint OngoingParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 
-	void OngoingParticle::draw(const Uint64 usec)
+	void OngoingParticle::draw(const uint64_t usec)
 	{
 		if ((type == OngoingEffect::OG_POISON) && (state == 1))
 		{
@@ -202,7 +202,7 @@ namespace ec
 
 	OngoingEffect::OngoingEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 		const color_t _hue_adjust, const color_t _saturation_adjust,
-		const OngoingType _type, const Uint16 _LOD, const float _strength, Uint32 _buff_type)
+		const OngoingType _type, const uint16_t _LOD, const float _strength, uint32_t _buff_type)
 	{
 		if (EC_DEBUG)
 			std::cout << "OngoingEffect (" << this << ") created." << std::endl;
@@ -269,7 +269,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool OngoingEffect::idle(const Uint64 usec)
+	bool OngoingEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 		{
@@ -284,7 +284,7 @@ namespace ec
 		effect_center = *pos;
 
 		const interval_t float_time = usec / 1000000.0;
-		const Uint64 age = get_time() - born;
+		const uint64_t age = get_time() - born;
 		const float age_f = (float)(age)/1000000;
 		switch (type)
 		{

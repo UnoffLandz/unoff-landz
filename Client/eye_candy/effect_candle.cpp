@@ -12,7 +12,7 @@ namespace ec
 
 	CandleParticle::CandleParticle(Effect* _effect, ParticleMover* _mover,
 		const Vec3 _pos, const Vec3 _velocity, const color_t hue_adjust,
-		const color_t saturation_adjust, const float _scale, const Uint16 _LOD) :
+		const color_t saturation_adjust, const float _scale, const uint16_t _LOD) :
 		Particle(_effect, _mover, _pos, _velocity)
 	{
 		color_t hue, saturation, value;
@@ -35,7 +35,7 @@ namespace ec
 		state = ((rand() % 3) == 0);
 	}
 
-	bool CandleParticle::idle(const Uint64 delta_t)
+	bool CandleParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -51,7 +51,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 CandleParticle::get_texture()
+	uint32_t CandleParticle::get_texture()
 	{
 		return base->get_texture(EC_FLARE);
 	}
@@ -68,12 +68,12 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	GLuint CandleParticle::get_texture(const Uint16 res_index)
+	GLuint CandleParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexFlare.get_texture(res_index);
 	}
 
-	void CandleParticle::draw(const Uint64 usec)
+	void CandleParticle::draw(const uint64_t usec)
 	{
 		if (state == 0)
 		{
@@ -90,7 +90,7 @@ namespace ec
 
 	CandleEffect::CandleEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 		const color_t _hue_adjust, const color_t _saturation_adjust,
-		const float _scale, const Uint16 _LOD)
+		const float _scale, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "CandleEffect (" << this << ") created." << std::endl;
@@ -116,7 +116,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool CandleEffect::idle(const Uint64 usec)
+	bool CandleEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 			return false;

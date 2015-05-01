@@ -226,7 +226,7 @@ const char* el_file_name(const el_file_ptr file);
  * \param file The file pointer.
  * \return Returns the checksum.
  */
-Uint32 el_crc32(el_file_ptr file);
+uint32_t el_crc32(el_file_ptr file);
 
 /*!
  * \brief Read a line

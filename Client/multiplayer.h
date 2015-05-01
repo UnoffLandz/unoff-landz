@@ -8,17 +8,12 @@
 
 #include <SDL_net.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 extern int port; /*!< the server port we use */
-extern unsigned char server_address[60]; /*!< the server address we use */
+extern uint8_t server_address[60]; /*!< the server address we use */
 
 extern TCPsocket my_socket; /*!< our TCP socket to communiate with the server */
 
-/*! \name Version information 
+/*! \name Version information
  * @{ */
 extern char version_string[]; /*!< a buffer for the complete version string */
 extern int client_version_major; /*!< The clients Major version number */
@@ -32,7 +27,7 @@ extern int mixed_message_filter; /*!< If true, do not display console messages f
 /*! @} */
 
 
-extern Uint32 next_second_time; /*!< the time of the next second */
+extern uint32_t next_second_time; /*!< the time of the next second */
 extern short real_game_minute; /*!< the real game minute */
 extern short real_game_second; /*!< the real game second */
 
@@ -45,31 +40,31 @@ int is_real_game_second_valid(void);
 
 /*!
  * \brief	Set game seconds as valid.
- * 
+ *
 */
 void set_real_game_second_valid(void);
 
 /*!
  * \brief	Get the current game time.
- * 
+ *
  * \retval	game time in seconds.
 */
-Uint32 get_game_time_sec(void);
+uint32_t get_game_time_sec(void);
 
 /*!
  * \brief	Get the time difference from current game time.
  *
  * \param	the relative time to compare
- * 
+ *
  * \retval	the time difference in seconds, wrapped appropriately
 */
-Uint32 diff_game_time_sec(Uint32 ref_time);
+uint32_t diff_game_time_sec(uint32_t ref_time);
 
 /*!
  * \brief	Set the state to disconnected from the server, showing messages and recording time.
  *
  * \param	A message string, or NULL
- * 
+ *
 */
 void enter_disconnected_state(char *message);
 
@@ -110,7 +105,7 @@ void create_tcp_out_mutex();
  */
 void cleanup_tcp();
 
-	/*!
+    /*!
  * \ingroup network_actors
  * \brief Move the actor to a new location
  *
@@ -133,7 +128,7 @@ void move_to (short int x, short int y, int try_pathfinder);
  * \param my_socket the socket used to communicate with the server
  * \param str       the message to sent
  * \param len       the length of \a str
- * \retval int      0, if the client is not connected, or if the actor has been sitting for a specific amount of time, or if the packet is already stored in the \ref tcp_cache, 
+ * \retval int      0, if the client is not connected, or if the actor has been sitting for a specific amount of time, or if the packet is already stored in the \ref tcp_cache,
  *                  else the return value of SDLNet_TCP_Send will be returned.
  * \callgraph
  *
@@ -141,7 +136,8 @@ void move_to (short int x, short int y, int try_pathfinder);
  * \pre If the actor is already sitting this function will return 0, when the \ref SIT_DOWN command is sent.
  * \pre If the message given in \a str was already sent during a specific amount of time, meaning it is still in the \ref tcp_cache, this function will return 0.
  */
-int my_tcp_send (TCPsocket my_socket, const Uint8 *str, int len);
+int my_tcp_send (TCPsocket my_socket, const char *str, int len);
+int my_tcp_send (TCPsocket my_socket, const uint8_t *str, int len);
 
 int my_tcp_flush (TCPsocket my_socket);
 
@@ -205,7 +201,7 @@ void send_new_char(char * user_str, char * pass_str, char skin, char hair, char 
  */
 int get_message_from_server(void *thread_args);
 
-void process_message_from_server(const Uint8 *in_data, int data_length);
+void process_message_from_server(const uint8_t *in_data, int data_length);
 
 void send_heart_beat();
 
@@ -215,7 +211,7 @@ void send_heart_beat();
  * 		If a callback is registered, send it the date too.
  *
  * \param	the_string	the new data string
- * 
+ *
  * \retval	int	1 if the date was requested from a get_date() call, otherwise 0
 */
 int set_date(const char *the_string);
@@ -228,13 +224,9 @@ int set_date(const char *the_string);
  * save any callback function for when we have the new date.
  *
  * \param	callback	if not NULL a function to be passed the string when we have it
- * 
+ *
  * \retval	string pointer	NULL is no date ready
 */
 const char *get_date(void (*callback)(const char *));
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif

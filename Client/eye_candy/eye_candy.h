@@ -145,7 +145,7 @@ namespace ec
 #define randdouble MathCache::randdouble
 #define randfloat MathCache::randfloat
 #define randint MathCache::randint
-#define rand8 Uint8 rand8();	//Functions to ensure a minimum entropy range for the rand function.
+#define rand8 uint8_t rand8();	//Functions to ensure a minimum entropy range for the rand function.
 #define rand16 MathCache::rand16
 #define rand32 MathCache::rand32
 #define rand64 MathCache::rand64
@@ -199,7 +199,7 @@ namespace ec
 #pragma warning (disable : 4311) // Explicitly asting a pointer to a non-pointer type (Justification: Occasionally I use the pointer to an object as salt in a function -- salt that's consistant across that object but not between objects)
 #endif
 
-	Uint64 get_time();
+	uint64_t get_time();
 	void hsv_to_rgb(const color_t h, const color_t s, const color_t v,
 		color_t& r, color_t& g, color_t& b);
 
@@ -561,10 +561,10 @@ namespace ec
 
 			void push_texture(const std::string filename);
 			void clear(void);
-			GLuint get_texture(const Uint16 res_index) const;
-			GLuint get_texture(const Uint16 res_index, const int frame) const;
-			GLuint get_texture(const Uint16 res_index, const Uint64 born,
-			const Uint64 changerate) const;
+			GLuint get_texture(const uint16_t res_index) const;
+			GLuint get_texture(const uint16_t res_index, const int frame) const;
+			GLuint get_texture(const uint16_t res_index, const uint64_t born,
+			const uint64_t changerate) const;
 
 			std::vector<GLuint> texture_ids[4];
 
@@ -1053,11 +1053,11 @@ namespace ec
 				const Vec3 _velocity, const coord_t _size = 1.0f);
 			virtual ~Particle();
 
-			virtual bool idle(const Uint64 delta_t) = 0;
+			virtual bool idle(const uint64_t delta_t) = 0;
 #ifdef	NEW_TEXTURES
-			virtual Uint32 get_texture() = 0;
+			virtual uint32_t get_texture() = 0;
 #else	/* NEW_TEXTURES */
-			virtual GLuint get_texture(const Uint16 res_index) = 0;
+			virtual GLuint get_texture(const uint16_t res_index) = 0;
 #endif	/* NEW_TEXTURES */
 			virtual light_t estimate_light_level() const = 0;
 			virtual light_t get_light_level()
@@ -1077,9 +1077,9 @@ namespace ec
 				return 1.0f;
 			}
 
-			void draw(const Uint64 usec);
+			void draw(const uint64_t usec);
 #else	/* NEW_TEXTURES */
-			virtual void draw(const Uint64 usec);
+			virtual void draw(const uint64_t usec);
 #endif	/* NEW_TEXTURES */
 			virtual coord_t flare() const;
 
@@ -1089,12 +1089,12 @@ namespace ec
 			color_t color[3];
 			alpha_t alpha;
 			coord_t size;
-			Uint64 born;
+			uint64_t born;
 			energy_t energy;
 			coord_t flare_max; // Bigger values mean bigger flares.  1.0 to max particle size.
 			coord_t flare_exp; // Lower values mean rarer flares.  0.0 to 1.0.
 			coord_t flare_frequency; // Geographic scalar between flares.
-			Uint16 state;
+			uint16_t state;
 			Effect* effect;
 			EyeCandy* base;
 
@@ -1119,16 +1119,14 @@ namespace ec
 			}
 			;
 
-			virtual void move(Particle& p, Uint64 usec)
+			virtual void move(Particle& p, uint64_t usec)
 			{
 				p.pos += p.velocity * (usec / 1000000.0);
 			}
-			;
-			virtual energy_t calculate_energy(const Particle& p) const
+            virtual energy_t calculate_energy(const Particle& /*p*/) const
 			{
 				return 0;
 			}
-			;
 
 			Vec3 vec_shift(const Vec3 src, const Vec3 dest,
 				const percent_t percent) const;
@@ -1168,7 +1166,7 @@ namespace ec
 			}
 			;
 
-			virtual void move(Particle& p, Uint64 usec);
+			virtual void move(Particle& p, uint64_t usec);
 
 			virtual Vec3 get_force_gradient(Particle& p) const;
 			virtual Vec3 get_obstruction_gradient(Particle& p) const;
@@ -1197,7 +1195,7 @@ namespace ec
 			}
 			;
 
-			//  virtual void move(Particle& p, Uint64 usec);
+			//  virtual void move(Particle& p, uint64_t usec);
 			virtual Vec3 get_force_gradient(Particle& p) const;
 
 			coord_t strength;
@@ -1363,7 +1361,7 @@ namespace ec
 			;
 
 			void set_gravity_center(Vec3* _gravity_center);
-			virtual void move(Particle& p, Uint64 usec);
+			virtual void move(Particle& p, uint64_t usec);
 			energy_t calculate_velocity_energy(const Particle& p) const;
 			energy_t calculate_position_energy(const Particle& p) const;
 			coord_t gravity_dist(const Particle& p, const Vec3& center) const;
@@ -2057,11 +2055,11 @@ namespace ec
 
 #ifdef	NEW_TEXTURES
 			void draw_particle(const coord_t size,
-				const Uint32 texture, const color_t r,
+				const uint32_t texture, const color_t r,
 				const color_t g, const color_t b,
 				const alpha_t alpha, const Vec3 pos,
 				const alpha_t burn);
-			void build_particle_buffer(const Uint64 time_diff);
+			void build_particle_buffer(const uint64_t time_diff);
 			void draw_particle_buffer();
 #endif	/* NEW_TEXTURES */
 
@@ -2077,8 +2075,8 @@ namespace ec
 			;
 
 			virtual EffectEnum get_type() = 0;
-			virtual bool idle(const Uint64 usec) = 0;
-			virtual void draw(const Uint64 usec)
+			virtual bool idle(const uint64_t usec) = 0;
+            virtual void draw(const uint64_t /*usec*/)
 			{
 				for (std::map<Particle*, bool>::iterator iter2 =
 					particles.begin(); iter2 != particles.end(); iter2++)
@@ -2095,17 +2093,17 @@ namespace ec
 			{
 				if (fabs(_LOD - (float)LOD) < 1.0)
 					return;
-				const Uint16 rounded_LOD = (Uint16)round(_LOD);
+				const uint16_t rounded_LOD = (uint16_t)round(_LOD);
 				if (rounded_LOD <= desired_LOD)
 					LOD = rounded_LOD;
 				else
 					LOD = desired_LOD;
 			}
 			;
-			static Uint64 get_max_end_time()
+			static uint64_t get_max_end_time()
 			{
 				return 0x8000000000000000ull;};
-			virtual Uint64 get_expire_time()
+			virtual uint64_t get_expire_time()
 			{	return 0x8000000000000000ull;};
 
 #ifdef CLUSTER_INSIDES  
@@ -2126,8 +2124,8 @@ namespace ec
 			EyeCandy* base;
 			int motion_blur_points;
 			percent_t motion_blur_fade_rate; //0 to 1; higher means less fade.
-			Uint16 state;
-			Uint64 born;
+			uint16_t state;
+			uint64_t born;
 			bool* dead; //Provided by the effect caller; set when this effect is going away.
 			Vec3* pos;
 			std::vector<Obstruction*>* obstructions;
@@ -2135,13 +2133,13 @@ namespace ec
 			BoundingRange* bounds;
 			bool active;
 			bool recall;
-			Uint16 desired_LOD;
-			Uint16 LOD;
+			uint16_t desired_LOD;
+			uint16_t LOD;
 #ifdef	NEW_TEXTURES
 			protected:
 			el::HardwareBuffer particle_vertex_buffer;
-			Uint32 particle_max_count;
-			Uint32 particle_count;
+			uint32_t particle_max_count;
+			uint32_t particle_count;
 			float* buffer;
 #endif	/* NEW_TEXTURES */
 		};
@@ -2201,13 +2199,13 @@ namespace ec
 			void start_draw();
 			void end_draw();
 #ifdef	NEW_TEXTURES
-			Uint32 get_texture(const TextureEnum type) const;
+			uint32_t get_texture(const TextureEnum type) const;
 			void set_particle_texture_combiner();
 			void set_shape_texture_combiner(const float alpha_scale);
 
 			std::auto_ptr<el::HardwareBuffer> index_buffer;
-			Uint32 texture_atlas;
-			Uint32 texture_burn;
+			uint32_t texture_atlas;
+			uint32_t texture_burn;
 #else	/* NEW_TEXTURES */
 			void draw_point_sprite_particle(const coord_t size, const GLuint texture, const color_t r, const color_t g, const color_t b, const alpha_t alpha, const Vec3 pos);
 			void draw_fast_billboard_particle(const coord_t size, const GLuint texture, const color_t r, const color_t g, const color_t b, const alpha_t alpha, const Vec3 pos);
@@ -2229,7 +2227,7 @@ namespace ec
 			Texture TexSnowflake;
 #endif	/* NEW_TEXTURES */
 			int max_particles;
-			Uint64 max_usec_per_particle_move;
+			uint64_t max_usec_per_particle_move;
 			coord_t max_point_size;
 			coord_t max_allowable_point_size;
 			Vec3 camera;
@@ -2237,7 +2235,7 @@ namespace ec
 			coord_t width;
 			coord_t height;
 			angle_t zoom;
-			Uint64 time_diff;
+			uint64_t time_diff;
 			float framerate;
 			float max_fps;
 			light_t lighting_scalar;
@@ -2268,7 +2266,7 @@ namespace ec
 			bool poor_transparency_resolution;
 #endif	/* NEW_TEXTURES */
 			bool draw_shapes;
-			Uint16 last_forced_LOD;
+			uint16_t last_forced_LOD;
 #ifndef	NEW_TEXTURES
 			DrawType draw_method;
 #endif	/* NEW_TEXTURES */

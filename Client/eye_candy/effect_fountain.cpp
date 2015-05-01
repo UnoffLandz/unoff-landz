@@ -57,7 +57,7 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	void FountainParticle::draw(const Uint64 usec)
+	void FountainParticle::draw(const uint64_t usec)
 	{
 		if (!backlight)
 		{
@@ -98,7 +98,7 @@ namespace ec
 	}
 #endif	/* NEW_TEXTURES */
 
-	bool FountainParticle::idle(const Uint64 delta_t)
+	bool FountainParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -133,7 +133,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 FountainParticle::get_texture()
+	uint32_t FountainParticle::get_texture()
 	{
 		if (state == 1)
 		{
@@ -145,7 +145,7 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	GLuint FountainParticle::get_texture(const Uint16 res_index)
+	GLuint FountainParticle::get_texture(const uint16_t res_index)
 	{
 		if (state == 1)
 			return base->TexWater.get_texture(res_index);
@@ -157,7 +157,7 @@ namespace ec
 	FountainEffect::FountainEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 		const color_t _hue_adjust, const color_t _saturation_adjust,
 		const bool _backlight, const coord_t _base_height, const float _scale,
-		const Uint16 _LOD)
+		const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "FountainEffect (" << this << ") created."
@@ -206,7 +206,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool FountainEffect::idle(const Uint64 usec)
+	bool FountainEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 			return false;

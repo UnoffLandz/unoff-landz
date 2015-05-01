@@ -54,7 +54,7 @@ void display_manufacture_menu();
  * \param quantity	the number of items to manufacture, max 255
  * \param mixbut_empty_str message for user if no items to mix
  */
-int mix_handler(Uint8 quantity, const char* mixbut_empty_str);
+int mix_handler(uint8_t quantity, const char* mixbut_empty_str);
 
 /*!
  * \ingroup manufacture_window

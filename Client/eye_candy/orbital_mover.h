@@ -27,7 +27,7 @@ namespace ec
 		public:
 			OrbitalMover(Effect* _effect, const Vec3 &center);
 			virtual ~OrbitalMover();
-			virtual void move(Particle& p, Uint64 usec);
+			virtual void move(Particle& p, uint64_t usec);
 			virtual void attachParticle(Particle *);
 			virtual void detachParticle(Particle *);
 			virtual void setParticleData(Particle *,

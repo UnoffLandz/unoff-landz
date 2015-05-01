@@ -59,7 +59,7 @@ void clear_conn_log()
 	fflush (conn_file);
 }
 
-void log_conn(const Uint8 *in_data, Uint16 data_length)
+void log_conn(const uint8_t *in_data, uint16_t data_length)
 {
   	if(!conn_file) {
 		conn_file = open_log ("connection_log.txt", "a");

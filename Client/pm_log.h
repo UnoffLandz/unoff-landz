@@ -94,7 +94,7 @@ void check_afk_state(void);
  *
  * \callgraph
  */
-void add_message_to_pm_log (char *msg, int len, Uint8 channel);
+void add_message_to_pm_log (char *msg, int len, uint8_t channel);
 
 /*!
  * \ingroup network_actors
@@ -108,7 +108,7 @@ void add_message_to_pm_log (char *msg, int len, Uint8 channel);
  *
  * \callgraph
  */
-void send_afk_message (const char *server_msg, int len, Uint8 channel);
+void send_afk_message (const char *server_msg, int len, uint8_t channel);
 
 /*!
  * \ingroup actor_utils
@@ -124,7 +124,7 @@ void print_message(int no);
  * \ingroup network_actors
  * \brief is_talking_about_me
  *
- *      is_talking_about_me(Uint8*,int)
+ *      is_talking_about_me(uint8_t*,int)
  *
  * \param server_msg
  * \param len

@@ -52,7 +52,7 @@ extern int skeletons_count;
  * \param name the name of the bone
  * \return the ID of the bone if it exists, else -1
  */
-int find_core_bone_id(struct CalCoreSkeleton *skel, const char *name);
+int find_core_bone_id(CalCoreSkeleton *skel, const char *name);
 
 /*!
  * \brief Get the ID of a skeleton by its name
@@ -64,7 +64,7 @@ int find_core_bone_id(struct CalCoreSkeleton *skel, const char *name);
  * Otherwise, it adds a new skeleton to the array and setup the IDs for the
  * different bones names according to the name of the skeleton.
  */
-int get_skeleton(struct CalCoreModel *cal_model, const char *skeleton_name);
+int get_skeleton(CalCoreModel *cal_model, const char *skeleton_name);
 
 /*!
  * \brief Get the ID of an actor bone by its name

@@ -66,10 +66,10 @@ extern int	show_lights;	/*! the highest numbered light in the current GL display
 extern int	num_lights; /*! the number of lights currently loaded */
 extern light *lights_list[MAX_LIGHTS]; /*!< global lights list */
 
-extern unsigned char light_level; /*!< the light level */
+extern uint8_t light_level; /*!< the light level */
 extern short game_minute; /*!< the current game minute */
 extern short game_second; /*!< the current game second */
-extern unsigned char freeze_time; /*!< when this value is equal to 1, the game minute is freezed */
+extern uint8_t freeze_time; /*!< when this value is equal to 1, the game minute is freezed */
 
 /*!
  * \ingroup lights

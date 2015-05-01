@@ -59,13 +59,13 @@ int cur_cat=0;
 emote_data* emote_sel[EMOTES_CATEGORIES]={NULL/*,NULL,NULL,NULL,NULL*/}; //remove the comment for poses
 emote_data *selectables[EMOTES_SHOWN];
 
-unsigned char emote_str1[100];
-unsigned char emote_str2[100];
+char emote_str1[100];
+char emote_str2[100];
 
 
 void send_emote(int emote_id){
 	static int last_emote_time=0;
-	Uint8 str[4];
+	uint8_t str[4];
 
 	if(cur_time-last_emote_time>EMOTE_SPAM_TIME) {
 		//Send message to server...	
@@ -159,13 +159,13 @@ int display_emotes_handler(window_info *win){
 	glEnable(GL_TEXTURE_2D);
 	
 	SET_COLOR(c_orange1);
-	draw_string_small(20, 15, (unsigned char*)"Categories",1);
-	draw_string_small(20, emotes_rect_y+30+5, (unsigned char*)"Emotes",1);
+	draw_string_small(20, 15, "Categories",1);
+	draw_string_small(20, emotes_rect_y+30+5, "Emotes",1);
 
 	for(i=0;i<EMOTES_CATEGORIES;i++){
 		if(cur_cat==i) SET_COLOR(c_blue2);
 		else glColor3f(1.0f, 1.0f, 1.0f);
-		draw_string_small(23, 32+13*i, (unsigned char*)emote_cats[i],1);
+		draw_string_small(23, 32+13*i, emote_cats[i],1);
 	}
 
 	for(i=0;i<EMOTES_SHOWN;i++){
@@ -173,7 +173,7 @@ int display_emotes_handler(window_info *win){
 		else glColor3f(1.0f, 1.0f, 1.0f);
 		if(cur_cat&&act&&selectables[i]==act->poses[cur_cat-1]) SET_COLOR(c_green1);
 		if(selectables[i])
-			draw_string_small(23, 30+emotes_rect_y+20+1+13*i, (unsigned char*)selectables[i]->name,1);
+			draw_string_small(23, 30+emotes_rect_y+20+1+13*i,selectables[i]->name,1);
 	}
 	glColor3f(0.77f, 0.57f, 0.39f);
 	//do grids
@@ -197,7 +197,7 @@ CHECK_GL_ERRORS();
 }
 
 
-int click_emotes_handler(window_info *win, int mx, int my, Uint32 flags){
+int click_emotes_handler(window_info *win, int mx, int my, uint32_t flags){
 	static int last_clicked=0;
 	static int last_pos=-1;
 
@@ -254,7 +254,7 @@ void display_emotes_menu()
 		}
 		emotes_win= create_window("Emotes", our_root_win, 0, emotes_menu_x, emotes_menu_y, emotes_menu_x_len, emotes_menu_y_len, ELW_WIN_DEFAULT);
 		set_window_handler(emotes_win, ELW_HANDLER_DISPLAY, &display_emotes_handler );
-		set_window_handler(emotes_win, ELW_HANDLER_CLICK, &click_emotes_handler );
+        set_window_handler(emotes_win, ELW_HANDLER_CLICK, (int (*)())&click_emotes_handler );
 		vscrollbar_add_extended(emotes_win, EMOTES_SCROLLBAR_ITEMS, NULL, emotes_rect_x2+20, 30+emotes_rect_y+20, 20, emotes_rect_y2, 0, 1.0, 0.77f, 0.57f, 0.39f, 0, 1, 20);
 
 		//do_button_id=button_add_extended(emotes_win, do_button_id, NULL, 33*9+18+10, emotes_menu_y_len-36, 70, 0, 0, 1.0f, 0.77f, 0.57f, 0.39f, "Do!");

@@ -16,10 +16,6 @@
 #include "3d_objects.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*!
  * \ingroup maps
  * \brief Update the occupation array with the height map
@@ -29,12 +25,13 @@ extern "C" {
  * \param occupied   The occupation array
  * \param height_map The height map 
  */
-static __inline__ void update_occupied_with_height_map (char* occupied, const unsigned char* height_map)
+static __inline__ void update_occupied_with_height_map (char* occupied, const uint8_t* height_map)
 {
 	int i;
 
 	for (i = 0; i < tile_map_size_x*tile_map_size_y*6*6; i++)
-		if (height_map[i]) occupied[i] = 1;
+        if (height_map[i])
+            occupied[i] = 1;
 }
 
 /*!
@@ -47,7 +44,7 @@ static __inline__ void update_occupied_with_height_map (char* occupied, const un
  * \param occupied The occupation array
  * \param tile_map The tile map 
  */
-static __inline__ void update_occupied_with_tile_map (char* occupied, const unsigned char* tile_map)
+static __inline__ void update_occupied_with_tile_map (char* occupied, const uint8_t* tile_map)
 {
 	int nx = tile_map_size_x * 6;
 	int ny = tile_map_size_y * 6;
@@ -292,10 +289,6 @@ short get_actor_cluster ();
 #endif
 
 extern short current_cluster;
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif // CLUSTER_H
 

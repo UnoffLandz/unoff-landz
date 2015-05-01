@@ -33,7 +33,7 @@ namespace eternal_lands
 		{
 			public:
 				std::string m_name;
-				Uint64 m_log_file_pos;
+				uint64_t m_log_file_pos;
 
 		};
 
@@ -43,13 +43,13 @@ namespace eternal_lands
 				std::vector<DebugMark> m_debug_marks;
 				std::string m_name;
 				std::string m_last_message;
-				Uint32 m_last_message_count;
-				Uint32 m_message_level;
+				uint32_t m_last_message_count;
+				uint32_t m_message_level;
 				int m_log_file;
 
 		};
 
-		typedef std::map<Uint32, ThreadData> ThreadDatas;
+		typedef std::map<uint32_t, ThreadData> ThreadDatas;
 
 		std::string log_dir;
 		SDL_mutex* log_mutex;
@@ -76,7 +76,7 @@ namespace eternal_lands
 
 		void log_message(const std::string &type,
 			const std::string &message, const std::string &file,
-			const Uint32 line, ThreadData &thread)
+			const uint32_t line, ThreadData &thread)
 		{
 			char buffer[128];
 			std::stringstream str, log_stream;
@@ -151,9 +151,9 @@ namespace eternal_lands
 
 		void do_log_message(const LogLevelType log_level,
 			const std::string &message, const std::string &file,
-			const Uint32 line, ThreadData &thread_data)
+			const uint32_t line, ThreadData &thread_data)
 		{
-			Uint32 level;
+			uint32_t level;
 
 			log_message(get_str(log_level), message, file,
 				line, thread_data);
@@ -167,7 +167,7 @@ namespace eternal_lands
 		}
 
 		void do_enter_debug_mark(const std::string &name,
-			const std::string &file, const Uint32 line,
+			const std::string &file, const uint32_t line,
 			ThreadData &thread_data)
 		{
 			DebugMark debug_mark;
@@ -186,12 +186,12 @@ namespace eternal_lands
 		}
 
 		void do_leave_debug_mark(const std::string &name,
-			const std::string &file, const Uint32 line,
+			const std::string &file, const uint32_t line,
 			ThreadData &thread_data)
 		{
 			std::stringstream str;
-			Uint64 size, pos;
-			Uint32 level;
+			uint64_t size, pos;
+			uint32_t level;
 
 			if (thread_data.m_debug_marks.rbegin() ==
 				thread_data.m_debug_marks.rend())
@@ -282,7 +282,7 @@ namespace eternal_lands
 			ThreadDatas::iterator found;
 			std::stringstream file_name;
 			std::stringstream str;
-			Uint32 id;
+			uint32_t id;
 
 			id = SDL_ThreadID();
 
@@ -363,7 +363,7 @@ namespace eternal_lands
 	void exit_logging()
 	{
 		ThreadDatas::iterator it, end;
-		Uint64 pos;
+		uint64_t pos;
 
 		end = thread_datas.end();
 
@@ -402,7 +402,7 @@ namespace eternal_lands
 
 	void log_message(const LogLevelType log_level,
 		const std::string &message, const std::string &file,
-		const Uint32 line)
+		const uint32_t line)
 	{
 		ThreadDatas::iterator found;
 
@@ -425,7 +425,7 @@ namespace eternal_lands
 	}
 
 	void enter_debug_mark(const std::string &name,
-		const std::string &file, const Uint32 line)
+		const std::string &file, const uint32_t line)
 	{
 		ThreadDatas::iterator found;
 
@@ -447,7 +447,7 @@ namespace eternal_lands
 	}
 
 	void leave_debug_mark(const std::string &name,
-		const std::string &file, const Uint32 line)
+		const std::string &file, const uint32_t line)
 	{
 		ThreadDatas::iterator found;
 

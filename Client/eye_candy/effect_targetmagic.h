@@ -31,29 +31,29 @@ namespace ec
 
 			TargetMagicEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 				Vec3* _target, const TargetMagicType _type,
-				std::vector<ec::Obstruction*>* _obstructions, const Uint16 _LOD);
+				std::vector<ec::Obstruction*>* _obstructions, const uint16_t _LOD);
 			TargetMagicEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 				const std::vector<Vec3*> _targets, const TargetMagicType _type,
-				std::vector<ec::Obstruction*>* _obstructions, const Uint16 _LOD);
+				std::vector<ec::Obstruction*>* _obstructions, const uint16_t _LOD);
 			~TargetMagicEffect();
 
 			void initialize(EyeCandy* _base, bool* _dead, Vec3* _pos,
 				const std::vector<Vec3*> _targets, const TargetMagicType _type,
-				std::vector<ec::Obstruction*>* _obstructions, const Uint16 _LOD);
+				std::vector<ec::Obstruction*>* _obstructions, const uint16_t _LOD);
 
 			virtual EffectEnum get_type()
 			{
 				return EC_TARGETMAGIC;
 			}
 			;
-			bool idle(const Uint64 usec);
-			void draw(const Uint64 usec);
-			static Uint64 get_max_end_time()
+			bool idle(const uint64_t usec);
+			void draw(const uint64_t usec);
+			static uint64_t get_max_end_time()
 			{
 				return 6000000;
 			}
 			;
-			virtual Uint64 get_expire_time()
+			virtual uint64_t get_expire_time()
 			{
 				return 6000000 + born;
 			}
@@ -66,7 +66,7 @@ namespace ec
 			std::vector<Vec3*> targets;
 			std::vector<Vec3> effect_centers;
 			Vec3 target;
-			Uint16 effect_count;
+			uint16_t effect_count;
 			TargetMagicType type;
 			std::vector<Shape*> capless_cylinders;
 			float *target_alpha;
@@ -79,7 +79,7 @@ namespace ec
 			TargetMagicEffect2(EyeCandy* _base, TargetMagicEffect* _effect,
 				Vec3* _pos, const TargetMagicEffect::TargetMagicType _type,
 				ParticleSpawner* _spawner, ParticleMover* _mover,
-				float* _target_alpha, Uint16 _effect_id, const Uint16 _LOD);
+				float* _target_alpha, uint16_t _effect_id, const uint16_t _LOD);
 			~TargetMagicEffect2();
 
 			virtual EffectEnum get_type()
@@ -87,8 +87,8 @@ namespace ec
 				return EC_TARGETMAGIC;
 			}
 			;
-			bool idle(const Uint64 usec);
-			virtual Uint64 get_max_end_time()
+			bool idle(const uint64_t usec);
+			virtual uint64_t get_max_end_time()
 			{
 				return 6000000;
 			}
@@ -100,9 +100,9 @@ namespace ec
 			Vec3 center;
 			Vec3 gravity_center;
 			Vec3 shift;
-			Uint16 LOD;
+			uint16_t LOD;
 			TargetMagicEffect::TargetMagicType type;
-			Uint16 effect_id;
+			uint16_t effect_id;
 			float *target_alpha;
 			bool dummy_dead;
 	};
@@ -114,24 +114,24 @@ namespace ec
 				const Vec3 _pos, const Vec3 _velocity, const coord_t _size,
 				const alpha_t _alpha, const color_t red, const color_t green,
 #ifdef	NEW_TEXTURES
-				const color_t blue, TextureEnum _texture, const Uint16 _LOD,
+				const color_t blue, TextureEnum _texture, const uint16_t _LOD,
 #else	/* NEW_TEXTURES */
-				const color_t blue, Texture* _texture, const Uint16 _LOD,
+				const color_t blue, Texture* _texture, const uint16_t _LOD,
 #endif	/* NEW_TEXTURES */
 				const TargetMagicEffect::TargetMagicType _type,
 				ParticleSpawner* _spawner2, ParticleMover* _mover2,
-				Vec3* _target, Uint16 _effect_id, Uint16 _state);
+				Vec3* _target, uint16_t _effect_id, uint16_t _state);
 			~TargetMagicParticle()
 			{
 			}
 
-			virtual bool idle(const Uint64 delta_t);
+			virtual bool idle(const uint64_t delta_t);
 #ifdef	NEW_TEXTURES
-			virtual Uint32 get_texture();
+			virtual uint32_t get_texture();
 			virtual float get_burn() const;
 #else	/* NEW_TEXTURES */
-			virtual GLuint get_texture(const Uint16 res_index);
-			virtual void draw(const Uint64 usec);
+			virtual GLuint get_texture(const uint16_t res_index);
+			virtual void draw(const uint64_t usec);
 #endif	/* NEW_TEXTURES */
 			virtual light_t estimate_light_level() const
 			{
@@ -144,12 +144,12 @@ namespace ec
 #else	/* NEW_TEXTURES */
 			Texture* texture;
 #endif	/* NEW_TEXTURES */
-			Uint16 LOD;
+			uint16_t LOD;
 			TargetMagicEffect::TargetMagicType type;
 			ParticleSpawner* spawner2;
 			ParticleMover* mover2;
 			Vec3* target;
-			Uint16 effect_id;
+			uint16_t effect_id;
 	};
 
 ///////////////////////////////////////////////////////////////////////////////

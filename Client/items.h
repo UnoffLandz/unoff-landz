@@ -18,7 +18,7 @@ extern "C" {
  */
 typedef struct
 {
-	Uint16 id; /*!< server id of this item */
+	uint16_t id; /*!< server id of this item */
 	int image_id; /*!< id of the image for this item */
 	int pos;
 	int quantity;
@@ -30,8 +30,8 @@ typedef struct
 	int action;			/*!< action being done on this item, for playing sounds on server result */
 	int action_time;	/*!< time this action has been active - times out after 2 seconds */
 #endif // NEW_SOUND
-	Uint32 cooldown_time; /*!< time when cooldown shall reach zero */
-	Uint32 cooldown_rate; /*!< time that the item would need to cool down from full heat */
+	uint32_t cooldown_time; /*!< time when cooldown shall reach zero */
+	uint32_t cooldown_rate; /*!< time that the item would need to cool down from full heat */
 } item;
 
 /*!
@@ -122,7 +122,7 @@ extern int items_auto_get_all;
 extern int items_list_on_left;
 
 extern int item_uid_enabled;
-extern const Uint16 unset_item_uid;
+extern const uint16_t unset_item_uid;
 
 #ifdef NEW_SOUND
 void update_item_sound(int interval);
@@ -202,7 +202,7 @@ void display_items_menu();
  *
  * \callgraph
  */
-void get_your_items (const Uint8 *data);
+void get_your_items (const uint8_t *data);
 
 /*!
  * \ingroup item
@@ -244,7 +244,7 @@ void remove_item_from_inventory(int pos);
  * \note Assumes that \a data is valid and not NULL. This may be a possible bug.
  * \bug Assumes that \a data is valid and not NULL and does not perform any sanity checks.
  */
-void get_new_inventory_item (const Uint8 *data);
+void get_new_inventory_item (const uint8_t *data);
 
 /*!
  * \ingroup item
@@ -256,7 +256,7 @@ void get_new_inventory_item (const Uint8 *data);
  * \param cooldown 	the length of the string in bytes
  *
  */
-void get_items_cooldown (const Uint8 *data, int len);
+void get_items_cooldown (const uint8_t *data, int len);
 
 /*!
  * \ingroup item
@@ -281,7 +281,7 @@ void update_cooldown ();
 void set_shown_string(char colour_code, const char *the_text);
 
 #ifdef	NEW_TEXTURES
-void get_item_uv(const Uint32 item, float* u_start, float* v_start,
+void get_item_uv(const uint32_t item, float* u_start, float* v_start,
 	float* u_end, float* v_end);
 #endif	/* NEW_TEXTURES */
 

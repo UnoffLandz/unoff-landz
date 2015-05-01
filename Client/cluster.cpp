@@ -14,7 +14,7 @@ void set_clusters (const char* data)
 	int ny = tile_map_size_y * 6;
 	int idx;
 
-	clusters = calloc (nx * ny, sizeof (short));
+    clusters = (short *)calloc (nx * ny, sizeof (short));
 	for (idx = 0; idx < nx*ny; idx++)
 		clusters[idx] = SDL_SwapLE16 (cdata[idx]);	
 }
@@ -54,7 +54,7 @@ void compute_clusters (const char* occupied)
 	int ny = tile_map_size_y * 6;
 	int x, y, idx;
 
-	clusters = calloc (nx * ny, sizeof (short));
+    clusters = (short *)calloc (nx * ny, sizeof (short));
 	
 	nr_clusters = 0;
 	cluster_idx[0] = 0;

@@ -14,9 +14,9 @@ namespace ec
 		const Vec3 _pos, const Vec3 _velocity, const coord_t _size,
 		const alpha_t _alpha, const color_t red, const color_t green,
 #ifdef	NEW_TEXTURES
-		const color_t blue, TextureEnum _texture, const Uint16 _LOD,
+		const color_t blue, TextureEnum _texture, const uint16_t _LOD,
 #else	/* NEW_TEXTURES */
-		const color_t blue, Texture* _texture, const Uint16 _LOD,
+		const color_t blue, Texture* _texture, const uint16_t _LOD,
 #endif	/* NEW_TEXTURES */
 		const ImpactEffect::ImpactType _type) :
 		Particle(_effect, _mover, _pos, _velocity,
@@ -38,7 +38,7 @@ namespace ec
 		state = 0;
 	}
 
-	bool ImpactParticle::idle(const Uint64 delta_t)
+	bool ImpactParticle::idle(const uint64_t delta_t)
 	{
 		const float float_time = delta_t / 1000000.0;
 		switch (type)
@@ -94,7 +94,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 ImpactParticle::get_texture()
+	uint32_t ImpactParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
@@ -111,12 +111,12 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	GLuint ImpactParticle::get_texture(const Uint16 res_index)
+	GLuint ImpactParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 
-	void ImpactParticle::draw(const Uint64 usec)
+	void ImpactParticle::draw(const uint64_t usec)
 	{
 		if (state == 1)
 		{
@@ -139,7 +139,7 @@ namespace ec
 #endif	/* NEW_TEXTURES */
 
 	ImpactEffect::ImpactEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
-		const Vec3 _angle, const ImpactType _type, const Uint16 _LOD,
+		const Vec3 _angle, const ImpactType _type, const uint16_t _LOD,
 		const float _strength)
 	{
 		if (EC_DEBUG)
@@ -303,7 +303,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool ImpactEffect::idle(const Uint64 usec)
+	bool ImpactEffect::idle(const uint64_t usec)
 	{
 		if (particles.size() == 0)
 			return false;

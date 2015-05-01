@@ -8,9 +8,6 @@
 
 #include <SDL_types.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*!
  * \name Pathfinder limitting
@@ -26,36 +23,36 @@ extern "C" {
  *      This enumeration declares the different states the pathfinder can be in.
  */
 enum {
-	PF_STATE_NONE=0,
-	PF_STATE_OPEN,
-	PF_STATE_CLOSED
+    PF_STATE_NONE=0,
+    PF_STATE_OPEN,
+    PF_STATE_CLOSED
 };
 /*! @} */
 
 /*!
  * a structure to store the data of tiles related to pathfinding
  */
-typedef struct
+struct PF_TILE
 {
-	Uint32 open_pos;
-	Sint32 x;
-	Sint32 y;
-	Uint16 f;
-	Uint16 g;
+    uint32_t open_pos;
+    int32_t x;
+    int32_t y;
+    uint16_t f;
+    uint16_t g;
 
-	Uint8 state; /*!< the current state pathfinder states */
-	Uint8 z;
+    uint8_t state; /*!< the current state pathfinder states */
+    uint8_t z;
 
-	void *parent;
-} PF_TILE;
+    PF_TILE *parent;
+};
 
 /*!
  * this list stores information about open (non-blocked) paths
  */
 typedef struct
 {
-	PF_TILE **tiles; /*!< an array of \see PF_TILE structures */
-	int count; /*!< number of elements in tiles */
+    PF_TILE **tiles; /*!< an array of \see PF_TILE structures */
+    int count; /*!< number of elements in tiles */
 } PF_OPEN_LIST;
 
 extern PF_TILE *pf_tile_map; /*!< a list of \see PF_TILE structures that form the path */
@@ -140,8 +137,5 @@ int pf_get_mouse_position(int mouse_x, int mouse_y, int * px, int * py);
  */
 int pf_get_mouse_position_extended(int mouse_x, int mouse_y, int * px, int * py, int tile_x, int tile_y);
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif /* __PATHFINDER_H__ */

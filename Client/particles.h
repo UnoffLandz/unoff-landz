@@ -66,7 +66,7 @@ typedef struct
 	float vx,vy,vz;
     /*! \} */
 
-	Uint8 free;
+	uint8_t free;
 }particle;
 
 /*!
@@ -196,7 +196,7 @@ void destroy_all_particles();
  *
  * \callgraph
  */
-void add_fire_at_tile (int kind, Uint16 x_tile, Uint16 y_tile);
+void add_fire_at_tile (int kind, uint16_t x_tile, uint16_t y_tile);
 
 /*!
  * \ingroup other
@@ -207,7 +207,7 @@ void add_fire_at_tile (int kind, Uint16 x_tile, Uint16 y_tile);
  * \param x_tile	x value of the tile the fire is on
  * \param y_tile	y value of the tile the fire is on
  */
-void remove_fire_at_tile (Uint16 x_tile, Uint16 y_tile);
+void remove_fire_at_tile (uint16_t x_tile, uint16_t y_tile);
 
 /*!
  * \ingroup other
@@ -331,7 +331,7 @@ void update_particles();
  *
  * \callgraph
  */
-void add_teleporters_from_list (const Uint8 *teleport_list);
+void add_teleporters_from_list (const uint8_t *teleport_list);
 
 /*!
  * \ingroup loadsave

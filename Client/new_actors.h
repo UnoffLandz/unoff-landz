@@ -41,7 +41,7 @@ void draw_enhanced_actor(actor * actor_id, int banner);
  *
  * \sa actor_wear_item
  */
-void unwear_item_from_actor(int actor_id,Uint8 which_part);
+void unwear_item_from_actor(int actor_id,uint8_t which_part);
 
 /*!
  * \ingroup display_actors
@@ -59,7 +59,7 @@ void unwear_item_from_actor(int actor_id,Uint8 which_part);
  *
  * \sa unwear_item_from_actor
  */
-void actor_wear_item(int actor_id,Uint8 which_part, Uint8 which_id);
+void actor_wear_item(int actor_id,uint8_t which_part, uint8_t which_id);
 
 /*!
  * \ingroup network_actors

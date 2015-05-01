@@ -29,9 +29,9 @@ extern "C" {
 
 typedef enum
 {
-	HUD_INTERFACE_NEW_CHAR, /*!< the interface for the character creation screen */
-	HUD_INTERFACE_GAME,     /*!< the interface for the game */
-	HUD_INTERFACE_LAST      /*!< the last interface used */
+    HUD_INTERFACE_NEW_CHAR, /*!< the interface for the character creation screen */
+    HUD_INTERFACE_GAME,     /*!< the interface for the game */
+    HUD_INTERFACE_LAST      /*!< the last interface used */
 } hud_interface;
 
 extern int qb_action_mode; /*!< flag indicating whether we are in quickbar action mode or not */
@@ -89,7 +89,7 @@ extern int always_enlarge_text;
  *
  *	returns 1 if the key is a item keypress, otherwise 0.
  */
-int action_item_keys(Uint32 key);
+int action_item_keys(uint32_t key);
 
 /*!
  * \ingroup other
@@ -171,7 +171,7 @@ void draw_hud_frame();
  * \param name		the name of the window
  *
  *	returns if sucessful, a pointer to the window id variable, otherwise NULL.
- * 
+ *
  * \callgraph
  */
  int* get_winid(const char *name);
@@ -309,7 +309,7 @@ void show_sized_help_coloured(const char *help_message, int x, int y, float r, f
  *      true if one of those is set.
  *
  *	returns true if text should be enlarged.
- * 
+ *
  * \callgraph
  */
 int enlarge_text(void);
@@ -362,29 +362,29 @@ void build_levels_table();
  *
  * \sa get_flags
  */
-void change_flags(int win_id, Uint32 flags);
+void change_flags(int win_id, uint32_t flags);
 
 /*!
  * \ingroup windows
- * \brief Gets the flags of the given window 
+ * \brief Gets the flags of the given window
  *
  * 	Gets the flag of the given window
  *
  * \sa change_flags
  */
-Uint32 get_flags(int win_id);
+uint32_t get_flags(int win_id);
 
 /*!
  * \ingroup other
  * \brief   	The #exp command, show current exp levels in console.
  * \retval	1, so command not passed to server
  */
-int show_exp(char *text, int len);
+int show_exp(const char *text, int len);
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
-extern Uint32 exp_lev[200];
+extern uint32_t exp_lev[200];
 
 #endif	//__HUD_H

@@ -59,12 +59,12 @@ extern int use_alpha_banner;	/*!< Use_alpha_banner defines if an alpha backgroun
  */
 /*! \{ */
 /*! The colours used in the glowing swords (magic, thermal, ice, fire)*/
-typedef struct
+struct glow_color
 {
 	float r; /*!< Red (0<=r<=1)*/
 	float g; /*!< Green (0<=g<=1)*/
 	float b; /*!< Blue (0<=b<=1)*/
-}glow_color;
+};
 
 //GLOWS
 #define GLOW_NONE 0 	/*!< RGB: 0.0, 0.0, 0.0*/
@@ -97,7 +97,7 @@ extern near_actor near_actors[MAX_ACTORS];
 /*!
  * The enhanced actor structure holds information about the actors extensions such as if the actor is wearing any armour, weapons etc.
  */
-typedef struct
+struct enhanced_actor
 {
 	int uniq_id;
 	int guild_id;
@@ -161,20 +161,20 @@ typedef struct
 	int legs_glow;
 	/*! \} */
 
-}enhanced_actor;
+};
 
 /*! Sets the main model type*/
-typedef struct
+struct body_part
 {
 	char model_name[MAX_FILE_PATH];
 	char skin_name[MAX_FILE_PATH];
 	char skin_mask[MAX_FILE_PATH];
 	int glow;
 	int mesh_index;
-}body_part;
+};
 
 /*! Sets the shield type*/
-typedef struct
+struct shield_part
 {
 	char model_name[MAX_FILE_PATH];
 	char skin_name[MAX_FILE_PATH];
@@ -184,10 +184,10 @@ typedef struct
 
 	int missile_type; /*!< The type of equipped missiles (>=0 if a quiver is equipped, -1 if a regular shield is equipped) */
 
-}shield_part;
+};
 
 /*! Sets the weapon type (including animation frame names)*/
-typedef struct
+struct weapon_part
 {
 	char model_name[MAX_FILE_PATH];
 	char skin_name[MAX_FILE_PATH];
@@ -197,12 +197,12 @@ typedef struct
 	int turn_horse;
 	int unarmed;
 
-	struct cal_anim cal_frames[NUM_WEAPON_FRAMES];
+    cal_anim cal_frames[NUM_WEAPON_FRAMES];
 
-}weapon_part;
+};
 
 /*! Defines the main models looks*/
-typedef struct
+struct shirt_part
 {
 	char model_name[MAX_FILE_PATH];
 	char arms_name[MAX_FILE_PATH];
@@ -211,10 +211,10 @@ typedef struct
 	char torso_mask[MAX_FILE_PATH];
 	int mesh_index;
 
-}shirt_part;
+};
 
 /*! Sets the models hands and head*/
-typedef struct
+struct skin_part
 {
 	char hands_name[MAX_FILE_PATH];
 	char head_name[MAX_FILE_PATH];
@@ -224,26 +224,26 @@ typedef struct
 	char feet_name[MAX_FILE_PATH];
 	int mesh_index;
 
-}skin_part;
+};
 
 /*! Sets the models hair name*/
-typedef struct
+struct hair_part
 {
 	char hair_name[MAX_FILE_PATH];
 	int mesh_index;
 
-}hair_part;
+};
 
 /*! Sets the models eyes name*/
-typedef struct
+struct eyes_part
 {
 	char eyes_name[MAX_FILE_PATH];
 	int mesh_index;
 
-}eyes_part;
+};
 
 /*! Holds info about the boots */
-typedef struct
+struct boots_part
 {
 	char boots_name[MAX_FILE_PATH];
 	char model_name[MAX_FILE_PATH];
@@ -251,7 +251,7 @@ typedef struct
 	int glow;
 	int mesh_index;
 
-}boots_part;
+};
 
 /*! Holds info about the legs type*/
 typedef struct
@@ -282,14 +282,14 @@ typedef struct
 } act_extra_sound;
 #endif // NEW_SOUND
 
-typedef struct
+struct attachment_props
 {
 	int is_holder;      /*!< Specifies if this type of actor hold the actor to which it is attached or if he is held */
 	int parent_bone_id; /*!< The bone to use on the actor to which it is attached */
 	int local_bone_id;  /*!< The bone to use on the actor that is attached */
 	float shift[3];     /*!< The shift to apply to the actor that is held */
 	struct cal_anim cal_frames[NUM_ATTACHED_ACTOR_FRAMES];
-} attachment_props;
+};
 
 /*!
  * Structure containing how an actor type is attached to all other actors types
@@ -315,7 +315,7 @@ typedef enum {
 	ACTOR_NUM_PARTS
 } actor_parts_enum;
 
-typedef struct
+struct actor_types
 {
 	/*! \name Model data*/
 	/*! \{ */
@@ -335,7 +335,7 @@ typedef struct
 	GLuint vertex_buffer;
 	GLuint index_buffer;
 	GLenum index_type;
-	Uint32 index_size;
+	uint32_t index_size;
 	//Animation indexes
 	struct cal_anim_group idle_group[16];//16 animation groups
 	int group_count;
@@ -379,9 +379,9 @@ typedef struct
 
 	int step_duration;
 
-} actor_types;
+};
 
-typedef struct
+struct range_action
 {
 	float aim_position[3];  /*!< Position of the target to aim at */
 	float fire_position[3]; /*!< Position of the target to fire at */
@@ -390,7 +390,7 @@ typedef struct
 	char shot_type;         /*!< The type of the shot (0: normal, 1: missed, 2: critical) */
 	char reload; /*!< To tell if the char must reload after the next fire */
 	char state; /*!< The state of the action (0: aim needed, 1: aim done, 2: fire needed, 3: fire done) */
-} range_action;
+};
 
 #define MY_HORSE(a) (actors_list[actors_list[a]->attached_actor])
 #define MY_HORSE_ID(a) (actors_list[a]->attached_actor)
@@ -452,7 +452,7 @@ typedef struct _emote_type
 {
 	int id;
 	char barehanded;
-	unsigned char pose;
+    uint8_t pose;
 	int timeout; //default 2 sec
 	emote_frame *anims[EMOTE_ACTOR_TYPES][4][2];
 	char name[20];
@@ -461,8 +461,8 @@ typedef struct _emote_type
 
 
 typedef struct _emote_anim {
-	Uint32 start_time;
-	Uint32 max_duration;
+	uint32_t start_time;
+	uint32_t max_duration;
 	int nframes;
 	char active;
 	struct cal_anim frames[MAX_EMOTE_FRAME];
@@ -483,7 +483,7 @@ extern hash_table *emotes; //used to store emotes
 #define SERVER_EMOTE 1
 #define CLIENT_EMOTE 2
 typedef struct _emote_command {
-	Uint32 create_time;
+	uint32_t create_time;
 	emote_data *emote;
 	char origin;
 } emote_command;
@@ -522,7 +522,7 @@ typedef struct
 	struct cal_anim cur_idle_anims[16];
 	int IsOnIdle;
 	float anim_time;
-	Uint32	last_anim_update;
+	uint32_t	last_anim_update;
 	AABBOX bbox;
 
 	/*! \name Range mode parameters */
@@ -629,12 +629,12 @@ typedef struct
 	int damage;		/*!< Sets the damage the actor has been given*/
 	int damage_ms;		/*!< Defines the remaining time in which the actor damage will be shown*/
 	int last_health_loss;	/*!< Defines the time of damage*/
-	Uint16 cur_health;	/*!< Sets the current health of the actor*/
-	Uint16 max_health;	/*!< Sets the maximum health of the actor*/
+	uint16_t cur_health;	/*!< Sets the current health of the actor*/
+	uint16_t max_health;	/*!< Sets the maximum health of the actor*/
 	char ghost;		/*!< Sets the actor type to ghost (Disable lightning, enable blending (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA))*/
 	char has_alpha;		/*!< is alpha blending needed for this actor? */
 	int kind_of_actor;	/*!< Defines the kind_of_actor (NPC, HUMAN, COMPUTER_CONTROLLED_HUMAN, PKABLE, PKABLE_COMPUTER_CONTROLLED)*/
-	Uint32 buffs;		/*!<Contains the buffs on this actor as bits (currently only invisibility)*/
+	uint32_t buffs;		/*!<Contains the buffs on this actor as bits (currently only invisibility)*/
 	/*! \} */
 
 	/*! \name Overhead text (text bubbles)*/
@@ -742,7 +742,7 @@ void add_actor_from_server (const char * in_data, int len);
 extern void	init_actors_lists();
 
 #ifdef MUTEX_DEBUG
-extern Uint32 have_actors_lock;
+extern uint32_t have_actors_lock;
 /*!
  * \ingroup mutex
  * \name Actor list thread synchronization
@@ -864,7 +864,7 @@ void get_actor_rotation_matrix(actor *in_act, float *out_rot);
  */
 void transform_actor_local_position_to_absolute(actor *in_act, float *in_local_pos, float *in_act_rot, float *out_pos);
 
-void draw_actor_without_banner(actor * actor_id, Uint32 use_lightning, Uint32 use_textures, Uint32 use_glow);
+void draw_actor_without_banner(actor * actor_id, uint32_t use_lightning, uint32_t use_textures, uint32_t use_glow);
 
 static __inline__ int is_actor_held(actor *act)
 {

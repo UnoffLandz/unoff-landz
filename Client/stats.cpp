@@ -48,13 +48,13 @@ floating_message floating_messages[MAX_NUMBER_OF_FLOATING_MESSAGES];
 
 int floatingmessages_enabled = 1;
 
-void floatingmessages_add_level(int actor_id, int level, const unsigned char * skillname);
-void floatingmessages_compare_stat(int actor_id, int value, int new_value, const unsigned char *skillname);
+void floatingmessages_add_level(int actor_id, int level, const char * skillname);
+void floatingmessages_compare_stat(int actor_id, int value, int new_value, const char *skillname);
 
-void draw_stat_final(int len, int x, int y, const unsigned char * name, const char * value);
+void draw_stat_final(int len, int x, int y, const char * name, const char * value);
 
 
-void get_the_stats(Sint16 *stats, size_t len_in_bytes)
+void get_the_stats(int16_t *stats, size_t len_in_bytes)
 {
         have_stats=1;
 
@@ -113,43 +113,43 @@ void get_the_stats(Sint16 *stats, size_t len_in_bytes)
         your_info.ethereal_points.base=SDL_SwapLE16(stats[45]);
         your_info.food_level=SDL_SwapLE16(stats[46]);
 
-        your_info.manufacturing_exp=SDL_SwapLE32(*((Uint32 *)(stats+49)));
-        your_info.manufacturing_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+51)));
-        your_info.harvesting_exp=SDL_SwapLE32(*((Uint32 *)(stats+53)));
-        your_info.harvesting_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+55)));
-        your_info.alchemy_exp=SDL_SwapLE32(*((Uint32 *)(stats+57)));
-        your_info.alchemy_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+59)));
-        your_info.overall_exp=SDL_SwapLE32(*((Uint32 *)(stats+61)));
-        your_info.overall_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+63)));
-        your_info.attack_exp=SDL_SwapLE32(*((Uint32 *)(stats+65)));
-        your_info.attack_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+67)));
-        your_info.defense_exp=SDL_SwapLE32(*((Uint32 *)(stats+69)));
-        your_info.defense_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+71)));
-        your_info.magic_exp=SDL_SwapLE32(*((Uint32 *)(stats+73)));
-        your_info.magic_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+75)));
-        your_info.potion_exp=SDL_SwapLE32(*((Uint32 *)(stats+77)));
-        your_info.potion_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+79)));
+        your_info.manufacturing_exp=SDL_SwapLE32(*((uint32_t *)(stats+49)));
+        your_info.manufacturing_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+51)));
+        your_info.harvesting_exp=SDL_SwapLE32(*((uint32_t *)(stats+53)));
+        your_info.harvesting_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+55)));
+        your_info.alchemy_exp=SDL_SwapLE32(*((uint32_t *)(stats+57)));
+        your_info.alchemy_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+59)));
+        your_info.overall_exp=SDL_SwapLE32(*((uint32_t *)(stats+61)));
+        your_info.overall_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+63)));
+        your_info.attack_exp=SDL_SwapLE32(*((uint32_t *)(stats+65)));
+        your_info.attack_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+67)));
+        your_info.defense_exp=SDL_SwapLE32(*((uint32_t *)(stats+69)));
+        your_info.defense_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+71)));
+        your_info.magic_exp=SDL_SwapLE32(*((uint32_t *)(stats+73)));
+        your_info.magic_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+75)));
+        your_info.potion_exp=SDL_SwapLE32(*((uint32_t *)(stats+77)));
+        your_info.potion_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+79)));
 
         your_info.summoning_skill.cur=SDL_SwapLE16(stats[83]);
         your_info.summoning_skill.base=SDL_SwapLE16(stats[84]);
-        your_info.summoning_exp=SDL_SwapLE32(*((Uint32 *)(stats+85)));
-        your_info.summoning_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+87)));
+        your_info.summoning_exp=SDL_SwapLE32(*((uint32_t *)(stats+85)));
+        your_info.summoning_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+87)));
         your_info.crafting_skill.cur=SDL_SwapLE16(stats[89]);
         your_info.crafting_skill.base=SDL_SwapLE16(stats[90]);
-        your_info.crafting_exp=SDL_SwapLE32(*((Uint32 *)(stats+91)));
-        your_info.crafting_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+93)));
+        your_info.crafting_exp=SDL_SwapLE32(*((uint32_t *)(stats+91)));
+        your_info.crafting_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+93)));
         your_info.engineering_skill.cur=SDL_SwapLE16(stats[95]);
         your_info.engineering_skill.base=SDL_SwapLE16(stats[96]);
-        your_info.engineering_exp=SDL_SwapLE32(*((Uint32 *)(stats+97)));
-        your_info.engineering_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+99)));
+        your_info.engineering_exp=SDL_SwapLE32(*((uint32_t *)(stats+97)));
+        your_info.engineering_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+99)));
         your_info.tailoring_skill.cur=SDL_SwapLE16(stats[101]);
         your_info.tailoring_skill.base=SDL_SwapLE16(stats[102]);
-        your_info.tailoring_exp=SDL_SwapLE32(*((Uint32 *)(stats+103)));
-        your_info.tailoring_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+105)));
+        your_info.tailoring_exp=SDL_SwapLE32(*((uint32_t *)(stats+103)));
+        your_info.tailoring_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+105)));
         your_info.ranging_skill.cur=SDL_SwapLE16(stats[107]);
         your_info.ranging_skill.base=SDL_SwapLE16(stats[108]);
-        your_info.ranging_exp=SDL_SwapLE32(*((Uint32 *)(stats+109)));
-        your_info.ranging_exp_next_lev=SDL_SwapLE32(*((Uint32 *)(stats+111)));
+        your_info.ranging_exp=SDL_SwapLE32(*((uint32_t *)(stats+109)));
+        your_info.ranging_exp_next_lev=SDL_SwapLE32(*((uint32_t *)(stats+111)));
 
         your_info.research_completed=SDL_SwapLE16(stats[47]);
         your_info.researching=SDL_SwapLE16(stats[81]);
@@ -172,7 +172,7 @@ void get_the_stats(Sint16 *stats, size_t len_in_bytes)
         check_castability();
 }
 
-void get_partial_stat(Uint8 name,Sint32 value)
+void get_partial_stat(uint8_t name,int32_t value)
 {
         switch(name)
                 {
@@ -231,9 +231,9 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_man_left(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_man_right(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_man_left(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_man_right(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.manufacturing_skill.base=value;break;
@@ -244,8 +244,8 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_har(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_har(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.harvesting_skill.base=value;break;
@@ -256,9 +256,9 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_alc_left(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_alc_right(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_alc_left(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_alc_right(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.alchemy_skill.base=value;break;
@@ -269,8 +269,8 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_oa(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_oa(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.overall_skill.base=value;break;
@@ -281,8 +281,8 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_att(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_att(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.attack_skill.base=value;break;
@@ -293,8 +293,8 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_def(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_def(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.defense_skill.base=value;break;
@@ -305,8 +305,8 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_mag(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_mag(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.magic_skill.base=value;break;
@@ -317,9 +317,9 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_pot_left(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_pot_right(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_pot_left(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_pot_right(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.potion_skill.base=value;break;
@@ -351,7 +351,7 @@ void get_partial_stat(Uint8 name,Sint32 value)
                                 break;
                         }
                 case ACTION_POINTS_BASE:
-                        your_info.action_points.base=value;break;                
+                        your_info.action_points.base=value;break;
                 case FOOD_LEV:
                         your_info.food_level=value;break;
                 case MAN_EXP:
@@ -364,7 +364,7 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         your_info.manufacturing_exp_next_lev=value;break;
                 case HARV_EXP:
                         set_last_skill_exp(SI_HAR, value-your_info.harvesting_exp);
-						floatingmessages_compare_stat(yourself, your_info.harvesting_exp, value, attributes.harvesting_skill.shortname);
+                        floatingmessages_compare_stat(yourself, your_info.harvesting_exp, value, attributes.harvesting_skill.shortname);
                         your_info.harvesting_exp=value;
                         break;
                 case HARV_EXP_NEXT:
@@ -426,8 +426,8 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_sum(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_sum(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.summoning_skill.base=value;break;
@@ -446,9 +446,9 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_cra_left(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_cra_right(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_cra_left(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_cra_right(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.crafting_skill.base=value;break;
@@ -467,9 +467,9 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_eng_left(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_eng_right(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_eng_left(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_eng_right(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.engineering_skill.base=value;break;
@@ -488,9 +488,9 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_tai_left(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_tai_right(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_tai_left(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_tai_right(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.tailoring_skill.base=value;break;
@@ -509,8 +509,8 @@ void get_partial_stat(Uint8 name,Sint32 value)
                         {
                             actor *_actor = get_actor_ptr_from_id(yourself);
                             if (use_eye_candy == 1 && _actor != NULL) {
-                  	          ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
-                  	          ec_create_glow_level_up_ran(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_default(_actor, (poor_man ? 6 : 10));
+                              ec_create_glow_level_up_ran(_actor, (poor_man ? 6 : 10));
                             }
                         }
                         your_info.ranging_skill.base=value;break;
@@ -530,102 +530,102 @@ void get_partial_stat(Uint8 name,Sint32 value)
 
 }
 
-Sint16 get_base_might() { return (your_info.phy.base+your_info.coo.base)/2;}
-Sint16 get_cur_might() { return (your_info.phy.cur+your_info.coo.cur)/2;}
+int16_t get_base_might() { return (your_info.phy.base+your_info.coo.base)/2;}
+int16_t get_cur_might() { return (your_info.phy.cur+your_info.coo.cur)/2;}
 
-Sint16 get_base_matter() { return (your_info.phy.base+your_info.wil.base)/2;}
-Sint16 get_cur_matter() { return (your_info.phy.cur+your_info.wil.cur)/2;}
+int16_t get_base_matter() { return (your_info.phy.base+your_info.wil.base)/2;}
+int16_t get_cur_matter() { return (your_info.phy.cur+your_info.wil.cur)/2;}
 
-Sint16 get_base_tough() { return (your_info.phy.base+your_info.vit.base)/2;}
-Sint16 get_cur_tough() { return (your_info.phy.cur+your_info.vit.cur)/2;}
+int16_t get_base_tough() { return (your_info.phy.base+your_info.vit.base)/2;}
+int16_t get_cur_tough() { return (your_info.phy.cur+your_info.vit.cur)/2;}
 
-Sint16 get_base_charm() { return (your_info.ins.base+your_info.vit.base)/2;}
-Sint16 get_cur_charm() { return (your_info.ins.cur+your_info.vit.cur)/2;}
+int16_t get_base_charm() { return (your_info.ins.base+your_info.vit.base)/2;}
+int16_t get_cur_charm() { return (your_info.ins.cur+your_info.vit.cur)/2;}
 
-Sint16 get_base_react() { return (your_info.ins.base+your_info.coo.base)/2;}
-Sint16 get_cur_react() { return (your_info.ins.cur+your_info.coo.cur)/2;}
+int16_t get_base_react() { return (your_info.ins.base+your_info.coo.base)/2;}
+int16_t get_cur_react() { return (your_info.ins.cur+your_info.coo.cur)/2;}
 
-Sint16 get_base_perc() { return (your_info.ins.base+your_info.rea.base)/2;}
-Sint16 get_cur_perc() { return (your_info.ins.cur+your_info.rea.cur)/2;}
+int16_t get_base_perc() { return (your_info.ins.base+your_info.rea.base)/2;}
+int16_t get_cur_perc() { return (your_info.ins.cur+your_info.rea.cur)/2;}
 
-Sint16 get_base_rat() { return (your_info.wil.base+your_info.rea.base)/2;}
-Sint16 get_cur_rat() { return (your_info.wil.cur+your_info.rea.cur)/2;}
+int16_t get_base_rat() { return (your_info.wil.base+your_info.rea.base)/2;}
+int16_t get_cur_rat() { return (your_info.wil.cur+your_info.rea.cur)/2;}
 
-Sint16 get_base_dext() { return (your_info.coo.base+your_info.rea.base)/2;}
-Sint16 get_cur_dext() { return (your_info.coo.cur+your_info.rea.cur)/2;}
+int16_t get_base_dext() { return (your_info.coo.base+your_info.rea.base)/2;}
+int16_t get_cur_dext() { return (your_info.coo.cur+your_info.rea.cur)/2;}
 
-Sint16 get_base_eth() { return (your_info.wil.base+your_info.vit.base)/2;}
-Sint16 get_cur_eth() { return (your_info.wil.cur+your_info.vit.cur)/2;}
+int16_t get_base_eth() { return (your_info.wil.base+your_info.vit.base)/2;}
+int16_t get_cur_eth() { return (your_info.wil.cur+your_info.vit.cur)/2;}
 
 
 /* store references to the skills info in an easy to use array */
 void init_statsinfo_array(void)
 {
-	statsinfo[SI_ATT].exp = &your_info.attack_exp;
-	statsinfo[SI_ATT].next_lev = &your_info.attack_exp_next_lev;
-	statsinfo[SI_ATT].skillattr = &your_info.attack_skill;
-	statsinfo[SI_ATT].skillnames = &attributes.attack_skill;
+    statsinfo[SI_ATT].exp = &your_info.attack_exp;
+    statsinfo[SI_ATT].next_lev = &your_info.attack_exp_next_lev;
+    statsinfo[SI_ATT].skillattr = &your_info.attack_skill;
+    statsinfo[SI_ATT].skillnames = &attributes.attack_skill;
 
-	statsinfo[SI_DEF].exp = &your_info.defense_exp;
-	statsinfo[SI_DEF].next_lev = &your_info.defense_exp_next_lev;
-	statsinfo[SI_DEF].skillattr = &your_info.defense_skill;
-	statsinfo[SI_DEF].skillnames = &attributes.defense_skill;
+    statsinfo[SI_DEF].exp = &your_info.defense_exp;
+    statsinfo[SI_DEF].next_lev = &your_info.defense_exp_next_lev;
+    statsinfo[SI_DEF].skillattr = &your_info.defense_skill;
+    statsinfo[SI_DEF].skillnames = &attributes.defense_skill;
 
-	statsinfo[SI_HAR].exp = &your_info.harvesting_exp;
-	statsinfo[SI_HAR].next_lev = &your_info.harvesting_exp_next_lev;
-	statsinfo[SI_HAR].skillattr = &your_info.harvesting_skill;
-	statsinfo[SI_HAR].skillnames = &attributes.harvesting_skill;
+    statsinfo[SI_HAR].exp = &your_info.harvesting_exp;
+    statsinfo[SI_HAR].next_lev = &your_info.harvesting_exp_next_lev;
+    statsinfo[SI_HAR].skillattr = &your_info.harvesting_skill;
+    statsinfo[SI_HAR].skillnames = &attributes.harvesting_skill;
 
-	statsinfo[SI_ALC].exp = &your_info.alchemy_exp;
-	statsinfo[SI_ALC].next_lev = &your_info.alchemy_exp_next_lev;
-	statsinfo[SI_ALC].skillattr = &your_info.alchemy_skill;
-	statsinfo[SI_ALC].skillnames = &attributes.alchemy_skill;
+    statsinfo[SI_ALC].exp = &your_info.alchemy_exp;
+    statsinfo[SI_ALC].next_lev = &your_info.alchemy_exp_next_lev;
+    statsinfo[SI_ALC].skillattr = &your_info.alchemy_skill;
+    statsinfo[SI_ALC].skillnames = &attributes.alchemy_skill;
 
-	statsinfo[SI_MAG].exp = &your_info.magic_exp;
-	statsinfo[SI_MAG].next_lev = &your_info.magic_exp_next_lev;
-	statsinfo[SI_MAG].skillattr = &your_info.magic_skill;
-	statsinfo[SI_MAG].skillnames = &attributes.magic_skill;
+    statsinfo[SI_MAG].exp = &your_info.magic_exp;
+    statsinfo[SI_MAG].next_lev = &your_info.magic_exp_next_lev;
+    statsinfo[SI_MAG].skillattr = &your_info.magic_skill;
+    statsinfo[SI_MAG].skillnames = &attributes.magic_skill;
 
-	statsinfo[SI_POT].exp = &your_info.potion_exp;
-	statsinfo[SI_POT].next_lev = &your_info.potion_exp_next_lev;
-	statsinfo[SI_POT].skillattr = &your_info.potion_skill;
-	statsinfo[SI_POT].skillnames = &attributes.potion_skill;
+    statsinfo[SI_POT].exp = &your_info.potion_exp;
+    statsinfo[SI_POT].next_lev = &your_info.potion_exp_next_lev;
+    statsinfo[SI_POT].skillattr = &your_info.potion_skill;
+    statsinfo[SI_POT].skillnames = &attributes.potion_skill;
 
-	statsinfo[SI_SUM].exp = &your_info.summoning_exp;
-	statsinfo[SI_SUM].next_lev = &your_info.summoning_exp_next_lev;
-	statsinfo[SI_SUM].skillattr = &your_info.summoning_skill;
-	statsinfo[SI_SUM].skillnames = &attributes.summoning_skill;
+    statsinfo[SI_SUM].exp = &your_info.summoning_exp;
+    statsinfo[SI_SUM].next_lev = &your_info.summoning_exp_next_lev;
+    statsinfo[SI_SUM].skillattr = &your_info.summoning_skill;
+    statsinfo[SI_SUM].skillnames = &attributes.summoning_skill;
 
-	statsinfo[SI_MAN].exp = &your_info.manufacturing_exp;
-	statsinfo[SI_MAN].next_lev = &your_info.manufacturing_exp_next_lev;
-	statsinfo[SI_MAN].skillattr = &your_info.manufacturing_skill;
-	statsinfo[SI_MAN].skillnames = &attributes.manufacturing_skill;
+    statsinfo[SI_MAN].exp = &your_info.manufacturing_exp;
+    statsinfo[SI_MAN].next_lev = &your_info.manufacturing_exp_next_lev;
+    statsinfo[SI_MAN].skillattr = &your_info.manufacturing_skill;
+    statsinfo[SI_MAN].skillnames = &attributes.manufacturing_skill;
 
-	statsinfo[SI_CRA].exp = &your_info.crafting_exp;
-	statsinfo[SI_CRA].next_lev = &your_info.crafting_exp_next_lev;
-	statsinfo[SI_CRA].skillattr = &your_info.crafting_skill;
-	statsinfo[SI_CRA].skillnames = &attributes.crafting_skill;
+    statsinfo[SI_CRA].exp = &your_info.crafting_exp;
+    statsinfo[SI_CRA].next_lev = &your_info.crafting_exp_next_lev;
+    statsinfo[SI_CRA].skillattr = &your_info.crafting_skill;
+    statsinfo[SI_CRA].skillnames = &attributes.crafting_skill;
 
-	statsinfo[SI_ENG].exp = &your_info.engineering_exp;
-	statsinfo[SI_ENG].next_lev = &your_info.engineering_exp_next_lev;
-	statsinfo[SI_ENG].skillattr = &your_info.engineering_skill;
-	statsinfo[SI_ENG].skillnames = &attributes.engineering_skill;
+    statsinfo[SI_ENG].exp = &your_info.engineering_exp;
+    statsinfo[SI_ENG].next_lev = &your_info.engineering_exp_next_lev;
+    statsinfo[SI_ENG].skillattr = &your_info.engineering_skill;
+    statsinfo[SI_ENG].skillnames = &attributes.engineering_skill;
 
-	statsinfo[SI_TAI].exp = &your_info.tailoring_exp;
-	statsinfo[SI_TAI].next_lev = &your_info.tailoring_exp_next_lev;
-	statsinfo[SI_TAI].skillattr = &your_info.tailoring_skill;
-	statsinfo[SI_TAI].skillnames = &attributes.tailoring_skill;
+    statsinfo[SI_TAI].exp = &your_info.tailoring_exp;
+    statsinfo[SI_TAI].next_lev = &your_info.tailoring_exp_next_lev;
+    statsinfo[SI_TAI].skillattr = &your_info.tailoring_skill;
+    statsinfo[SI_TAI].skillnames = &attributes.tailoring_skill;
 
-	statsinfo[SI_RAN].exp = &your_info.ranging_exp;
-	statsinfo[SI_RAN].next_lev = &your_info.ranging_exp_next_lev;
-	statsinfo[SI_RAN].skillattr = &your_info.ranging_skill;
-	statsinfo[SI_RAN].skillnames = &attributes.ranging_skill;
+    statsinfo[SI_RAN].exp = &your_info.ranging_exp;
+    statsinfo[SI_RAN].next_lev = &your_info.ranging_exp_next_lev;
+    statsinfo[SI_RAN].skillattr = &your_info.ranging_skill;
+    statsinfo[SI_RAN].skillnames = &attributes.ranging_skill;
 
-	/* always make last as special case for skills modifiers - and best displayed last anyway */
-	statsinfo[SI_ALL].exp = &your_info.overall_exp;
-	statsinfo[SI_ALL].next_lev = &your_info.overall_exp_next_lev;
-	statsinfo[SI_ALL].skillattr = &your_info.overall_skill;
-	statsinfo[SI_ALL].skillnames = &attributes.overall_skill;
+    /* always make last as special case for skills modifiers - and best displayed last anyway */
+    statsinfo[SI_ALL].exp = &your_info.overall_exp;
+    statsinfo[SI_ALL].next_lev = &your_info.overall_exp_next_lev;
+    statsinfo[SI_ALL].skillattr = &your_info.overall_skill;
+    statsinfo[SI_ALL].skillnames = &attributes.overall_skill;
 }
 
 
@@ -680,12 +680,12 @@ void draw_statf(int len, int x, int y, attrib_16f * var, names * name)
         draw_stat_final(len,x,y,name->name,str);
 }
 
-void draw_stat_final(int len, int x, int y, const unsigned char * name, const char * value)
+void draw_stat_final(int len, int x, int y, const char * name, const char * value)
 {
         char str[80];
 
         safe_snprintf(str,sizeof(str),"%-15s %s",name,value);
-        draw_string_small(x, y, (unsigned char*)str, 1);
+        draw_string_small(x, y, str, 1);
 }
 
 int display_stats_handler(window_info *win)
@@ -859,7 +859,7 @@ int display_stats_handler(window_info *win)
         return 1;
 }
 
-int click_stats_handler(window_info *win, int mx, int my, Uint32 flags)
+int click_stats_handler(window_info *win, int mx, int my, uint32_t flags)
 {
         int     i;
         int is_button = flags & ELW_MOUSE_BUTTON;
@@ -883,7 +883,7 @@ void fill_stats_win ()
 {
         //set_window_color(stats_win, ELW_COLOR_BORDER, 0.0f, 1.0f, 0.0f, 0.0f);
         set_window_handler(stats_win, ELW_HANDLER_DISPLAY, &display_stats_handler );
-        set_window_handler(stats_win, ELW_HANDLER_CLICK, &click_stats_handler );
+        set_window_handler(stats_win, ELW_HANDLER_CLICK, (int (*)())&click_stats_handler );
 }
 
 void draw_floatingmessage(floating_message *message, float healthbar_z) {
@@ -897,7 +897,7 @@ void draw_floatingmessage(floating_message *message, float healthbar_z) {
         cut=message->active_time/4000.0f;
         f = ((float)(message->active_time-(cur_time-message->first_time)))/message->active_time;
         glColor4f(message->color[0], message->color[1], message->color[2], f > cut ? 1.0f : (f / cut));
-		width = (float)get_string_width((unsigned char*)message->message) * INGAME_FONT_X_LEN * name_zoom * 8.0;
+        width = (float)get_string_width(message->message) * INGAME_FONT_X_LEN * name_zoom * 8.0;
 
         //Figure out where the point just above the actor's head is in the viewport
         glGetDoublev(GL_MODELVIEW_MATRIX, model);
@@ -905,13 +905,13 @@ void draw_floatingmessage(floating_message *message, float healthbar_z) {
         glGetIntegerv(GL_VIEWPORT, view);
         if (first_person)
         {
-			x=window_width/2.0;
-			y=window_height/2.0-40.0;
+            x=window_width/2.0;
+            y=window_height/2.0-40.0;
         }
         else
         {
-			gluProject(0.0, 0.0, healthbar_z * get_actor_scale(your_actor), model, proj, view, &x, &y, &z);
-			y += 50*name_zoom; // size of the actor name/bar
+            gluProject(0.0, 0.0, healthbar_z * get_actor_scale(your_actor), model, proj, view, &x, &y, &z);
+            y += 50*name_zoom; // size of the actor name/bar
         }
 
 
@@ -946,7 +946,7 @@ void draw_floatingmessage(floating_message *message, float healthbar_z) {
         glLoadIdentity();
         glOrtho(view[0],view[2]+view[0],view[1],view[3]+view[1],0.0f,-1.0f);
 
-        draw_ortho_ingame_string(x, y, 0, (unsigned char*)message->message, 1, INGAME_FONT_X_LEN*8.0, INGAME_FONT_Y_LEN*8.0);
+        draw_ortho_ingame_string(x, y, 0, message->message, 1, INGAME_FONT_X_LEN*8.0, INGAME_FONT_Y_LEN*8.0);
 
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
@@ -1002,7 +1002,7 @@ floating_message *get_free_floatingmessage() {
         return NULL;
 }
 
-void add_floating_message(int actor_id, char * str, int direction, float r, float g, float b, int active_time)
+void add_floating_message(int actor_id, const char * str, int direction, float r, float g, float b, int active_time)
 {
         int time;
         static int last_time_added[5]={0};
@@ -1054,7 +1054,7 @@ void add_floating_message(int actor_id, char * str, int direction, float r, floa
         last_direction_added[4]=direction;
 }
 
-void floatingmessages_add_level(int actor_id, int level, const unsigned char * skillname)
+void floatingmessages_add_level(int actor_id, int level, const char * skillname)
 {
         char str[50];
 
@@ -1062,7 +1062,7 @@ void floatingmessages_add_level(int actor_id, int level, const unsigned char * s
         add_floating_message(actor_id, str, FLOATINGMESSAGE_NORTH, 0.3, 0.3, 1.0, 2000);
 }
 
-void floatingmessages_compare_stat(int actor_id, int value, int new_value, const unsigned char *skillname)
+void floatingmessages_compare_stat(int actor_id, int value, int new_value, const char *skillname)
 {
         char str[50];
         int diff=new_value-value;

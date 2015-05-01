@@ -134,7 +134,7 @@ namespace eternal_lands
 
 	extern "C" void send_video_info()
 	{
-		Uint8 data[33];
+		uint8_t data[33];
 		bit_set_96 caps;
 		xmlNodePtr root_element;
 		xmlDoc *document;

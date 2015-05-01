@@ -20,7 +20,7 @@ extern "C" {
 typedef struct
 {
    char name[32]; /*!< name of your buddy */
-   unsigned char type;
+   uint8_t type;
 }_buddy;
 
 /*!

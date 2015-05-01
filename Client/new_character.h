@@ -5,6 +5,7 @@
  */
 #ifndef __NEW_CHARACTER_H__
 #define __NEW_CHARACTER_H__
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,7 +77,7 @@ void draw_new_char_screen();
  *
  * \callgraph
  */
-void add_char_to_new_character(unsigned char ch);
+void add_char_to_new_character(uint8_t ch);
 
 /*!
  * \ingroup interface_newchar

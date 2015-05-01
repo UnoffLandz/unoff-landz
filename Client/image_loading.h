@@ -54,14 +54,14 @@ typedef enum
  */
 typedef struct
 {
-	Uint32 offsets[MAX_IMAGE_MIPMAPS];	/*!< the offsets of the mipmaps relativ to the image pointer */
-	Uint32 sizes[MAX_IMAGE_MIPMAPS];	/*!< the sizes of the mipmaps */
-	Uint8* image;				/*!< a pointer to the image */
-	Uint32 width;				/*!< the width of the image in pixels */
-	Uint32 height;				/*!< the height of the image in pixels */
-	Uint32 mipmaps;				/*!< the number of mipmaps of the image */
+	uint32_t offsets[MAX_IMAGE_MIPMAPS];	/*!< the offsets of the mipmaps relativ to the image pointer */
+	uint32_t sizes[MAX_IMAGE_MIPMAPS];	/*!< the sizes of the mipmaps */
+	uint8_t* image;				/*!< a pointer to the image */
+	uint32_t width;				/*!< the width of the image in pixels */
+	uint32_t height;				/*!< the height of the image in pixels */
+	uint32_t mipmaps;				/*!< the number of mipmaps of the image */
 	image_format_type format;		/*!< the format of the image */
-	Uint8 alpha;				/*!< the image has an alpha channel */
+	uint8_t alpha;				/*!< the image has an alpha channel */
 } image_t;
 
 /**
@@ -77,7 +77,7 @@ typedef struct
  * @return Zero if the file was not found or the buffer is too small, else one.
  * @callgraph
  */
-Uint32 check_image_name(const char* file_name, const Uint32 size, char* buffer);
+uint32_t check_image_name(const char* file_name, const uint32_t size, char* buffer);
 
 /**
  * @ingroup textures
@@ -88,7 +88,7 @@ Uint32 check_image_name(const char* file_name, const Uint32 size, char* buffer);
  * @return The length of the filename.
  * @callgraph
  */
-Uint32 get_file_name_len(const char* file_name);
+uint32_t get_file_name_len(const char* file_name);
 
 /**
  * @ingroup textures
@@ -110,9 +110,9 @@ Uint32 get_file_name_len(const char* file_name);
  * @see free_image
  * @callgraph
  */
-Uint32 load_image_data(const char* file_name, const Uint32 compression,
-	const Uint32 unpack, const Uint32 strip_mipmaps,
-	const Uint32 base_level, image_t* image);
+uint32_t load_image_data(const char* file_name, const uint32_t compression,
+	const uint32_t unpack, const uint32_t strip_mipmaps,
+	const uint32_t base_level, image_t* image);
 
 /**
  * @ingroup textures
@@ -134,9 +134,9 @@ Uint32 load_image_data(const char* file_name, const Uint32 compression,
  * @see free_image
  * @callgraph
  */
-Uint32 load_image_data_file(el_file_ptr file, const Uint32 compression,
-	const Uint32 unpack, const Uint32 strip_mipmaps,
-	const Uint32 base_level, image_t* image);
+uint32_t load_image_data_file(el_file_ptr file, const uint32_t compression,
+	const uint32_t unpack, const uint32_t strip_mipmaps,
+	const uint32_t base_level, image_t* image);
 
 /**
  * @ingroup textures
@@ -150,7 +150,7 @@ Uint32 load_image_data_file(el_file_ptr file, const Uint32 compression,
  * @return Returns one if everything is ok, zero else.
  * @callgraph
  */
-Uint32 get_image_information(el_file_ptr file, image_t* image);
+uint32_t get_image_information(el_file_ptr file, image_t* image);
 
 /**
  * @ingroup textures

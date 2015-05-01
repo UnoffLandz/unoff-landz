@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <time.h>
 #include "zlib.h"
 #include "zip.h"
@@ -117,7 +118,7 @@ typedef struct linkedlist_datablock_internal_s
   uLong  avail_in_this_block;
   uLong  filled_in_this_block;
   uLong  unused; /* for future use and alignement */
-  unsigned char data[SIZEDATA_INDATABLOCK];
+  uint8_t data[SIZEDATA_INDATABLOCK];
 } linkedlist_datablock_internal;
 
 typedef struct linkedlist_data_s
@@ -229,7 +230,7 @@ local void free_linkedlist(linkedlist_data* ll)
 local int add_data_in_datablock(linkedlist_data* ll, const void* buf, uLong len)
 {
     linkedlist_datablock_internal* ldi;
-    const unsigned char* from_copy;
+    const uint8_t* from_copy;
 
     if (ll==NULL)
         return ZIP_INTERNALERROR;
@@ -242,13 +243,13 @@ local int add_data_in_datablock(linkedlist_data* ll, const void* buf, uLong len)
     }
 
     ldi = ll->last_block;
-    from_copy = (unsigned char*)buf;
+    from_copy = (uint8_t*)buf;
 
     while (len>0)
     {
         uInt copy_this;
         uInt i;
-        unsigned char* to_copy;
+        uint8_t* to_copy;
 
         if (ldi->avail_in_this_block==0)
         {
@@ -290,11 +291,11 @@ local int add_data_in_datablock(linkedlist_data* ll, const void* buf, uLong len)
 local int zip64local_putValue OF((const zlib_filefunc64_32_def* pzlib_filefunc_def, voidpf filestream, ZPOS64_T x, int nbByte));
 local int zip64local_putValue (const zlib_filefunc64_32_def* pzlib_filefunc_def, voidpf filestream, ZPOS64_T x, int nbByte)
 {
-    unsigned char buf[8];
+    uint8_t buf[8];
     int n;
     for (n = 0; n < nbByte; n++)
     {
-        buf[n] = (unsigned char)(x & 0xff);
+        buf[n] = (uint8_t)(x & 0xff);
         x >>= 8;
     }
     if (x != 0)
@@ -314,10 +315,10 @@ local int zip64local_putValue (const zlib_filefunc64_32_def* pzlib_filefunc_def,
 local void zip64local_putValue_inmemory OF((void* dest, ZPOS64_T x, int nbByte));
 local void zip64local_putValue_inmemory (void* dest, ZPOS64_T x, int nbByte)
 {
-    unsigned char* buf=(unsigned char*)dest;
+    uint8_t* buf=(uint8_t*)dest;
     int n;
     for (n = 0; n < nbByte; n++) {
-        buf[n] = (unsigned char)(x & 0xff);
+        buf[n] = (uint8_t)(x & 0xff);
         x >>= 8;
     }
 
@@ -352,7 +353,7 @@ local int zip64local_getByte OF((const zlib_filefunc64_32_def* pzlib_filefunc_de
 
 local int zip64local_getByte(const zlib_filefunc64_32_def* pzlib_filefunc_def,voidpf filestream,int* pi)
 {
-    unsigned char c;
+    uint8_t c;
     int err = (int)ZREAD64(*pzlib_filefunc_def,filestream,&c,1);
     if (err==1)
     {
@@ -483,7 +484,7 @@ local ZPOS64_T zip64local_SearchCentralDir OF((const zlib_filefunc64_32_def* pzl
 
 local ZPOS64_T zip64local_SearchCentralDir(const zlib_filefunc64_32_def* pzlib_filefunc_def, voidpf filestream)
 {
-  unsigned char* buf;
+  uint8_t* buf;
   ZPOS64_T uSizeFile;
   ZPOS64_T uBackRead;
   ZPOS64_T uMaxBack=0xffff; /* maximum size of global comment */
@@ -498,7 +499,7 @@ local ZPOS64_T zip64local_SearchCentralDir(const zlib_filefunc64_32_def* pzlib_f
   if (uMaxBack>uSizeFile)
     uMaxBack = uSizeFile;
 
-  buf = (unsigned char*)ALLOC(BUFREADCOMMENT+4);
+  buf = (uint8_t*)ALLOC(BUFREADCOMMENT+4);
   if (buf==NULL)
     return 0;
 
@@ -545,7 +546,7 @@ local ZPOS64_T zip64local_SearchCentralDir64 OF((const zlib_filefunc64_32_def* p
 
 local ZPOS64_T zip64local_SearchCentralDir64(const zlib_filefunc64_32_def* pzlib_filefunc_def, voidpf filestream)
 {
-  unsigned char* buf;
+  uint8_t* buf;
   ZPOS64_T uSizeFile;
   ZPOS64_T uBackRead;
   ZPOS64_T uMaxBack=0xffff; /* maximum size of global comment */
@@ -561,7 +562,7 @@ local ZPOS64_T zip64local_SearchCentralDir64(const zlib_filefunc64_32_def* pzlib
   if (uMaxBack>uSizeFile)
     uMaxBack = uSizeFile;
 
-  buf = (unsigned char*)ALLOC(BUFREADCOMMENT+4);
+  buf = (uint8_t*)ALLOC(BUFREADCOMMENT+4);
   if (buf==NULL)
     return 0;
 
@@ -1246,7 +1247,7 @@ extern int ZEXPORT zipOpenNewFileInZip4_64 (zipFile file, const char* filename, 
     zi->ci.crypt_header_size = 0;
     if ((err==Z_OK) && (password != NULL))
     {
-        unsigned char bufHead[RAND_HEAD_LEN];
+        uint8_t bufHead[RAND_HEAD_LEN];
         unsigned int sizeHead;
         zi->ci.encrypt = 1;
         zi->ci.pcrc_32_tab = get_crc_table();
@@ -1414,7 +1415,7 @@ extern int ZEXPORT zipWriteInFileInZip (zipFile file,const void* buf,unsigned in
     if (zi->in_opened_file_inzip == 0)
         return ZIP_PARAMERROR;
 
-    zi->ci.crc32 = crc32(zi->ci.crc32,buf,(uInt)len);
+    zi->ci.crc32 = crc32(zi->ci.crc32,(const Bytef *)buf,(uInt)len);
 
 #ifdef HAVE_BZIP2
     if(zi->ci.method == Z_BZIP2ED && (!zi->ci.raw))

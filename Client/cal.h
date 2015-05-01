@@ -9,16 +9,16 @@
 extern "C" {
 #endif
 
-enum CalBoolean CalMixer_ExecuteAction_Stop(struct CalMixer *self, int id, float delayIn, float delayOut);
-struct CalMesh *CalModel_GetAttachedMesh(struct CalModel *self,int i);
-void CalCoreSkeleton_Scale(struct CalCoreSkeleton *self,float factor);
-void CalMixer_RemoveAction(struct CalMixer *self,int id);
-void CalCoreAnimation_Scale(struct CalCoreAnimation *self, float factor);
-void CalCoreMesh_Scale(struct CalCoreMesh *self,float factor);
+enum CalBoolean CalMixer_ExecuteAction_Stop( CalMixer *self, int id, float delayIn, float delayOut);
+CalMesh *CalModel_GetAttachedMesh( CalModel *self,int i);
+void CalCoreSkeleton_Scale( CalCoreSkeleton *self,float factor);
+void CalMixer_RemoveAction( CalMixer *self,int id);
+void CalCoreAnimation_Scale( CalCoreAnimation *self, float factor);
+void CalCoreMesh_Scale( CalCoreMesh *self,float factor);
 #ifdef NEW_SOUND
-void cal_set_anim_sound(struct cal_anim *my_cal_anim, const char *sound, const char *sound_scale);
+void cal_set_anim_sound( cal_anim *my_cal_anim, const char *sound, const char *sound_scale);
 #endif // NEW_SOUND
-enum CalBoolean CalMixer_ExecuteActionExt(struct CalMixer *self, int id, float delayIn, float delayOut, float weight, int autoLock);
+enum CalBoolean CalMixer_ExecuteActionExt( CalMixer *self, int id, float delayIn, float delayOut, float weight, int autoLock);
  
 
 void cal_actor_set_emote_anim(actor *pActor, emote_frame *anims);
@@ -36,7 +36,7 @@ void cal_reset_emote_anims(actor *pActor, int cycles_too);
  *
  * \callgraph
  */
-void cal_render_actor(actor *act, Uint32 use_lightning, Uint32 use_textures, Uint32 use_glow);
+void cal_render_actor(actor *act, uint32_t use_lightning, uint32_t use_textures, uint32_t use_glow);
 	#ifdef NEW_SOUND
 struct cal_anim cal_load_anim(actor_types *act, const char *str, const char *sound, const char *sound_scale, int duration);
 	#else

@@ -94,7 +94,7 @@ static int display_console_handler (window_info *win)
 		draw_console_pic (cons_text);
 		if (scroll_up_lines != 0)
 		{
-			const unsigned char *sep_string = (unsigned char*)"^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^";
+            const char *sep_string = "^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^ ^^";
 			glColor3f (1.0, 1.0, 1.0);
 			draw_string_clipped (CONSOLE_TEXT_X_BORDER,
 				CONSOLE_TEXT_Y_BORDER + win->len_y - input_widget->len_y - CONSOLE_SEP_HEIGHT - HUD_MARGIN_Y,
@@ -131,9 +131,9 @@ static int display_console_handler (window_info *win)
 	return 1;
 }
 
-static int keypress_console_handler (window_info *win, int mx, int my, Uint32 key, Uint32 unikey)
+static int keypress_console_handler (window_info *win, int mx, int my, uint32_t key, uint32_t unikey)
 {
-	Uint16 keysym = key & 0xffff;
+    uint16_t keysym = key & 0xffff;
 
 	// first try the keypress handler for all root windows
 	if ( keypress_root_common (key, unikey) )
@@ -197,7 +197,7 @@ static int keypress_console_handler (window_info *win, int mx, int my, Uint32 ke
 	}
 	else
 	{
-		Uint8 ch = key_to_char (unikey);
+		uint8_t ch = key_to_char (unikey);
 
 		reset_tab_completer();
 		if ((ch == '`' || key == K_CONSOLE) && !locked_to_console)
@@ -254,14 +254,14 @@ static int resize_console_handler (window_info *win, int width, int height)
 	return 1;
 }
 
-static int console_scroll_click(widget_list *widget, int mx, int my, Uint32 flags)
+static int console_scroll_click(widget_list *widget, int mx, int my, uint32_t flags)
 {
 	scroll_up_lines = (total_nr_lines - nr_console_lines) - vscrollbar_get_pos(console_root_win, console_scrollbar_id);
 	console_text_changed = 1;
 	return 1;
 }
 
-static int console_scroll_drag(widget_list *widget, int mx, int my, Uint32 flags, int dx, int dy)
+static int console_scroll_drag(widget_list *widget, int mx, int my, uint32_t flags, int dx, int dy)
 {
 	return console_scroll_click(widget, mx, my, flags);
 }
@@ -280,7 +280,7 @@ static void create_console_scrollbar(void)
 	widget_set_OnClick(console_root_win, console_scrollbar_id, console_scroll_click);
 }
 
-static int click_console_handler(window_info *win, int mx, int my, Uint32 flags)
+static int click_console_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 #if !defined OSX && !defined WINDOWS
 #ifdef MIDDLE_MOUSE_PASTE
@@ -403,9 +403,9 @@ void create_console_root_window (int width, int height)
 		console_root_win = create_window ("Console", -1, -1, 0, 0, width, height, ELW_TITLE_NONE|ELW_SHOW_LAST);
 
 		set_window_handler (console_root_win, ELW_HANDLER_DISPLAY, &display_console_handler);
-		set_window_handler (console_root_win, ELW_HANDLER_KEYPRESS, &keypress_console_handler);
-		set_window_handler (console_root_win, ELW_HANDLER_RESIZE, &resize_console_handler);
-		set_window_handler (console_root_win, ELW_HANDLER_CLICK, &click_console_handler);
+        set_window_handler (console_root_win, ELW_HANDLER_KEYPRESS, (int (*)())&keypress_console_handler);
+        set_window_handler (console_root_win, ELW_HANDLER_RESIZE, (int (*)())&resize_console_handler);
+        set_window_handler (console_root_win, ELW_HANDLER_CLICK, (int (*)())&click_console_handler);
 		set_window_handler (console_root_win, ELW_HANDLER_SHOW, &show_console_handler);
 
 		console_out_id = text_field_add_extended (console_root_win, console_out_id, NULL,
@@ -419,7 +419,7 @@ void create_console_root_window (int width, int height)
 				total_nr_lines += rewrap_message(&display_text_buffer[i], chat_zoom, console_text_width, NULL);
 
 		if(input_widget == NULL) {
-			Uint32 id;
+			uint32_t id;
 			id = text_field_add_extended(console_root_win, console_in_id, NULL,
 				0, console_active_height - INPUT_HEIGHT, console_active_width, INPUT_HEIGHT,
 				(INPUT_DEFAULT_FLAGS|TEXT_FIELD_BORDER)^WIDGET_CLICK_TRANSPARENT,
@@ -439,11 +439,11 @@ void create_console_root_window (int width, int height)
 	}
 }
 
-int input_field_resize(widget_list *w, Uint32 x, Uint32 y)
+int input_field_resize(widget_list *w, uint32_t x, uint32_t y)
 {
 	window_info *console_win = &windows_list.window[console_root_win];
 	widget_list *console_out_w = widget_find(console_root_win, console_out_id);
-	text_field *tf = w->widget_info;
+    text_field *tf = (text_field *)w->widget_info;
 	text_message *msg = &(tf->buffer[tf->msg]);
 	int console_active_height;
 

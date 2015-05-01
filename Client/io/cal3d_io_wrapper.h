@@ -14,14 +14,14 @@ extern "C"
 {
 #endif
 
-extern struct CalCoreAnimation *CalLoader_ELLoadCoreAnimation(struct CalLoader *self, const char *strFilename);
-extern struct CalCoreMaterial *CalLoader_ELLoadCoreMaterial(struct CalLoader *self, const char *strFilename);
-extern struct CalCoreMesh *CalLoader_ELLoadCoreMesh(struct CalLoader *self, const char *strFilename);
-extern struct CalCoreSkeleton *CalLoader_ELLoadCoreSkeleton(struct CalLoader *self, const char *strFilename);
-extern int CalCoreModel_ELLoadCoreAnimation(struct CalCoreModel *self, const char *strFilename, float scale);
-extern int CalCoreModel_ELLoadCoreMaterial(struct CalCoreModel *self, const char *strFilename);
-extern int CalCoreModel_ELLoadCoreMesh(struct CalCoreModel *self, const char *strFilename);
-extern enum CalBoolean CalCoreModel_ELLoadCoreSkeleton(struct CalCoreModel *self, const char *strFilename);
+extern CalCoreAnimation *CalLoader_ELLoadCoreAnimation(CalLoader *self, const char *strFilename);
+extern CalCoreMaterial *CalLoader_ELLoadCoreMaterial(CalLoader *self, const char *strFilename);
+extern CalCoreMesh *CalLoader_ELLoadCoreMesh(CalLoader *self, const char *strFilename);
+extern CalCoreSkeleton *CalLoader_ELLoadCoreSkeleton(CalLoader *self, const char *strFilename);
+extern int CalCoreModel_ELLoadCoreAnimation(CalCoreModel *self, const char *strFilename, float scale);
+extern int CalCoreModel_ELLoadCoreMaterial(CalCoreModel *self, const char *strFilename);
+extern int CalCoreModel_ELLoadCoreMesh(CalCoreModel *self, const char *strFilename);
+extern enum CalBoolean CalCoreModel_ELLoadCoreSkeleton(CalCoreModel *self, const char *strFilename);
 extern void set_invert_v_coord();
 
 #ifdef __cplusplus

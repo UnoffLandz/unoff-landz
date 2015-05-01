@@ -15,8 +15,8 @@ namespace eternal_lands
 	{
 	}
 
-	ExtendedException::ExtendedException(const Uint32 number, const std::string &description,
-		const char* type, const char* file, const char* function, const Uint32 line):
+	ExtendedException::ExtendedException(const uint32_t number, const std::string &description,
+		const char* type, const char* file, const char* function, const uint32_t line):
 		m_number(number), m_description(description), m_type(type), m_file(file),
 		m_function(function), m_line(line)
 	{

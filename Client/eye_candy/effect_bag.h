@@ -23,13 +23,13 @@ namespace ec
 			{
 			}
 
-			virtual bool idle(const Uint64 delta_t);
+			virtual bool idle(const uint64_t delta_t);
 #ifdef	NEW_TEXTURES
-			virtual Uint32 get_texture();
+			virtual uint32_t get_texture();
 			virtual float get_burn() const;
 #else	/* NEW_TEXTURES */
-			virtual GLuint get_texture(const Uint16 res_index);
-			virtual void draw(const Uint64 usec);
+			virtual GLuint get_texture(const uint16_t res_index);
+			virtual void draw(const uint64_t usec);
 #endif	/* NEW_TEXTURES */
 			virtual light_t estimate_light_level() const
 			{
@@ -47,7 +47,7 @@ namespace ec
 	{
 		public:
 			BagEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
-				const bool _picked_up, const Uint16 _LOD);
+				const bool _picked_up, const uint16_t _LOD);
 			~BagEffect();
 
 			virtual EffectEnum get_type()
@@ -55,13 +55,13 @@ namespace ec
 				return EC_BAG;
 			}
 			;
-			bool idle(const Uint64 usec);
-			static Uint64 get_max_end_time()
+			bool idle(const uint64_t usec);
+			static uint64_t get_max_end_time()
 			{
 				return 2000000;
 			}
 			;
-			virtual Uint64 get_expire_time()
+			virtual uint64_t get_expire_time()
 			{
 				return 2000000 + born;
 			}

@@ -107,7 +107,7 @@ namespace UserMenus
 			const std::string & get_name(void) const { return menu_name; }
 			int get_name_width(void) const { return menu_name_width; }
 			size_t get_cm_id(void) const { return cm_menu_id; }
-			void action(int option, CommandQueue::Queue &cq) const { lines[option]->action(cq); };
+            void action(int option, CommandQueue::Queue &cq) const { lines[option]->action(cq); }
 		private:
 			size_t cm_menu_id;
 			int menu_name_width;
@@ -158,18 +158,18 @@ namespace UserMenus
 			int display(window_info *win);
 			int action(size_t active_menu, int option);
 			void pre_show(window_info *win, int widget_id, int mx, int my, window_info *cm_win);
-			int click(window_info *win, int mx, Uint32 flags);
+			int click(window_info *win, int mx, uint32_t flags);
 			size_t get_mouse_over_menu(int mx);
 			void delete_menus(void);
 			int context(window_info *win, int widget_id, int mx, int my, int option);
-			void set_win_flag(Uint32 *flags, Uint32 flag, int state);
+			void set_win_flag(uint32_t *flags, uint32_t flag, int state);
 			void mouseover(int mx) { mouse_over_window = true; current_mouseover_menu = get_mouse_over_menu(mx); }
 			int get_height(void) const { return static_cast<int>(((use_small_font)?SMALL_FONT_Y_LEN:DEFAULT_FONT_Y_LEN)+2*window_pad +0.5); }
 			int calc_actual_width(int width) const { return static_cast<int>(0.5 + ((use_small_font)?DEFAULT_SMALL_RATIO:1) * width); }
 
 			static int display_handler(window_info *win) { return get_instance()->display(win); }
 			static int mouseover_handler(window_info *win, int mx, int my) { get_instance()->mouseover(mx); return 0; }
-			static int click_handler(window_info *win, int mx, int my, Uint32 flags) { return get_instance()->click(win, mx, flags); }
+			static int click_handler(window_info *win, int mx, int my, uint32_t flags) { return get_instance()->click(win, mx, flags); }
 			static int context_handler(window_info *win, int widget_id, int mx, int my, int option){ return get_instance()->context(win, widget_id, mx, my, option); }
 	};
 
@@ -195,7 +195,7 @@ namespace UserMenus
 			in.close();
 			return;
 		}
-		menu_name_width = get_string_width((const unsigned char*)menu_name.c_str());
+		menu_name_width = get_string_width(menu_name.c_str());
 
 		// read each line after the menu name line, creating a menu Line object for each
 		std::string line;
@@ -273,7 +273,7 @@ namespace UserMenus
 			return;
 		}
 
-		Uint32 win_flags = ELW_SHOW_LAST|ELW_DRAGGABLE|ELW_USE_BACKGROUND|ELW_SHOW|ELW_TITLE_NAME|ELW_ALPHA_BORDER|ELW_SWITCHABLE_OPAQUE;
+		uint32_t win_flags = ELW_SHOW_LAST|ELW_DRAGGABLE|ELW_USE_BACKGROUND|ELW_SHOW|ELW_TITLE_NAME|ELW_ALPHA_BORDER|ELW_SWITCHABLE_OPAQUE;
 		
 		set_win_flag(&win_flags, ELW_TITLE_BAR, title_on);
 		set_win_flag(&win_flags, ELW_USE_BORDER, border_on);
@@ -384,9 +384,9 @@ namespace UserMenus
 			else
 				glColor3f(0.40f,0.30f,0.20f);
 			if (use_small_font)
-				draw_string_small(curr_x, window_pad, (const unsigned char *)um_no_menus_str, 1 );
+				draw_string_small(curr_x, window_pad, um_no_menus_str, 1 );
 			else
-				draw_string(curr_x, window_pad, (const unsigned char *)um_no_menus_str, 1 );
+				draw_string(curr_x, window_pad, um_no_menus_str, 1 );
 			mouse_over_window = false;
 			return 1;
 		}
@@ -411,9 +411,9 @@ namespace UserMenus
 			else
 				glColor3f(0.40f,0.30f,0.20f);
 			if (use_small_font)
-				draw_string_small(curr_x, window_pad, (const unsigned char *)menus[i]->get_name().c_str(), 1);
+				draw_string_small(curr_x, window_pad,menus[i]->get_name().c_str(), 1);
 			else
-				draw_string(curr_x, window_pad, (const unsigned char *)menus[i]->get_name().c_str(), 1);
+				draw_string(curr_x, window_pad, menus[i]->get_name().c_str(), 1);
 			curr_x += calc_actual_width(menus[i]->get_name_width()) + name_sep;
 		}
 
@@ -429,7 +429,7 @@ namespace UserMenus
 	//
 	// open the menu if the name is clicked
 	//
-	int Container::click(window_info *win, int mx, Uint32 flags)
+	int Container::click(window_info *win, int mx, uint32_t flags)
 	{
 		if ((flags & ELW_LEFT_MOUSE) &&
 			((current_mouseover_menu = get_mouse_over_menu(mx)) < menus.size()) &&
@@ -494,7 +494,7 @@ namespace UserMenus
 	Container * Container::get_instance(void)
 	{
 		static Container um;
-		static Uint32 creation_thread = SDL_ThreadID();
+		static uint32_t creation_thread = SDL_ThreadID();
 		if (SDL_ThreadID() != creation_thread)
 			std::cerr << __FUNCTION__ << ": Danger W.R.! User menus call by non-creator thread." << std::endl;
 		return &um;
@@ -573,7 +573,7 @@ namespace UserMenus
 		// if there are no menus, use the size of the message for the window width
 		if (menus.empty())
 		{
-			win_width = 2 * window_pad + calc_actual_width(get_string_width((const unsigned char*)um_no_menus_str));
+			win_width = 2 * window_pad + calc_actual_width(get_string_width(um_no_menus_str));
 			return;
 		}
 
@@ -647,7 +647,7 @@ namespace UserMenus
 	//
 	//	change a window property bit flag
 	//
-	void Container::set_win_flag(Uint32 *flags, Uint32 flag, int state)
+	void Container::set_win_flag(uint32_t *flags, uint32_t flag, int state)
 	{
 		if (state)
 			*flags |= flag;

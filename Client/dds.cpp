@@ -7,10 +7,10 @@
 
 #include "dds.h"
 
-void unpack_dxt_color(DXTColorBlock *block, Uint8 *values, Uint32 dxt1)
+void unpack_dxt_color(DXTColorBlock *block, uint8_t *values, uint32_t dxt1)
 {
 	float colors[4][4];
-	Uint32 i, j, index;
+	uint32_t i, j, index;
 
 	colors[0][0] = (block->m_colors[0] & 0xF800) >> 11;
 	colors[0][1] = (block->m_colors[0] & 0x07E0) >> 5;
@@ -79,10 +79,10 @@ void unpack_dxt_color(DXTColorBlock *block, Uint8 *values, Uint32 dxt1)
 	}
 }
 
-void unpack_dxt_explicit_alpha(DXTExplicitAlphaBlock *block, Uint8 *values)
+void unpack_dxt_explicit_alpha(DXTExplicitAlphaBlock *block, uint8_t *values)
 {
 	float value;
-	Uint32 i, j, index;
+	uint32_t i, j, index;
 
 	index = 0;
 
@@ -97,11 +97,11 @@ void unpack_dxt_explicit_alpha(DXTExplicitAlphaBlock *block, Uint8 *values)
 	}
 }
 
-void unpack_dxt_interpolated_alpha(DXTInterpolatedAlphaBlock *block, Uint8 *values)
+void unpack_dxt_interpolated_alpha(DXTInterpolatedAlphaBlock *block, uint8_t *values)
 {
 	float alphas[8];
 	float scale, f0, f1;
-	Uint32 i, index, idx0, idx1;
+	uint32_t i, index, idx0, idx1;
 
 	alphas[0] = block->m_alphas[0];
 	alphas[1] = block->m_alphas[1];
@@ -151,15 +151,15 @@ void unpack_dxt_interpolated_alpha(DXTInterpolatedAlphaBlock *block, Uint8 *valu
 	}
 }
 
-void unpack_dxt1(DXTColorBlock *block, Uint8 *values)
+void unpack_dxt1(DXTColorBlock *block, uint8_t *values)
 {
 	unpack_dxt_color(block, values, 1);
 }
 
-void unpack_dxt3(DXTExplicitAlphaBlock *alpha_block, DXTColorBlock *color_block, Uint8 *values)
+void unpack_dxt3(DXTExplicitAlphaBlock *alpha_block, DXTColorBlock *color_block, uint8_t *values)
 {
-	Uint8 alpha_values[16];
-	Uint32 i;
+	uint8_t alpha_values[16];
+	uint32_t i;
 
 	unpack_dxt_color(color_block, values, 0);
 	unpack_dxt_explicit_alpha(alpha_block, alpha_values);
@@ -170,10 +170,10 @@ void unpack_dxt3(DXTExplicitAlphaBlock *alpha_block, DXTColorBlock *color_block,
 	}
 }
 
-void unpack_dxt5(DXTInterpolatedAlphaBlock *alpha_block, DXTColorBlock *color_block, Uint8 *values)
+void unpack_dxt5(DXTInterpolatedAlphaBlock *alpha_block, DXTColorBlock *color_block, uint8_t *values)
 {
-	Uint8 alpha_values[16];
-	Uint32 i;
+	uint8_t alpha_values[16];
+	uint32_t i;
 
 	unpack_dxt_color(color_block, values, 0);
 	unpack_dxt_interpolated_alpha(alpha_block, alpha_values);
@@ -184,10 +184,10 @@ void unpack_dxt5(DXTInterpolatedAlphaBlock *alpha_block, DXTColorBlock *color_bl
 	}
 }
 
-void unpack_ati1(DXTInterpolatedAlphaBlock *block, Uint8 *values)
+void unpack_ati1(DXTInterpolatedAlphaBlock *block, uint8_t *values)
 {
-	Uint8 alpha_values[16];
-	Uint32 i;
+	uint8_t alpha_values[16];
+	uint32_t i;
 
 	unpack_dxt_interpolated_alpha(block, alpha_values);
 
@@ -201,10 +201,10 @@ void unpack_ati1(DXTInterpolatedAlphaBlock *block, Uint8 *values)
 }
 
 void unpack_ati2(DXTInterpolatedAlphaBlock *first_block, DXTInterpolatedAlphaBlock *second_block,
-	Uint8 *values)
+	uint8_t *values)
 {
-	Uint8 first_values[16], second_values[16];
-	Uint32 i;
+	uint8_t first_values[16], second_values[16];
+	uint32_t i;
 
 	unpack_dxt_interpolated_alpha(first_block, first_values);
 	unpack_dxt_interpolated_alpha(second_block, second_values);

@@ -26,11 +26,11 @@ namespace ec
 			{
 			}
 
-			virtual bool idle(const Uint64 delta_t);
+			virtual bool idle(const uint64_t delta_t);
 #ifdef	NEW_TEXTURES
-			virtual Uint32 get_texture();
+			virtual uint32_t get_texture();
 #else	/* NEW_TEXTURES */
-			virtual GLuint get_texture(const Uint16 res_index);
+			virtual GLuint get_texture(const uint16_t res_index);
 #endif	/* NEW_TEXTURES */
 			virtual light_t estimate_light_level() const
 			{
@@ -49,7 +49,7 @@ namespace ec
 		public:
 			TeleporterEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 				const color_t _hue_adjust, const color_t _saturation_adjust,
-				const float _scale, const Uint16 _LOD);
+				const float _scale, const uint16_t _LOD);
 			~TeleporterEffect();
 
 			virtual EffectEnum get_type()
@@ -57,8 +57,8 @@ namespace ec
 				return EC_TELEPORTER;
 			}
 			;
-			bool idle(const Uint64 usec);
-			void draw(const Uint64 usec);
+			bool idle(const uint64_t usec);
+			void draw(const uint64_t usec);
 			virtual void request_LOD(const float _LOD);
 			void add_actor_alpha_pointer(float* ptr);
 
@@ -76,7 +76,7 @@ namespace ec
 			coord_t radius;
 			coord_t scale;
 			Vec3 teleporter_color;
-			std::vector< std::pair<float*, Uint64> > targets;
+			std::vector< std::pair<float*, uint64_t> > targets;
 	};
 
 ///////////////////////////////////////////////////////////////////////////////

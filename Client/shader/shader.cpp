@@ -278,7 +278,7 @@ void free_shaders()
 	}
 }
 
-static __inline__ int get_shader_index(shader_type type, shader_shadow_type shadow_type, shader_fog_type fog_type, Uint32 quality)
+static __inline__ int get_shader_index(shader_type type, shader_shadow_type shadow_type, shader_fog_type fog_type, uint32_t quality)
 {
 	int ret;
 
@@ -290,12 +290,12 @@ static __inline__ int get_shader_index(shader_type type, shader_shadow_type shad
 	return ret;
 }
 
-static __inline__ GLuint build_filter_lut(const Uint32 size)
+static __inline__ GLuint build_filter_lut(const uint32_t size)
 {
 	GLfloat *data;
 	float w[4];
 	float x3, x2, x;
-	Uint32 i;
+	uint32_t i;
 	GLuint texture;
 
 	data = (GLfloat*)malloc(size * 3 * sizeof(GLfloat));
@@ -358,7 +358,7 @@ void init_shaders()
 	}
 }
 
-GLhandleARB get_shader(shader_type type, shader_shadow_type shadow_type, shader_fog_type fog_type, Uint32 quality)
+GLhandleARB get_shader(shader_type type, shader_shadow_type shadow_type, shader_fog_type fog_type, uint32_t quality)
 {
 	int index;
 

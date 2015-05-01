@@ -7,11 +7,9 @@
 #ifndef EL_PATH_WRAPPER_H
 #define EL_PATH_WRAPPER_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif //C++
 
 #include <stdio.h>
+#include <stdint.h>
 #include <sys/types.h>
 
 /**
@@ -129,7 +127,7 @@ int move_file_to_updates(const char* from_file, char* to_file, int custom);
  * @param md5		The checksum given in the updates list to indicate the downloaded version
  * @return Returns 1 if valid, 0 if not
  */
-int file_temp_check(const char * filename, const unsigned char * md5);
+int file_temp_check(const char * filename, const uint8_t * md5);
 
 /**
  * @brief Check if file update is needed
@@ -143,7 +141,7 @@ int file_temp_check(const char * filename, const unsigned char * md5);
  * @param custom	Flag specifying the configdir/custom/ directory instead of the default
  * @return Returns 1 if an update is needed, 0 if not
  */
-int file_update_check(char * filename, const unsigned char * md5, int custom);
+int file_update_check(char * filename, const uint8_t * md5, int custom);
 
 /**
  * @brief Check for valid datadir
@@ -224,9 +222,6 @@ int file_rename_config( const char *old_filename, const char *new_filename );
 int file_remove_config( const char *filename );
 
 
-#ifdef __cplusplus
-}
-#endif //C++
 
 
 #endif //EL_PATH_WRAPPER_H

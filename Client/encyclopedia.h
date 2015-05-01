@@ -41,7 +41,7 @@ typedef struct _Texts
 typedef struct _Images
 {
 	int id,x,y,xend,yend; /*!< id, start and end position of the image */
-	Uint8 mouseover; /*!< flag, determining whether the mouse is currently over the image or not */
+	uint8_t mouseover; /*!< flag, determining whether the mouse is currently over the image or not */
 	float u,v,uend,vend; /*!< start and end points of texture coordinates */
 	struct _Images *Next; /*!< pointer to the next image in the list */
 }_Image;

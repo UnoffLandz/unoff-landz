@@ -11,7 +11,7 @@ typedef struct
 {
 	char id[20];						// The ID of the server - to be specified on the command line
 	char dir[20];						// The dir under $CONF_DIR
-	unsigned char address[60];
+	uint8_t address[60];
 	int port;
 	char desc[100];						// Description of the server - to be shown on in the Server Selection screen
 } server_def;
@@ -284,7 +284,7 @@ void draw_server_sel_interface (int len_x, int len_y)
 //	float diff = (float) (len_x - len_y) / 2;
 	float window_ratio = (float) len_x / 640.0f;
 
-	draw_string ((len_x - (strlen(str) * 11)) / 2, 200 * window_ratio, (unsigned char*)str, 0);
+	draw_string ((len_x - (strlen(str) * 11)) / 2, 200 * window_ratio, str, 0);
 */
 /*	Possibly use this box to display the list of files updated?
 	
@@ -327,14 +327,14 @@ int click_server_sel_root_connect ()
 	return 1;
 }
 
-int click_server_sel_root_handler (window_info *win, int mx, int my, Uint32 flags)
+int click_server_sel_root_handler (window_info *win, int mx, int my, uint32_t flags)
 {
 	return 0;
 }
 
-int keypress_server_sel_root_handler (window_info *win, int mx, int my, Uint32 key, Uint32 unikey)
+int keypress_server_sel_root_handler (window_info *win, int mx, int my, uint32_t key, uint32_t unikey)
 {
-	Uint16 keysym = key & 0xffff;
+	uint16_t keysym = key & 0xffff;
 
 	// first, try to see if we pressed Alt+x, to quit.
 	if (check_quit_or_fullscreen(key))

@@ -44,12 +44,12 @@ extern "C"
 class Vars
 {
 	public:
-		static const float zoom(void) { return 1.0; }
-		static const int space(void) { return 10; }
-		static const int border(void) { return 2; }
-		static const float font_x(void) { return DEFAULT_FONT_X_LEN; }
-		static const float font_y(void) { return DEFAULT_FONT_Y_LEN; }
-		static const int y_len(void) { return static_cast<int>(border() + zoom() * font_y() + 0.5); }
+        static float zoom(void) { return 1.0; }
+        static int space(void) { return 10; }
+        static int border(void) { return 2; }
+        static float font_x(void) { return DEFAULT_FONT_X_LEN; }
+        static float font_y(void) { return DEFAULT_FONT_Y_LEN; }
+        static int y_len(void) { return static_cast<int>(border() + zoom() * font_y() + 0.5); }
 };
 
 
@@ -121,7 +121,7 @@ void Indicator::do_draw(void)
 		glColor3f(0.99f,0.87f,0.65f);
 	else
 		glColor3f(0.40f,0.30f,0.20f);
-	draw_string_zoomed(x_pos, y_pos, (const unsigned char*)disp.c_str(), 1, Vars::zoom());
+	draw_string_zoomed(x_pos, y_pos, disp.c_str(), 1, Vars::zoom());
 	mouse_over = false;
 }
 
@@ -190,7 +190,7 @@ static int mouseover_indicators_handler(window_info *win, int mx, int my)
 
 //	Window mouse click callback, execute action if over an indicator
 //
-static int click_indicators_handler(window_info *win, int mx, int my, Uint32 flags)
+static int click_indicators_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 	// TODO move window code, finish/abandon.... 
 	/*if (flags&ELW_CTRL)

@@ -12,21 +12,21 @@
 #include "md5.h"
 #include "errors.h"
 
-Uint32 use_animation_program = 1;
-Uint32 max_bones_per_mesh = 27;
+uint32_t use_animation_program = 1;
+uint32_t max_bones_per_mesh = 27;
 
 class HardwareMeshData
 {
 	private:
-		const Sint32 m_mesh_index;
-		const Uint32 m_size;
+		const int32_t m_mesh_index;
+		const uint32_t m_size;
 		float* m_buffer;
 
 		const HardwareMeshData &operator=(const HardwareMeshData &hmd);
 
 	public:
-		inline HardwareMeshData(const Sint32 mesh_index,
-			const Uint32 size): m_mesh_index(mesh_index),
+		inline HardwareMeshData(const int32_t mesh_index,
+			const uint32_t size): m_mesh_index(mesh_index),
 			m_size(size)
 		{
 			m_buffer = new float[m_size * 4];
@@ -45,22 +45,22 @@ class HardwareMeshData
 			delete[] m_buffer;
 		}
 
-		inline void set_buffer_value(const Uint32 index, const float value)
+		inline void set_buffer_value(const uint32_t index, const float value)
 		{
 			m_buffer[index] = value;
 		}
 
-		inline float* get_buffer(const Uint32 index = 0) const
+		inline float* get_buffer(const uint32_t index = 0) const
 		{
 			return &m_buffer[index];
 		}
 
-		inline Uint32 get_size() const
+		inline uint32_t get_size() const
 		{
 			return m_size;
 		}
 
-		inline Sint32 get_mesh_index() const
+		inline int32_t get_mesh_index() const
 		{
 			return m_mesh_index;
 		}
@@ -69,14 +69,14 @@ class HardwareMeshData
 struct ActorVertex
 {
 	float m_vertex[3];
-	Uint8 m_weight[4];
+	uint8_t m_weight[4];
 	float m_normal[3];
-	Uint8 m_index[4];
+	uint8_t m_index[4];
 	float m_texture[2];
 //	float m_bone_count;
 };
 
-typedef std::map<Sint32, HardwareMeshData> IntMap;
+typedef std::map<int32_t, HardwareMeshData> IntMap;
 
 int last_actor_type = -1;
 bool use_normals;
@@ -165,10 +165,10 @@ extern "C" void unload_vertex_programs()
 	memset(vertex_program_ids, 0, sizeof(vertex_program_ids));
 }
 
-static inline void render_mesh_shader(actor_types *a, actor *act, Sint32 index, const HardwareMeshData &hmd, const bool use_glow)
+static inline void render_mesh_shader(actor_types *a, actor *act, int32_t index, const HardwareMeshData &hmd, const bool use_glow)
 {
-	Uint32 element_index, count, i;
-	Sint32 bone_id, glow;
+	uint32_t element_index, count, i;
+	int32_t bone_id, glow;
 	float reverse_scale;
 	CalSkeleton *skel;
 
@@ -181,7 +181,7 @@ static inline void render_mesh_shader(actor_types *a, actor *act, Sint32 index, 
 		{
 			if (act->cur_shield >= 0)
 			{
-				if ((Sint32)a->shield[act->cur_shield].mesh_index == hmd.get_mesh_index())
+				if ((int32_t)a->shield[act->cur_shield].mesh_index == hmd.get_mesh_index())
 				{
 					bone_id = 21;
 					glow = a->shield[act->cur_shield].glow;
@@ -189,7 +189,7 @@ static inline void render_mesh_shader(actor_types *a, actor *act, Sint32 index, 
 			}
 			if (act->cur_weapon >= 0)
 			{
-				if ((Sint32)a->weapon[act->cur_weapon].mesh_index == hmd.get_mesh_index())
+				if ((int32_t)a->weapon[act->cur_weapon].mesh_index == hmd.get_mesh_index())
 				{
 					bone_id = 26;
 					glow = a->weapon[act->cur_weapon].glow;
@@ -260,9 +260,9 @@ static inline void render_mesh_shader(actor_types *a, actor *act, Sint32 index, 
 	}
 }
 
-extern "C" void set_actor_animation_program(Uint32 pass, Uint32 ghost)
+extern "C" void set_actor_animation_program(uint32_t pass, uint32_t ghost)
 {
-	Uint32 index, i;
+	uint32_t index, i;
 	VECTOR4 zero;
 	VECTOR4 one;
 
@@ -414,7 +414,7 @@ extern "C" int load_vertex_programs()
 	}
 }
 
-extern "C" void cal_render_actor_shader(actor *act, Uint32 use_lightning, Uint32 use_textures, Uint32 use_glow)
+extern "C" void cal_render_actor_shader(actor *act, uint32_t use_lightning, uint32_t use_textures, uint32_t use_glow)
 {
 	actor_types* a;
 	IntMap* im;
@@ -435,26 +435,26 @@ extern "C" void cal_render_actor_shader(actor *act, Uint32 use_lightning, Uint32
 	{
 		ELglBindBufferARB(GL_ARRAY_BUFFER_ARB, a->vertex_buffer);
 		ELglVertexAttribPointerARB(0, 3, GL_FLOAT, GL_FALSE, sizeof(ActorVertex),
-			reinterpret_cast<void*>(0 * sizeof(float) + 0 * sizeof(Uint8)));
+			reinterpret_cast<void*>(0 * sizeof(float) + 0 * sizeof(uint8_t)));
 		ELglVertexAttribPointerARB(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ActorVertex),
-			reinterpret_cast<void*>(3 * sizeof(float) + 0 * sizeof(Uint8)));
+			reinterpret_cast<void*>(3 * sizeof(float) + 0 * sizeof(uint8_t)));
 		if (use_normals && use_lightning)
 		{
 			ELglEnableVertexAttribArrayARB(2);
 			ELglVertexAttribPointerARB(2, 3, GL_FLOAT, GL_FALSE, sizeof(ActorVertex),
-				reinterpret_cast<void*>(3 * sizeof(float) + 4 * sizeof(Uint8)));
+				reinterpret_cast<void*>(3 * sizeof(float) + 4 * sizeof(uint8_t)));
 		}
 		else
 		{
 			ELglDisableVertexAttribArrayARB(2);
 		}
 		ELglVertexAttribPointerARB(3, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(ActorVertex),
-			reinterpret_cast<void*>(6 * sizeof(float) + 4 * sizeof(Uint8)));
+			reinterpret_cast<void*>(6 * sizeof(float) + 4 * sizeof(uint8_t)));
 		if (use_textures)
 		{
 			ELglEnableVertexAttribArrayARB(8);
 			ELglVertexAttribPointerARB(8, 2, GL_FLOAT, GL_FALSE, sizeof(ActorVertex),
-				reinterpret_cast<void*>(6 * sizeof(float) + 8 * sizeof(Uint8)));
+				reinterpret_cast<void*>(6 * sizeof(float) + 8 * sizeof(uint8_t)));
 		}
 		else
 		{
@@ -474,12 +474,12 @@ extern "C" void cal_render_actor_shader(actor *act, Uint32 use_lightning, Uint32
 	}
 }
 
-static inline void calculate_face_and_vertex_count(CalCoreModel* core_model, Uint32 &face_count,
-	Uint32 &vertex_count)
+static inline void calculate_face_and_vertex_count(CalCoreModel* core_model, uint32_t &face_count,
+	uint32_t &vertex_count)
 {
 	CalCoreMesh *core_mesh;
-	Sint32 i, j;
-	Sint32 count;
+	int32_t i, j;
+	int32_t count;
 
 	face_count = 0;
 	vertex_count = 0;
@@ -497,9 +497,9 @@ static inline void calculate_face_and_vertex_count(CalCoreModel* core_model, Uin
 	}
 }
 
-static inline void convert_indices(Uint32* data, const CalIndex* indices, const Uint32 count)
+static inline void convert_indices(uint32_t* data, const CalIndex* indices, const uint32_t count)
 {
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < count * 3; i++)
 	{ 
@@ -507,9 +507,9 @@ static inline void convert_indices(Uint32* data, const CalIndex* indices, const 
 	}
 }
 
-static inline void pack_indices(Uint16* data, const Uint32* indices, const Uint32 count)
+static inline void pack_indices(uint16_t* data, const uint32_t* indices, const uint32_t count)
 {
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < count * 3; i++)
 	{ 
@@ -526,13 +526,13 @@ extern "C" void build_buffers(actor_types* a)
 	float* texture_coordinate_buffer;
 	CalIndex* indices;
 	ActorVertex* buffer;
-	Uint32* data32;
-	Uint32 face_count, vertex_count, max_index;
-	Sint32 i, j;
-	Uint32 offset, count;
+	uint32_t* data32;
+	uint32_t face_count, vertex_count, max_index;
+	int32_t i, j;
+	uint32_t offset, count;
 #ifdef	USE_ACTORS_OPTIMIZER
 	MD5_DIGEST digest;
-	Uint32 size, tmp;
+	uint32_t size, tmp;
 	bool loaded;
 #endif	/* USE_ACTORS_OPTIMIZER */
 
@@ -578,7 +578,7 @@ extern "C" void build_buffers(actor_types* a)
 		}
 		for (j = 0; j < 4; j++)
 		{
-			buffer[i].m_weight[j] = (Uint8)(weight_buffer[i * 4 + j] * 255.0f + 0.5f);
+			buffer[i].m_weight[j] = (uint8_t)(weight_buffer[i * 4 + j] * 255.0f + 0.5f);
 /*			if (weight_buffer[i * 4 + j] > 0.0f)
 			{
 				buffer[i].m_bone_count = j + 1;
@@ -590,7 +590,7 @@ extern "C" void build_buffers(actor_types* a)
 		}
 		for (j = 0; j < 4; j++)
 		{
-			buffer[i].m_index[j] = (Uint8)(matrix_index_buffer[i * 4 + j]);
+			buffer[i].m_index[j] = (uint8_t)(matrix_index_buffer[i * 4 + j]);
 		}
 		for (j = 0; j < 2; j++)
 		{
@@ -620,23 +620,23 @@ extern "C" void build_buffers(actor_types* a)
 			indices[j * 3 + 0 + offset] += count;
 			indices[j * 3 + 1 + offset] += count;
 			indices[j * 3 + 2 + offset] += count;
-			max_index = std::max(max_index, static_cast<Uint32>(indices[j * 3 + 0 + offset]));
-			max_index = std::max(max_index, static_cast<Uint32>(indices[j * 3 + 1 + offset]));
-			max_index = std::max(max_index, static_cast<Uint32>(indices[j * 3 + 2 + offset]));
+			max_index = std::max(max_index, static_cast<uint32_t>(indices[j * 3 + 0 + offset]));
+			max_index = std::max(max_index, static_cast<uint32_t>(indices[j * 3 + 1 + offset]));
+			max_index = std::max(max_index, static_cast<uint32_t>(indices[j * 3 + 2 + offset]));
 		}
 	}
 
 	ELglGenBuffersARB(1, &a->index_buffer);
 	ELglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, a->index_buffer);
 
-	data32 = new Uint32[a->hardware_model->getTotalFaceCount() * 3];
+	data32 = new uint32_t[a->hardware_model->getTotalFaceCount() * 3];
 
 	convert_indices(data32, indices, a->hardware_model->getTotalFaceCount());
 
 #ifdef	USE_ACTORS_OPTIMIZER
 	loaded = false;
 
-	size = a->hardware_model->getTotalFaceCount() * 3 * sizeof(Uint32);
+	size = a->hardware_model->getTotalFaceCount() * 3 * sizeof(uint32_t);
 
 	{
 		MD5 md5;
@@ -657,11 +657,11 @@ extern "C" void build_buffers(actor_types* a)
 		if (eternal_lands::el_file::file_exists(file_name.str(), get_path_config_base()))
 		{
 			eternal_lands::el_file file(file_name.str(), true, get_path_config_base());
-			if (static_cast<Uint32>(file.get_size()) != (size + sizeof(MD5_DIGEST) + sizeof(Uint32) * 2))
+			if (static_cast<uint32_t>(file.get_size()) != (size + sizeof(MD5_DIGEST) + sizeof(uint32_t) * 2))
 			{
 				EXTENDED_EXCEPTION(ExtendedException::ec_io_error, "File '" <<
 					file_name.str() << "' has wrong size. Size " << (size +
-					sizeof(MD5_DIGEST) + sizeof(Uint32) * 2) << " expected, "
+					sizeof(MD5_DIGEST) + sizeof(uint32_t) * 2) << " expected, "
 					<< "but found size " << file.get_size());
 			}
 			if (memcmp(digest, file.get_pointer(), sizeof(MD5_DIGEST)) != 0)
@@ -670,13 +670,13 @@ extern "C" void build_buffers(actor_types* a)
 					file_name.str() << "' has wrong md5 for data.");
 			}
 			file.seek(sizeof(MD5_DIGEST), SEEK_SET);
-			file.read(sizeof(Uint32), &tmp);
+			file.read(sizeof(uint32_t), &tmp);
 			if (tmp != size)
 			{
 				EXTENDED_EXCEPTION(ExtendedException::ec_io_error, "File '" <<
 					file_name.str() << "' is for wrong number of indices.");
 			}
-			file.read(sizeof(Uint32), &tmp);
+			file.read(sizeof(uint32_t), &tmp);
 			if (tmp != max_bones_per_mesh)
 			{
 				EXTENDED_EXCEPTION(ExtendedException::ec_io_error, "File '" <<
@@ -712,8 +712,8 @@ extern "C" void build_buffers(actor_types* a)
 		std::ofstream file(file_name.str().c_str());
 
 		file.write(reinterpret_cast<char*>(digest), sizeof(MD5_DIGEST));
-		file.write(reinterpret_cast<char*>(&size), sizeof(Uint32));
-		file.write(reinterpret_cast<char*>(&max_bones_per_mesh), sizeof(Uint32));
+		file.write(reinterpret_cast<char*>(&size), sizeof(uint32_t));
+		file.write(reinterpret_cast<char*>(&max_bones_per_mesh), sizeof(uint32_t));
 
 		file.write(reinterpret_cast<char*>(data32), size);
 
@@ -721,11 +721,11 @@ extern "C" void build_buffers(actor_types* a)
 	}
 #endif	/* USE_ACTORS_OPTIMIZER */
 
-	if (max_index <= std::numeric_limits<Uint16>::max())
+	if (max_index <= std::numeric_limits<uint16_t>::max())
 	{
-		Uint16* data16;
+		uint16_t* data16;
 
-		data16 = new Uint16[a->hardware_model->getTotalFaceCount() * 3];
+		data16 = new uint16_t[a->hardware_model->getTotalFaceCount() * 3];
 
 		pack_indices(data16, data32, a->hardware_model->getTotalFaceCount());
 		a->index_type = GL_UNSIGNED_SHORT;
@@ -765,10 +765,10 @@ extern "C" void clear_buffers(actor_types* a)
 	delete a->hardware_model;
 }
 
-static inline void set_transformation_buffer(actor_types *a, actor *act, const Uint32 index,
+static inline void set_transformation_buffer(actor_types *a, actor *act, const uint32_t index,
 	HardwareMeshData &hmd)
 {
-	Sint32 i, count;
+	int32_t i, count;
 	const std::vector<CalBone *>& vectorBone = act->calmodel->getSkeleton()->getVectorBone();
 
 	a->hardware_model->selectHardwareMesh(index);
@@ -816,7 +816,7 @@ extern "C" void set_transformation_buffers(actor* act)
 extern "C" void build_actor_bounding_box(actor* a)
 {
 	CalSkeleton* cs;
-	Uint32 i;
+	uint32_t i;
 	float t;
 
 	if (a->calmodel)
@@ -881,7 +881,7 @@ extern "C" void model_attach_mesh(actor *act, int mesh_id)
 		{
 			if (a->hardware_model->getVectorHardwareMesh()[i].meshId == mesh_id)
 			{
-				std::pair<Sint32, HardwareMeshData> p = std::pair<Sint32,
+				std::pair<int32_t, HardwareMeshData> p = std::pair<int32_t,
 					HardwareMeshData>(i, HardwareMeshData(mesh_id,
 					max_bones_per_mesh * 3));
 				im->insert(p);

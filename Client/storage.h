@@ -25,7 +25,7 @@ extern int storage_win_x;
 extern int storage_win_y;
 extern int view_only_storage;
 extern int sort_storage_categories;
-extern Uint32 drop_fail_time;
+extern uint32_t drop_fail_time;
 extern int disable_storage_filter;
 
 /*!
@@ -52,7 +52,7 @@ void get_storage_categories (const char * in_data, int len);
  *
  * \callgraph
  */
-void get_storage_items (const Uint8 * in_data, int len);
+void get_storage_items (const uint8_t * in_data, int len);
 
 /*!
  * \ingroup storage_window
@@ -65,7 +65,7 @@ void get_storage_items (const Uint8 * in_data, int len);
  *
  * \pre If \a len is >200 it will be adjusted to be equal to 200.
  */
-void get_storage_text (const Uint8 * in_data, int len);
+void get_storage_text (const uint8_t * in_data, int len);
 
 /*!
  * \ingroup storage_window
@@ -97,7 +97,7 @@ void display_storage_menu();
  * 
  * \callgraph
  */
-void pickup_storage_item(int image_id, Uint16 item_id, int cat_id);
+void pickup_storage_item(int image_id, uint16_t item_id, int cat_id);
 
 #ifdef __cplusplus
 } // extern "C"

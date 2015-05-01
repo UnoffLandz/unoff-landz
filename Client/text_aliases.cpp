@@ -25,8 +25,8 @@
 static char *numeric_aliases[100]; /* Stores the alias buffer */
 static int numeric_alias_sizes[100]; /* Stores the alias buffer size */
 
-static void escape_octal_putstring (const unsigned char *text, int len, FILE * fp);
-static int generic_numeric_process (char *text, int len, int (*callback) (int index, char *text, int len));
+static void escape_octal_putstring (const uint8_t *text, int len, FILE * fp);
+static int generic_numeric_process (const char *text, int len, int (*callback) (int index, const char *text, int len));
 
 /**
  \brief Save current aliases to a file
@@ -47,7 +47,7 @@ static int save_aliases (void)
 		if (NULL != numeric_aliases[i])
 		{
 			fprintf (fp, "%d ", i);
-			escape_octal_putstring ((unsigned char *) numeric_aliases[i],
+            escape_octal_putstring ((uint8_t *) numeric_aliases[i],
 									numeric_alias_sizes[i], fp);
 			fputs ("\n", fp);
 		}
@@ -56,7 +56,7 @@ static int save_aliases (void)
 	return fclose (fp);
 }
 
-static int internal_bind_alias (int index, char *text, int len)
+static int internal_bind_alias (int index, const char *text, int len)
 {
 	int seen = 0;
     char buf[128];
@@ -72,14 +72,14 @@ static int internal_bind_alias (int index, char *text, int len)
 		free (numeric_aliases[index]);
 		seen = 1;
 	}
-	numeric_aliases[index] = malloc (len);
+    numeric_aliases[index] = (char *)malloc (len);
 	memcpy (numeric_aliases[index], text, len);
 	numeric_alias_sizes[index] = len;
 	save_aliases ();
 	return seen;
 }
 
-int bind_alias (int index, char *text, int len)
+int bind_alias (int index, const char *text, int len)
 {
 	char buf[512];
 
@@ -93,7 +93,7 @@ int bind_alias (int index, char *text, int len)
 	return 0;
 }
 
-int unbind_alias (int index, char *text, int len)
+int unbind_alias (int index, const char */*text*/, int /*len*/)
 {
 	char buf[128];
 
@@ -109,7 +109,7 @@ int unbind_alias (int index, char *text, int len)
 }
 
 
-static void escape_octal_putstring (const unsigned char *text, int len, FILE * fp)
+static void escape_octal_putstring (const uint8_t *text, int len, FILE * fp)
 {
 	while (len)
 	{
@@ -134,7 +134,7 @@ static void escape_octal_putstring (const unsigned char *text, int len, FILE * f
 	}
 }
 
-static char *unescape_octal_string (const unsigned char *text, int len, int *newlen)
+static char *unescape_octal_string (const uint8_t *text, int len, int *newlen)
 {
 	char *retval;
 	char octal_value[4];
@@ -150,7 +150,7 @@ static char *unescape_octal_string (const unsigned char *text, int len, int *new
 
 	state = CHAR_NORMAL;
 
-	retval = malloc (len);
+    retval = (char *)malloc (len);
 	*newlen = 0;
 
 	if (NULL == retval)
@@ -208,7 +208,7 @@ static char *unescape_octal_string (const unsigned char *text, int len, int *new
 	return retval;
 }
 
-static dbuffer_t *expand_alias_parameters( char *parameters, const char *aliastext, int alias_size )
+static dbuffer_t *expand_alias_parameters( const char *parameters, const char *aliastext, int alias_size )
 {
 	dbuffer_t *return_text;
 
@@ -216,7 +216,7 @@ static dbuffer_t *expand_alias_parameters( char *parameters, const char *aliaste
 	int argc = 0;
     int param_index;
 	char **argv = NULL;
-    unsigned char nullchar = '\0';
+    uint8_t nullchar = '\0';
 	enum {
 		PARAM_NORMAL_CHAR,
 		PARAM_INDEX
@@ -245,12 +245,12 @@ static dbuffer_t *expand_alias_parameters( char *parameters, const char *aliaste
 				state = PARAM_INDEX;
 				break;
 			}
-            return_text = dbuffer_append_data(return_text, (unsigned char*)cptr, 1);
+            return_text = dbuffer_append_data(return_text, (uint8_t*)cptr, 1);
 			break;
 		case PARAM_INDEX:
 			if (isdigit(*cptr)) {
 				/* Ok, try to expand this */
-				param_index = ((unsigned char)(*cptr)) - '0';
+                param_index = ((uint8_t)(*cptr)) - '0';
 
 				LOG_DEBUG("Index for expansion is %d, params %s", param_index, parameters);
 
@@ -279,13 +279,13 @@ static dbuffer_t *expand_alias_parameters( char *parameters, const char *aliaste
 
 				// Nice, try to append the argument.
 
-				return_text = dbuffer_append_data(return_text, (unsigned char*)argv[param_index], strlen(argv[param_index]));
+                return_text = dbuffer_append_data(return_text, (uint8_t*)argv[param_index], strlen(argv[param_index]));
 
                 state = PARAM_NORMAL_CHAR;
                 break;
 			}
 			if (*cptr == '$') {
-				return_text = dbuffer_append_data(return_text, (unsigned char*)cptr, 1);
+                return_text = dbuffer_append_data(return_text, (uint8_t*)cptr, 1);
 				state = PARAM_NORMAL_CHAR;
                 break;
 			}
@@ -320,11 +320,11 @@ static dbuffer_t *expand_alias_parameters( char *parameters, const char *aliaste
 	return return_text;
 }
 
-static int read_alias_line (int index, char *text, int len)
+static int read_alias_line (int index, const char *text, int len)
 {
 	int newlen;
 	char *realline =
-		unescape_octal_string ((unsigned char *) text, len, &newlen);
+        unescape_octal_string ((uint8_t *) text, len, &newlen);
 	if (NULL != realline)
 	{
 		numeric_aliases[index] = realline;
@@ -396,7 +396,7 @@ void shutdown_text_aliases (void)
 			free (numeric_aliases[i]);
 }
 
-static int handle_text_alias (int index, char *text, int len)
+static int handle_text_alias (int index, const char *text, int len)
 {
 	char msg[80];
 	dbuffer_t *newmsg;
@@ -445,7 +445,7 @@ int process_text_alias (char *text, int len)
 	return generic_numeric_process (text, len, handle_text_alias);
 }
 
-static int generic_numeric_process (char *text, int len, int (*callback) (int index, char *text, int len))
+static int generic_numeric_process (const char *text, int len, int (*callback) (int index, const char *text, int len))
 {
 	char num_to_process[3];
 	char *endp;
@@ -503,7 +503,7 @@ static int generic_numeric_process (char *text, int len, int (*callback) (int in
 	return -1;
 }
 
-int alias_command (char *text, int len)
+int alias_command (const char *text, int len)
 {
 	if (*text != ' ')
 	{
@@ -519,7 +519,7 @@ int alias_command (char *text, int len)
 	return 1;			/* Don't pass to server */
 }
 
-int unalias_command ( char *text, int len)
+int unalias_command (const char *text, int len)
 {
 	while (len > 0 && *text == ' ') {
 		text++;
@@ -530,7 +530,7 @@ int unalias_command ( char *text, int len)
 	return 1;			/* Don't pass to server */
 }
 
-int aliases_command ( char *text, int len)
+int aliases_command (const char */*text*/, int /*len*/)
 {
 	int i;
 	char alias_temp[128+6]; /* 128 chars of alias + at most '#100 ' */

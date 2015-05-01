@@ -22,18 +22,18 @@ typedef enum
 struct el_file_t
 {
 #ifdef FASTER_STARTUP
-	unsigned char* buffer;
-	unsigned char* current;
-	unsigned char *end;
+	uint8_t* buffer;
+	uint8_t* current;
+	uint8_t *end;
 #else
 	Sint64 size;
 	Sint64 position;
 	void* buffer;
 #endif
 	char* file_name;
-	Uint32 crc32;
+    uint32_t crc32;
 #ifdef FASTER_MAP_LOAD
-	el_file_flags_t flags;
+    uint32_t flags;
 #endif
 };
 
@@ -41,7 +41,7 @@ typedef struct
 {
 	unz64_file_pos position;
 	char* file_name;
-	Uint32 hash;
+    uint32_t hash;
 } el_zip_file_entry_t;
 
 typedef struct
@@ -50,7 +50,7 @@ typedef struct
 	unzFile file;
 	SDL_mutex* mutex;
 	el_zip_file_entry_t* files;
-	Uint32 count;
+    uint32_t count;
 } el_zip_file_t;
 
 static void free_el_file(el_file_t* file)
@@ -86,13 +86,13 @@ int compare_el_zip_file_entry(const void* a, const void* b)
 
 #define MAX_NUM_ZIP_FILES 128
 
-Uint32 num_zip_files = 0;
+uint32_t num_zip_files = 0;
 el_zip_file_t zip_files[MAX_NUM_ZIP_FILES];
 SDL_mutex* zip_mutex;
 
 static void clear_zip(el_zip_file_t* zip)
 {
-	Uint32 i;
+    uint32_t i;
 
 	if (zip == 0)
 	{
@@ -133,7 +133,7 @@ static void clear_zip(el_zip_file_t* zip)
 	CHECK_AND_UNLOCK_MUTEX(zip->mutex);
 }
 
-static Uint32 find_in_zip(el_zip_file_t* zip, const el_zip_file_entry_t* key)
+static uint32_t find_in_zip(el_zip_file_t* zip, const el_zip_file_entry_t* key)
 {
 	if ((zip == 0) || (key == 0))
 	{
@@ -161,7 +161,7 @@ static Uint32 find_in_zip(el_zip_file_t* zip, const el_zip_file_entry_t* key)
 	}
 }
 
-static Uint32 locate_in_zip(el_zip_file_t* zip, const el_zip_file_entry_t* key)
+static uint32_t locate_in_zip(el_zip_file_t* zip, const el_zip_file_entry_t* key)
 {
 	el_zip_file_entry_t* file;
 
@@ -193,10 +193,10 @@ static Uint32 locate_in_zip(el_zip_file_t* zip, const el_zip_file_entry_t* key)
 }
 
 static void init_key(const char* file_name, el_zip_file_entry_t* key,
-	const Uint32 size, char* buffer)
+    const uint32_t size, char* buffer)
 {
-	char* ptr;
-	Uint32 src_idx, dst_idx, len, count;
+    const char* ptr;
+    uint32_t src_idx, dst_idx, len, count;
 
 	if ((key == 0) || (file_name == 0))
 	{
@@ -243,7 +243,7 @@ static void init_key(const char* file_name, el_zip_file_entry_t* key,
 
 void clear_zip_archives()
 {
-	Uint32 i;
+    uint32_t i;
 
 	ENTER_DEBUG_MARK("unload zips");
 
@@ -267,7 +267,7 @@ void clear_zip_archives()
 
 void init_zip_archives()
 {
-	Uint32 i;
+    uint32_t i;
 
 	zip_mutex = SDL_CreateMutex();
 
@@ -286,7 +286,7 @@ void load_zip_archive(const char* file_name)
 	unz_global_info64 global_info;
 	el_zip_file_entry_t* files;
 	char* name;
-	Uint32 i, count, size, index;
+    uint32_t i, count, size, index;
 
 	if (file_name == 0)
 	{
@@ -328,7 +328,7 @@ void load_zip_archive(const char* file_name)
 
 	LOG_DEBUG("Loading zip file '%s' with %d files", file_name, count);
 
-	files = malloc(count * sizeof(el_zip_file_entry_t));
+    files = (el_zip_file_entry_t*)malloc(count * sizeof(el_zip_file_entry_t));
 
 	for (i = 0; i < count; i++)
 	{
@@ -338,7 +338,7 @@ void load_zip_archive(const char* file_name)
 
 		size = info.size_filename;
 
-		files[i].file_name = calloc(size + 1, 1);
+        files[i].file_name = (char *)calloc(size + 1, 1);
 
 		unzGetCurrentFileInfo64(file, 0, files[i].file_name, size,
 			0, 0, 0, 0);
@@ -352,7 +352,7 @@ void load_zip_archive(const char* file_name)
 	}
 
 	size = strlen(file_name);
-	name = calloc(size + 1, 1);
+    name = (char *)calloc(size + 1, 1);
 	memcpy(name, file_name, size);
 
 	LOG_DEBUG("Sorting files from zip file '%s'.", file_name);
@@ -396,7 +396,7 @@ void load_zip_archive(const char* file_name)
 
 void unload_zip_archive(const char* file_name)
 {
-	Uint32 i, count;
+    uint32_t i, count;
 
 	if (file_name == 0)
 	{
@@ -443,11 +443,11 @@ void unload_zip_archive(const char* file_name)
 	LEAVE_DEBUG_MARK("unload zip");
 }
 
-static Uint32 do_file_exists(const char* file_name, const char* path,
-	const Uint32 size, char* buffer)
+static uint32_t do_file_exists(const char* file_name, const char* path,
+    const uint32_t size, char* buffer)
 {
 	struct stat fstat;
-	Uint32 found;
+    uint32_t found;
 
 	safe_strncpy2(buffer, path, size, strlen(path));
 	safe_strcat(buffer, file_name, size);
@@ -493,11 +493,11 @@ static Uint32 do_file_exists(const char* file_name, const char* path,
 	return 0;
 }
 
-static Uint32 file_exists_path(const char* file_name, const char* extra_path)
+static uint32_t file_exists_path(const char* file_name, const char* extra_path)
 {
 	char str[1024];
 	el_zip_file_entry_t key;
-	Sint32 i, count;
+	int32_t i, count;
 
 	if (file_name == 0)
 	{
@@ -551,8 +551,8 @@ static el_file_ptr xz_file_open(const char* file_name)
 {
 	el_file_ptr result;
 	FILE* file;
-	Uint64 size;
-	Uint32 file_name_len, error;
+	uint64_t size;
+    uint32_t file_name_len, error;
 
 	file = fopen(file_name, "rb");
 
@@ -563,7 +563,7 @@ static el_file_ptr xz_file_open(const char* file_name)
 		return 0;
 	}
 
-	result = calloc(1, sizeof(el_file_t));
+    result = (el_file_t*)calloc(1, sizeof(el_file_t));
 
 	error = xz_file_read(file, (void**)&(result->buffer), &size);
 #ifdef FASTER_STARTUP
@@ -578,7 +578,7 @@ static el_file_ptr xz_file_open(const char* file_name)
 	if (error == 0)
 	{
 		file_name_len = strlen(file_name) + 1;
-		result->file_name = malloc(file_name_len);
+        result->file_name = (char *)malloc(file_name_len);
 		safe_strncpy(result->file_name, file_name, file_name_len);
 
 #ifdef FASTER_MAP_LOAD
@@ -613,7 +613,7 @@ static el_file_ptr gz_file_open(const char* file_name)
 		return NULL;
 	}
 
-	result = calloc(1, sizeof(el_file_t));
+    result = (el_file_t*)calloc(1, sizeof(el_file_t));
 	result->file_name = strdup(file_name);
 
 	size = 0;
@@ -623,13 +623,13 @@ static el_file_ptr gz_file_open(const char* file_name)
 
 	do
 	{
-		result->buffer = realloc(result->buffer, size + 0x40000);
+        result->buffer = (uint8_t *)realloc(result->buffer, size + 0x40000);
 		read = gzread(file, result->buffer + size, 0x40000);
 		size += read;
 	}
 	while (gzeof(file) == 0);
 
-	result->buffer = realloc(result->buffer, size);
+    result->buffer = (uint8_t *)realloc(result->buffer, size);
 #ifdef FASTER_STARTUP
 	result->current = result->buffer;
 	result->end = result->buffer + size;
@@ -671,7 +671,7 @@ static el_file_ptr zip_file_open(unzFile file)
 {
 	unz_file_info64 file_info;
 	el_file_ptr result;
-	Uint32 size, crc;
+    uint32_t size, crc;
 
 	if (unzOpenCurrentFile(file) != UNZ_OK)
 	{
@@ -684,10 +684,10 @@ static el_file_ptr zip_file_open(unzFile file)
 		return NULL;
 	}
 
-	result = calloc(1, sizeof(el_file_t));
+    result = (el_file_t*)calloc(1, sizeof(el_file_t));
 
 	size = file_info.size_filename;
-	result->file_name = calloc(size + 1, 1);
+    result->file_name = (char *)calloc(size + 1, 1);
 
 #ifndef FASTER_STARTUP
 	result->size = file_info.uncompressed_size;
@@ -696,7 +696,7 @@ static el_file_ptr zip_file_open(unzFile file)
 #ifdef FASTER_MAP_LOAD
 	result->flags |= EL_FILE_HAVE_CRC;
 #endif
-	result->buffer = malloc(file_info.uncompressed_size);
+    result->buffer = (uint8_t *)malloc(file_info.uncompressed_size);
 #ifdef FASTER_STARTUP
 	result->current = result->buffer;
 	result->end = result->buffer + file_info.uncompressed_size;
@@ -746,7 +746,7 @@ static el_file_ptr file_open(const char* file_name, const char* extra_path)
 	char str[1024];
 	el_zip_file_entry_t key;
 	el_file_ptr result;
-	Sint32 i, count;
+	int32_t i, count;
 
 	if (!file_name || !*file_name)
 		return NULL;
@@ -910,7 +910,7 @@ int el_read_int(el_file_ptr file, int *i)
 #ifdef FASTER_STARTUP
 Sint64 el_seek(el_file_ptr file, Sint64 offset, int seek_type)
 {
-	unsigned char* cur;
+	uint8_t* cur;
 
 	if (!file)
 		return -1;
@@ -1045,7 +1045,7 @@ const char* el_file_name(el_file_ptr file)
 	return file ? file->file_name : NULL;
 }
 
-Uint32 el_crc32(el_file_ptr file)
+uint32_t el_crc32(el_file_ptr file)
 {
 	if (!file)
 		return 0;
@@ -1108,7 +1108,7 @@ char *el_fgets(char *str, int size, el_file_ptr file)
 	*dp = '\0';
 
 #ifdef FASTER_STARTUP
-	file->current = (unsigned char*)sp;
+	file->current = (uint8_t*)sp;
 #else
 	file->position = sp - (const char*)file->buffer;
 #endif

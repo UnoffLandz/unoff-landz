@@ -19,7 +19,7 @@ namespace ec
 		public:
 			CandleEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 				const color_t _hue_adjust, const color_t _saturation_adjust,
-				const float scale, const Uint16 _LOD);
+				const float scale, const uint16_t _LOD);
 			~CandleEffect();
 
 			virtual EffectEnum get_type()
@@ -27,7 +27,7 @@ namespace ec
 				return EC_CANDLE;
 			}
 			;
-			bool idle(const Uint64 usec);
+			bool idle(const uint64_t usec);
 
 			GradientMover* mover;
 			ParticleSpawner* spawner;
@@ -43,19 +43,19 @@ namespace ec
 			CandleParticle(Effect* _effect, ParticleMover* _mover,
 				const Vec3 _pos, const Vec3 _velocity,
 				const color_t hue_adjust, const color_t saturation_adjust,
-				const float _scale, const Uint16 _LOD);
+				const float _scale, const uint16_t _LOD);
 			~CandleParticle()
 			{
 			}
 			;
 
-			virtual bool idle(const Uint64 delta_t);
+			virtual bool idle(const uint64_t delta_t);
 #ifdef	NEW_TEXTURES
-			virtual Uint32 get_texture();
+			virtual uint32_t get_texture();
 			virtual float get_burn() const;
 #else	/* NEW_TEXTURES */
-			virtual GLuint get_texture(const Uint16 res_index);
-			virtual void draw(const Uint64 usec);
+			virtual GLuint get_texture(const uint16_t res_index);
+			virtual void draw(const uint64_t usec);
 #endif	/* NEW_TEXTURES */
 			virtual light_t estimate_light_level() const
 			{
@@ -68,7 +68,7 @@ namespace ec
 			}
 			; // Same.
 
-			Uint16 LOD;
+			uint16_t LOD;
 	};
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -37,23 +37,23 @@
 
 actor_texture_cache_t* actor_texture_handles = NULL;
 SDL_Thread* actor_texture_threads[ACTOR_TEXTURE_THREAD_COUNT];
-Uint32 max_actor_texture_handles = 32;
+uint32_t max_actor_texture_handles = 32;
 queue_t* actor_texture_queue = NULL;
-Uint32 actor_texture_threads_done = 0;
+uint32_t actor_texture_threads_done = 0;
 #endif	/* ELC */
 
 #define TEXTURE_CACHE_MAX 8192
 
 static texture_cache_t* texture_handles = NULL;
 static cache_struct* texture_cache = NULL;
-static Uint32 texture_handles_used = 0;
+static uint32_t texture_handles_used = 0;
 #ifdef FASTER_MAP_LOAD
-static Uint32 texture_cache_sorted[TEXTURE_CACHE_MAX];
+static uint32_t texture_cache_sorted[TEXTURE_CACHE_MAX];
 #endif
 
-Uint32 compact_texture(texture_cache_t* texture)
+uint32_t compact_texture(texture_cache_t* texture)
 {
-	Uint32 size;
+    uint32_t size;
 
 	if (texture == 0)
 	{
@@ -84,14 +84,14 @@ void bind_texture_id(const GLuint id)
 	}
 }
 
-static GLuint build_texture(image_t* image, const Uint32 wrap_mode_repeat,
-	const GLenum min_filter, const Uint32 af,
+static GLuint build_texture(image_t* image, const uint32_t wrap_mode_repeat,
+	const GLenum min_filter, const uint32_t af,
 	const texture_format_type format)
 {
 	void* ptr;
 	GLuint id;
 	GLenum src_format, type, internal_format;
-	Uint32 compressed, compression, width, height, i;
+	uint32_t compressed, compression, width, height, i;
 
 	compressed = 0;
 	compression = 0;
@@ -381,14 +381,14 @@ static GLuint build_texture(image_t* image, const Uint32 wrap_mode_repeat,
 #ifdef FASTER_MAP_LOAD
 typedef struct
 {
-	Uint32 hash;
+	uint32_t hash;
 	char file_name[128];
 } cache_identifier_t;
 
 int cache_cmp_identifier(const void *idfp, const void *idxp)
 {
-	const cache_identifier_t *idf = idfp;
-	Uint32 idx = *((const Uint32*)idxp);
+    const cache_identifier_t *idf = (const cache_identifier_t *)idfp;
+	uint32_t idx = *((const uint32_t*)idxp);
 	if (idf->hash < texture_handles[idx].hash)
 		return -1;
 	if (idf->hash > texture_handles[idx].hash)
@@ -396,24 +396,24 @@ int cache_cmp_identifier(const void *idfp, const void *idxp)
 	return strcasecmp(idf->file_name, texture_handles[idx].file_name);
 }
 
-Uint32 load_texture_cached(const char* file_name, const texture_type type)
+uint32_t load_texture_cached(const char* file_name, const texture_type type)
 {
 	cache_identifier_t idf;
-	Uint32 i, len;
-	Uint32 *idxp, idx;
+	uint32_t i, len;
+	uint32_t *idxp, idx;
 
 	len = get_file_name_len(file_name);
 	idf.hash = mem_hash(file_name, len);
 	safe_strncpy2(idf.file_name, file_name, sizeof(idf.file_name), len);
 
-	idxp = bsearch(&idf, texture_cache_sorted, texture_handles_used,
-		sizeof(Uint32), cache_cmp_identifier);
+    idxp = (uint32_t *)bsearch(&idf, texture_cache_sorted, texture_handles_used,
+		sizeof(uint32_t), cache_cmp_identifier);
 	if (idxp)
 		return *idxp;
 
 	if (texture_handles_used < TEXTURE_CACHE_MAX)
 	{
-		Uint32 slot = texture_handles_used;
+		uint32_t slot = texture_handles_used;
 		for (i = 0; i < texture_handles_used; i++)
 		{
 			idx = texture_cache_sorted[i];
@@ -422,7 +422,7 @@ Uint32 load_texture_cached(const char* file_name, const texture_type type)
 					&& strcasecmp(idf.file_name, texture_handles[idx].file_name) <= 0))
 			{
 				memmove(texture_cache_sorted+(i+1), texture_cache_sorted+i,
-					(texture_handles_used-i)*sizeof(Uint32));
+					(texture_handles_used-i)*sizeof(uint32_t));
 				break;
 			}
 		}
@@ -449,10 +449,10 @@ Uint32 load_texture_cached(const char* file_name, const texture_type type)
 	}
 }
 #else  // FASTER_MAP_LOAD
-Uint32 load_texture_cached(const char* file_name, const texture_type type)
+uint32_t load_texture_cached(const char* file_name, const texture_type type)
 {
 	char buffer[128];
-	Uint32 i, handle, len, hash;
+	uint32_t i, handle, len, hash;
 
 	handle = texture_handles_used;
 
@@ -511,9 +511,9 @@ Uint32 load_texture_cached(const char* file_name, const texture_type type)
 }
 #endif // FASTER_MAP_LOAD
 
-static Uint32 get_supported_compression_formats()
+static uint32_t get_supported_compression_formats()
 {
-	Uint32 result;
+	uint32_t result;
 
 	result = 0;
 
@@ -540,11 +540,11 @@ static Uint32 get_supported_compression_formats()
 	return result;
 }
 
-static Uint32 load_texture(texture_cache_t* texture_handle)
+static uint32_t load_texture(texture_cache_t* texture_handle)
 {
 	image_t image;
 	GLuint id;
-	Uint32 strip_mipmaps, base_level, wrap_mode_repeat, af, i, compression;
+	uint32_t strip_mipmaps, base_level, wrap_mode_repeat, af, i, compression;
 	GLenum min_filter;
 	texture_format_type format;
 
@@ -622,7 +622,7 @@ static Uint32 load_texture(texture_cache_t* texture_handle)
 	return 1;
 }
 
-static Uint32 load_texture_handle(const Uint32 handle)
+static uint32_t load_texture_handle(const uint32_t handle)
 {
 	if (handle >= texture_handles_used)
 	{
@@ -654,7 +654,7 @@ static Uint32 load_texture_handle(const Uint32 handle)
 	return 0;
 }
 
-static GLuint get_texture_id(const Uint32 handle)
+static GLuint get_texture_id(const uint32_t handle)
 {
 	if (handle >= texture_handles_used)
 	{
@@ -677,7 +677,7 @@ static GLuint get_texture_id(const Uint32 handle)
 	return texture_handles[handle].id;
 }
 
-Uint32 get_texture_alpha(const Uint32 handle)
+uint32_t get_texture_alpha(const uint32_t handle)
 {
 	if (handle >= texture_handles_used)
 	{
@@ -695,7 +695,7 @@ Uint32 get_texture_alpha(const Uint32 handle)
 	return texture_handles[handle].alpha;
 }
 
-void bind_texture(const Uint32 handle)
+void bind_texture(const uint32_t handle)
 {
 	if (handle >= texture_handles_used)
 	{
@@ -708,7 +708,7 @@ void bind_texture(const Uint32 handle)
 	bind_texture_id(get_texture_id(handle));
 }
 
-void bind_texture_unbuffered(const Uint32 handle)
+void bind_texture_unbuffered(const uint32_t handle)
 {
 	if (handle >= texture_handles_used)
 	{
@@ -766,13 +766,13 @@ void free_actor_texture_resources(actor_texture_cache_t* texture)
 	}
 }
 
-static Uint32 copy_to_coordinates(const image_t* source, const Uint32 x,
-	const Uint32 y, image_t* dest)
+static uint32_t copy_to_coordinates(const image_t* source, const uint32_t x,
+	const uint32_t y, image_t* dest)
 {
-	Uint32 source_height, source_width, source_offset;
-	Uint32 dest_width, dest_offset;
-	Uint32 i;
-	Uint8 *src, *dst;
+	uint32_t source_height, source_width, source_offset;
+	uint32_t dest_width, dest_offset;
+	uint32_t i;
+	uint8_t *src, *dst;
 
 	source_width = source->width;
 	source_height = source->height;
@@ -791,13 +791,13 @@ static Uint32 copy_to_coordinates(const image_t* source, const Uint32 x,
 	return source->alpha;
 }
 
-static Uint32 copy_to_coordinates_block(const image_t* source, const Uint32 x,
-	const Uint32 y, image_t* dest)
+static uint32_t copy_to_coordinates_block(const image_t* source, const uint32_t x,
+	const uint32_t y, image_t* dest)
 {
-	Uint32 source_height, source_width, source_offset;
-	Uint32 dest_height, dest_width, dest_offset, dest_start;
-	Uint32 i, j, dest_size, source_size;
-	Uint8 *src, *dst;
+	uint32_t source_height, source_width, source_offset;
+	uint32_t dest_height, dest_width, dest_offset, dest_start;
+	uint32_t i, j, dest_size, source_size;
+	uint8_t *src, *dst;
 
 	source_width = source->width;
 	source_height = source->height;
@@ -884,14 +884,14 @@ static Uint32 copy_to_coordinates_block(const image_t* source, const Uint32 x,
 	return source->alpha;
 }
 
-static Uint32 copy_to_coordinates_mask2(const image_t* source0,
+static uint32_t copy_to_coordinates_mask2(const image_t* source0,
 	const image_t* source1, const image_t* mask,
-	const Uint32 x, const Uint32 y, image_t* dest, Uint8* buffer)
+	const uint32_t x, const uint32_t y, image_t* dest, uint8_t* buffer)
 {
-	Uint32 source_height, source_width, source_offset;
-	Uint32 dest_width, dest_offset;
-	Uint32 i, size;
-	Uint8 *src0, *src1, *msk, *dst;
+	uint32_t source_height, source_width, source_offset;
+	uint32_t dest_width, dest_offset;
+	uint32_t i, size;
+	uint8_t *src0, *src1, *msk, *dst;
 
 	source_width = source0->width;
 	source_height = source0->height;
@@ -924,11 +924,11 @@ static Uint32 copy_to_coordinates_mask2(const image_t* source0,
 	}
 }
 
-Uint32 load_image_data_file_size(el_file_ptr file, const Uint32 compression,
-	const Uint32 unpack, const Uint32 width, const Uint32 height,
+uint32_t load_image_data_file_size(el_file_ptr file, const uint32_t compression,
+	const uint32_t unpack, const uint32_t width, const uint32_t height,
 	image_t* image)
 {
-	Uint32 sw, sh, s, size, base_level;
+	uint32_t sw, sh, s, size, base_level;
 
 	if (get_image_information(file, image) == 0)
 	{
@@ -980,12 +980,12 @@ Uint32 load_image_data_file_size(el_file_ptr file, const Uint32 compression,
 	return 1;
 }
 
-static Uint32 load_to_coordinates(el_file_ptr file, const Uint32 x,
-	const Uint32 y, const Uint32 width, const Uint32 height,
-	const Uint32 use_compressed_image, const Uint32 scale, image_t *dst)
+static uint32_t load_to_coordinates(el_file_ptr file, const uint32_t x,
+	const uint32_t y, const uint32_t width, const uint32_t height,
+	const uint32_t use_compressed_image, const uint32_t scale, image_t *dst)
 {
 	image_t image;
-	Uint32 tw, th, tx, ty, result;
+	uint32_t tw, th, tx, ty, result;
 
 	memset(&image, 0, sizeof(image));
 
@@ -1054,10 +1054,10 @@ static Uint32 load_to_coordinates(el_file_ptr file, const Uint32 x,
 	return result;
 }
 
-static void build_alpha_mask(const Uint8* source, const Uint32 size,
-	Uint8* dest)
+static void build_alpha_mask(const uint8_t* source, const uint32_t size,
+	uint8_t* dest)
 {
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < size; i++)
 	{
@@ -1065,14 +1065,14 @@ static void build_alpha_mask(const Uint8* source, const Uint32 size,
 	}
 }
 
-static Uint32 load_to_coordinates_mask2(el_file_ptr source0, el_file_ptr source1,
-	el_file_ptr mask, const Uint32 x, const Uint32 y, const Uint32 width,
-	const Uint32 height, const Uint32 use_compressed_image,
-	const Uint32 scale, image_t *dest, Uint8* buffer)
+static uint32_t load_to_coordinates_mask2(el_file_ptr source0, el_file_ptr source1,
+	el_file_ptr mask, const uint32_t x, const uint32_t y, const uint32_t width,
+	const uint32_t height, const uint32_t use_compressed_image,
+	const uint32_t scale, image_t *dest, uint8_t* buffer)
 {
 	image_t src0, src1, msk;
-	Uint8* tmp;
-	Uint32 tw, th, tx, ty, result;
+	uint8_t* tmp;
+	uint32_t tw, th, tx, ty, result;
 
 	memset(&src0, 0, sizeof(src0));
 	memset(&src1, 0, sizeof(src1));
@@ -1148,7 +1148,7 @@ static Uint32 load_to_coordinates_mask2(el_file_ptr source0, el_file_ptr source1
 			return 0;
 		}
 
-		tmp = malloc_aligned(msk.width * msk.height, 16);
+        tmp = (uint8_t *)malloc_aligned(msk.width * msk.height, 16);
 
 		build_alpha_mask(msk.image, msk.width * msk.height, tmp);
 
@@ -1173,12 +1173,12 @@ static Uint32 load_to_coordinates_mask2(el_file_ptr source0, el_file_ptr source1
 	return result;
 }
 
-static Uint32 open_for_coordinates_checks(const char* file_name,
-	el_file_ptr* file, const Uint32 width, const Uint32 height,
-	Uint16* sizes, image_t* image)
+static uint32_t open_for_coordinates_checks(const char* file_name,
+	el_file_ptr* file, const uint32_t width, const uint32_t height,
+    uint16_t* sizes, image_t* image)
 {
 	char buffer[128];
-	Uint32 i, mask, size, size_x, size_y;
+	uint32_t i, mask, size, size_x, size_y;
 
 	if (check_image_name(file_name, sizeof(buffer), buffer) == 0)
 	{
@@ -1236,8 +1236,8 @@ static Uint32 open_for_coordinates_checks(const char* file_name,
 	return 1;
 }
 
-static Uint32 open_for_coordinates(const char* file_name, el_file_ptr* file,
-	const Uint32 width, const Uint32 height, Uint16* sizes,
+static uint32_t open_for_coordinates(const char* file_name, el_file_ptr* file,
+    const uint32_t width, const uint32_t height, uint16_t* sizes,
 	image_format_type* format)
 {
 	image_t image;
@@ -1274,10 +1274,10 @@ static Uint32 open_for_coordinates(const char* file_name, el_file_ptr* file,
 	}
 }
 
-static Uint32 open_for_coordinates_mask2(const char* source0,
+static uint32_t open_for_coordinates_mask2(const char* source0,
 	const char* source1, const char* mask, el_file_ptr* src0,
-	el_file_ptr* src1, el_file_ptr* msk, const Uint32 width,
-	const Uint32 height, Uint16* sizes, image_format_type* format)
+	el_file_ptr* src1, el_file_ptr* msk, const uint32_t width,
+    const uint32_t height, uint16_t* sizes, image_format_type* format)
 {
 	image_t image;
 
@@ -1338,7 +1338,7 @@ static Uint32 open_for_coordinates_mask2(const char* source0,
 }
 
 static void load_enhanced_actor_threaded(const enhanced_actor_images_t* files,
-	image_t* image, Uint8* buffer)
+	image_t* image, uint8_t* buffer)
 {
 	el_file_ptr pants_tex;
 	el_file_ptr pants_mask;
@@ -1366,10 +1366,10 @@ static void load_enhanced_actor_threaded(const enhanced_actor_images_t* files,
 	el_file_ptr cape_tex;
 	el_file_ptr hands_tex_save;
 	image_format_type format;
-	Uint32 alpha, use_compressed_image, size;
-	Uint32 width, height, scale;
-	Sint32 i;
-	Uint16 sizes;
+	uint32_t alpha, use_compressed_image, size;
+	uint32_t width, height, scale;
+    int32_t i;
+    uint16_t sizes;
 
 	pants_tex = 0;
 	pants_mask = 0;
@@ -1547,7 +1547,7 @@ static void load_enhanced_actor_threaded(const enhanced_actor_images_t* files,
 	image->height = height;
 	image->mipmaps = 1;
 	image->format = format;
-	image->image = malloc_aligned(size, 16);
+    image->image = (uint8_t *)malloc_aligned(size, 16);
 	memset(image->image, 0xFF, size);
 
 	alpha = 0;
@@ -1637,11 +1637,11 @@ static void copy_enhanced_actor_file_name(char* dest, const char* source)
 	safe_strncpy2(dest, source, MAX_FILE_PATH, get_file_name_len(source));
 }
 
-Uint32 load_enhanced_actor(const enhanced_actor* actor, const char* name)
+uint32_t load_enhanced_actor(const enhanced_actor* actor, const char* name)
 {
 	enhanced_actor_images_t files;
 	char str[MAX_ACTOR_NAME];
-	Uint32 i, handle, hash, access_time;
+	uint32_t i, handle, hash, access_time;
 
 	memset(str, 0, sizeof(str));
 
@@ -1808,9 +1808,9 @@ Uint32 load_enhanced_actor(const enhanced_actor* actor, const char* name)
 	}
 }
 
-Uint32 bind_actor_texture(const Uint32 handle, char* alpha)
+uint32_t bind_actor_texture(const uint32_t handle, char* alpha)
 {
-	Uint32 af, result;
+	uint32_t af, result;
 	GLuint id;
 	GLenum min_filter;
 	texture_format_type format;
@@ -1916,7 +1916,7 @@ Uint32 bind_actor_texture(const Uint32 handle, char* alpha)
 	return result;
 }
 
-void free_actor_texture(const Uint32 handle)
+void free_actor_texture(const uint32_t handle)
 {
 	if (handle >= ACTOR_TEXTURE_CACHE_MAX)
 	{
@@ -1949,9 +1949,9 @@ void free_actor_texture(const Uint32 handle)
 	CHECK_AND_UNLOCK_MUTEX(actor_texture_handles[handle].mutex);
 }
 
-Uint32 get_actor_texture_ready(const Uint32 handle)
+uint32_t get_actor_texture_ready(const uint32_t handle)
 {
-	Uint32 result;
+	uint32_t result;
 
 	if (handle >= ACTOR_TEXTURE_CACHE_MAX)
 	{
@@ -1988,7 +1988,7 @@ Uint32 get_actor_texture_ready(const Uint32 handle)
 	return result;
 }
 
-void use_ready_actor_texture(const Uint32 handle)
+void use_ready_actor_texture(const uint32_t handle)
 {
 	if (handle >= ACTOR_TEXTURE_CACHE_MAX)
 	{
@@ -2046,10 +2046,10 @@ void use_ready_actor_texture(const Uint32 handle)
 	CHECK_AND_UNLOCK_MUTEX(actor_texture_handles[handle].mutex);
 }
 
-void change_enhanced_actor(const Uint32 handle, enhanced_actor* actor)
+void change_enhanced_actor(const uint32_t handle, enhanced_actor* actor)
 {
 	enhanced_actor_images_t files;
-	Uint32 hash;
+	uint32_t hash;
 
 	if (handle >= ACTOR_TEXTURE_CACHE_MAX)
 	{
@@ -2137,16 +2137,16 @@ int load_enhanced_actor_thread(void* done)
 	enhanced_actor_images_t files;
 	image_t image;
 	actor_texture_cache_t* actor;
-	Uint8* buffer;
-	Uint32 hash;
+	uint8_t* buffer;
+	uint32_t hash;
 
 	init_thread_log("load_actors");
 
-	buffer = malloc_aligned(TEXTURE_SIZE_X * TEXTURE_SIZE_Y * 4, 16);
+    buffer = (uint8_t *)malloc_aligned(TEXTURE_SIZE_X * TEXTURE_SIZE_Y * 4, 16);
 
-	while (*((Uint32*)done) == 0)
+	while (*((uint32_t*)done) == 0)
 	{
-		actor = queue_pop_blocking(actor_texture_queue);
+        actor = (actor_texture_cache_t *)queue_pop_blocking(actor_texture_queue);
 
 		if (actor == 0)
 		{
@@ -2201,7 +2201,7 @@ int load_enhanced_actor_thread(void* done)
 
 void unload_actor_texture_cache()
 {
-	Uint32 i, used;
+	uint32_t i, used;
 
 	if (actor_texture_handles != 0)
 	{
@@ -2230,16 +2230,16 @@ void unload_actor_texture_cache()
 void init_texture_cache()
 {
 #ifdef	ELC
-	Uint32 i;
+	uint32_t i;
 #endif	/* ELC */
 
 	texture_cache = cache_init("texture cache", TEXTURE_CACHE_MAX, 0);
-	cache_set_compact(texture_cache, compact_texture);
+    cache_set_compact(texture_cache, (uint32_t (*)(void *))compact_texture);
 	cache_set_time_limit(texture_cache, 5 * 60 * 1000);
 
-	texture_handles = calloc(TEXTURE_CACHE_MAX, sizeof(texture_cache_t));
+    texture_handles = (texture_cache_t *)calloc(TEXTURE_CACHE_MAX, sizeof(texture_cache_t));
 #ifdef	ELC
-	actor_texture_handles = calloc(ACTOR_TEXTURE_CACHE_MAX, sizeof(actor_texture_cache_t));
+    actor_texture_handles = (actor_texture_cache_t *)calloc(ACTOR_TEXTURE_CACHE_MAX, sizeof(actor_texture_cache_t));
 
 	queue_initialise(&actor_texture_queue);
 
@@ -2259,7 +2259,7 @@ void init_texture_cache()
 
 void free_texture_cache()
 {
-	Uint32 i;
+	uint32_t i;
 #ifdef	ELC
 	int result;
 
@@ -2304,7 +2304,7 @@ void free_texture_cache()
 
 void unload_texture_cache()
 {
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < texture_handles_used; i++)
 	{
@@ -2327,7 +2327,7 @@ void unload_texture_cache()
 #ifdef	DEBUG
 void dump_texture_cache()
 {
-	Uint32 i;
+	uint32_t i;
 
 	if (actor_texture_handles != 0)
 	{
@@ -2444,7 +2444,7 @@ __inline__ static void set_texture_filter_parameter()
 }
 
 
-static texture_struct *load_texture_SDL(el_file_ptr file, const char * file_name, texture_struct *tex, Uint8 alpha)
+static texture_struct *load_texture_SDL(el_file_ptr file, const char * file_name, texture_struct *tex, uint8_t alpha)
 {
 	SDL_Surface *texture_surface;
 	GLubyte* data;
@@ -2500,7 +2500,7 @@ static texture_struct *load_texture_SDL(el_file_ptr file, const char * file_name
 			if ((texture_surface->format->BitsPerPixel == 8) &&
 				(texture_surface->format->palette != 0))
 			{
-				index = ((Uint8 *)texture_surface->pixels)[idx];
+				index = ((uint8_t *)texture_surface->pixels)[idx];
 				r = texture_surface->format->palette->colors[index].r;
 				g = texture_surface->format->palette->colors[index].g;
 				b = texture_surface->format->palette->colors[index].b;
@@ -2508,30 +2508,30 @@ static texture_struct *load_texture_SDL(el_file_ptr file, const char * file_name
 			}
 			else
 			{
-				memcpy(&pixel, &((Uint8 *)texture_surface->pixels)[idx], bpp);
+				memcpy(&pixel, &((uint8_t *)texture_surface->pixels)[idx], bpp);
 				/* Get Red component */
 				temp = pixel & texture_surface->format->Rmask;  /* Isolate red component */
 				temp = temp >> texture_surface->format->Rshift; /* Shift it down to 8-bit */
 				temp = temp << texture_surface->format->Rloss;  /* Expand to a full 8-bit number */
-				r = (Uint8)temp;
+				r = (uint8_t)temp;
 
 				/* Get Green component */
 				temp = pixel & texture_surface->format->Gmask;  /* Isolate green component */
 				temp = temp >> texture_surface->format->Gshift; /* Shift it down to 8-bit */
 				temp = temp << texture_surface->format->Gloss;  /* Expand to a full 8-bit number */
-				g = (Uint8)temp;
+				g = (uint8_t)temp;
 
 				/* Get Blue component */
 				temp = pixel & texture_surface->format->Bmask;  /* Isolate blue component */
 				temp = temp >> texture_surface->format->Bshift; /* Shift it down to 8-bit */
 				temp = temp << texture_surface->format->Bloss;  /* Expand to a full 8-bit number */
-				b = (Uint8)temp;
+				b = (uint8_t)temp;
 
 				/* Get Alpha component */
 				temp = pixel & texture_surface->format->Amask;  /* Isolate alpha component */
 				temp = temp >> texture_surface->format->Ashift; /* Shift it down to 8-bit */
 				temp = temp << texture_surface->format->Aloss;  /* Expand to a full 8-bit number */
-				a = (Uint8)temp;
+				a = (uint8_t)temp;
 			}
 			if (alpha)
 			{
@@ -2554,11 +2554,11 @@ static texture_struct *load_texture_SDL(el_file_ptr file, const char * file_name
 	return tex;
 }
 
-texture_struct *load_texture(const char * file_name, texture_struct *tex, Uint8 alpha)
+texture_struct *load_texture(const char * file_name, texture_struct *tex, uint8_t alpha)
 {
 	el_file_ptr file;
 	
-	Uint32 dds;
+	uint32_t dds;
 
 	file = el_open_custom(file_name);
 
@@ -2600,10 +2600,10 @@ texture_struct *load_texture(const char * file_name, texture_struct *tex, Uint8 
 }
 
 // set a default alpha value except where it's black, make that transparent
-void	texture_set_alpha(texture_struct *tex, Uint8 alpha, int cutoff)
+void	texture_set_alpha(texture_struct *tex, uint8_t alpha, int cutoff)
 {
 	int	y;
-	Uint8 * texture_mem= tex->texture;
+	uint8_t * texture_mem= tex->texture;
 
 	for(y=0; y<tex->y_size; y++)
 	{
@@ -2628,8 +2628,8 @@ void	texture_set_alpha(texture_struct *tex, Uint8 alpha, int cutoff)
 void	texture_alpha_mask(texture_struct *tex, texture_struct *mask)
 {
 	int	y;
-	Uint8 * texture_mem= tex->texture;
-	Uint8 * btexture_mem= mask->texture;
+	uint8_t * texture_mem= tex->texture;
+	uint8_t * btexture_mem= mask->texture;
 
 	for(y=0; y<tex->y_size; y++)
 	{
@@ -2651,8 +2651,8 @@ void	texture_alpha_mask(texture_struct *tex, texture_struct *mask)
 void	texture_alpha_blend(texture_struct *tex, texture_struct *blend)
 {
 	int	y;
-	Uint8 * texture_mem= tex->texture;
-	Uint8 * btexture_mem= blend->texture;
+	uint8_t * texture_mem= tex->texture;
+	uint8_t * btexture_mem= blend->texture;
 
 	for(y=0; y<tex->y_size; y++)
 	{
@@ -2684,8 +2684,8 @@ void	texture_alpha_blend(texture_struct *tex, texture_struct *blend)
 void	texture_overlay(texture_struct *tex, texture_struct *blend)
 {
 	int	y;
-	Uint8 * texture_mem= tex->texture;
-	Uint8 * btexture_mem= blend->texture;
+	uint8_t * texture_mem= tex->texture;
+	uint8_t * btexture_mem= blend->texture;
 
 	for(y=0; y<tex->y_size; y++)
 	{
@@ -2694,7 +2694,7 @@ void	texture_overlay(texture_struct *tex, texture_struct *blend)
 
 		for(x=0; x<tex->x_size; x++)
 		{
-			unsigned char alpha;
+            uint8_t alpha;
 			int texture_offset= (y_offset+x)*4;
 
 			alpha= btexture_mem[texture_offset+3];
@@ -2713,9 +2713,9 @@ void	texture_overlay(texture_struct *tex, texture_struct *blend)
 void	texture_mask2(texture_struct *texR, texture_struct *texG, texture_struct *mask)
 {
 	int	y;
-	Uint8 * textureR;
-	Uint8 * textureG;
-	Uint8 * textureM;
+	uint8_t * textureR;
+	uint8_t * textureG;
+	uint8_t * textureM;
 
 	if(texG == NULL)	return;	// NOP
 	if(mask == NULL)	return;	// NOP
@@ -2730,8 +2730,8 @@ void	texture_mask2(texture_struct *texR, texture_struct *texG, texture_struct *m
 
 		for(x=0; x<texR->x_size; x++)
 		{
-			Uint8 r,g;
-			Uint8 * tex;
+			uint8_t r,g;
+			uint8_t * tex;
 			int texture_offset= (y_offset+x)*4;
 
 			r= textureM[texture_offset+0];
@@ -2765,10 +2765,10 @@ void	texture_mask2(texture_struct *texR, texture_struct *texG, texture_struct *m
 void	texture_mask3(texture_struct *texR, texture_struct *texG, texture_struct *texB, texture_struct *mask)
 {
 	int	y;
-	Uint8 * textureR;
-	Uint8 * textureG;
-	Uint8 * textureB;
-	Uint8 * textureM;
+	uint8_t * textureR;
+	uint8_t * textureG;
+	uint8_t * textureB;
+	uint8_t * textureM;
 
 	if(mask == NULL)	return;	// nothing to do
 	// watch for a NULL value meaning use the texture before it
@@ -2786,8 +2786,8 @@ void	texture_mask3(texture_struct *texR, texture_struct *texG, texture_struct *t
 
 		for(x=0; x<texR->x_size; x++)
 		{
-			Uint8 r,b,g;
-			Uint8 * tex;
+			uint8_t r,b,g;
+			uint8_t * tex;
 			int texture_offset= (y_offset+x)*4;
 
 			r= textureM[texture_offset+0];
@@ -2885,7 +2885,7 @@ int get_and_set_texture_id(int i)
 }
 #endif	//USE_INLINE
 
-int load_alphamap(const char * FileName, Uint8 * texture_mem, int orig_x_size, int orig_y_size)
+int load_alphamap(const char * FileName, uint8_t * texture_mem, int orig_x_size, int orig_y_size)
 {
 	int x_size, y_size;
 	texture_struct	texture;
@@ -2947,7 +2947,7 @@ int load_alphamap(const char * FileName, Uint8 * texture_mem, int orig_x_size, i
 GLuint load_bmp8_color_key(texture_cache_struct * tex_cache_entry, int alpha)
 {
 	int x_size, y_size;
-	Uint8 *texture_mem;
+	uint8_t *texture_mem;
 	texture_struct	ttexture;
 	texture_struct	*tex;
 	GLuint texture;
@@ -3013,10 +3013,10 @@ GLuint load_bmp8_color_key(texture_cache_struct * tex_cache_entry, int alpha)
 }
 
 //load a bmp texture, with the specified global alpha
-GLuint load_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, Uint8 a)
+GLuint load_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, uint8_t a)
 {
 	int x_size, y_size;
-	Uint8 *texture_mem;
+	uint8_t *texture_mem;
 	texture_struct	ttexture;
 	texture_struct	*tex;
 	GLuint texture;
@@ -3063,10 +3063,10 @@ GLuint load_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, Uint8 a)
 	return texture;
 }
 
-GLuint load_bmp8_fixed_alpha_with_transparent_color(texture_cache_struct * tex_cache_entry, Uint8 a,Uint8 tr,Uint8 tg,Uint8 tb)
+GLuint load_bmp8_fixed_alpha_with_transparent_color(texture_cache_struct * tex_cache_entry, uint8_t a,uint8_t tr,uint8_t tg,uint8_t tb)
 {
 	int x_size, y_size,i;
-	Uint8 *texture_mem;
+	uint8_t *texture_mem;
 	texture_struct	ttexture;
 	texture_struct	*tex;
 	GLuint texture;
@@ -3130,7 +3130,7 @@ GLuint load_bmp8_fixed_alpha_with_transparent_color(texture_cache_struct * tex_c
 GLuint reload_bmp8_color_key(texture_cache_struct * tex_cache_entry, int alpha, GLuint texture)
 {
 	int x_size, y_size;
-	Uint8 *texture_mem;
+	uint8_t *texture_mem;
 	texture_struct	ttexture;
 	texture_struct	*tex;
 
@@ -3194,10 +3194,10 @@ GLuint reload_bmp8_color_key(texture_cache_struct * tex_cache_entry, int alpha, 
 }
 
 //reload a bmp texture, with the specified global alpha
-GLuint reload_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, Uint8 a, GLuint texture)
+GLuint reload_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, uint8_t a, GLuint texture)
 {
 	int x_size, y_size;
-	Uint8 *texture_mem;
+	uint8_t *texture_mem;
 	texture_struct	ttexture;
 	texture_struct	*tex;
 
@@ -3339,10 +3339,10 @@ int load_texture_cache_deferred(const char* file_name, int alpha)
 #endif // FASTER_MAP_LOAD
 
 #ifndef MAP_EDITOR2
-void copy_bmp8_to_coordinates (texture_struct *tex, Uint8 *texture_space, int x_pos, int y_pos)
+void copy_bmp8_to_coordinates (texture_struct *tex, uint8_t *texture_space, int x_pos, int y_pos)
 {
 	int x, y, x_size, y_size;
-	Uint8 *texture_mem;
+	uint8_t *texture_mem;
 
 	
 	x_size= tex->x_size;
@@ -3368,10 +3368,10 @@ void copy_bmp8_to_coordinates (texture_struct *tex, Uint8 *texture_space, int x_
 	}
 }
 
-texture_struct *load_bmp8_alpha (const char *filename, texture_struct *tex, Uint8 alpha)
+texture_struct *load_bmp8_alpha (const char *filename, texture_struct *tex, uint8_t alpha)
 {
 	int x_size, y_size;
-	Uint8 *texture_mem;
+	uint8_t *texture_mem;
 
 	tex = load_texture(filename, tex, alpha);
 	if(!tex){	// oops, failed
@@ -3391,7 +3391,7 @@ texture_struct *load_bmp8_alpha (const char *filename, texture_struct *tex, Uint
 	return(tex);
 }
 
-int load_bmp8_to_coordinates (const char *filename, Uint8 *texture_space, int x_pos, int y_pos, Uint8 alpha)
+int load_bmp8_to_coordinates (const char *filename, uint8_t *texture_space, int x_pos, int y_pos, uint8_t alpha)
 {
 	texture_struct	texture;
 	texture_struct	*tex;
@@ -3407,7 +3407,7 @@ int load_bmp8_to_coordinates (const char *filename, Uint8 *texture_space, int x_
 	return(tex->has_alpha);
 }
 
-int load_bmp8_to_coordinates_mask2 (const char *filename, const char *basename, const char *maskname, Uint8 *texture_space, int x_pos, int y_pos, Uint8 alpha)
+int load_bmp8_to_coordinates_mask2 (const char *filename, const char *basename, const char *maskname, uint8_t *texture_space, int x_pos, int y_pos, uint8_t alpha)
 {
 	//int x_size, y_size;
 	texture_struct	texture;
@@ -3467,13 +3467,13 @@ int load_bmp8_to_coordinates_mask2 (const char *filename, const char *basename, 
 
 
 #ifdef	ELC
-int load_bmp8_enhanced_actor(enhanced_actor *this_actor, Uint8 a)
+int load_bmp8_enhanced_actor(enhanced_actor *this_actor, uint8_t a)
 {
 	GLuint texture;
-	Uint8 * texture_mem;
+	uint8_t * texture_mem;
 	int	has_alpha= 0;
 
-	texture_mem=(Uint8*)calloc(1,TEXTURE_SIZE_X*TEXTURE_SIZE_Y*4);
+	texture_mem=(uint8_t*)calloc(1,TEXTURE_SIZE_X*TEXTURE_SIZE_Y*4);
 	if(this_actor->pants_tex[0]){
 		has_alpha+= load_bmp8_to_coordinates_mask2(this_actor->pants_tex,this_actor->legs_base,this_actor->pants_mask,texture_mem,78*TEXTURE_RATIO,175*TEXTURE_RATIO,a);
 	}
@@ -3551,17 +3551,17 @@ int load_bmp8_enhanced_actor(enhanced_actor *this_actor, Uint8 a)
 char * load_bmp8_color_key_no_texture_img(char * filename, img_struct * img)
 {
 	int x,y,x_padding,x_size,y_size,colors_no,r,g,b,a,current_pallete_entry; //i unused?
-	Uint8 * file_mem;
-	Uint8 * file_mem_start;
-	Uint8 * read_buffer;
-	Uint8 * color_pallete;
-	Uint8 *texture_mem;
+	uint8_t * file_mem;
+	uint8_t * file_mem_start;
+	uint8_t * read_buffer;
+	uint8_t * color_pallete;
+	uint8_t *texture_mem;
 	gzFile *f = NULL;
 	if(!gzfile_exists(filename))	return 0;	// no file at all
 	f= my_gzopen(filename, "rb");
   	if (!f)
 		return NULL;
-  	file_mem = (Uint8 *) calloc ( 20000, sizeof(Uint8));
+  	file_mem = (uint8_t *) calloc ( 20000, sizeof(uint8_t));
   	file_mem_start=file_mem;
   	gzread(f, file_mem, 50);//header only
   	//now, check to see if our bmp file is indeed a bmp file, and if it is 8 bits, uncompressed
@@ -3606,8 +3606,8 @@ char * load_bmp8_color_key_no_texture_img(char * filename, img_struct * img)
 		x_padding=4-x_padding;
 
 	//now, allocate the memory for the file
-	texture_mem = (Uint8 *) calloc ( x_size*y_size*4, sizeof(Uint8));
-	read_buffer = (Uint8 *) calloc ( 2000, sizeof(Uint8));
+    texture_mem = (uint8_t *) calloc ( x_size*y_size*4, sizeof(uint8_t));
+    read_buffer = (uint8_t *) calloc ( 2000, sizeof(uint8_t));
 
 	for(y=0;y<y_size;y++)
 	{

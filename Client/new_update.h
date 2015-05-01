@@ -23,10 +23,10 @@ extern "C"
  *		currently unknown.
  * \param	current Current progress.
  * \param	user_data The user data given to update.
- * \retval	Uint32 A return value of other than one cancels the update.
+ * \retval	uint32_t A return value of other than one cancels the update.
  */
-typedef Uint32 (*progress_fnc) (const char* str, const Uint32 max,
-	const Uint32 current, void* user_data);
+typedef uint32_t (*progress_fnc) (const char* str, const uint32_t max,
+	const uint32_t current, void* user_data);
 
 /*!
  * \ingroup	update
@@ -39,9 +39,9 @@ typedef Uint32 (*progress_fnc) (const char* str, const Uint32 max,
  * \param	zip The name of the zip file that should be updated.
  * \param	update_progress_function The progress function to use.
  * \param	user_data The user data for the progress function.
- * \retval	Uint32 A return value of other than one means an error.
+ * \retval	uint32_t A return value of other than one means an error.
  */
-Uint32 update(const char* server, const char* file, const char* dir,
+uint32_t update(const char* server, const char* file, const char* dir,
 	const char* zip, progress_fnc update_progress_function,
 	void* user_data);
 

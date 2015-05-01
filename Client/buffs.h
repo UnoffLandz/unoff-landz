@@ -25,7 +25,7 @@ extern int buff_icon_size;
  * \param	actor_id The server-side actor ID
  * \param	quantity The buffs.
  */
-void update_actor_buffs(int actor_id, Uint32 in_buffs);
+void update_actor_buffs(int actor_id, uint32_t in_buffs);
 
 void draw_buffs(int, float x, float y,float z);
 

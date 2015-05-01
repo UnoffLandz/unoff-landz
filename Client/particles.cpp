@@ -579,7 +579,7 @@ void destroy_all_particles()
 
 }
 #ifndef MAP_EDITOR
-void add_fire_at_tile (int kind, Uint16 x_tile, Uint16 y_tile)
+void add_fire_at_tile (int kind, uint16_t x_tile, uint16_t y_tile)
 {
 	float x = 0.5f * x_tile + 0.25f;
 	float y = 0.5f * y_tile + 0.25f;
@@ -612,7 +612,7 @@ void add_fire_at_tile (int kind, Uint16 x_tile, Uint16 y_tile)
 #endif // NEW_SOUND
 }
 
-void remove_fire_at_tile (Uint16 x_tile, Uint16 y_tile)
+void remove_fire_at_tile (uint16_t x_tile, uint16_t y_tile)
 {
 	float x = 0.5f * x_tile + 0.25f;
 	float y = 0.5f * y_tile + 0.25f;
@@ -650,7 +650,7 @@ void rotate_vector3f(float *vector, float x, float y, float z)
 
 void add_ec_effect_to_e3d(object3d* e3d) 
 {
-	ec_bounds *bounds = ec_create_bounds_list();
+    ec_bounds bounds = ec_create_bounds_list();
 	float shift[3] = { 0.0f, 0.0f, 0.0f };
 	// useful for debugging: 
 	// ec_create_fountain(e3d->x_pos + shift[0], e3d->y_pos + shift[1], e3d->z_pos + shift[2], 0.0, 1.0, (e3d->z_pos >= 0.8 ? e3d->z_pos - 0.8 : 0.0), 0, 1.0, (poor_man ? 6 : 10));
@@ -1647,20 +1647,20 @@ void update_particles() {
  *                        MISC HELPER FUNCTIONS                               *
  ******************************************************************************/
 #ifdef ELC
-void add_teleporters_from_list (const Uint8 *teleport_list)
+void add_teleporters_from_list (const uint8_t *teleport_list)
 {
-	Uint16 teleporters_no;
+	uint16_t teleporters_no;
 	int i;
 	int teleport_x,teleport_y,my_offset;
 	float x,y,z;
 
-	teleporters_no=SDL_SwapLE16(*((Uint16 *)(teleport_list)));
+	teleporters_no=SDL_SwapLE16(*((uint16_t *)(teleport_list)));
 	LOCK_PARTICLES_LIST();	//lock it to avoid timing issues
 	for(i=0;i<teleporters_no;i++)
 		{
 			my_offset=i*5+2;
-			teleport_x=SDL_SwapLE16(*((Uint16 *)(teleport_list+my_offset)));
-			teleport_y=SDL_SwapLE16(*((Uint16 *)(teleport_list+my_offset+2)));
+			teleport_x=SDL_SwapLE16(*((uint16_t *)(teleport_list+my_offset)));
+			teleport_y=SDL_SwapLE16(*((uint16_t *)(teleport_list+my_offset+2)));
 						
 			//later on, maybe we want to have different visual types
 			//now, get the Z position

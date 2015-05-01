@@ -140,7 +140,7 @@ void destroy_e3d(e3d_object *e3d_id);
  * \param	len the length in bytes of the array
  * \callgraph
  */
-void set_3d_object (Uint8 display, const void *ptr, int len);
+void set_3d_object (uint8_t display, const void *ptr, int len);
 
 /*!
  * \ingroup	load_3d
@@ -154,7 +154,7 @@ void set_3d_object (Uint8 display, const void *ptr, int len);
  * \param	len the length in bytes of the array
  * \callgraph
  */
-void state_3d_object (Uint8 state, const void *ptr, int len);
+void state_3d_object (uint8_t state, const void *ptr, int len);
 
 /*!
  * \ingroup	load_3d
@@ -206,8 +206,8 @@ char * get_3dobject_at_location(float x_pos, float y_pos);
  *
  * \callgraph
  */
-void draw_3d_object_detail(object3d * object_id, Uint32 material_index, Uint32 use_lightning,
-	Uint32 use_textures, Uint32 use_extra_textures);
+void draw_3d_object_detail(object3d * object_id, uint32_t material_index, uint32_t use_lightning,
+	uint32_t use_textures, uint32_t use_extra_textures);
 
 /*!
  * \ingroup	display_3d

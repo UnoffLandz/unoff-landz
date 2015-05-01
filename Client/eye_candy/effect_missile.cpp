@@ -14,9 +14,9 @@ namespace ec
 		const Vec3 _pos, const Vec3 _velocity, const coord_t _size,
 		const alpha_t _alpha, const color_t red, const color_t green,
 #ifdef	NEW_TEXTURES
-		const color_t blue, TextureEnum _texture, const Uint16 _LOD,
+		const color_t blue, TextureEnum _texture, const uint16_t _LOD,
 #else	/* NEW_TEXTURES */
-		const color_t blue, Texture* _texture, const Uint16 _LOD,
+		const color_t blue, Texture* _texture, const uint16_t _LOD,
 #endif	/* NEW_TEXTURES */
 		const MissileEffect::MissileType _type) :
 		Particle(_effect, _mover, _pos, _velocity,
@@ -35,7 +35,7 @@ namespace ec
 		type = _type;
 	}
 
-	bool MissileParticle::idle(const Uint64 delta_t)
+	bool MissileParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -66,19 +66,19 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 MissileParticle::get_texture()
+	uint32_t MissileParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint MissileParticle::get_texture(const Uint16 res_index)
+	GLuint MissileParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 #endif	/* NEW_TEXTURES */
 
 	MissileEffect::MissileEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
-		const MissileType _type, const Uint16 _LOD, int _hitOrMiss)
+		const MissileType _type, const uint16_t _LOD, int _hitOrMiss)
 	{
 		if (EC_DEBUG)
 			std::cout << "MissileEffect (" << this << ") created (" << _type
@@ -171,7 +171,7 @@ namespace ec
 		if (fabs(_LOD - (float)LOD) < 1.0)
 			return;
 
-		const Uint16 rounded_LOD = (Uint16)round(_LOD);
+		const uint16_t rounded_LOD = (uint16_t)round(_LOD);
 		if (rounded_LOD <= desired_LOD)
 			LOD = rounded_LOD;
 		else
@@ -207,7 +207,7 @@ namespace ec
 		alpha /= 13.0 / (LOD + 3);
 	}
 
-	bool MissileEffect::idle(const Uint64 usec)
+	bool MissileEffect::idle(const uint64_t usec)
 	{
 
 		if (particles.size() == 0)

@@ -14,9 +14,9 @@ namespace ec
 		const Vec3 _pos, const Vec3 _velocity, const coord_t _size,
 		const alpha_t _alpha, const color_t red, const color_t green,
 #ifdef	NEW_TEXTURES
-		const color_t blue, TextureEnum _texture, const Uint16 _LOD) :
+		const color_t blue, TextureEnum _texture, const uint16_t _LOD) :
 #else	/* NEW_TEXTURES */
-		const color_t blue, Texture* _texture, const Uint16 _LOD) :
+		const color_t blue, Texture* _texture, const uint16_t _LOD) :
 #endif	/* NEW_TEXTURES */
 		Particle(_effect, _mover, _pos, _velocity,
 			std::min(1.0f, _size * (0.2f + randcoord())))
@@ -33,7 +33,7 @@ namespace ec
 		LOD = _LOD;
 	}
 
-	bool StaffParticle::idle(const Uint64 delta_t)
+	bool StaffParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -49,19 +49,19 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 StaffParticle::get_texture()
+	uint32_t StaffParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint StaffParticle::get_texture(const Uint16 res_index)
+	GLuint StaffParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 #endif	/* NEW_TEXTURES */
 
 	StaffEffect::StaffEffect(EyeCandy* _base, bool* _dead,
-		Vec3* _end, const StaffType _type, const Uint16 _LOD)
+		Vec3* _end, const StaffType _type, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "StaffEffect (" << this << ") created (" << _type
@@ -119,7 +119,7 @@ namespace ec
 		if (fabs(_LOD - (float)LOD) < 1.0)
 			return;
 
-		const Uint16 rounded_LOD = (Uint16)round(_LOD);
+		const uint16_t rounded_LOD = (uint16_t)round(_LOD);
 		if (rounded_LOD <= desired_LOD)
 			LOD = rounded_LOD;
 		else
@@ -144,7 +144,7 @@ namespace ec
 		alpha /= 13.0 / (LOD + 3);
 	}
 
-	bool StaffEffect::idle(const Uint64 usec)
+	bool StaffEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 			return false;

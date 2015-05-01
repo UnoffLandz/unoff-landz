@@ -17,18 +17,18 @@ extern "C" {
  */
 typedef struct
 {
-	Uint8 r1;
-	Uint8 g1;
-	Uint8 b1;
-	Uint8 r2;
-	Uint8 g2;
-	Uint8 b2;
-	Uint8 r3;
-	Uint8 g3;
-	Uint8 b3;
-	Uint8 r4;
-	Uint8 g4;
-	Uint8 b4;
+	uint8_t r1;
+	uint8_t g1;
+	uint8_t b1;
+	uint8_t r2;
+	uint8_t g2;
+	uint8_t b2;
+	uint8_t r3;
+	uint8_t g3;
+	uint8_t b3;
+	uint8_t r4;
+	uint8_t g4;
+	uint8_t b4;
 
 } color_rgb;
 

@@ -562,9 +562,9 @@ void update_cloudy_sky_positions()
 
 	if (is_day)
 	{
-		float dir[3] = {skybox_sun_position[0] * 480.0,
-						skybox_sun_position[1] * 480.0,
-						skybox_sun_position[2] * 480.0};
+        float dir[3] = {skybox_sun_position[0] * 480.0f,
+                        skybox_sun_position[1] * 480.0f,
+                        skybox_sun_position[2] * 480.0f};
 		skybox_direction_to_ground_coords(dir, &skybox_sun_projection[0], &skybox_sun_projection[1]);
 	}
 	else
@@ -1566,7 +1566,7 @@ void draw_horizon_fog(float rain_coef)
 
 void cloudy_sky()
 {
-	static Uint32 last_cloud_time = 0;
+	static uint32_t last_cloud_time = 0;
 	int i;
 	GLfloat black_color[] = {0.0, 0.0, 0.0, 0.0};
 
@@ -1946,7 +1946,7 @@ void cloudy_sky()
 
 void underworld_sky()
 {
-	static Uint32 last_cloud_time = 0;
+	static uint32_t last_cloud_time = 0;
 	int i;
 
 	glTranslatef(0.0, 0.0, -40.0);

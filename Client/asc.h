@@ -18,7 +18,7 @@ extern "C" {
 /*!
  * Check if a character is a color character
  */
-static __inline__ int is_color (Uint8 c)
+static __inline__ int is_color (uint8_t c)
 {
 	return c >= 127 + c_lbound && c <= 127 + c_ubound;
 }
@@ -33,7 +33,7 @@ static __inline__ int is_color (Uint8 c)
  * \retval int the color number
  * \sa is_color(), to_color_char()
  */
-static __inline__ int from_color_char (Uint8 c)
+static __inline__ int from_color_char (uint8_t c)
 {
 	return c-127;
 }
@@ -44,19 +44,19 @@ static __inline__ int from_color_char (Uint8 c)
  * Compute the color character for the color with index \a color.
  *
  * \param color A valid color number between \c c_lbound and \c c_ubound
- * \retval Uint8 The color character
+ * \retval uint8_t The color character
  * \sa from_color_char()
  */
-static __inline__ Uint8 to_color_char (int color)
+static __inline__ uint8_t to_color_char (int color)
 {
-	return (Uint8) (color+127);
+	return (uint8_t) (color+127);
 }
 
 /*!
  * Check if a character is printable. In this context, that means
  * printable ascii, or non-ascii if we know what symbol to use
  */
-static __inline__ int is_printable (Uint8 c)
+static __inline__ int is_printable (uint8_t c)
 {
 	return get_font_char(c) >= 0;
 }
@@ -76,9 +76,9 @@ static __inline__ int is_printable (Uint8 c)
  * \param	needle The string you wish to find
  * \param	haystack The pointer to the char array you wish to find the string from
  * \param	max_len The maximum length it should check
- * \retval Sint32	Returns the integer behind the string or -1 on failure.
+ * \retval int32_t	Returns the integer behind the string or -1 on failure.
  */
-Sint32 get_integer_after_string (const char* needle, const char* haystack, Uint32 max_len);
+int32_t get_integer_after_string (const char* needle, const char* haystack, uint32_t max_len);
 
 /*!
  * \ingroup	misc_utils
@@ -91,7 +91,7 @@ Sint32 get_integer_after_string (const char* needle, const char* haystack, Uint3
  * \param	max_len The maximum length it should check
  * \retval float	Returns the float after the string or -1.0f on failure.
  */
-float get_float_after_string (const char* needle, const char* haystack, Uint32 max_len);
+float get_float_after_string (const char* needle, const char* haystack, uint32_t max_len);
 #endif // FASTER_MAP_LOAD
 
 /*!
@@ -104,9 +104,9 @@ float get_float_after_string (const char* needle, const char* haystack, Uint32 m
  * \param	haystack The char array you want to search for \a needle
  * \param	max_len The maximum length of \a haystack
  * \param	beginning Whether it should return the offset to the beginning of the string or the end of the string
- * \retval Sint32	Returns either the offset to the beginning of the string or to the end of the string - if the string was not found in the char array it returns -1 on failure.
+ * \retval int32_t	Returns either the offset to the beginning of the string or to the end of the string - if the string was not found in the char array it returns -1 on failure.
  */
-Sint32 get_string_occurance (const char *needle, const char *haystack, const Uint32 max_len, const char beginning);
+int32_t get_string_occurance (const char *needle, const char *haystack, const uint32_t max_len, const char beginning);
 
 /*!
  * \ingroup	misc_utils
@@ -226,9 +226,9 @@ void my_strcat(char *dest, const char * source);
  * \param	dest The first string
  * \param	src The second string
  * \param	len The number of bytes to compare
- * \retval Sint32	Returns 1 on match, 0 if the strings doesn't match.
+ * \retval int32_t	Returns 1 on match, 0 if the strings doesn't match.
  */
-Sint32 my_strncompare(const char *dest, const char *src, Sint32 len);
+int32_t my_strncompare(const char *dest, const char *src, int32_t len);
 
 /*!
  * \ingroup	misc_utils
@@ -238,10 +238,10 @@ Sint32 my_strncompare(const char *dest, const char *src, Sint32 len);
  *
  * \param	dest The first string
  * \param	src The second string
- * \retval Sint32 	Returns 1 on match, 0 if the strings doesn't match.
+ * \retval int32_t 	Returns 1 on match, 0 if the strings doesn't match.
  * \sa my_strncompare
  */
-Sint32 my_strcompare(const char *dest, const char *src);
+int32_t my_strcompare(const char *dest, const char *src);
 
 /*!
  * \ingroup	misc_utils
@@ -251,9 +251,9 @@ Sint32 my_strcompare(const char *dest, const char *src);
  *
  * \param	src The string to be checked
  * \param	len The length of characters you wish to check
- * \retval Sint32	Returns 1 if enough characters are uppercase, 0 if they are lowercase.
+ * \retval int32_t	Returns 1 if enough characters are uppercase, 0 if they are lowercase.
  */
-Sint32 my_isupper(const char *src, int len);
+int32_t my_isupper(const char *src, int len);
 
 /*!
  * \ingroup	misc_utils
@@ -287,9 +287,9 @@ char ** get_lines(char * str, int chars_per_line);
  * \param	dest The destination string
  * \param	src The source string
  * \param	max_len The maximum length
- * \retval Uint32	Returns the length of the string
+ * \retval uint32_t	Returns the length of the string
  */
-Uint32 clean_file_name (char *dest, const char *src, Uint32 max_len);
+uint32_t clean_file_name (char *dest, const char *src, uint32_t max_len);
 
 /*!
  * \ingroup	xml_utils
@@ -332,13 +332,13 @@ int xmlGetInt(xmlNode *n, xmlChar *p);
  */
 int my_xmlStrncopy(char ** dest, const char * src, int len);
 
-int get_file_digest(const char*, Uint8[16]);
-void get_string_digest(const char*, Uint8[16]);
+int get_file_digest(const char*, uint8_t[16]);
+void get_string_digest(const char*, uint8_t[16]);
 
 // Element type and dictionaries for actor definitions
 typedef struct {
 #ifndef EXT_ACTOR_DICT
-	char *desc;
+    const char *desc;
 #else
 	char desc[100];
 #endif
@@ -347,7 +347,7 @@ typedef struct {
 
 int find_description_index(const dict_elem dict[], const char *elem, const char *desc);
 void get_string_value(char *buf, size_t maxlen, const xmlNode *node);
-void get_item_string_value(char *buf, size_t maxlen, const xmlNode *node, const unsigned char *name);
+void get_item_string_value(char *buf, size_t maxlen, const xmlNode *node, const char *name);
 int get_bool_value(const xmlNode *node);
 int get_int_value(const xmlNode *node);
 double get_float_value(const xmlNode *node);

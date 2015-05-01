@@ -25,11 +25,11 @@ static const char* image_extensions[IMAGE_EXTENSIONS_MAX] =
 	".bmp"
 };
 
-Uint32 get_file_name_len(const char* file_name)
+uint32_t get_file_name_len(const char* file_name)
 {
-	char* p0;
-	char* p1;
-	Uint32 len;
+    const char* p0;
+    const char* p1;
+    uint32_t len;
 
 	p0 = strrchr(file_name, '.');
 	p1 = strrchr(file_name, '/');
@@ -43,10 +43,10 @@ Uint32 get_file_name_len(const char* file_name)
 	return len;
 }
 
-Uint32 check_image_name(const char* file_name, const Uint32 size, char* str)
+uint32_t check_image_name(const char* file_name, const uint32_t size, char* str)
 {
 	char buffer[128];
-	Uint32 len, i;
+    uint32_t len, i;
 
 	len = get_file_name_len(file_name);
 
@@ -83,11 +83,11 @@ Uint32 check_image_name(const char* file_name, const Uint32 size, char* str)
 	return 0;
 }
 
-Uint32 check_alpha_image_name(const char* file_name, const Uint32 size,
+uint32_t check_alpha_image_name(const char* file_name, const uint32_t size,
 	char* str)
 {
 	char buffer[128];
-	Uint32 len, i;
+    uint32_t len, i;
 
 	if (file_name == 0)
 	{
@@ -132,7 +132,7 @@ Uint32 check_alpha_image_name(const char* file_name, const Uint32 size,
 	return 0;
 }
 
-static Uint32 get_sdl_image_information(el_file_ptr file, image_t* image)
+static uint32_t get_sdl_image_information(el_file_ptr file, image_t* image)
 {
 	SDL_Surface *image_surface;
 	SDL_RWops *buffer;
@@ -186,11 +186,11 @@ static Uint32 get_sdl_image_information(el_file_ptr file, image_t* image)
 	return 1;
 }
 
-static Uint32 load_image_SDL(el_file_ptr file, image_t* image)
+static uint32_t load_image_SDL(el_file_ptr file, image_t* image)
 {
 	SDL_Surface *image_surface;
 	SDL_RWops *buffer;
-	Uint8* data;
+	uint8_t* data;
 	int image_width, image_height, idx;
 	int pixel, temp, r, g, b, a;
 	int bpp, i, j, index, x_padding;
@@ -276,7 +276,7 @@ static Uint32 load_image_SDL(el_file_ptr file, image_t* image)
 			if ((image_surface->format->BitsPerPixel == 8) &&
 				(image_surface->format->palette != 0))
 			{
-				index = ((Uint8 *)image_surface->pixels)[idx];
+				index = ((uint8_t *)image_surface->pixels)[idx];
 				r = image_surface->format->palette->colors[index].r;
 				g = image_surface->format->palette->colors[index].g;
 				b = image_surface->format->palette->colors[index].b;
@@ -284,30 +284,30 @@ static Uint32 load_image_SDL(el_file_ptr file, image_t* image)
 			}
 			else
 			{
-				memcpy(&pixel, &((Uint8 *)image_surface->pixels)[idx], bpp);
+				memcpy(&pixel, &((uint8_t *)image_surface->pixels)[idx], bpp);
 				/* Get Red component */
 				temp = pixel & image_surface->format->Rmask;  /* Isolate red component */
 				temp = temp >> image_surface->format->Rshift; /* Shift it down to 8-bit */
 				temp = temp << image_surface->format->Rloss;  /* Expand to a full 8-bit number */
-				r = (Uint8)temp;
+				r = (uint8_t)temp;
 
 				/* Get Green component */
 				temp = pixel & image_surface->format->Gmask;  /* Isolate green component */
 				temp = temp >> image_surface->format->Gshift; /* Shift it down to 8-bit */
 				temp = temp << image_surface->format->Gloss;  /* Expand to a full 8-bit number */
-				g = (Uint8)temp;
+				g = (uint8_t)temp;
 
 				/* Get Blue component */
 				temp = pixel & image_surface->format->Bmask;  /* Isolate blue component */
 				temp = temp >> image_surface->format->Bshift; /* Shift it down to 8-bit */
 				temp = temp << image_surface->format->Bloss;  /* Expand to a full 8-bit number */
-				b = (Uint8)temp;
+				b = (uint8_t)temp;
 
 				/* Get Alpha component */
 				temp = pixel & image_surface->format->Amask;  /* Isolate alpha component */
 				temp = temp >> image_surface->format->Ashift; /* Shift it down to 8-bit */
 				temp = temp << image_surface->format->Aloss;  /* Expand to a full 8-bit number */
-				a = (Uint8)temp;
+				a = (uint8_t)temp;
 
 				if (image_surface->format->Amask == 0)
 				{
@@ -331,7 +331,7 @@ static Uint32 load_image_SDL(el_file_ptr file, image_t* image)
 	return 1;
 }
 
-static Uint32 load_image_SDL_alpha(el_file_ptr file, image_t* image)
+static uint32_t load_image_SDL_alpha(el_file_ptr file, image_t* image)
 {
 	SDL_Surface *image_surface;
 	GLubyte* data;
@@ -421,7 +421,7 @@ static Uint32 load_image_SDL_alpha(el_file_ptr file, image_t* image)
 			if ((image_surface->format->BitsPerPixel == 8) &&
 				(image_surface->format->palette != 0))
 			{
-				index = ((Uint8 *)image_surface->pixels)[idx];
+				index = ((uint8_t *)image_surface->pixels)[idx];
 				r = image_surface->format->palette->colors[index].r;
 				g = image_surface->format->palette->colors[index].g;
 				b = image_surface->format->palette->colors[index].b;
@@ -429,13 +429,13 @@ static Uint32 load_image_SDL_alpha(el_file_ptr file, image_t* image)
 			}
 			else
 			{
-				memcpy(&pixel, &((Uint8 *)image_surface->pixels)[idx], bpp);
+				memcpy(&pixel, &((uint8_t *)image_surface->pixels)[idx], bpp);
 
 				/* Get Alpha component */
 				temp = pixel & image_surface->format->Amask;  /* Isolate alpha component */
 				temp = temp >> image_surface->format->Ashift; /* Shift it down to 8-bit */
 				temp = temp << image_surface->format->Aloss;  /* Expand to a full 8-bit number */
-				a = (Uint8)temp;
+				a = (uint8_t)temp;
 			}
 
 			idx += bpp;
@@ -453,13 +453,13 @@ static Uint32 load_image_SDL_alpha(el_file_ptr file, image_t* image)
 	return 1;
 }
 
-Uint32 load_image_data_file(el_file_ptr file, const Uint32 compression,
-	const Uint32 unpack, const Uint32 strip_mipmaps,
-	const Uint32 base_level, image_t* image)
+uint32_t load_image_data_file(el_file_ptr file, const uint32_t compression,
+    const uint32_t unpack, const uint32_t strip_mipmaps,
+    const uint32_t base_level, image_t* image)
 {
 	char buffer[128];
 	el_file_ptr alpha_file;
-	Uint32 dds, result;
+    uint32_t dds, result;
 
 	if (file == 0)
 	{
@@ -472,7 +472,7 @@ Uint32 load_image_data_file(el_file_ptr file, const Uint32 compression,
 
 	if (el_get_size(file) >= 4)
 	{
-		if (check_dds(el_get_pointer(file)))
+        if (check_dds((const uint8_t *)el_get_pointer(file)))
 		{
 			dds = 1;
 		}
@@ -521,9 +521,9 @@ Uint32 load_image_data_file(el_file_ptr file, const Uint32 compression,
 	return 1;
 }
 
-Uint32 load_image_data(const char* file_name, const Uint32 compression,
-	const Uint32 unpack, const Uint32 strip_mipmaps,
-	const Uint32 base_level, image_t* image)
+uint32_t load_image_data(const char* file_name, const uint32_t compression,
+    const uint32_t unpack, const uint32_t strip_mipmaps,
+    const uint32_t base_level, image_t* image)
 {
 	char buffer[128];
 	el_file_ptr file;
@@ -547,9 +547,9 @@ Uint32 load_image_data(const char* file_name, const Uint32 compression,
 		base_level, image);
 }
 
-Uint32 get_image_information(el_file_ptr file, image_t* image)
+uint32_t get_image_information(el_file_ptr file, image_t* image)
 {
-	Uint32 dds, result;
+    uint32_t dds, result;
 
 	if (file == 0)
 	{
@@ -562,7 +562,7 @@ Uint32 get_image_information(el_file_ptr file, image_t* image)
 
 	if (el_get_size(file) >= 4)
 	{
-		if (check_dds(el_get_pointer(file)))
+        if (check_dds((const uint8_t *)el_get_pointer(file)))
 		{
 			dds = 1;
 		}

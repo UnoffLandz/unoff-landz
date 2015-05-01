@@ -81,7 +81,7 @@ static int button_height = 30;
 
 static int popup_display_handler(window_info *win);
 static int popup_close_handler(window_info *win);
-static int popup_click_handler(window_info *win, int mx, int my, Uint32 flags);
+static int popup_click_handler(window_info *win, int mx, int my, uint32_t flags);
 
 /* Forward helpers */
 static popup_node_t *popup_node_find_by_window( window_info *win );
@@ -114,13 +114,13 @@ static void popup_send_to_server( popup_t *popup );
 #define FETCH_U16( var ) \
 	do { \
 	DECREASE_SIZE(2); \
-	var = SDL_SwapLE16( *((Uint16*)payload) ); \
+    var = SDL_SwapLE16( *((uint16_t*)payload) ); \
 	payload+=2; \
 	} while (0);
 
 #define FETCH_SIZESTRING( var ) \
 	do { \
-	Uint8 stringsize; \
+	uint8_t stringsize; \
 	FETCH_U8(stringsize); \
 	DECREASE_SIZE( stringsize ); \
 	safe_strncpy( var, (char*)payload, stringsize+1 ); \
@@ -130,7 +130,7 @@ static void popup_send_to_server( popup_t *popup );
 #define FETCH_U8( var ) \
 	do { \
 	DECREASE_SIZE(1); \
-	var = *((Uint8*)payload); \
+	var = *((uint8_t*)payload); \
 	payload+=1; \
 	} while (0);
 
@@ -214,7 +214,7 @@ static popup_node_t *popup_node_find_by_id( popup_id_t id )
 
 popup_t *popup_allocate()
 {
-	popup_t *new_popup = calloc( 1,sizeof(popup_t) );
+    popup_t *new_popup = (popup_t *) calloc( 1,sizeof(popup_t) );
 	if (NULL!=new_popup) {
 		flowing_text_zeroe( &new_popup->text );
 		new_popup->win = -1;
@@ -318,7 +318,7 @@ static void popup_free(popup_t *popup)
 
 static popup_option_t *popup_option_allocate()
 {
-	popup_option_t *new_popup_option = calloc( 1, sizeof(popup_option_t ));
+    popup_option_t *new_popup_option = (popup_option_t *)calloc( 1, sizeof(popup_option_t ));
 
 	if ( new_popup_option ) {
 		flowing_text_zeroe( &new_popup_option->text );
@@ -366,7 +366,7 @@ static popup_option_t *popup_option_create( const char *const text,
 		/* Alloc more POPUP_MAX_NEWLINES_IN_TEXT chars than needed -
 		 this allows for extra POPUP_MAX_NEWLINES_IN_TEXT lines */
         new_popup_option->text.str_size_allocated = text_size+POPUP_MAX_NEWLINES_IN_TEXT;
-		new_popup_option->text.str = calloc( new_popup_option->text.str_size_allocated , sizeof (char));
+        new_popup_option->text.str = (char *)calloc( new_popup_option->text.str_size_allocated , sizeof (char));
 
 		if (NULL==new_popup_option->text.str) {
             popup_option_free( new_popup_option );
@@ -407,7 +407,7 @@ void popup_finish_setup( popup_t *this_popup )
 
 popup_grouped_option_t *popup_grouped_option_create( popup_option_group_t id, popup_option_type_t type)
 {
-	popup_grouped_option_t *this_group = calloc( 1, sizeof(popup_grouped_option_t) );
+    popup_grouped_option_t *this_group = (popup_grouped_option_t *)calloc( 1, sizeof(popup_grouped_option_t) );
 	if (this_group) {
 		this_group->options = NULL;
 		this_group->group_id = id;
@@ -528,7 +528,7 @@ void popup_add_option_textentry(popup_t *this_popup,
 								const char *const text)
 {
 	popup_option_value_t dummy_value;
-	dummy_value.str = calloc( 256, sizeof(char) );
+    dummy_value.str = (char *)calloc( 256, sizeof(char) );
 
 	popup_add_option_extended( this_popup, group_id, text, dummy_value, OPTION_TYPE_TEXTENTRY );
     this_popup->has_send_button = 1;
@@ -600,7 +600,7 @@ static int popup_display_object( popup_t *this_popup, window_info *win )
 
 		draw_string_zoomed(POPUP_TOP_TEXT_LEFT_MARGIN,
 						   POPUP_TOP_TEXT_TOP_MARGIN,
-						   (unsigned char*)this_popup->text.str,
+						   this_popup->text.str,
 						   100, /* Max lines */
 						   popup_font_zoom);
 	}
@@ -656,13 +656,13 @@ static int popup_display_object( popup_t *this_popup, window_info *win )
 					if ( this_option->type == OPTION_TYPE_DISPLAYTEXT || this_option->type == OPTION_TYPE_TEXTENTRY ) {
 						draw_string_zoomed(POPUP_TOP_TEXT_LEFT_MARGIN,
 										   this_option->computed_y_pos,
-										   (unsigned char*)this_option->text.str,
+										   this_option->text.str,
 										   100,
 										   popup_font_zoom);
 					} else {
 						draw_string_zoomed(POPUP_OPTION_TEXT_LEFT_MARGIN,
 										   this_option->computed_y_pos,
-										   (unsigned char*)this_option->text.str,
+										   this_option->text.str,
 										   100,
 										   popup_font_zoom);
 					}
@@ -823,7 +823,7 @@ static int popup_are_all_options_chosen( popup_t *this_popup )
 
     return 1;
 }
-int popup_send_button_clicked(widget_list *w, int mx, int my, Uint32 flags)
+int popup_send_button_clicked(widget_list *w, int mx, int my, uint32_t flags)
 {
     list_node_t *popup_node;
 
@@ -863,7 +863,7 @@ static void popup_create_window(popup_t *this_popup)
 
 	set_window_handler( this_popup->win, ELW_HANDLER_DISPLAY, &popup_display_handler);
 	set_window_handler( this_popup->win, ELW_HANDLER_CLOSE, &popup_close_handler);
-	set_window_handler( this_popup->win, ELW_HANDLER_CLICK, &popup_click_handler);
+    set_window_handler( this_popup->win, ELW_HANDLER_CLICK, (int (*)())&popup_click_handler);
 
 	if (this_popup->has_send_button) {
 		this_popup->button_widget_id = button_add( this_popup->win, NULL, button_send,
@@ -872,7 +872,7 @@ static void popup_create_window(popup_t *this_popup)
 
 		widget_set_OnClick(this_popup->win,
 						   this_popup->button_widget_id,
-                           &popup_send_button_clicked
+                           popup_send_button_clicked
 						  );
 	}
 
@@ -894,7 +894,7 @@ static void popup_create_window(popup_t *this_popup)
 															  P_TEXT,
 															  popup_font_zoom,
 															  0.77f, 0.57f, 0.39f,
-															  (unsigned char*)option->value.str,
+															  option->value.str,
 															  256
 															 );
 			}
@@ -914,7 +914,7 @@ popup_t* popup_create( const char *title, popup_id_t id, int persistent )
 	new_popup->win = -1;
 	new_popup->realized = 0;
 	new_popup->is_persistent = (persistent != 0);
-	new_popup->title = calloc( strlen(title)+1, sizeof(char) );
+    new_popup->title = (char *)calloc( strlen(title)+1, sizeof(char) );
     safe_strncpy( new_popup->title, title, (strlen(title)+1)*sizeof(char) );
 
 	list_push( &popup_list, new_popup );
@@ -928,7 +928,7 @@ popup_t* popup_create( const char *title, popup_id_t id, int persistent )
  * \returns 1
  */
 
-int popup_click_object(popup_t *this_popup, window_info *win, int mx, int my, Uint32 flags)
+int popup_click_object(popup_t *this_popup, window_info *win, int mx, int my, uint32_t flags)
 {
 	popup_option_node_t *this_option_node;
 	list_node_t *this_option_group_node;
@@ -980,7 +980,7 @@ void popup_set_text( popup_t *this_popup, const char *text )
 	flowing_text_free( &this_popup->text );
 
 	this_popup->text.str_size_allocated = text_size+POPUP_MAX_NEWLINES_IN_TEXT;
-	this_popup->text.str = calloc( this_popup->text.str_size_allocated , sizeof (char));
+    this_popup->text.str = (char *)calloc( this_popup->text.str_size_allocated , sizeof (char));
 
 	if (NULL==this_popup->text.str)
 		return;
@@ -1022,7 +1022,7 @@ static int popup_display_handler(window_info *win)
  * \param flags The mouse flags
  * \returns popup_display_object() if popup found, 0 otherwise
  */
-static int popup_click_handler(window_info *win,int mx, int my, Uint32 flags)
+static int popup_click_handler(window_info *win,int mx, int my, uint32_t flags)
 {
 	popup_node_t *the_popup_node = popup_node_find_by_window( win );
 	if (NULL!=the_popup_node) {
@@ -1126,15 +1126,15 @@ static popup_option_t *popup_group_get_selected( popup_grouped_option_t *group )
 static void popup_send_to_server( popup_t *popup )
 {
     /* Max size hardcoded for now */
-	unsigned char buffer[8192];
-    unsigned char *bptr = buffer;
+    uint8_t buffer[8192];
+    uint8_t *bptr = buffer;
 	list_node_t *group_node;
 	popup_option_t *option;
 
 	*bptr = POPUP_REPLY;
     bptr++;
 
-	*((Uint16*)bptr) = SDL_SwapLE16( popup->id );
+    *((uint16_t*)bptr) = SDL_SwapLE16( popup->id );
     bptr+=2;
 
 	list_for_each_node( group_node, popup->grouped_options )
@@ -1174,7 +1174,7 @@ static void popup_send_to_server( popup_t *popup )
 #if 0
 	fprintf(stderr,"Sending packet: \n");
 	{
-		unsigned char *p = buffer;
+        uint8_t *p = buffer;
 		while (p<bptr) {
             fprintf(stderr,"%02x ",*p);
             p++;
@@ -1193,15 +1193,15 @@ static void popup_send_to_server( popup_t *popup )
  * \param size The network buffer size
  * \returns Nothing
  */
-void popup_create_from_network( const unsigned char *payload, size_t size )
+void popup_create_from_network( const uint8_t *payload, size_t size )
 {
-	Uint16 popup_id;
-	Uint16 size_hint;
-	Uint8 flags;
+    uint16_t popup_id;
+    uint16_t size_hint;
+	uint8_t flags;
 	char title[256];
 	char text[256];
 	popup_t *new_popup;
-	Uint8 option_type;
+	uint8_t option_type;
 	popup_option_group_t option_group;
 	popup_option_value_t value_id;
 

@@ -20,7 +20,7 @@ extern "C" {
 extern int game_root_win; /*!< the root (game) window */
 /*! @} */
 extern int use_old_clicker;
-extern Uint32 next_fps_time;
+extern uint32_t next_fps_time;
 extern int last_count;
 extern float fps_average;
 extern int include_use_cursor_on_animals;
@@ -42,10 +42,10 @@ void draw_special_cursors();
  *	Utility function for keypress handlers that converts the 32-bit key code to an unsigned character
  *
  * \param unikey The full key code
- * \retval Uint8
+ * \retval uint8_t
  * \callgraph
  */
-Uint8 key_to_char (Uint32 unikey);
+uint8_t key_to_char (uint32_t unikey);
 
 /*!
  * \brief Maintain an input string with key presses
@@ -69,7 +69,7 @@ int string_input(char *text, size_t maxlen, char ch);
  * \callgraph
  */
 
-int check_quit_or_fullscreen (Uint32 key);
+int check_quit_or_fullscreen (uint32_t key);
 /*!
  * \ingroup events
  * \brief Common handler for normal character input
@@ -81,7 +81,7 @@ int check_quit_or_fullscreen (Uint32 key);
  * \retval int
  * \callgraph
  */
-int text_input_handler (Uint32 key, Uint32 unikey);
+int text_input_handler (uint32_t key, uint32_t unikey);
 
 /*!
  * \ingroup events
@@ -94,7 +94,7 @@ int text_input_handler (Uint32 key, Uint32 unikey);
  * \retval int
  * \callgraph
  */
-int keypress_root_common (Uint32 key, Uint32 unikey);
+int keypress_root_common (uint32_t key, uint32_t unikey);
 
 /*!
  * \ingroup events
@@ -103,7 +103,7 @@ int keypress_root_common (Uint32 key, Uint32 unikey);
  * \param key
  * \callgraph
  */
-void do_keypress(Uint32 key);
+void do_keypress(uint32_t key);
 
 /*!
  * \ingroup root_window

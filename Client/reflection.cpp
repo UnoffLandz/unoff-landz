@@ -131,7 +131,7 @@ int get_max_supported_water_shader_quality()
 
 void init_water_buffers(int water_buffer_size)
 {
-	water_tile_buffer = realloc(water_tile_buffer, water_buffer_size * 4 * 2 * sizeof(GLfloat));
+    water_tile_buffer = (GLfloat *)realloc(water_tile_buffer, water_buffer_size * 4 * 2 * sizeof(GLfloat));
 
 	if (have_extension(arb_vertex_buffer_object))
 	{
@@ -852,11 +852,11 @@ void draw_lake_tiles()
 	{
 		if (!dungeon && shadows_on && (is_day || lightning_falling))
 		{
-			cur_shader = get_shader(st_water, sst_shadow_receiver, use_fog, water_shader_quality - 1);
+            cur_shader = get_shader(st_water, sst_shadow_receiver, (shader_fog_type) use_fog, water_shader_quality - 1);
 		}
 		else
 		{
-			cur_shader = get_shader(st_water, sst_no_shadow_receiver, use_fog, water_shader_quality - 1);
+            cur_shader = get_shader(st_water, sst_no_shadow_receiver, (shader_fog_type) use_fog, water_shader_quality - 1);
 		}
 		ELglUseProgramObjectARB(cur_shader);
 		CHECK_GL_ERRORS();
@@ -931,11 +931,11 @@ void draw_lake_tiles()
 
 		if (!dungeon && shadows_on && (is_day || lightning_falling))
 		{
-			cur_shader = get_shader(st_reflectiv_water, sst_shadow_receiver, use_fog, water_shader_quality - 1);
+            cur_shader = get_shader(st_reflectiv_water, sst_shadow_receiver, (shader_fog_type) use_fog, water_shader_quality - 1);
 		}
 		else
 		{
-			cur_shader = get_shader(st_reflectiv_water, sst_no_shadow_receiver, use_fog, water_shader_quality - 1);
+            cur_shader = get_shader(st_reflectiv_water, sst_no_shadow_receiver, (shader_fog_type)use_fog, water_shader_quality - 1);
 		}
 		ELglUseProgramObjectARB(cur_shader);
 		CHECK_GL_ERRORS();

@@ -68,7 +68,7 @@ int click_opening_handler ()
 	return 1;
 }
 
-int keypress_opening_handler (window_info *win, int mx, int my, Uint32 key, Uint32 unikey)
+int keypress_opening_handler (window_info *win, int mx, int my, uint32_t key, uint32_t unikey)
 {
 #ifndef MAP_EDITOR2
 	int alt_on = key & ELW_ALT;
@@ -111,7 +111,7 @@ void create_opening_root_window (int width, int height)
 		opening_root_win = create_window ("Opening", -1, -1, 0, 0, width, height, ELW_TITLE_NONE|ELW_SHOW_LAST);
 
 		set_window_handler (opening_root_win, ELW_HANDLER_DISPLAY, &display_opening_handler);
-		set_window_handler (opening_root_win, ELW_HANDLER_KEYPRESS, &keypress_opening_handler);
+        set_window_handler (opening_root_win, ELW_HANDLER_KEYPRESS, (int (*)())&keypress_opening_handler);
 		set_window_handler (opening_root_win, ELW_HANDLER_CLICK, &click_opening_handler);
 		set_window_handler (opening_root_win, ELW_HANDLER_SHOW, &show_opening_handler);
 		

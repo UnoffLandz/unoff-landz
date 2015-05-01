@@ -12,7 +12,7 @@ namespace ec
 
 	LampParticle::LampParticle(Effect* _effect, ParticleMover* _mover,
 		const Vec3 _pos, const Vec3 _velocity, const color_t hue_adjust,
-		const color_t saturation_adjust, const float _scale, const Uint16 _LOD) :
+		const color_t saturation_adjust, const float _scale, const uint16_t _LOD) :
 		Particle(_effect, _mover, _pos, _velocity,
 			4 * (0.15 + 2.3 * randcoord() * randcoord()) / (_LOD + 2))
 	{
@@ -34,7 +34,7 @@ namespace ec
 		flare_frequency = 2.0;
 	}
 
-	bool LampParticle::idle(const Uint64 delta_t)
+	bool LampParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -54,12 +54,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 LampParticle::get_texture()
+	uint32_t LampParticle::get_texture()
 	{
 		return base->get_texture(EC_FLARE);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint LampParticle::get_texture(const Uint16 res_index)
+	GLuint LampParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexFlare.get_texture(res_index);
 	}
@@ -67,7 +67,7 @@ namespace ec
 
 	LampBigParticle::LampBigParticle(Effect* _effect, ParticleMover* _mover,
 		const Vec3 _pos, const Vec3 _velocity, const color_t hue_adjust,
-		const color_t saturation_adjust, const float _scale, const Uint16 _LOD) :
+		const color_t saturation_adjust, const float _scale, const uint16_t _LOD) :
 		Particle(_effect, _mover, _pos, _velocity)
 	{
 		LOD = _LOD;
@@ -86,7 +86,7 @@ namespace ec
 		state = ((rand() % 3) == 0);
 	}
 
-	bool LampBigParticle::idle(const Uint64 delta_t)
+	bool LampBigParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -105,7 +105,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 LampBigParticle::get_texture()
+	uint32_t LampBigParticle::get_texture()
 	{
 		return base->get_texture(EC_FLARE);
 	}
@@ -122,12 +122,12 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	GLuint LampBigParticle::get_texture(const Uint16 res_index)
+	GLuint LampBigParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexFlare.get_texture(res_index);
 	}
 
-	void LampBigParticle::draw(const Uint64 usec)
+	void LampBigParticle::draw(const uint64_t usec)
 	{
 		if (state == 0)
 		{
@@ -159,7 +159,7 @@ namespace ec
 		true_pos = _pos;
 	}
 
-	bool LampFlareParticle::idle(const Uint64 delta_t)
+	bool LampFlareParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -168,12 +168,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 LampFlareParticle::get_texture()
+	uint32_t LampFlareParticle::get_texture()
 	{
 		return base->get_texture(EC_VOID);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint LampFlareParticle::get_texture(const Uint16 res_index)
+	GLuint LampFlareParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexVoid.get_texture(res_index);
 	}
@@ -181,7 +181,7 @@ namespace ec
 
 	LampEffect::LampEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 		const color_t _hue_adjust, const color_t _saturation_adjust,
-		const float _scale, const bool _halo, const Uint16 _LOD)
+		const float _scale, const bool _halo, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "LampEffect (" << this << ") created." << std::endl;
@@ -247,7 +247,7 @@ namespace ec
 			std::cout << "LampEffect (" << this << ") destroyed." << std::endl;
 	}
 
-	bool LampEffect::idle(const Uint64 usec)
+	bool LampEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 			return false;

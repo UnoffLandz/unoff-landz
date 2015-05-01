@@ -33,7 +33,7 @@ namespace ec
 		flare_frequency = 2.0;
 	}
 
-	bool TeleporterParticle::idle(const Uint64 delta_t)
+	bool TeleporterParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -49,12 +49,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 TeleporterParticle::get_texture()
+	uint32_t TeleporterParticle::get_texture()
 	{
 		return base->get_texture(EC_SHIMMER);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint TeleporterParticle::get_texture(const Uint16 res_index)
+	GLuint TeleporterParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexShimmer.get_texture(res_index);
 	}
@@ -62,7 +62,7 @@ namespace ec
 
 	TeleporterEffect::TeleporterEffect(EyeCandy* _base, bool* _dead,
 		Vec3* _pos, const color_t _hue_adjust,
-		const color_t _saturation_adjust, const float _scale, const Uint16 _LOD)
+		const color_t _saturation_adjust, const float _scale, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "TeleporterEffect (" << this << ") created."
@@ -146,7 +146,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool TeleporterEffect::idle(const Uint64 usec)
+	bool TeleporterEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 			return false;
@@ -170,9 +170,9 @@ namespace ec
 
 		for (int i = 0; i < (int)targets.size();)
 		{
-			std::vector< std::pair<float *, Uint64> >::iterator iter =
+			std::vector< std::pair<float *, uint64_t> >::iterator iter =
 				targets.begin() + i;
-			Uint64 age = get_time() - iter->second;
+			uint64_t age = get_time() - iter->second;
 			if (age < 500000)
 			{
 				*(iter->first) = 1.0 - (age / 500000.0);;
@@ -193,7 +193,7 @@ namespace ec
 		return true;
 	}
 
-	void TeleporterEffect::draw(const Uint64 usec)
+	void TeleporterEffect::draw(const uint64_t usec)
 	{
 #ifdef	NEW_TEXTURES
 		capless_cylinders->draw(1.0f);
@@ -208,7 +208,7 @@ namespace ec
 	{
 		if (fabs(_LOD - (float)LOD) < 1.5)
 			return;
-		const Uint16 rounded_LOD = (Uint16)round(_LOD);
+		const uint16_t rounded_LOD = (uint16_t)round(_LOD);
 		if (rounded_LOD <= desired_LOD)
 			LOD = rounded_LOD;
 		else
@@ -247,7 +247,7 @@ namespace ec
 
 	void TeleporterEffect::add_actor_alpha_pointer(float* ptr)
 	{
-		targets.push_back(std::pair<float*, Uint64>(ptr, get_time()));
+		targets.push_back(std::pair<float*, uint64_t>(ptr, get_time()));
 	}
 
 	///////////////////////////////////////////////////////////////////////////////

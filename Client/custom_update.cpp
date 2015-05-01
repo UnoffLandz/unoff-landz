@@ -21,8 +21,8 @@ typedef struct
 	const char* dir;
 	const char* zip;
 	const char* name;
-	Uint32 running;
-	Uint32 error;
+	uint32_t running;
+	uint32_t error;
 } UpdateThreaData_t;
 
 static UpdateThreaData_t update_thread_data[2];
@@ -37,8 +37,8 @@ static const char* zip_names[2] =
 	"custom_clothes.zip", "unofficial_custom_clothes.zip"
 };
 
-static Uint32 progress_function(const char* str, const Uint32 max,
-	const Uint32 current, void* user_data)
+static uint32_t progress_function(const char* str, const uint32_t max,
+	const uint32_t current, void* user_data)
 {
 	UpdateThreaData_t* data;
 
@@ -72,7 +72,7 @@ static Uint32 progress_function(const char* str, const Uint32 max,
 	return 1;
 }
 
-static Uint32 custom_update_threaded(const char* dir, const char* zip_file,
+static uint32_t custom_update_threaded(const char* dir, const char* zip_file,
 	void* data)
 {
 	char *buffer = NULL;
@@ -81,7 +81,7 @@ static Uint32 custom_update_threaded(const char* dir, const char* zip_file,
 	size_t str_size = 256;
 	char* server;
 	FILE* file;
-	Uint32 count, index, idx, len, result;
+	uint32_t count, index, idx, len, result;
 	const char* file_name = "custom_mirrors.lst";
 
 	if ((buffer = (char *)calloc(sizeof(char), buffer_size)) == NULL)
@@ -210,7 +210,7 @@ static int custom_update_thread(void* thread_data)
 {
 	SDL_Event event;
 	UpdateThreaData_t* data;
-	Uint32 result;
+	uint32_t result;
 
 	result = 0;
 	data = (UpdateThreaData_t*)thread_data;
@@ -268,7 +268,7 @@ void init_custom_update()
 {
 	char *str = NULL;
 	size_t str_size = 256;
-	Uint32 i;
+	uint32_t i;
 
 	memset(update_thread_data, 0, sizeof(update_thread_data));
 
@@ -301,7 +301,7 @@ void init_custom_update()
 
 void start_custom_update()
 {
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < 2; i++)
 	{
@@ -320,7 +320,7 @@ void start_custom_update()
 
 void stopp_custom_update()
 {
-	Uint32 i;
+	uint32_t i;
 	int result;
 
 	for (i = 0; i < 2; i++)
@@ -342,9 +342,9 @@ void stopp_custom_update()
 	}
 }
 
-int command_update_status(char *text, int len)
+int command_update_status(const char *text, int len)
 {
-	Uint32 i;
+	uint32_t i;
 
 	if (custom_update == 0)
 	{
@@ -379,7 +379,7 @@ int command_update_status(char *text, int len)
 	return 1;
 }
 
-int command_update(char *text, int len)
+int command_update(const char *text, int len)
 {
 	if (custom_update == 0)
 	{

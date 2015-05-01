@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 typedef char magic_number[4];
-typedef unsigned char version_number[4];
+typedef uint8_t version_number[4];
 
 /*!
  * the header structure for a file.

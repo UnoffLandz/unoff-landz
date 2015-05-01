@@ -32,7 +32,7 @@ extern int show_weather;
 void weather_init();
 void weather_clear();
 void weather_set_area(int area, float x, float y, float radius, int type, float intensity, int change_duration);
-void weather_get_from_server(const Uint8* data);
+void weather_get_from_server(const uint8_t* data);
 
 void weather_compute_ratios(float ratios[MAX_WEATHER_TYPES], float x, float y);
 void weather_update();

@@ -11,7 +11,7 @@ extern "C"
 {
 #endif
 
-extern Uint32 use_animation_program;
+extern uint32_t use_animation_program;
 
 int load_vertex_programs();
 void unload_vertex_programs();
@@ -26,10 +26,10 @@ void model_attach_mesh(actor *act, int mesh_id);
 void model_detach_mesh(actor *act, int mesh_id);
 
 void enable_render_actor();
-void set_actor_animation_program(Uint32 pass, Uint32 ghost);
+void set_actor_animation_program(uint32_t pass, uint32_t ghost);
 void disable_actor_animation_program();
 void disable_render_actor();
-void cal_render_actor_shader(actor *act, Uint32 use_lightning, Uint32 use_textures, Uint32 use_glow);
+void cal_render_actor_shader(actor *act, uint32_t use_lightning, uint32_t use_textures, uint32_t use_glow);
 
 #ifdef __cplusplus
 }

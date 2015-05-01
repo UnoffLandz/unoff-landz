@@ -14,60 +14,60 @@
 #include "normal.h"
 #include "half.h"
 
-static Uint32 has_normal(const Uint32 options)
+static uint32_t has_normal(const uint32_t options)
 {
 	return (options & 0x01) != 0;
 }
 
-static Uint32 has_tangent(const Uint32 options)
+static uint32_t has_tangent(const uint32_t options)
 {
 	return (options & 0x02) != 0;
 }
 
-static Uint32 has_secondary_texture_coordinate(const Uint32 options)
+static uint32_t has_secondary_texture_coordinate(const uint32_t options)
 {
 	return (options & 0x04) != 0;
 }
 
-static Uint32 has_color(const Uint32 options)
+static uint32_t has_color(const uint32_t options)
 {
 	return (options & 0x08) != 0;
 }
 
-static Uint32 half_position(const Uint32 format)
+static uint32_t half_position(const uint32_t format)
 {
 	return (format & 0x01) != 0;
 }
 
-static Uint32 half_uv(const Uint32 format)
+static uint32_t half_uv(const uint32_t format)
 {
 	return (format & 0x02) != 0;
 }
 
-static Uint32 half_extra_uv(const Uint32 format)
+static uint32_t half_extra_uv(const uint32_t format)
 {
 	return (format & 0x04) != 0;
 }
 
-static Uint32 compressed_normal(const Uint32 format)
+static uint32_t compressed_normal(const uint32_t format)
 {
 	return (format & 0x08) != 0;
 }
 
-static Uint32 short_index(const Uint32 format)
+static uint32_t short_index(const uint32_t format)
 {
 	return (format & 0x10) != 0;
 }
 
-static Uint32 check_vertex_size(const Uint32 size, const Uint32 options, const Uint32 format)
+static uint32_t check_vertex_size(const uint32_t size, const uint32_t options, const uint32_t format)
 {
-	Uint32 tmp;
+    uint32_t tmp;
 
 	tmp = 0;
 
 	if (half_position(format))
 	{
-		tmp += 3 * sizeof(Uint16);
+		tmp += 3 * sizeof(uint16_t);
 	}
 	else
 	{
@@ -75,7 +75,7 @@ static Uint32 check_vertex_size(const Uint32 size, const Uint32 options, const U
 	}
 	if (half_uv(format))
 	{
-		tmp += 2 * sizeof(Uint16);
+		tmp += 2 * sizeof(uint16_t);
 	}
 	else
 	{
@@ -86,7 +86,7 @@ static Uint32 check_vertex_size(const Uint32 size, const Uint32 options, const U
 	{
 		if (compressed_normal(format))
 		{
-			tmp += sizeof(Uint16);
+			tmp += sizeof(uint16_t);
 		}
 		else
 		{
@@ -98,7 +98,7 @@ static Uint32 check_vertex_size(const Uint32 size, const Uint32 options, const U
 	{
 		if (compressed_normal(format))
 		{
-			tmp += sizeof(Uint16);
+			tmp += sizeof(uint16_t);
 		}
 		else
 		{
@@ -110,7 +110,7 @@ static Uint32 check_vertex_size(const Uint32 size, const Uint32 options, const U
 	{
 		if (half_extra_uv(format))
 		{
-			tmp += 2 * sizeof(Uint16);
+			tmp += 2 * sizeof(uint16_t);
 		}
 		else
 		{
@@ -120,13 +120,13 @@ static Uint32 check_vertex_size(const Uint32 size, const Uint32 options, const U
 
 	if (has_color(options))
 	{
-		tmp += 4 * sizeof(Uint8);
+		tmp += 4 * sizeof(uint8_t);
 	}
 
 	return tmp == size;
 }
 
-static Uint32 get_material_size(const Uint32 options)
+static uint32_t get_material_size(const uint32_t options)
 {
 	if (has_secondary_texture_coordinate(options))
 	{
@@ -152,23 +152,23 @@ e3d_vertex_data vertex_layout_array[] =
 	},
 	{
 		sizeof(float) * 2, 0, 0, sizeof(float) * 5,
-		sizeof(float) * 5 + sizeof(Uint8) * 4, 3, 2, 0, 4,
+		sizeof(float) * 5 + sizeof(uint8_t) * 4, 3, 2, 0, 4,
 		GL_FLOAT, GL_FLOAT, GL_FLOAT, GL_UNSIGNED_BYTE
 	},
 	{
 		sizeof(float) * 5, 0, sizeof(float) * 2, sizeof(float) * 8,
-		sizeof(float) * 8 + sizeof(Uint8) * 4, 3, 2, 3, 4,
+		sizeof(float) * 8 + sizeof(uint8_t) * 4, 3, 2, 3, 4,
 		GL_FLOAT, GL_FLOAT, GL_FLOAT, GL_UNSIGNED_BYTE
 	}
 };
 
-static void read_vertex_buffer(el_file_ptr file, float* buffer, const Uint32 vertex_count,
-	const Uint32 vertex_size, const Uint32 options, const Uint32 format)
+static void read_vertex_buffer(el_file_ptr file, float* buffer, const uint32_t vertex_count,
+    const uint32_t vertex_size, const uint32_t options, const uint32_t format)
 {
 	float temp[3];
-	Uint16 tmp[3];
-	Uint32 i, idx, offset;
-	Uint8 color[4];
+	uint16_t tmp[3];
+    uint32_t i, idx, offset;
+	uint8_t color[4];
 
 	idx = 0;
 
@@ -180,7 +180,7 @@ static void read_vertex_buffer(el_file_ptr file, float* buffer, const Uint32 ver
 
 		if (half_uv(format))
 		{
-			el_read(file, 2 * sizeof(Uint16), tmp);
+			el_read(file, 2 * sizeof(uint16_t), tmp);
 
 			temp[0] = half_to_float(SDL_SwapLE16(tmp[0]));
 			temp[1] = half_to_float(SDL_SwapLE16(tmp[1]));
@@ -202,7 +202,7 @@ static void read_vertex_buffer(el_file_ptr file, float* buffer, const Uint32 ver
 		{
 			if (half_extra_uv(format))
 			{
-				el_seek(file, 2 * sizeof(Uint16), SEEK_CUR);
+				el_seek(file, 2 * sizeof(uint16_t), SEEK_CUR);
 			}
 			else
 			{
@@ -214,7 +214,7 @@ static void read_vertex_buffer(el_file_ptr file, float* buffer, const Uint32 ver
 		{
 			if (compressed_normal(format))
 			{
-				el_read(file, sizeof(Uint16), tmp);
+				el_read(file, sizeof(uint16_t), tmp);
 
 				uncompress_normal(SDL_SwapLE16(tmp[0]), temp);
 			}
@@ -238,7 +238,7 @@ static void read_vertex_buffer(el_file_ptr file, float* buffer, const Uint32 ver
 		{
 			if (compressed_normal(format))
 			{
-				el_seek(file, sizeof(Uint16), SEEK_CUR);
+				el_seek(file, sizeof(uint16_t), SEEK_CUR);
 			}
 			else
 			{
@@ -248,7 +248,7 @@ static void read_vertex_buffer(el_file_ptr file, float* buffer, const Uint32 ver
 
 		if (half_position(format))
 		{
-			el_read(file, 3 * sizeof(Uint16), tmp);
+			el_read(file, 3 * sizeof(uint16_t), tmp);
 
 			temp[0] = half_to_float(SDL_SwapLE16(tmp[0]));
 			temp[1] = half_to_float(SDL_SwapLE16(tmp[1]));
@@ -271,8 +271,8 @@ static void read_vertex_buffer(el_file_ptr file, float* buffer, const Uint32 ver
 
 		if (has_color(options))
 		{
-			el_read(file, 4 * sizeof(Uint8), color);
-			memcpy(&buffer[idx], color, 4 * sizeof(Uint8));
+			el_read(file, 4 * sizeof(uint8_t), color);
+			memcpy(&buffer[idx], color, 4 * sizeof(uint8_t));
 			idx += 1;
 		}
 	}
@@ -326,9 +326,9 @@ static e3d_object* do_load_e3d_detail(e3d_object* cur_object)
 	int i, idx, l, mem_size, vertex_size, material_size;
 	int file_pos, indices_size, index_size;
 	char text_file_name[1024];
-	Uint32 tmp;
-	Uint16 tmp_16;
-	Uint8* index_pointer;
+    uint32_t tmp;
+	uint16_t tmp_16;
+	uint8_t* index_pointer;
 	el_file_ptr file;
 	version_number version;
 	
@@ -474,10 +474,10 @@ static e3d_object* do_load_e3d_detail(e3d_object* cur_object)
 
 	if (short_index(header.vertex_format))
 	{
-		if (index_size != sizeof(Uint16))
+		if (index_size != sizeof(uint16_t))
 		{
 			LOG_ERROR("File '%s' has wrong index size! Expected size %d, found size %d.",
-				cur_object->file_name, sizeof(Uint16), index_size);
+				cur_object->file_name, sizeof(uint16_t), index_size);
 			free_e3d_pointer(cur_object);
 			el_close(file);
 			return 0;
@@ -485,10 +485,10 @@ static e3d_object* do_load_e3d_detail(e3d_object* cur_object)
 	}
 	else
 	{
-		if (index_size != sizeof(Uint32))
+        if (index_size != sizeof(uint32_t))
 		{
 			LOG_ERROR("File '%s' has wrong index size! Expected size %d, found size %d.",
-				cur_object->file_name, sizeof(Uint32), index_size);
+                cur_object->file_name, sizeof(uint32_t), index_size);
 			free_e3d_pointer(cur_object);
 			el_close(file);
 			return 0;
@@ -525,29 +525,31 @@ static e3d_object* do_load_e3d_detail(e3d_object* cur_object)
 
 	cur_object->indices = malloc(cur_object->index_no * indices_size);
 
-	if (use_vertex_buffers) index_pointer = 0;
-	else index_pointer = cur_object->indices;
+    if (use_vertex_buffers)
+        index_pointer = 0;
+    else
+        index_pointer = (uint8_t*)cur_object->indices;
 
 	for (i = 0; i < cur_object->index_no; i++)
 	{
 		if (index_size == 2)
 		{
-			el_read(file, sizeof(Uint16), &tmp_16);
+			el_read(file, sizeof(uint16_t), &tmp_16);
 			tmp = SDL_SwapLE16(tmp_16);
 		}
 		else
 		{
-			el_read(file, sizeof(Uint32), &tmp);
+            el_read(file, sizeof(uint32_t), &tmp);
 			tmp = SDL_SwapLE32(tmp);
 		}
 
 		if (indices_size == 2)
 		{
-			((Uint16*)(cur_object->indices))[i] = tmp;
+			((uint16_t*)(cur_object->indices))[i] = tmp;
 		}
 		else
 		{
-			((Uint32*)(cur_object->indices))[i] = tmp;
+            ((uint32_t*)(cur_object->indices))[i] = tmp;
 		}
 	}
 

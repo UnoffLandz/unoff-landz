@@ -10,7 +10,7 @@ int get_height_of_timer(void);
 void set_mouse_over_timer(void);
 int display_timer(window_info *win, int base_y_start);
 int mouse_is_over_timer(window_info *win, int mx, int my);
-int mouse_click_timer(Uint32 flags);
+int mouse_click_timer(uint32_t flags);
 void destroy_timer(void);
 
 extern int hud_timer_keep_state;

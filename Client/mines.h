@@ -53,7 +53,7 @@ void put_mine_on_ground(int mine_x, int mine_y, int mine_type, int mine_id);
  * \note No sanity checks on \a data are performed. This may be a possible bug.
  * \bug No sanity checks on \a data are performed.
  */
-void add_mines_from_list (const Uint8 * data);
+void add_mines_from_list (const uint8_t * data);
 
 /*!
  * \ingroup item

@@ -49,7 +49,7 @@ void go_afk()
 	LOG_TO_CONSOLE(c_green1,going_afk);
 	if(!you_sit) 
 		{
-			Uint8 str[4];
+			uint8_t str[4];
 			str[0]=SIT_DOWN;
 			str[1]=1;
 			my_tcp_send(my_socket,str,2);
@@ -83,7 +83,7 @@ void check_afk_state(void)
 	}
 }
 
-void print_title(char * no, char * name, char * messages)
+void print_title(const char * no, char * name, char * messages)
 {
 	char * ptr = afk_title;
 	
@@ -159,7 +159,7 @@ int add_name_to_pm_log(char *name, int len)
 	return z;
 }
 
-void add_message_to_pm_log (char *message, int len, Uint8 channel)
+void add_message_to_pm_log (char *message, int len, uint8_t channel)
 {
 	char buf[512];
 	char last_msg_from[32];
@@ -191,10 +191,10 @@ void add_message_to_pm_log (char *message, int len, Uint8 channel)
 		z = add_name_to_pm_log (last_msg_from, last_msg_len);
 	}
 	
-	pm_log.afk_msgs[z].messages = realloc (pm_log.afk_msgs[z].messages, (pm_log.afk_msgs[z].msgs+1) * sizeof (char *));
+    pm_log.afk_msgs[z].messages = (char **)realloc (pm_log.afk_msgs[z].messages, (pm_log.afk_msgs[z].msgs+1) * sizeof (char *));
 	// time name message
 	safe_snprintf (buf, sizeof(buf), "<%1d:%02d> %s: %.*s", real_game_minute/60, real_game_minute%60, last_msg_from, strlen(mymsg), mymsg);
-	pm_log.afk_msgs[z].messages[pm_log.afk_msgs[z].msgs] = calloc (strlen (buf) + 1, sizeof (char));
+    pm_log.afk_msgs[z].messages[pm_log.afk_msgs[z].msgs] = (char *)calloc (strlen (buf) + 1, sizeof (char));
 	safe_strncpy (pm_log.afk_msgs[z].messages[pm_log.afk_msgs[z].msgs], buf, (strlen(buf) + 1) * sizeof(char));
 	pm_log.afk_msgs[z].msgs++;
 	pm_log.msgs++;
@@ -208,7 +208,7 @@ int my_namecmp(char *check)
 	my_tolower(username);
 	
 	for(;i<20 && username[i] && check[i]==username[i];i++);
-	if(check[i]==username[i]||((check[i]==' '||!isalpha((unsigned char)check[i])) && !username[i])) return 0;
+	if(check[i]==username[i]||((check[i]==' '||!isalpha(check[i])) && !username[i])) return 0;
 	return 1;
 }
 
@@ -239,9 +239,9 @@ int is_talking_about_me (const char *server_msg, int len, char everywhere)
 	return 0;
 }
 
-void send_afk_message (const char *server_msg, int len, Uint8 channel)
+void send_afk_message (const char *server_msg, int len, uint8_t channel)
 {
-	Uint8 sendtext[MAX_TEXT_MESSAGE_LENGTH]={0};
+	uint8_t sendtext[MAX_TEXT_MESSAGE_LENGTH]={0};
 	
 	if (afk_message[0] == '\0') return;
 	

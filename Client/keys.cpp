@@ -13,121 +13,121 @@
 #endif
 
 // default definitions for keys
-Uint32 K_QUIT=ALT|'x';
+uint32_t K_QUIT=ALT|'x';
 #ifdef WINDOWS
 // Windows SDL reports [Alt Gr] as [Ctrl], which hinders German users typing '@',
 // so don't use Ctrl-q as a symbol to exit
-Uint32 K_QUIT_ALT=ALT|'x';
+uint32_t K_QUIT_ALT=ALT|'x';
 #elif OSX
-Uint32 K_QUIT_ALT=KMOD_LMETA|'q';
+uint32_t K_QUIT_ALT=KMOD_LMETA|'q';
 #else
-Uint32 K_QUIT_ALT=CTRL|'q';
+uint32_t K_QUIT_ALT=CTRL|'q';
 #endif
-Uint32 K_CAMERAUP=SDLK_UP;
-Uint32 K_CAMERADOWN=SDLK_DOWN;
-Uint32 K_ZOOMOUT=SDLK_PAGEDOWN;
-Uint32 K_ZOOMIN=SDLK_PAGEUP;
-Uint32 K_TURNLEFT=SDLK_INSERT;
-Uint32 K_TURNRIGHT=SDLK_DELETE;
-Uint32 K_ADVANCE=SDLK_HOME;
-Uint32 K_HEALTHBAR=ALT|'h';
-Uint32 K_VIEWNAMES=ALT|'n';
-Uint32 K_VIEWHP=ALT|'b';
-Uint32 K_STATS=CTRL|'a';
-Uint32 K_QUESTLOG=CTRL|'g';
-Uint32 K_SESSION=CTRL|'z';
-Uint32 K_WALK=CTRL|'w';
-Uint32 K_LOOK=CTRL|'l';
-Uint32 K_USE=CTRL|'u';
-Uint32 K_OPTIONS=CTRL|'o';
-Uint32 K_REPEATSPELL=CTRL|'r';
-Uint32 K_SIGILS=CTRL|'s';
-Uint32 K_MANUFACTURE=CTRL|'m';
-Uint32 K_ITEMS=CTRL|'i';
-Uint32 K_MAP=SDLK_TAB;
-Uint32 K_MINIMAP=ALT|'m';
-Uint32 K_ROTATELEFT=SDLK_LEFT;
-Uint32 K_ROTATERIGHT=SDLK_RIGHT;
-Uint32 K_FROTATELEFT=SHIFT|SDLK_LEFT;
-Uint32 K_FROTATERIGHT=SHIFT|SDLK_RIGHT;
-Uint32 K_BROWSER=SDLK_F2;
-Uint32 K_BROWSERWIN=CTRL|SDLK_F2;
-Uint32 K_ESCAPE=SDLK_ESCAPE;
-Uint32 K_CONSOLE=SDLK_F1;
-Uint32 K_SHADOWS=SDLK_F3;
-Uint32 K_KNOWLEDGE=CTRL|'k';
-Uint32 K_ENCYCLOPEDIA=CTRL|'e';
-Uint32 K_HELP=CTRL|'h';
-Uint32 K_NOTEPAD=CTRL|'n';
-Uint32 K_HIDEWINS=ALT|'d';
-Uint32 K_ITEM1=CTRL|'1';
-Uint32 K_ITEM2=CTRL|'2';
-Uint32 K_ITEM3=CTRL|'3';
-Uint32 K_ITEM4=CTRL|'4';
-Uint32 K_ITEM5=CTRL|'5';
-Uint32 K_ITEM6=CTRL|'6';
-Uint32 K_ITEM7=CTRL|'7';
-Uint32 K_ITEM8=CTRL|'8';
-Uint32 K_ITEM9=CTRL|'9';
-Uint32 K_ITEM10=CTRL|'0';
-Uint32 K_ITEM11=CTRL|'-';
-Uint32 K_ITEM12=CTRL|'=';
-Uint32 K_SCREENSHOT=CTRL|'p';
-Uint32 K_VIEWTEXTASOVERTEXT=ALT|'o';
-Uint32 K_AFK=CTRL|ALT|'a';
-Uint32 K_SIT=ALT|'s';
-Uint32 K_RANGINGLOCK=ALT|'r';
-Uint32 K_BUDDY=CTRL|'b';
-Uint32 K_NEXT_CHAT_TAB=CTRL|SDLK_PAGEDOWN;
-Uint32 K_PREV_CHAT_TAB=CTRL|SDLK_PAGEUP;
-Uint32 K_RULES=SDLK_F5;
-Uint32 K_SPELL1=ALT|'1';
-Uint32 K_SPELL2=ALT|'2';
-Uint32 K_SPELL3=ALT|'3';
-Uint32 K_SPELL4=ALT|'4';
-Uint32 K_SPELL5=ALT|'5';
-Uint32 K_SPELL6=ALT|'6';
-Uint32 K_SPELL7=ALT|'7';
-Uint32 K_SPELL8=ALT|'8';
-Uint32 K_SPELL9=ALT|'9';
-Uint32 K_SPELL10=ALT|'0';
-Uint32 K_SPELL11=ALT|'-';
-Uint32 K_SPELL12=ALT|'=';
-Uint32 K_TABCOMPLETE=CTRL|' ';
-Uint32 K_WINDOWS_ON_TOP=ALT|'w';
-Uint32 K_MARKFILTER=CTRL|'f';
-Uint32 K_OPAQUEWIN=CTRL|'d';
-Uint32 K_GRAB_MOUSE=ALT|'g';
-Uint32 K_FIRST_PERSON=ALT|'f';
-Uint32 K_EXTEND_CAM=ALT|'e';
+uint32_t K_CAMERAUP=SDLK_UP;
+uint32_t K_CAMERADOWN=SDLK_DOWN;
+uint32_t K_ZOOMOUT=SDLK_PAGEDOWN;
+uint32_t K_ZOOMIN=SDLK_PAGEUP;
+uint32_t K_TURNLEFT=SDLK_INSERT;
+uint32_t K_TURNRIGHT=SDLK_DELETE;
+uint32_t K_ADVANCE=SDLK_HOME;
+uint32_t K_HEALTHBAR=ALT|'h';
+uint32_t K_VIEWNAMES=ALT|'n';
+uint32_t K_VIEWHP=ALT|'b';
+uint32_t K_STATS=CTRL|'a';
+uint32_t K_QUESTLOG=CTRL|'g';
+uint32_t K_SESSION=CTRL|'z';
+uint32_t K_WALK=CTRL|'w';
+uint32_t K_LOOK=CTRL|'l';
+uint32_t K_USE=CTRL|'u';
+uint32_t K_OPTIONS=CTRL|'o';
+uint32_t K_REPEATSPELL=CTRL|'r';
+uint32_t K_SIGILS=CTRL|'s';
+uint32_t K_MANUFACTURE=CTRL|'m';
+uint32_t K_ITEMS=CTRL|'i';
+uint32_t K_MAP=SDLK_TAB;
+uint32_t K_MINIMAP=ALT|'m';
+uint32_t K_ROTATELEFT=SDLK_LEFT;
+uint32_t K_ROTATERIGHT=SDLK_RIGHT;
+uint32_t K_FROTATELEFT=SHIFT|SDLK_LEFT;
+uint32_t K_FROTATERIGHT=SHIFT|SDLK_RIGHT;
+uint32_t K_BROWSER=SDLK_F2;
+uint32_t K_BROWSERWIN=CTRL|SDLK_F2;
+uint32_t K_ESCAPE=SDLK_ESCAPE;
+uint32_t K_CONSOLE=SDLK_F1;
+uint32_t K_SHADOWS=SDLK_F3;
+uint32_t K_KNOWLEDGE=CTRL|'k';
+uint32_t K_ENCYCLOPEDIA=CTRL|'e';
+uint32_t K_HELP=CTRL|'h';
+uint32_t K_NOTEPAD=CTRL|'n';
+uint32_t K_HIDEWINS=ALT|'d';
+uint32_t K_ITEM1=CTRL|'1';
+uint32_t K_ITEM2=CTRL|'2';
+uint32_t K_ITEM3=CTRL|'3';
+uint32_t K_ITEM4=CTRL|'4';
+uint32_t K_ITEM5=CTRL|'5';
+uint32_t K_ITEM6=CTRL|'6';
+uint32_t K_ITEM7=CTRL|'7';
+uint32_t K_ITEM8=CTRL|'8';
+uint32_t K_ITEM9=CTRL|'9';
+uint32_t K_ITEM10=CTRL|'0';
+uint32_t K_ITEM11=CTRL|'-';
+uint32_t K_ITEM12=CTRL|'=';
+uint32_t K_SCREENSHOT=CTRL|'p';
+uint32_t K_VIEWTEXTASOVERTEXT=ALT|'o';
+uint32_t K_AFK=CTRL|ALT|'a';
+uint32_t K_SIT=ALT|'s';
+uint32_t K_RANGINGLOCK=ALT|'r';
+uint32_t K_BUDDY=CTRL|'b';
+uint32_t K_NEXT_CHAT_TAB=CTRL|SDLK_PAGEDOWN;
+uint32_t K_PREV_CHAT_TAB=CTRL|SDLK_PAGEUP;
+uint32_t K_RULES=SDLK_F5;
+uint32_t K_SPELL1=ALT|'1';
+uint32_t K_SPELL2=ALT|'2';
+uint32_t K_SPELL3=ALT|'3';
+uint32_t K_SPELL4=ALT|'4';
+uint32_t K_SPELL5=ALT|'5';
+uint32_t K_SPELL6=ALT|'6';
+uint32_t K_SPELL7=ALT|'7';
+uint32_t K_SPELL8=ALT|'8';
+uint32_t K_SPELL9=ALT|'9';
+uint32_t K_SPELL10=ALT|'0';
+uint32_t K_SPELL11=ALT|'-';
+uint32_t K_SPELL12=ALT|'=';
+uint32_t K_TABCOMPLETE=CTRL|' ';
+uint32_t K_WINDOWS_ON_TOP=ALT|'w';
+uint32_t K_MARKFILTER=CTRL|'f';
+uint32_t K_OPAQUEWIN=CTRL|'d';
+uint32_t K_GRAB_MOUSE=ALT|'g';
+uint32_t K_FIRST_PERSON=ALT|'f';
+uint32_t K_EXTEND_CAM=ALT|'e';
 #ifndef OSX
-Uint32 K_CUT=CTRL|'x';
-Uint32 K_COPY=CTRL|'c';
-Uint32 K_PASTE=CTRL|'v';
+uint32_t K_CUT=CTRL|'x';
+uint32_t K_COPY=CTRL|'c';
+uint32_t K_PASTE=CTRL|'v';
 #else
-Uint32 K_CUT=KMOD_LMETA|'x';
-Uint32 K_COPY=KMOD_LMETA|'c';
-Uint32 K_PASTE=KMOD_LMETA|'v';
+uint32_t K_CUT=KMOD_LMETA|'x';
+uint32_t K_COPY=KMOD_LMETA|'c';
+uint32_t K_PASTE=KMOD_LMETA|'v';
 #endif
-Uint32 K_COPY_ALT=CTRL|SDLK_INSERT;
-Uint32 K_PASTE_ALT=SHIFT|SDLK_INSERT;
+uint32_t K_COPY_ALT=CTRL|SDLK_INSERT;
+uint32_t K_PASTE_ALT=SHIFT|SDLK_INSERT;
 #ifdef ECDEBUGWIN
-Uint32 K_ECDEBUGWIN=ALT|CTRL|'c';
+uint32_t K_ECDEBUGWIN=ALT|CTRL|'c';
 #endif
-Uint32 K_EMOTES=CTRL|'j';
-Uint32 K_RANGINGWIN=CTRL|'t';
+uint32_t K_EMOTES=CTRL|'j';
+uint32_t K_RANGINGWIN=CTRL|'t';
 
 // Remaining keys are not assigned to the keyboard but
 // can be redefined or used by the #keypress command.
 // They will get values at startup along with any keys
 // undefined in key.ini
-Uint32 K_COUNTERS=SDLK_UNKNOWN;
-Uint32 K_HELPSKILLS=SDLK_UNKNOWN;
+uint32_t K_COUNTERS=SDLK_UNKNOWN;
+uint32_t K_HELPSKILLS=SDLK_UNKNOWN;
 
 typedef struct
 {
 	char name[25];
-	Uint32 *value;
+	uint32_t *value;
 } key_store_entry;
 
 static key_store_entry key_store[] =
@@ -226,7 +226,7 @@ static key_store_entry key_store[] =
 };
 
 
-Uint32 get_key_value(const char* name)
+uint32_t get_key_value(const char* name)
 {
 	size_t num_keys = sizeof(key_store)/sizeof(key_store_entry);
 	size_t i;
@@ -243,7 +243,7 @@ Uint32 get_key_value(const char* name)
 	return 0;
 }
 
-static void add_key(Uint32 *key, Uint32 n)
+static void add_key(uint32_t *key, uint32_t n)
 {
 	switch (n)
 	{
@@ -264,11 +264,11 @@ static void add_key(Uint32 *key, Uint32 n)
         }
 }
 
-static Uint32 CRC32(const char *data, int len)
+static uint32_t CRC32(const char *data, int len)
 {
 	unsigned int result = 0;
 	int i, j;
-	unsigned char octet;
+    uint8_t octet;
 
 	for (i = 0; i < len; i++)
 	{
@@ -286,7 +286,7 @@ static Uint32 CRC32(const char *data, int len)
 	return ~result;
 }
 
-static Uint16 get_key_code(const char *key)
+static uint16_t get_key_code(const char *key)
 {
 	int len = strlen(key);
 
@@ -296,7 +296,7 @@ static Uint16 get_key_code(const char *key)
 	}
 	else
 	{
-		Uint32 crc = CRC32(key,len);
+		uint32_t crc = CRC32(key,len);
 		switch(crc){
 			case 0x414243d2: //UP
 				return 273;
@@ -451,7 +451,7 @@ static Uint16 get_key_code(const char *key)
 static void parse_key_line(const char *line)
 {
 	char kstr[100], t1[100], t2[100], t3[100], t4[100];
-	Uint32 key = 0;
+	uint32_t key = 0;
 	int nkey = sscanf(line, " #K_%99s = %99s %99s %99s %99s", kstr,
 		t1, t2, t3, t4);
 	size_t num_keys = sizeof(key_store)/sizeof(key_store_entry);
@@ -488,7 +488,7 @@ void read_key_config()
 	char line[512];
 	el_file_ptr f;
 	size_t num_keys = sizeof(key_store)/sizeof(key_store_entry);
-	Uint32 last_key_value = SDLK_LAST;
+	uint32_t last_key_value = SDLK_LAST;
 	size_t i;
 
 	f = el_open_custom("key.ini");
@@ -506,10 +506,10 @@ void read_key_config()
 }
 
 // Returns (in the buffer provided) a string describing the specified keydef.
-const char *get_key_string(Uint32 keydef, char *buf, size_t buflen)
+const char *get_key_string(uint32_t keydef, char *buf, size_t buflen)
 {
 	char base = keydef & 0xFF;
-	char *mod = "";
+    const char *mod = "";
 	if (keydef & CTRL)
 		mod = "ctrl-";
 	else if (keydef & ALT)

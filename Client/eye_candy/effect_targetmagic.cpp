@@ -18,9 +18,9 @@ namespace ec
 #else	/* NEW_TEXTURES */
 		const color_t green, const color_t blue, Texture* _texture,
 #endif	/* NEW_TEXTURES */
-		const Uint16 _LOD, const TargetMagicEffect::TargetMagicType _type,
+		const uint16_t _LOD, const TargetMagicEffect::TargetMagicType _type,
 		ParticleSpawner* _spawner2, ParticleMover* _mover2, Vec3* _target,
-		Uint16 _effect_id, Uint16 _state) :
+		uint16_t _effect_id, uint16_t _state) :
 		Particle(_effect, _mover, _pos, _velocity,
 			_size * (0.5 + randcoord()))
 	{
@@ -48,12 +48,12 @@ namespace ec
 		effect_id = _effect_id;
 	}
 
-	bool TargetMagicParticle::idle(const Uint64 delta_t)
+	bool TargetMagicParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
 
-		const Uint64 age = get_time() - born;
+		const uint64_t age = get_time() - born;
 		const interval_t float_time = delta_t / 1000000.0;
 		Vec3 cur_target = *target;
 		cur_target.y += 0.5;
@@ -277,7 +277,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 TargetMagicParticle::get_texture()
+	uint32_t TargetMagicParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
@@ -298,12 +298,12 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	GLuint TargetMagicParticle::get_texture(const Uint16 res_index)
+	GLuint TargetMagicParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 
-	void TargetMagicParticle::draw(const Uint64 usec)
+	void TargetMagicParticle::draw(const uint64_t usec)
 	{
 		if ((type == TargetMagicEffect::POISON) && (state == 2))
 		{
@@ -337,7 +337,7 @@ namespace ec
 
 	TargetMagicEffect::TargetMagicEffect(EyeCandy* _base, bool* _dead,
 		Vec3* _pos, Vec3* _target, const TargetMagicType _type,
-		std::vector<ec::Obstruction*>* _obstructions, const Uint16 _LOD)
+		std::vector<ec::Obstruction*>* _obstructions, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "TargetMagicEffect (" << this << ", " << _type
@@ -351,7 +351,7 @@ namespace ec
 	TargetMagicEffect::TargetMagicEffect(EyeCandy* _base, bool* _dead,
 		Vec3* _pos, const std::vector<Vec3*> _targets,
 		const TargetMagicType _type,
-		std::vector<ec::Obstruction*>* _obstructions, const Uint16 _LOD)
+		std::vector<ec::Obstruction*>* _obstructions, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "TargetMagicEffect (" << this << ", " << _type
@@ -362,7 +362,7 @@ namespace ec
 	void TargetMagicEffect::initialize(EyeCandy* _base, bool* _dead,
 		Vec3* _pos, const std::vector<Vec3*> _targets,
 		const TargetMagicType _type,
-		std::vector<ec::Obstruction*>* _obstructions, const Uint16 _LOD)
+		std::vector<ec::Obstruction*>* _obstructions, const uint16_t _LOD)
 	{
 		base = _base;
 		dead = _dead;
@@ -689,7 +689,7 @@ namespace ec
 				<< std::endl << std::flush;
 	}
 
-	bool TargetMagicEffect::idle(const Uint64 usec)
+	bool TargetMagicEffect::idle(const uint64_t usec)
 	{
 		if ((particles.size() == 0) && (effect_count == 0))
 			return false;
@@ -697,8 +697,8 @@ namespace ec
 		if (recall)
 			return true;
 
-		const Uint64 cur_time = get_time();
-		const Uint64 age = cur_time - born;
+		const uint64_t cur_time = get_time();
+		const uint64_t age = cur_time - born;
 		for (int i = 0; i < (int)effect_centers.size(); i++)
 		{
 			if (age < 500000)
@@ -846,7 +846,7 @@ namespace ec
 		return true;
 	}
 
-	void TargetMagicEffect::draw(const Uint64 usec)
+	void TargetMagicEffect::draw(const uint64_t usec)
 	{
 		for (std::vector<Shape*>::iterator iter = capless_cylinders.begin(); iter
 			!= capless_cylinders.end(); iter++)
@@ -857,7 +857,7 @@ namespace ec
 		TargetMagicEffect* _effect, Vec3* _pos,
 		const TargetMagicEffect::TargetMagicType _type,
 		ParticleSpawner* _spawner, ParticleMover* _mover, float* _target_alpha,
-		Uint16 _effect_id, const Uint16 _LOD)
+		uint16_t _effect_id, const uint16_t _LOD)
 	{
 		base = _base;
 		effect = _effect;
@@ -1096,7 +1096,7 @@ namespace ec
 		 std::cout << "TargetMagicEffect2 (" << this << ") destroyed." << std::endl << std::flush;*/
 	}
 
-	bool TargetMagicEffect2::idle(const Uint64 usec)
+	bool TargetMagicEffect2::idle(const uint64_t usec)
 	{
 		if (particles.size() == 0)
 		{
@@ -1108,8 +1108,8 @@ namespace ec
 		{
 			if (target_alpha != NULL)
 			{
-				const Uint64 cur_time = get_time();
-				const Uint64 age = cur_time - born;
+				const uint64_t cur_time = get_time();
+				const uint64_t age = cur_time - born;
 				if (age < 500000)
 				{
 					*target_alpha = age / 500000.0;

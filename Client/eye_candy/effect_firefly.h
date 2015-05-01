@@ -26,11 +26,11 @@ namespace ec
 			{
 			}
 
-			virtual bool idle(const Uint64 delta_t);
+			virtual bool idle(const uint64_t delta_t);
 #ifdef	NEW_TEXTURES
-			virtual Uint32 get_texture();
+			virtual uint32_t get_texture();
 #else	/* NEW_TEXTURES */
-			virtual GLuint get_texture(const Uint16 res_index);
+			virtual GLuint get_texture(const uint16_t res_index);
 #endif	/* NEW_TEXTURES */
 			virtual light_t estimate_light_level() const
 			{
@@ -67,7 +67,7 @@ namespace ec
 				return EC_FIREFLY;
 			}
 			;
-			bool idle(const Uint64 usec);
+			bool idle(const uint64_t usec);
 
 			BoundingMover* mover;
 			NoncheckingFilledBoundingSpawner* spawner;

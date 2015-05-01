@@ -26,7 +26,7 @@ const float debug_time_accel = 120.0f;
 #endif
 
 #ifdef DEBUG_TIME
-Uint64 old_time = 0;
+uint64_t old_time = 0;
 #endif
 
 /* NOTE: This file contains implementations of the following, currently unused, and commented functions:
@@ -53,13 +53,13 @@ GLfloat sky_lights_c4[GLOBAL_LIGHTS_NO*2][4];
 int	show_lights;
 int	num_lights;	// the highest light number loaded
 light *lights_list[MAX_LIGHTS];
-unsigned char light_level=58;
+uint8_t light_level=58;
 sun sun_pos[360];
 sun sun_show[181];
 
 short game_minute = 0;
 short game_second = 0;
-unsigned char freeze_time = 0;
+uint8_t freeze_time = 0;
 
 int test_point_visible(float x,float y,float z)
 {
@@ -196,7 +196,7 @@ int add_light(GLfloat x, GLfloat y, GLfloat z, GLfloat r, GLfloat g, GLfloat b, 
 		// oops no way to store the new light
 		return i;
 		
-	new_light = calloc(1, sizeof(light));
+    new_light = (light *)calloc(1, sizeof(light));
 
 	new_light->pos_x= x;
 	new_light->pos_y= y;
@@ -649,7 +649,7 @@ void new_second()
 
 void light_idle()
 {
-	Uint64 new_time;
+    uint64_t new_time;
 #ifdef WINDOWS
 	FILETIME ft;
 	GetSystemTimeAsFileTime(&ft);
@@ -660,9 +660,9 @@ void light_idle()
 #else
 	struct timeval t;
 	gettimeofday(&t, NULL);
-	new_time = ((Uint64)t.tv_sec)*1000000ul + (Uint64)t.tv_usec;
+    new_time = ((uint64_t)t.tv_sec)*1000000ul + (uint64_t)t.tv_usec;
 #endif
-	if (new_time / (Uint64)(60000000 / debug_time_accel) - old_time / (Uint64)(60000000 / debug_time_accel)){
+    if (new_time / (uint64_t)(60000000 / debug_time_accel) - old_time / (uint64_t)(60000000 / debug_time_accel)){
 		game_minute++;
 		if (game_minute >= 360)
 		      game_minute -= 360;

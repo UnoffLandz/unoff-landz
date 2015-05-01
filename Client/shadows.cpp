@@ -562,10 +562,10 @@ CHECK_GL_ERRORS();
 
 void setup_shadow_mapping()
 {
-    GLfloat shadow_color[] = {ambient_light[0]+0.2,
-							  ambient_light[1]+0.2,
-							  ambient_light[2]+0.2,
-							  1.0};
+    GLfloat shadow_color[] = {ambient_light[0]+0.2f,
+                              ambient_light[1]+0.2f,
+                              ambient_light[2]+0.2f,
+                              1.0f};
 
 	if (!is_day && lightning_falling)
 	{

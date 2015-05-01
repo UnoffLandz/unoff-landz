@@ -31,7 +31,7 @@ void clear_conn_log();
  * \param in_data           the data to write to the log
  * \param data_length       the length of \a in_data
  */
-void log_conn(const Uint8 *in_data, Uint16 data_length);
+void log_conn(const uint8_t *in_data, uint16_t data_length);
 
 #ifdef EXTRA_DEBUG
 /*! \name    ERR macro 

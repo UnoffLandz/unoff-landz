@@ -23,7 +23,7 @@ unsigned int get_fsaa_mode_count()
 void init_fsaa_modes()
 {
 	char str[1024];
-	Uint32 i;
+	uint32_t i;
 
 	fsaa_modes = get_fsaa_modes();
 

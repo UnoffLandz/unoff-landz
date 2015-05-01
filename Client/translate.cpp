@@ -833,20 +833,20 @@ void parse_spells(xmlNode * in);
 void parse_stats(xmlNode * in);
 void parse_titles(xmlNode * in);
 #endif
-struct xml_struct load_strings(char * file);
+struct xml_struct load_strings(const char * file);
 struct xml_struct load_strings_file(char * filename);
 
 void init_groups()
 {
 #ifdef ELC
-	console_str=add_xml_group(GROUP,CONSOLE_STR,"filter","ignore","misc","loading_msg","cmd");
-	errors=add_xml_group(GROUP,ERRORS,"actors","load","misc","particles","snd","video","rules");
-	help_str=add_xml_group(GROUP,HELP_STR,"afk","misc","new","tooltips","buddy");
-	options_str=add_xml_group(DIGROUP,OPTIONS_STR,"options");
-	sigils_str=add_xml_group(DIGROUP,SIGILS_STR,"sigils");
-	stats_str=add_xml_group(STAT_GROUP,STATS_STR,"base","cross","misc","nexus","skills");
-	stats_extra=add_xml_group(GROUP,STATS_EXTRA,"extra");
-	titles_str = add_xml_group (GROUP, TITLES_STR, "titles");
+    console_str=(group_id *)add_xml_group(GROUP,CONSOLE_STR,"filter","ignore","misc","loading_msg","cmd");
+    errors=(group_id *)add_xml_group(GROUP,ERRORS,"actors","load","misc","particles","snd","video","rules");
+    help_str=(group_id *)add_xml_group(GROUP,HELP_STR,"afk","misc","new","tooltips","buddy");
+    options_str=(group_id_di *)add_xml_group(DIGROUP,OPTIONS_STR,"options");
+    sigils_str=(group_id_di *)add_xml_group(DIGROUP,SIGILS_STR,"sigils");
+    stats_str=(group_stat *)add_xml_group(STAT_GROUP,STATS_STR,"base","cross","misc","nexus","skills");
+    stats_extra=(group_id *)add_xml_group(GROUP,STATS_EXTRA,"extra");
+    titles_str = (group_id *)add_xml_group (GROUP, TITLES_STR, "titles");
 #endif
 #ifdef MAP_EDITOR
 	errors=add_xml_group(GROUP,ERRORS,"particles");
@@ -887,7 +887,7 @@ void * add_xml_group(int type, int no, ...)
 	}
 }
 
-void add_xml_distringid(group_id_di * group, char * xml_id, dichar * var, char * str, char * desc)
+void add_xml_distringid(group_id_di * group, const char * xml_id, dichar * var, const char * str, const char * desc)
 {
 	group->distrings=(distring_item**)realloc(group->distrings,(group->no+1)*sizeof(distring_item*));
 	group->distrings[group->no]=(distring_item*)calloc(1,sizeof(distring_item));
@@ -899,7 +899,7 @@ void add_xml_distringid(group_id_di * group, char * xml_id, dichar * var, char *
 }
 
 #ifdef ELC
-void add_xml_statid(group_stat * group, char * xml_id, names * var, char * name, char * shortname)
+void add_xml_statid(group_stat * group, const char * xml_id, names * var,const char * name,const  char * shortname)
 {
 	group->statstrings=(statstring_item**)realloc(group->statstrings,(group->no+1)*sizeof(statstring_item*));
 	group->statstrings[group->no]=(statstring_item*)calloc(1,sizeof(statstring_item));
@@ -911,7 +911,7 @@ void add_xml_statid(group_stat * group, char * xml_id, names * var, char * name,
 }
 #endif
 
-void add_xml_identifier(group_id * group, char * xml_id, char * var, char * def, int max_len)
+void add_xml_identifier(group_id * group, const char * xml_id, char * var, const char * def, int max_len)
 {
 	group->strings=(string_item**)realloc(group->strings,(group->no+1)*sizeof(string_item*));
 	group->strings[group->no]=(string_item*)calloc(1,sizeof(string_item));
@@ -922,7 +922,7 @@ void add_xml_identifier(group_id * group, char * xml_id, char * var, char * def,
 	group->no++;
 }
 #ifdef ELC
-void add_options_distringid(char * xml_id, dichar * var, char * str, char * desc)
+void add_options_distringid(const char * xml_id, dichar * var, const char * str, const char * desc)
 {
 	add_xml_distringid(options_str, xml_id, var, str, desc);
 }
@@ -1343,7 +1343,7 @@ void init_help()
 {
 	group_id * afk = &(help_str[0]);
 	group_id * misc = &(help_str[1]);
-	group_id * new = &(help_str[2]);
+    group_id * new_ = &(help_str[2]);
 	group_id * tooltips = &(help_str[3]);
 	group_id * buddy = &(help_str[4]);
 
@@ -1485,58 +1485,58 @@ void init_help()
 	add_xml_identifier(misc,"storage_filter_help", storage_filter_help_str, "Type text - filter items.", sizeof(storage_filter_help_str));
 
 	//New characters
-	add_xml_identifier(new,"skin",skin_str,"Skin",sizeof(skin_str));
-	add_xml_identifier(new,"hair",hair_str,"Hair",sizeof(hair_str));
-	add_xml_identifier(new,"eyes",eyes_str,"Eyes",sizeof(eyes_str));
-	add_xml_identifier(new,"shirt",shirt_str,"Shirt",sizeof(shirt_str));
-	add_xml_identifier(new,"pants",pants_str,"Pants",sizeof(pants_str));
-	add_xml_identifier(new,"boots",boots_str,"Boots",sizeof(boots_str));
-	add_xml_identifier(new,"head",head_str,"Head",sizeof(head_str));
-	add_xml_identifier(new,"gender",gender_str,"Gender",sizeof(gender_str));
-	add_xml_identifier(new,"male",male_str,"Male",sizeof(male_str));
-	add_xml_identifier(new,"female",female_str,"Female",sizeof(female_str));
-	add_xml_identifier(new,"race",race_str,"Race",sizeof(race_str));
-	add_xml_identifier(new,"human",human_str,"Human",sizeof(human_str));
-	add_xml_identifier(new,"elf",elf_str,"Elf",sizeof(elf_str));
-	add_xml_identifier(new,"dwarf",dwarf_str,"Dwarf",sizeof(dwarf_str));
-	add_xml_identifier(new,"gnome",gnome_str,"Gnome",sizeof(gnome_str));
-	add_xml_identifier(new,"orchan",orchan_str,"Orchan",sizeof(orchan_str));
-	add_xml_identifier(new,"draegoni",draegoni_str,"Draegoni",sizeof(draegoni_str));
-	add_xml_identifier(new,"confirm",confirm_password,"Confirm:",sizeof(confirm_password));
-	add_xml_identifier(new,"userlen",error_username_length,"Username MUST be at least 3 characters long!",sizeof(error_username_length));
-	add_xml_identifier(new,"passlen",error_password_length,"The password MUST be at least 4 characters long!",sizeof(error_password_length));
-	add_xml_identifier(new,"passnomatch",error_pass_no_match,"Passwords don't match!",sizeof(error_pass_no_match));
-	add_xml_identifier(new,"passwordbad",error_bad_pass,"Bad password!",sizeof(error_bad_pass));
-	add_xml_identifier(new,"passmatch",passwords_match,"Passwords are matching!",sizeof(passwords_match));
-	add_xml_identifier(new,"appearance",remember_change_appearance,"Remember to change your characters appearance before pressing \"Done\"",sizeof(remember_change_appearance));
-	add_xml_identifier(new,"appearance_box",appearance_str,"Appearance",sizeof(appearance_str));
-	add_xml_identifier(new,"max_digits",error_max_digits,"You can only have 2 digits in your name!",sizeof(error_max_digits));
-	add_xml_identifier(new,"max_length",error_length,"Names and passwords can max be 15 characters long",sizeof(error_length));
-	add_xml_identifier(new,"illegal_char",error_illegal_character,"You have typed an illegal character!",sizeof(error_illegal_character));
-	add_xml_identifier(new,"p2p_race",p2p_race,"You have to pay to create a char with this race",sizeof(p2p_race));
-	add_xml_identifier(new,"char_help",char_help,"To customize your character and select name/password, press the buttons at the bottom.",sizeof(char_help));
-	add_xml_identifier(new,"confirmcreate",error_confirm_create_char,"Click done again to create a character with that name and appearance.",sizeof(error_confirm_create_char));
-	add_xml_identifier(new,"newcharwarning",newchar_warning,"Character creation screen",sizeof(newchar_warning));
-	add_xml_identifier(new,"newcharcusthelp",newchar_cust_help,"Click the eye icon below to customize your character.",sizeof(newchar_cust_help)); // it pains me to spell customize with a z:(
+    add_xml_identifier(new_,"skin",skin_str,"Skin",sizeof(skin_str));
+    add_xml_identifier(new_,"hair",hair_str,"Hair",sizeof(hair_str));
+    add_xml_identifier(new_,"eyes",eyes_str,"Eyes",sizeof(eyes_str));
+    add_xml_identifier(new_,"shirt",shirt_str,"Shirt",sizeof(shirt_str));
+    add_xml_identifier(new_,"pants",pants_str,"Pants",sizeof(pants_str));
+    add_xml_identifier(new_,"boots",boots_str,"Boots",sizeof(boots_str));
+    add_xml_identifier(new_,"head",head_str,"Head",sizeof(head_str));
+    add_xml_identifier(new_,"gender",gender_str,"Gender",sizeof(gender_str));
+    add_xml_identifier(new_,"male",male_str,"Male",sizeof(male_str));
+    add_xml_identifier(new_,"female",female_str,"Female",sizeof(female_str));
+    add_xml_identifier(new_,"race",race_str,"Race",sizeof(race_str));
+    add_xml_identifier(new_,"human",human_str,"Human",sizeof(human_str));
+    add_xml_identifier(new_,"elf",elf_str,"Elf",sizeof(elf_str));
+    add_xml_identifier(new_,"dwarf",dwarf_str,"Dwarf",sizeof(dwarf_str));
+    add_xml_identifier(new_,"gnome",gnome_str,"Gnome",sizeof(gnome_str));
+    add_xml_identifier(new_,"orchan",orchan_str,"Orchan",sizeof(orchan_str));
+    add_xml_identifier(new_,"draegoni",draegoni_str,"Draegoni",sizeof(draegoni_str));
+    add_xml_identifier(new_,"confirm",confirm_password,"Confirm:",sizeof(confirm_password));
+    add_xml_identifier(new_,"userlen",error_username_length,"Username MUST be at least 3 characters long!",sizeof(error_username_length));
+    add_xml_identifier(new_,"passlen",error_password_length,"The password MUST be at least 4 characters long!",sizeof(error_password_length));
+    add_xml_identifier(new_,"passnomatch",error_pass_no_match,"Passwords don't match!",sizeof(error_pass_no_match));
+    add_xml_identifier(new_,"passwordbad",error_bad_pass,"Bad password!",sizeof(error_bad_pass));
+    add_xml_identifier(new_,"passmatch",passwords_match,"Passwords are matching!",sizeof(passwords_match));
+    add_xml_identifier(new_,"appearance",remember_change_appearance,"Remember to change your characters appearance before pressing \"Done\"",sizeof(remember_change_appearance));
+    add_xml_identifier(new_,"appearance_box",appearance_str,"Appearance",sizeof(appearance_str));
+    add_xml_identifier(new_,"max_digits",error_max_digits,"You can only have 2 digits in your name!",sizeof(error_max_digits));
+    add_xml_identifier(new_,"max_length",error_length,"Names and passwords can max be 15 characters long",sizeof(error_length));
+    add_xml_identifier(new_,"illegal_char",error_illegal_character,"You have typed an illegal character!",sizeof(error_illegal_character));
+    add_xml_identifier(new_,"p2p_race",p2p_race,"You have to pay to create a char with this race",sizeof(p2p_race));
+    add_xml_identifier(new_,"char_help",char_help,"To customize your character and select name/password, press the buttons at the bottom.",sizeof(char_help));
+    add_xml_identifier(new_,"confirmcreate",error_confirm_create_char,"Click done again to create a character with that name and appearance.",sizeof(error_confirm_create_char));
+    add_xml_identifier(new_,"newcharwarning",newchar_warning,"Character creation screen",sizeof(newchar_warning));
+    add_xml_identifier(new_,"newcharcusthelp",newchar_cust_help,"Click the eye icon below to customize your character.",sizeof(newchar_cust_help)); // it pains me to spell customize with a z:(
 #ifndef NEW_NEW_CHAR_WINDOW
-	add_xml_identifier(new,"newcharcredhelp",newchar_cred_help,"Click the person icon below to choose your character name and password.",sizeof(newchar_cred_help));
+    add_xml_identifier(new_,"newcharcredhelp",newchar_cred_help,"Click the person icon below to choose your character name and password.",sizeof(newchar_cred_help));
 #else
-	add_xml_identifier(new,"newcharcredhelp",newchar_cred_help,"When ready, click \"Done\" to choose your character name and password.",sizeof(newchar_cred_help));
+    add_xml_identifier(new_,"newcharcredhelp",newchar_cred_help,"When ready, click \"Done\" to choose your character name and password.",sizeof(newchar_cred_help));
 #endif
-	add_xml_identifier(new,"newchardonehelp",newchar_done_help,"When ready, click \"Done\" to create your character and enter the game.",sizeof(newchar_done_help));
-	add_xml_identifier(new,"wrongpass",invalid_pass,"Invalid password!",sizeof(invalid_pass));
-	add_xml_identifier(new,"showpass",show_password,"Show password",sizeof(show_password));
-	add_xml_identifier(new,"hidepass",hide_password,"Hide password",sizeof(hide_password));
-	add_xml_identifier(new,"done",char_done,"Done",sizeof(char_done));
-	add_xml_identifier(new,"back",char_back,"Back",sizeof(char_back));
-	add_xml_identifier(new,"a_human",about_human,"About Human",sizeof(about_human));
-	add_xml_identifier(new,"a_elf",about_elves,"About Elves",sizeof(about_elves));
-	add_xml_identifier(new,"a_dwarf",about_dwarfs,"About Dwarfs",sizeof(about_dwarfs));
-	add_xml_identifier(new,"a_gnome",about_gnomes,"About Gnomes",sizeof(about_gnomes));
-	add_xml_identifier(new,"a_orchan",about_orchans,"About Orchans",sizeof(about_orchans));
-	add_xml_identifier(new,"a_draegoni",about_draegoni,"About Draegoni",sizeof(about_draegoni));
-	add_xml_identifier(new,"zoom_in_out",zoom_in_out,"To zoom in/out: Middle mouse wheel or Page Up/Down",sizeof(zoom_in_out));
-	add_xml_identifier(new,"rotate_camera",rotate_camera,"To rotate the camera: Middle mouse button or arrow keys",sizeof(rotate_camera));
+    add_xml_identifier(new_,"newchardonehelp",newchar_done_help,"When ready, click \"Done\" to create your character and enter the game.",sizeof(newchar_done_help));
+    add_xml_identifier(new_,"wrongpass",invalid_pass,"Invalid password!",sizeof(invalid_pass));
+    add_xml_identifier(new_,"showpass",show_password,"Show password",sizeof(show_password));
+    add_xml_identifier(new_,"hidepass",hide_password,"Hide password",sizeof(hide_password));
+    add_xml_identifier(new_,"done",char_done,"Done",sizeof(char_done));
+    add_xml_identifier(new_,"back",char_back,"Back",sizeof(char_back));
+    add_xml_identifier(new_,"a_human",about_human,"About Human",sizeof(about_human));
+    add_xml_identifier(new_,"a_elf",about_elves,"About Elves",sizeof(about_elves));
+    add_xml_identifier(new_,"a_dwarf",about_dwarfs,"About Dwarfs",sizeof(about_dwarfs));
+    add_xml_identifier(new_,"a_gnome",about_gnomes,"About Gnomes",sizeof(about_gnomes));
+    add_xml_identifier(new_,"a_orchan",about_orchans,"About Orchans",sizeof(about_orchans));
+    add_xml_identifier(new_,"a_draegoni",about_draegoni,"About Draegoni",sizeof(about_draegoni));
+    add_xml_identifier(new_,"zoom_in_out",zoom_in_out,"To zoom in/out: Middle mouse wheel or Page Up/Down",sizeof(zoom_in_out));
+    add_xml_identifier(new_,"rotate_camera",rotate_camera,"To rotate the camera: Middle mouse button or arrow keys",sizeof(rotate_camera));
 	
 	//Icons
 	add_xml_identifier(tooltips,"walk",tt_walk,"Walk",sizeof(tt_walk));
@@ -1920,7 +1920,7 @@ void load_translatables()
 #endif
 }
 
-struct xml_struct load_strings(char * file)
+struct xml_struct load_strings(const char * file)
 {
 	char file_name[120];
 	struct xml_struct tmp={NULL,NULL};
@@ -2119,10 +2119,10 @@ void parse_strings(xmlNode * in, group_id * group)
 
 void parse_groups(xmlNode * in, void * gPtr, int size, int type)
 {
-	group_id * group=gPtr;
-	group_id_di * Group=gPtr;
+    group_id * group=(group_id*)gPtr;
+    group_id_di * Group=(group_id_di *)gPtr;
 #ifdef ELC
-	group_stat * stat=gPtr;
+    group_stat * stat=(group_stat *)gPtr;
 #endif
 	int i;
 	xmlNode * cur = in->children?in->children:in;
@@ -2240,10 +2240,10 @@ void parse_titles(xmlNode * in)
 
 void free_xml_parser(int type, void * gPtr, int no)
 {
-	group_id * grp=gPtr;
-	group_id_di * Grp=gPtr;
+    group_id * grp=(group_id *)gPtr;
+    group_id_di * Grp=(group_id_di *)gPtr;
 #ifdef ELC
-	group_stat * stat=gPtr;
+    group_stat * stat=(group_stat *)gPtr;
 #endif
 	int i=0,j;
 	switch(type) {

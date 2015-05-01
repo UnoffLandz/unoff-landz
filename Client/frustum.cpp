@@ -402,7 +402,7 @@ int aabb_in_frustum(const AABBOX bbox)
 
 void init_reflection_portals(int size)
 {
-	reflection_portals = realloc(reflection_portals, size * 4 * sizeof(PLANE));
+    reflection_portals = (PLANE *)realloc(reflection_portals, size * 4 * sizeof(PLANE));
 }
 
 void calculate_reflection_frustum(float water_height)

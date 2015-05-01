@@ -11,7 +11,7 @@
 #include "mm_malloc.h"
 #endif	/* SIMD */
 
-void* malloc_aligned(const Uint64 size, const Uint64 alignment)
+void* malloc_aligned(const uint64_t size, const uint64_t alignment)
 {
 	void* result;
 

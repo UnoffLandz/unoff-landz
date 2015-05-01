@@ -43,7 +43,7 @@ class Hud_Timer
 		int cm_handler(window_info *win, int option);
 		int display(window_info *win, int base_y_start);
 		int mouse_is_over(window_info *win, int mx, int my);
-		int mouse_click(Uint32 flags);
+		int mouse_click(uint32_t flags);
 		void destroy(void);
 	private:
 		void toggle_mode(void);
@@ -217,15 +217,15 @@ int Hud_Timer::display(window_info *win, int base_y_start)
 		return 0;
 	base_y_start -= height;
 	safe_snprintf(str, sizeof(str), "%c%1d:%02d", ((mode_coundown) ?countdown_str[0] :stopwatch_str[0]), current_value/60, current_value%60);
-	x= 3+(win->len_x - (get_string_width((unsigned char*)str)*11)/12)/2;
+	x= 3+(win->len_x - (get_string_width(str)*11)/12)/2;
 	if (running)
-		draw_string_shadowed(x, 2 + base_y_start, (unsigned char*)str, 1,0.5f, 1.0f, 0.5f,0.0f,0.0f,0.0f);
+		draw_string_shadowed(x, 2 + base_y_start, str, 1,0.5f, 1.0f, 0.5f,0.0f,0.0f,0.0f);
 	else
-		draw_string_shadowed(x, 2 + base_y_start, (unsigned char*)str, 1,1.0f, 0.5f, 0.5f,0.0f,0.0f,0.0f);
+		draw_string_shadowed(x, 2 + base_y_start, str, 1,1.0f, 0.5f, 0.5f,0.0f,0.0f,0.0f);
 	if (mouse_over)
 	{
 		char *use_str = ((mode_coundown) ?countdown_str:stopwatch_str);
-		draw_string_small_shadowed(-(int)(SMALL_FONT_X_LEN*(strlen(use_str)+0.5)), base_y_start, (unsigned char*)use_str, 1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
+		draw_string_small_shadowed(-(int)(SMALL_FONT_X_LEN*(strlen(use_str)+0.5)), base_y_start, use_str, 1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
 		mouse_over = false;
 	}
 	return height;
@@ -251,7 +251,7 @@ int Hud_Timer::mouse_is_over(window_info *win, int mx, int my)
 // Left-click start/stop timer
 // Mouse wheel click - reset timer.
 //
-int Hud_Timer::mouse_click(Uint32 flags)
+int Hud_Timer::mouse_click(uint32_t flags)
 {
 	// change countdown start
 	if (flags & (ELW_WHEEL_DOWN|ELW_WHEEL_UP))
@@ -330,7 +330,7 @@ extern "C"
 	void set_mouse_over_timer(void) { my_timer.set_mouse_over(); }
 	int display_timer(window_info *win, int base_y_start) { return my_timer.display(win, base_y_start); }
 	int mouse_is_over_timer(window_info *win, int mx, int my) { return my_timer.mouse_is_over(win, mx, my); }
-	int mouse_click_timer(Uint32 flags) { return my_timer.mouse_click(flags); }
+	int mouse_click_timer(uint32_t flags) { return my_timer.mouse_click(flags); }
 	void destroy_timer(void) { return my_timer.destroy(); }
 
 	// external interface from main thread timer

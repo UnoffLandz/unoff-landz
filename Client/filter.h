@@ -18,7 +18,7 @@ extern char text_filter_replace[]; /*!< string, that contains the word to replac
 extern int caps_filter; /*!< global flag, indicating whether filter of caps is enabled or not */
 extern char storage_filter[128]; /*!< string to use as filter when using the #storage \<name\> command */
 
-extern unsigned char cached_storage_list[8192]; /*!< Copy of the result of #storage when last sent to server */
+extern uint8_t cached_storage_list[8192]; /*!< Copy of the result of #storage when last sent to server */
 
 /*!
  * \ingroup actors_utils
@@ -99,7 +99,7 @@ void load_filters();
  *      Lists all currently defined filters to the console.
  *
  */
-int list_filters();
+int list_filters(const char *text, int len);
 
 #ifdef DEBUG
 void print_filter_list ();

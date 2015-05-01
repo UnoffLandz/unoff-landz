@@ -48,8 +48,8 @@ int download_queue_size;
 char    *download_queue[MAX_UPDATE_QUEUE_SIZE];
 char    *download_cur_file;
 char    download_temp_file[1024];
-Uint8	*download_MD5s[MAX_UPDATE_QUEUE_SIZE];
-Uint8	*download_cur_md5;
+uint8_t	*download_MD5s[MAX_UPDATE_QUEUE_SIZE];
+uint8_t	*download_cur_md5;
 int doing_custom = 0;
 
 // keep a track of download threads so we can wait for there completion hence freeing resources
@@ -282,7 +282,7 @@ int    do_threaded_update(void *ptr)
 	while(buf && buf != Z_NULL){
 		char	filename[1024];
 		char    asc_md5[256];
-		Uint8	md5[16];
+		uint8_t	md5[16];
 		
 		// parse the line
 		filename[0]= '\0';
@@ -331,14 +331,14 @@ int    do_threaded_update(void *ptr)
 	return(0);
 }
 
-void add_to_download(const char *filename, const Uint8 *md5)
+void add_to_download(const char *filename, const uint8_t *md5)
 {
 	// lock the mutex
 	CHECK_AND_LOCK_MUTEX(download_mutex);
 	if(download_queue_size < MAX_UPDATE_QUEUE_SIZE){
 		// add the file to the list, and increase the count
 		download_queue[download_queue_size]= strdup(filename);
-		download_MD5s[download_queue_size]= calloc(1, 16);
+        download_MD5s[download_queue_size]= (uint8_t *)calloc(1, 16);
 		memcpy(download_MD5s[download_queue_size], md5, 16);
 		download_queue_size++;
 		
@@ -460,7 +460,7 @@ void    handle_file_download(struct http_get_struct *get)
 
 
 // start a download in another thread, return an even when complete
-void http_threaded_get_file(char *server, char *path, FILE *fp, Uint8 *md5, Uint32 event)
+void http_threaded_get_file(char *server, char *path, FILE *fp, uint8_t *md5, uint32_t event)
 {
 	struct http_get_struct  *spec;
 
@@ -638,7 +638,7 @@ void draw_update_interface (int len_x, int len_y)
 //	float diff = (float) (len_x - len_y) / 2;
 	float window_ratio = (float) len_y / 480.0f;
 
-	draw_string ((len_x - (strlen(update_complete_str) * 11)) / 2, 200 * window_ratio, (unsigned char*)update_complete_str, 0);
+    draw_string ((len_x - (strlen(update_complete_str) * 11)) / 2, 200 * window_ratio, update_complete_str, 0);
 
 /*	Possibly use this box to display the list of files updated?
 	
@@ -665,7 +665,7 @@ void draw_update_interface (int len_x, int len_y)
 		exit_now = 1;
 	}
 		
-	draw_string ((len_x - (strlen (str) * 11)) / 2, len_y - (200 * window_ratio), (unsigned char*)str, 0);
+    draw_string ((len_x - (strlen (str) * 11)) / 2, len_y - (200 * window_ratio), str, 0);
 	
 	glDisable (GL_ALPHA_TEST);
 #ifdef OPENGL_TRACE
@@ -686,20 +686,20 @@ int display_update_root_handler (window_info *win)
 	return 1;
 }
 
-int click_update_root_restart ()
+int click_update_root_restart (widget_list *, int, int, uint32_t)
 {
 	exit_now = 1;
 	return 1;
 }
 
-int click_update_root_handler (window_info *win, int mx, int my, Uint32 flags)
+int click_update_root_handler (window_info *win, int mx, int my, uint32_t flags)
 {
 	return 0;
 }
 
-int keypress_update_root_handler (window_info *win, int mx, int my, Uint32 key, Uint32 unikey)
+int keypress_update_root_handler (window_info *win, int mx, int my, uint32_t key, uint32_t unikey)
 {
-	Uint16 keysym = key & 0xffff;
+    uint16_t keysym = key & 0xffff;
 
 	// first, try to see if we pressed Alt+x, to quit.
 	if ( check_quit_or_fullscreen (key) )
@@ -733,10 +733,10 @@ void create_update_root_window (int width, int height, int time)
 		update_root_restart_id = button_add_extended (update_root_win, update_root_restart_id, NULL, (width - restart_width) /2, height - (160 * window_ratio), restart_width, restart_height, 0, 1.0f, 1.0f, 1.0f, 1.0f, restart_now_label);
 
 		set_window_handler (update_root_win, ELW_HANDLER_DISPLAY, &display_update_root_handler);
-		set_window_handler (update_root_win, ELW_HANDLER_CLICK, &click_update_root_handler);
-		set_window_handler (update_root_win, ELW_HANDLER_KEYPRESS, &keypress_update_root_handler);
+        set_window_handler (update_root_win, ELW_HANDLER_CLICK, (int (*)())&click_update_root_handler);
+        set_window_handler (update_root_win, ELW_HANDLER_KEYPRESS,(int (*)()) &keypress_update_root_handler);
 		set_window_handler (update_root_win, ELW_HANDLER_SHOW, &show_update_handler);
-		widget_set_OnClick(update_root_win, update_root_restart_id, &click_update_root_restart);
+        widget_set_OnClick(update_root_win, update_root_restart_id, click_update_root_restart);
 	}
 	
 	init_update_interface (1.0, time, width, height);

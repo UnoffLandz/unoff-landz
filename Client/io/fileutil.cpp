@@ -13,13 +13,13 @@ void init_crc_tables()
 	Crc64GenerateTable();
 }
 
-static Uint32 xz_unpack_data(const void* file_buffer,
-	const Uint64 file_size, void** buffer, Uint64* size)
+static uint32_t xz_unpack_data(const void* file_buffer,
+	const uint64_t file_size, void** buffer, uint64_t* size)
 {
 	CXzUnpacker state;
-	Uint64 uncompressed_size, dst_idx, src_idx;
+	uint64_t uncompressed_size, dst_idx, src_idx;
 	SizeT dst_size, src_size;
-	Uint32 err;
+	uint32_t err;
 	ECoderStatus status;
 
 	err = XzUnpacker_Create(&state, &lzmaAlloc);
@@ -72,10 +72,10 @@ static Uint32 xz_unpack_data(const void* file_buffer,
 	return err;
 }
 
-Uint32 file_read(FILE* file, const Uint64 file_size, void** buffer, Uint64* size)
+uint32_t file_read(FILE* file, const uint64_t file_size, void** buffer, uint64_t* size)
 {
 	void* file_buffer;
-	Uint32 result;
+	uint32_t result;
 
 	*size = 0;
 	*buffer = NULL;
@@ -110,11 +110,11 @@ Uint32 file_read(FILE* file, const Uint64 file_size, void** buffer, Uint64* size
 	return 0;
 }
 
-Uint32 xz_file_read(FILE* file, void** buffer, Uint64* size)
+uint32_t xz_file_read(FILE* file, void** buffer, uint64_t* size)
 {
 	void* file_buffer;
-	Uint64 file_size;
-	Uint32 result;
+	uint64_t file_size;
+	uint32_t result;
 
 	fseek(file, 0, SEEK_END);
 	file_size = ftell(file);

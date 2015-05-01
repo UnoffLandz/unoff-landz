@@ -17,8 +17,8 @@ extern "C" {
 #endif
 
 typedef struct {
-	char command[64];
-	int (*callback)();
+    char command[64];
+    int (*callback)(const char *,int len);
 } command_t;
 
 extern char	auto_open_encyclopedia; /*!< flag, that indicates whether the encyclopedia window should be opened automatically upon startup of the client */
@@ -52,7 +52,7 @@ int test_for_console_command (char *text, int len);
 
 void command_cleanup(void);
 
-void add_command(const char *command, int (*callback)());
+void add_command(const char *command, int (*callback)(const char *,int));
 void add_name_to_tablist(const char *name);
 
 void init_commands(const char *filename);
@@ -66,13 +66,13 @@ void do_tab_complete(text_message *input);
 void reset_tab_completer(void);
 
 void auto_save_local_and_server(void);
-int save_local_data(char * text, int len);
+int save_local_data(const char * text, int len);
 
-int command_time(char *text, int len);
-int command_date(char *text, int len);
-int command_mark(char *text, int len);
-int command_unmark_special(char *text, int len, int do_log);
-int command_ping(char *text, int len);
+int command_time(const char *text, int len);
+int command_date(const char *text, int len);
+int command_mark(const char *text, int len);
+int command_unmark_special(const char *text, int len, int do_log);
+int command_ping(const char *text, int len);
 
 void new_minute_console(void);
 

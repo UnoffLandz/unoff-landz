@@ -44,14 +44,14 @@ class ElDataSource: public CalDataSource
 
 		virtual bool readShort(short& value)
 		{
-			Sint16 tmp;
+			int16_t tmp;
 			int length;
 
-			length = el_read(m_file, sizeof(Sint16), &tmp);
+			length = el_read(m_file, sizeof(int16_t), &tmp);
 
 			value = SDL_SwapLE16(tmp);
 
-			return length == sizeof(Sint16);
+			return length == sizeof(int16_t);
 		}
 
 		virtual bool readFloat(float &value)
@@ -75,14 +75,14 @@ class ElDataSource: public CalDataSource
 #ifdef FASTER_STARTUP
 			return el_read_int(m_file, &value);
 #else
-			Sint32 tmp;
+			int32_t tmp;
 			int length;
 
-			length = el_read(m_file, sizeof(Sint32), &tmp);
+			length = el_read(m_file, sizeof(int32_t), &tmp);
 
 			value = SDL_SwapLE32(tmp);
 
-			return length == sizeof(Sint32);
+			return length == sizeof(int32_t);
 #endif
 		}
 

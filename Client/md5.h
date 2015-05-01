@@ -35,6 +35,8 @@ documentation and/or software.
 #ifndef H__MD5
 #define H__MD5
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,7 +44,7 @@ extern "C" {
 // sizeof(unsigned long) == 8 on 64 bit system and MD5Close will segfault.
 //typedef unsigned long UINT4;
 typedef unsigned int UINT4;
-typedef unsigned char MD5_DIGEST[16];
+typedef uint8_t MD5_DIGEST[16];
 
 /*!
  * The MD5 structure used to generate MD5 hash values
@@ -51,7 +53,7 @@ typedef struct
 {
   UINT4 state[4];
   UINT4 count[2];
-  unsigned char buffer[64];
+  uint8_t buffer[64];
 } MD5;
 
 /*!

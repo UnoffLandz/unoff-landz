@@ -93,11 +93,11 @@ void disable_buffer_arrays(void)
 	cur_e3d = NULL;
 }
 
-void draw_3d_object_detail(object3d * object_id, Uint32 material_index, Uint32 use_lightning,
-	Uint32 use_textures, Uint32 use_extra_textures)
+void draw_3d_object_detail(object3d * object_id, uint32_t material_index, uint32_t use_lightning,
+	uint32_t use_textures, uint32_t use_extra_textures)
 {
 	e3d_vertex_data* vertex_layout;
-	Uint8 * data_ptr;
+	uint8_t * data_ptr;
 
 	// check for having to load the arrays
 	load_e3d_detail_if_needed(object_id->e3d_data);
@@ -151,7 +151,7 @@ void draw_3d_object_detail(object3d * object_id, Uint32 material_index, Uint32 u
 		}
 		else
 		{
-			data_ptr = object_id->e3d_data->vertex_data;
+            data_ptr = (uint8_t *)object_id->e3d_data->vertex_data;
 		}
 
 		vertex_layout = object_id->e3d_data->vertex_layout;
@@ -427,12 +427,13 @@ static e3d_object *load_e3d_cache(const char* file_name)
 	e3d_object *e3d_id;
 
 	//do we have it already?
-	e3d_id = cache_find_item(cache_e3d, file_name);
-	if (e3d_id) return e3d_id;
+    e3d_id = (e3d_object*)cache_find_item(cache_e3d, file_name);
+    if (e3d_id)
+        return e3d_id;
 
 	//e3d not found in the cache, so load it, and store it
 	// allocate the memory
-	e3d_id = calloc(1, sizeof(e3d_object));
+    e3d_id = (e3d_object*)calloc(1, sizeof(e3d_object));
 	if (!e3d_id)
 	{
 		LOG_ERROR("Can't allocate data for file \"%s\"!", file_name);
@@ -508,7 +509,7 @@ int add_e3d_at_id(int id, const char* file_name,
 			return -1; // umm, not even found the place holder, this is teh SUCK!!!
 	}
 	// now, allocate the memory
-	our_object = calloc(1, sizeof (object3d));
+    our_object = (object3d*)calloc(1, sizeof (object3d));
 
 	// and fill it in
 	my_strncp(our_object->file_name, fname, sizeof(our_object->file_name));
@@ -898,7 +899,7 @@ void destroy_all_3d_objects(void)
 	next_obj_3d = 0;
 }
 
-Uint32 free_e3d_va(e3d_object *e3d_id)
+uint32_t free_e3d_va(e3d_object *e3d_id)
 {
 	set_all_intersect_update_needed(main_bbox_tree);
 
@@ -947,9 +948,9 @@ void destroy_e3d(e3d_object *e3d_id)
 }
 
 // for support of the 1.0.3 server, change if an object is to be displayed or not
-void set_3d_object (Uint8 display, const void *ptr, int len)
+void set_3d_object (uint8_t display, const void *ptr, int len)
 {
-	const Uint32 *id_ptr = ptr;
+    const uint32_t *id_ptr = (const uint32_t *)ptr;
 
 	// first look for the override to process ALL objects
 	if (len < sizeof(*id_ptr))
@@ -978,9 +979,9 @@ void set_3d_object (Uint8 display, const void *ptr, int len)
 }
 
 // for future expansion
-void state_3d_object (Uint8 state, const void *ptr, int len)
+void state_3d_object (uint8_t state, const void *ptr, int len)
 {
-	const Uint32 *id_ptr = ptr;
+    const uint32_t *id_ptr = (const uint32_t *)ptr;
 
 	// first look for the override to process ALL objects
 	if (len < sizeof(*id_ptr))

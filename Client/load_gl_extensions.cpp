@@ -8,10 +8,10 @@
 #include "errors.h"
 
 const char* gl_versions_str[] = { "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1" };
-const Uint16 gl_versions[] = { 0x0101, 0x0102, 0x0103, 0x0104, 0x0105, 0x0200, 0x0201 };
+const uint16_t gl_versions[] = { 0x0101, 0x0102, 0x0103, 0x0104, 0x0105, 0x0200, 0x0201 };
 
-Uint32 gl_version = 0;
-Uint64 extensions = 0;
+uint32_t gl_version = 0;
+uint64_t extensions = 0;
 GLint texture_units = 1;
 
 /*	GL_VERSION_1_2		*/
@@ -1395,7 +1395,7 @@ void init_opengl_extensions()
 /*	GL_EXT_abgr			*/
 	if (strstr(extensions_string, "GL_EXT_abgr") != NULL)
 	{
-		extensions |= ((Uint64)1) << ext_abgr;
+		extensions |= ((uint64_t)1) << ext_abgr;
 	}
 /*	GL_EXT_abgr			*/
 /*	GL_EXT_gpu_program_parameters	*/
@@ -1404,18 +1404,18 @@ void init_opengl_extensions()
 		e = el_init_GL_EXT_gpu_program_parameters();
 		if (e == GL_TRUE)
 		{
-			extensions |= ((Uint64)1) << ext_gpu_program_parameters;
+			extensions |= ((uint64_t)1) << ext_gpu_program_parameters;
 		}
 	}
 /*	GL_EXT_gpu_program_parameters	*/
 }
 
-Uint32 have_extension(extension_enum extension)
+uint32_t have_extension(extension_enum extension)
 {
 	return (extensions & (1 << extension)) != 0;
 }
 
-Uint32 get_texture_units()
+uint32_t get_texture_units()
 {
 	return texture_units;
 }
@@ -1425,7 +1425,7 @@ const char* get_gl_version_str()
 	return gl_versions_str[gl_version];
 }
 
-GLboolean supports_gl_version(Uint8 major, Uint8 minor)
+GLboolean supports_gl_version(uint8_t major, uint8_t minor)
 {
 	if (gl_versions[gl_version] >= ((major << 8) + minor))
 	{

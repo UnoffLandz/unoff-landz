@@ -25,17 +25,17 @@ int session_win = -1;
 int exp_log_threshold = 5000;
 static int reconnecting = 0;
 static int last_port = -1;
-static unsigned char last_server_address[60];
+static uint8_t last_server_address[60];
 static int show_reset_help = 0;
 static int last_mouse_click_y = -1;
 static int last_mouse_over_y = -1;
 static int distance_moved = -1;
 
-static Uint32 session_exp[NUM_SKILLS];
-static Uint32 max_exp[NUM_SKILLS];
-static Uint32 last_exp[NUM_SKILLS];
+static uint32_t session_exp[NUM_SKILLS];
+static uint32_t max_exp[NUM_SKILLS];
+static uint32_t last_exp[NUM_SKILLS];
 
-Uint32 session_start_time;
+uint32_t session_start_time;
 
 int display_session_handler(window_info *win);
 
@@ -44,14 +44,14 @@ int get_session_exp_ranging(void)
 	return *(statsinfo[SI_RAN].exp) - session_exp[SI_RAN];
 }
 
-static int mouseover_session_reset_handler(void)
+static int mouseover_session_reset_handler(struct widget_list *,int,int)
 {
 	if (!disable_double_click && show_help_text)
 		show_reset_help = 1;
 	return 0;
 }
 
-static int click_session_handler(window_info *win, int mx, int my, Uint32 flags)
+static int click_session_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 	if (flags & (ELW_WHEEL_UP|ELW_WHEEL_DOWN))
 		return 0;
@@ -70,8 +70,8 @@ void fill_session_win(void)
 {
 	int reset_button_id = -1;
 	set_window_handler(session_win, ELW_HANDLER_DISPLAY, &display_session_handler);
-	set_window_handler(session_win, ELW_HANDLER_CLICK, &click_session_handler );
-	set_window_handler(session_win, ELW_HANDLER_MOUSEOVER, &mouseover_session_handler );
+    set_window_handler(session_win, ELW_HANDLER_CLICK, (int (*)())&click_session_handler );
+    set_window_handler(session_win, ELW_HANDLER_MOUSEOVER, (int (*)())&mouseover_session_handler );
 
 	reset_button_id=button_add_extended(session_win, reset_button_id, NULL, 450, 280, 0, 0, 0, 1.0f, 0.77f, 0.57f, 0.39f, reset_str);
 	widget_set_OnClick(session_win, reset_button_id, session_reset_handler);
@@ -133,7 +133,7 @@ int display_session_handler(window_info *win)
 	glColor3f(1.0f, 1.0f, 1.0f);
 	safe_snprintf(buffer, sizeof(buffer), "%-20s%-17s%-17s%-17s",
 		"Skill", "Total Exp", "Max Exp", "Last Exp" );
-	draw_string_small(x, y, (unsigned char*)buffer, 1);
+	draw_string_small(x, y, buffer, 1);
 
 	glDisable(GL_TEXTURE_2D);
 	glColor3f(0.77f, 0.57f, 0.39f);
@@ -156,7 +156,7 @@ int display_session_handler(window_info *win)
 			glColor3f(1.0f, 1.0f, 1.0f);
 		safe_snprintf(buffer, sizeof(buffer), "%-20s%-17u%-17u%-17u",
 			statsinfo[i].skillnames->name, *(statsinfo[i].exp) - session_exp[i], max_exp[i], last_exp[i]);
-		draw_string_small(x, y, (unsigned char*)buffer, 1);
+		draw_string_small(x, y, buffer, 1);
 		y += 16;
 		if(i < NUM_SKILLS-1)
 			oa_exp += *(statsinfo[i].exp) - session_exp[i];
@@ -165,25 +165,25 @@ int display_session_handler(window_info *win)
 	y += 16;
 
 	glColor3f(1.0f, 1.0f, 1.0f);
-	draw_string_small(x, y, (unsigned char*)"Session Time", 1);
+	draw_string_small(x, y, "Session Time", 1);
 	timediff = cur_time - session_start_time;
 	safe_snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d", timediff/3600000, (timediff/60000)%60, (timediff/1000)%60);
-	draw_string_small(x + 200, y, (unsigned char*)buffer, 1);
+	draw_string_small(x + 200, y, buffer, 1);
 
 	y += 16;
 
-	draw_string_small(x, y, (unsigned char*)"Exp/Min", 1);
+	draw_string_small(x, y, "Exp/Min", 1);
 	
 	if(timediff<=0){
 		timediff=1;
 	}
 	safe_snprintf(buffer, sizeof(buffer), "%2.2f", oa_exp/((float)timediff/60000.0f));
-	draw_string_small(x + 200, y, (unsigned char*)buffer, 1);
+	draw_string_small(x + 200, y, buffer, 1);
 
 	y += 16;
-	draw_string_small(x, y, (unsigned char*)"Distance", 1);
+	draw_string_small(x, y, "Distance", 1);
 	safe_snprintf(buffer, sizeof(buffer), "%d", (distance_moved<0) ?0: distance_moved);
-	draw_string_small(x + 200, y, (unsigned char*)buffer, 1);
+	draw_string_small(x + 200, y, buffer, 1);
 
 	if (show_reset_help)
 	{
@@ -234,9 +234,9 @@ void init_session(void)
 	}
 }
 
-int session_reset_handler(void)
+int session_reset_handler(struct widget_list *,int,int , uint32_t)
 {
-	static Uint32 last_click = 0;
+	static uint32_t last_click = 0;
 	/* provide some protection for inadvertent pressing (double click that can be disabled) */
 	if (safe_button_click(&last_click))
 	{

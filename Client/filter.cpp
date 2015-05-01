@@ -28,7 +28,7 @@ int use_global_filters=1;
 int caps_filter=1;
 char storage_filter[128];
 
-unsigned char cached_storage_list[8192] = {0};
+uint8_t cached_storage_list[8192] = {0};
 
 //returns -1 if the name is already filtered, 1 on sucess, -2 if no more filter slots
 int add_to_filter_list (const char *name, char local, char save_name)
@@ -344,7 +344,7 @@ int filter_text (char *buff, int len, int size)
 	while (i < new_len)
 	{
 		/* skip non-alpha characters */
-		while (i < new_len && !isalpha ((unsigned char)buff[i])) i++;
+        while (i < new_len && !isalpha (buff[i])) i++;
 		if (i >= new_len) break;
 		
 		/* check if we need to filter this word */
@@ -475,7 +475,7 @@ void load_filters()
 	if (use_global_filters) load_filters_list ("global_filters.txt", 0);
 }
 
-int list_filters()
+int list_filters(const char *text, int len)
 {
 	int i, size, minlen;
 	char *str;
@@ -489,7 +489,7 @@ int list_filters()
 	size = MAX_FILTERS*20;
 	while (strlen (filters_str) + 2 >= size)
 		size *= 2;
-	str = calloc (size, sizeof (char));
+    str = (char *)calloc (size, sizeof (char));
 
 	safe_snprintf(str, size * sizeof(char), "%s:\n",filters_str);
 	for (i = 0; i < MAX_FILTERS; i++)
@@ -501,7 +501,7 @@ int list_filters()
 			{
 				while (minlen >= size)
 					size *= 2;
-				str = realloc (str, size * sizeof (char));
+                str = (char *)realloc (str, size * sizeof (char));
 			}
 		
 			strcat (str, filter_list[i].name);

@@ -72,18 +72,18 @@ typedef struct {
 	attrib_16 *lvls[NUM_WATCH_STAT];//pointers to your_info lvls
 	int lvls_req[NUM_WATCH_STAT];//minimum lvls requirement
 	int reagents_id[4]; //reagents needed image id
-	Uint16 reagents_uid[4]; //reagents needed, unique item id
+    uint16_t reagents_uid[4]; //reagents needed, unique item id
 	int reagents_qt[4]; //their quantities
-	Uint32 buff;
+    uint32_t buff;
 	int uncastable; //0 if castable, otherwise if something missing
 } spell_info;
 
 spell_info spells_list[SPELLS_NO];
 int num_spells=0;
-Uint8 spell_text[256];
-unsigned char spell_help[256];
-Sint8 on_cast[6];
-Uint8 last_spell_str[20];
+char spell_text[256];
+char spell_help[256];
+int8_t on_cast[6];
+char last_spell_str[20];
 int last_spell_len= 0;
 int spell_result=0;
 int have_error_message=0;
@@ -93,7 +93,7 @@ int show_poison_count = 0; // elconfig variable
 static int poison_drop_counter = 0;
 
 typedef struct {
-	unsigned char desc[120];
+	char desc[120];
 	int spells;
 	int spells_id[SPELLS_NO];
 	int x,y;
@@ -103,9 +103,9 @@ group_def groups_list[GROUPS_NO];
 
 typedef struct
 {
-	Sint8 spell;
-	Uint32 cast_time;
-	Uint32 duration;
+    int8_t spell;
+	uint32_t cast_time;
+	uint32_t duration;
 #ifdef NEW_SOUND
 	unsigned int sound;
 #endif
@@ -136,14 +136,14 @@ int spell_mini_rows=0;
 
 
 /* spell duration state */
-static Uint16 requested_durations = 0;
-static Uint16 last_requested_duration = 0;
+static uint16_t requested_durations = 0;
+static uint16_t last_requested_duration = 0;
 static size_t buff_duration_colour_id = 0;
 
 /* mapping of spell buff value from spells.xml to buff bit-masks */
 typedef struct buff_buffmask {
-	Uint32 buff;
-	Uint16 buffmask;
+    uint32_t buff;
+    uint16_t buffmask;
 } buff_buffmask;
 static buff_buffmask buff_to_buffmask[NUM_BUFFS] = {
 		{11, BUFF_INVISIBILITY},
@@ -185,13 +185,13 @@ static void duration_debug(int buff, int duration, const char*message)
 /* Called when the client receives SEND_BUFF_DURATION from server.
  * Set the duration and start the time out for the buff duration.
 */
-void here_is_a_buff_duration(Uint8 duration)
+void here_is_a_buff_duration(uint8_t duration)
 {
 	/* check the request is on the queue */
 	if (requested_durations & last_requested_duration)
 	{
 		size_t i;
-		Uint32 buff = 0xFFFFFFFF;
+        uint32_t buff = 0xFFFFFFFF;
 
 		/* get the spell / buff value from the bit-mask we used */
 		for (i=0; i<NUM_BUFFS; i++)
@@ -207,7 +207,7 @@ void here_is_a_buff_duration(Uint8 duration)
 			if ((active_spells[i].spell != -1) && (buff == active_spells[i].spell))
 			{
 				active_spells[i].cast_time = get_game_time_sec();
-				active_spells[i].duration = (Uint32)duration;
+                active_spells[i].duration = (uint32_t)duration;
 #if defined(BUFF_DURATION_DEBUG)
 				duration_debug(buff, active_spells[i].duration, "duration from server");
 #endif
@@ -231,7 +231,7 @@ void here_is_a_buff_duration(Uint8 duration)
 */
 void check_then_do_buff_duration_request(void)
 {
-	static Uint32 last_request_time = 0;
+	static uint32_t last_request_time = 0;
 
 	/* wait until the client knows the game time fully */
 	if (!is_real_game_second_valid())
@@ -247,7 +247,7 @@ void check_then_do_buff_duration_request(void)
 	/* else if there is no active request but we have one queued, make the server request */
 	else if (!last_requested_duration && requested_durations)
 	{
-		Uint8 str[4];
+		uint8_t str[4];
 
 		last_requested_duration = 1;
 		while (!(requested_durations & last_requested_duration))
@@ -255,7 +255,7 @@ void check_then_do_buff_duration_request(void)
 		last_request_time = SDL_GetTicks();
 
 		str[0] = GET_BUFF_DURATION;
-		*((Uint16 *)(str+1)) = SDL_SwapLE16(last_requested_duration);
+        *((uint16_t *)(str+1)) = SDL_SwapLE16(last_requested_duration);
 		my_tcp_send (my_socket, str, 3);
 	}
 }
@@ -263,7 +263,7 @@ void check_then_do_buff_duration_request(void)
 /*	Called when we receive notification that a spell is active.
  * 	If the spell is in the buff bit-mask array, queue the duration request.
 */
-static void request_buff_duration(Uint32 buff)
+static void request_buff_duration(uint32_t buff)
 {
 	size_t i;
 	for (i=0; i<NUM_BUFFS; i++)
@@ -278,9 +278,9 @@ static void request_buff_duration(Uint32 buff)
 
 typedef struct {
 	char spell_name[60];//The spell_name
-	Sint8 spell_image;//image_id
-	Sint8 spell_id;
-	Uint8 spell_str[30];
+    int8_t spell_image;//image_id
+    int8_t spell_id;
+	uint8_t spell_str[30];
 	//to be difficult, we will store the entire string ready
 	//to be sent to the server, including CAST_SPELL and len bytes, len will be byte 2
 } mqbdata;
@@ -296,7 +296,7 @@ int quickspell_y=64;
 int quickspells_loaded = 0;
 
 
-int cast_handler();
+int cast_handler(widget_list *, int, int, uint32_t);
 int prepare_for_cast();
 void draw_spell_icon(int id,int x_start, int y_start, int gridsize, int alpha, int grayed);
 void set_spell_help_text(int spell);
@@ -312,7 +312,7 @@ void repeat_spell(){
 }
 
 //returns a node with tagname, starts searching from the_node
-xmlNode *get_XML_node(xmlNode *the_node, char *tagname){
+xmlNode *get_XML_node(xmlNode *the_node, const char *tagname){
 	xmlNode *node=the_node;
 
 	while(node) {
@@ -364,7 +364,7 @@ int init_spells ()
 	xmlNode *root;
 	xmlDoc *doc;
 	int ok = 1;
-	char *fname="./spells.xml";
+    const char *fname="./spells.xml";
 
 	buff_duration_colour_id = elglGetColourId("buff.duration.background");
 
@@ -560,7 +560,7 @@ int init_spells ()
 				spells_list[i].reagents_id[j] =
 					get_int_property(data, "id");
 				if ((tmpval = get_int_property(data, "uid")) >= 0)
-					spells_list[i].reagents_uid[j] = (Uint16)tmpval;
+                    spells_list[i].reagents_uid[j] = (uint16_t)tmpval;
 				spells_list[i].reagents_qt[j] =
 					get_int_value(data);
 				j++;
@@ -705,7 +705,7 @@ void draw_spell_icon_strings(void)
 
 	for (i = 0; i < NUM_ACTIVE_SPELLS; i++)
 	{
-		unsigned char str[20];
+		char str[20];
 		/* handle the poison count */
 		if ((poison_drop_counter > 0) && (active_spells[i].spell == 2) && show_poison_count)
 		{
@@ -765,7 +765,7 @@ int command_buff_duration(char *text, int len)
 }
 #endif
 
-void get_active_spell_list(const Uint8 *my_spell_list)
+void get_active_spell_list(const uint8_t *my_spell_list)
 {
 	size_t i;
 
@@ -786,7 +786,7 @@ void get_active_spell_list(const Uint8 *my_spell_list)
 #ifdef NEW_SOUND
 void restart_active_spell_sounds(void)
 {
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < NUM_ACTIVE_SPELLS; i++)
 	{
@@ -804,7 +804,7 @@ void restart_active_spell_sounds(void)
 
 int we_are_poisoned()
 {
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < NUM_ACTIVE_SPELLS; i++)
 	{
@@ -837,7 +837,7 @@ void time_out(const float x_start, const float y_start, const float gridsize,
 
 void display_spells_we_have()
 {
-	Uint32 i;
+	uint32_t i;
 	float scale, duration;
 
 	if (your_actor != NULL)
@@ -989,7 +989,7 @@ void draw_current_spell(int x, int y, int sigils_too){
 	glColor3f(1.0f,1.0f,1.0f);
 	if(we_have_spell>=0){
 		int i,j;
-		unsigned char str[4];
+		char str[4];
 		//we have a current spell (cliked or casted) !!mqb_data[0] can still be null!!
 		j=we_have_spell;
 		draw_spell_icon(spells_list[j].image,x,y,32,1,0);
@@ -1009,7 +1009,7 @@ void draw_current_spell(int x, int y, int sigils_too){
 		for(i=0;spells_list[j].reagents_id[i]>0;i++) { 	
 			draw_item(spells_list[j].reagents_id[i],x+33*i,y,33);
 			safe_snprintf((char *)str, sizeof(str), "%i",spells_list[j].reagents_qt[i]);
-			draw_string_small_shadowed(x+33*i, y+21, (unsigned char*)str, 1,1.0f,1.0f,1.0f, 0.0f, 0.0f, 0.0f);
+			draw_string_small_shadowed(x+33*i, y+21, str, 1,1.0f,1.0f,1.0f, 0.0f, 0.0f, 0.0f);
 			if(spells_list[j].uncastable&UNCASTABLE_REAGENTS) gray_out(x+33*i,y+1,32);
 		}
 		//draw mana
@@ -1027,13 +1027,13 @@ void draw_current_spell(int x, int y, int sigils_too){
 	glColor3f(0.77f,0.57f,0.39f);
 	if(sigils_too) { 
 		x+=33*2; 
-		draw_string_small(x,y-15,(unsigned char*)"Sigils",1);
+		draw_string_small(x,y-15,"Sigils",1);
 		x+=33*6+33;
 	} else x+=33+16;
 
-	draw_string_small(x,y-15,(unsigned char*)"Reagents",1);
+	draw_string_small(x,y-15,"Reagents",1);
 	x+=33*4+((sigils_too) ? (33):(17));
-	draw_string_small(x,y-15,(unsigned char*)"Mana",1);
+	draw_string_small(x,y-15,"Mana",1);
 
 	//draw grids
 	glDisable(GL_TEXTURE_2D);
@@ -1179,16 +1179,16 @@ int display_spells_mini_handler(window_info *win){
 	//draw spell help
 	if(on_spell==-2) {
 		//mouse over the bottom-left selected spell icon, show uncastability
-		int l=(int)(get_string_width((unsigned char*)GET_UNCASTABLE_STR(spells_list[we_have_spell].uncastable))*(float)DEFAULT_SMALL_RATIO);
+		int l=(int)(get_string_width(GET_UNCASTABLE_STR(spells_list[we_have_spell].uncastable))*(float)DEFAULT_SMALL_RATIO);
 		SET_COLOR(c_red2);
-		draw_string_small(20+(33*SPELLS_ALIGN_X-l)/2,spell_mini_y_len-37-35,(unsigned char*)GET_UNCASTABLE_STR(spells_list[we_have_spell].uncastable),1);		
+		draw_string_small(20+(33*SPELLS_ALIGN_X-l)/2,spell_mini_y_len-37-35,GET_UNCASTABLE_STR(spells_list[we_have_spell].uncastable),1);		
 	} else {
 		i=(on_spell>=0) ? (on_spell):(we_have_spell);
 		if(i>=0){
-			int l=(int)(get_string_width((unsigned char*)spells_list[i].name)*(float)DEFAULT_SMALL_RATIO);
+			int l=(int)(get_string_width(spells_list[i].name)*(float)DEFAULT_SMALL_RATIO);
 			if (on_spell>=0) SET_COLOR(c_grey1);
 			else SET_COLOR(c_green3);
-			draw_string_small(20+(33*SPELLS_ALIGN_X-l)/2,spell_mini_y_len-37-35,(unsigned char*)spells_list[i].name,1);
+			draw_string_small(20+(33*SPELLS_ALIGN_X-l)/2,spell_mini_y_len-37-35,spells_list[i].name,1);
 		}
 	}
 	
@@ -1237,7 +1237,7 @@ int switch_handler(int new_win){
 }
 
 
-int click_switcher_handler(window_info *win, int mx, int my, Uint32 flags){
+int click_switcher_handler(window_info *win, int mx, int my, uint32_t flags){
 
 	if (mx>=win->len_x-20&&my>=20&&my<=40) {
 		do_click_sound();
@@ -1252,7 +1252,7 @@ int click_switcher_handler(window_info *win, int mx, int my, Uint32 flags){
 }
 
 
-int click_sigils_handler(window_info *win, int mx, int my, Uint32 flags)
+int click_sigils_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 	// only handle real clicks, not scroll wheel moves
 	if ( (flags & ELW_MOUSE_BUTTON) == 0 ) {
@@ -1293,7 +1293,7 @@ int click_sigils_handler(window_info *win, int mx, int my, Uint32 flags)
 	return 0;
 }
 
-int click_spells_handler(window_info *win, int mx, int my, Uint32 flags){
+int click_spells_handler(window_info *win, int mx, int my, uint32_t flags){
 	int pos,i,the_group=-1,the_spell=-1;
 	static int last_clicked=0;
 	static int last_pos=-1;	
@@ -1315,7 +1315,7 @@ int click_spells_handler(window_info *win, int mx, int my, Uint32 flags){
 		we_have_spell=groups_list[the_group].spells_id[the_spell];
 		put_on_cast();
 		//handle double click && cast spell
-		if ( ((SDL_GetTicks() - last_clicked) < 400)&&last_pos==code_pos) cast_handler();
+        if ( ((SDL_GetTicks() - last_clicked) < 400)&&last_pos==code_pos) cast_handler(NULL,0,0,0);
 		else have_error_message=0; //if not double click, clear server msg
 		last_pos=code_pos;
 	} else {
@@ -1324,7 +1324,7 @@ int click_spells_handler(window_info *win, int mx, int my, Uint32 flags){
 		if(we_have_spell>=0&&mx>20&&mx<53&&my>spell_y_len-37&&my<spell_y_len-4) {
 			if(flags & ELW_LEFT_MOUSE) {
 				//cast spell
-				if (put_on_cast()) cast_handler();
+                if (put_on_cast()) cast_handler(NULL,0,0,0);
 			} else if (flags & ELW_RIGHT_MOUSE) {
 				//add to quickbar
 				if(put_on_cast()) {
@@ -1337,7 +1337,7 @@ int click_spells_handler(window_info *win, int mx, int my, Uint32 flags){
 	last_clicked = SDL_GetTicks();	
 	return 0;
 }
-int click_spells_mini_handler(window_info *win, int mx, int my, Uint32 flags){
+int click_spells_mini_handler(window_info *win, int mx, int my, uint32_t flags){
 
 	int pos;
 	static int last_clicked=0;
@@ -1363,13 +1363,14 @@ int click_spells_mini_handler(window_info *win, int mx, int my, Uint32 flags){
 			we_have_spell=groups_list[the_group].spells_id[the_spell];
 			put_on_cast();
 			//handle double click
-			if ( ((SDL_GetTicks() - last_clicked) < 400)&&last_pos==pos) cast_handler();
+            if ( ((SDL_GetTicks() - last_clicked) < 400)&&last_pos==pos) cast_handler(NULL,0,0,0);
 		}
 	} else {
 		//check if clicked on the spell icon
 		if(we_have_spell>=0&&mx>=20&&mx<=53&&my>=spell_mini_y_len-37&&my<=spell_mini_y_len-4) {
 			if(flags & ELW_LEFT_MOUSE) {
-				if (put_on_cast()) cast_handler();
+                if (put_on_cast())
+                    cast_handler(NULL,0,0,0);
 			} else if (flags & ELW_RIGHT_MOUSE) {
 				//add to quickbar
 				if(put_on_cast()){
@@ -1514,7 +1515,7 @@ int mouseover_spells_mini_handler(window_info *win, int mx, int my){
 
 
 //MISC FUNCTIONS
-void get_sigils_we_have(Uint32 sigils_we_have, Uint32 sigils2)
+void get_sigils_we_have(uint32_t sigils_we_have, uint32_t sigils2)
 {
 	int i;
 	int po2=1;
@@ -1572,9 +1573,9 @@ void set_spell_name (int id, const char *data, int len)
 
 }
 
-static void spell_cast(const Uint8 id)
+static void spell_cast(const uint8_t id)
 {
-	Uint32 i, spell;
+	uint32_t i, spell;
 
 	spell = 0xFFFFFFFF;
 
@@ -1638,7 +1639,7 @@ void process_network_spell (const char *data, int len)
 
 	if(mqb_data[0]->spell_id!=data[1]){
 		if(!have_spell_name(data[1])){
-			Uint8 str[2];
+			uint8_t str[2];
 
 			str[0]=SPELL_NAME;
 			str[1]=data[1];
@@ -1675,7 +1676,7 @@ void add_spell_to_quickbar()
 		if (mqb_data[i] == NULL)
 		{
 			// Free slot
-			mqb_data[i] = calloc(1, sizeof (mqbdata));
+            mqb_data[i] = (mqbdata*)calloc(1, sizeof (mqbdata));
 			break;
 		}
 	}
@@ -1731,11 +1732,11 @@ void move_spell_on_quickbar (int pos, int direction)
 	}
 }
 
-static mqbdata* build_quickspell_data(const Uint32 spell_id)
+static mqbdata* build_quickspell_data(const uint32_t spell_id)
 {
-	Uint8 str[20];
+    uint8_t str[20];
 	mqbdata* result;
-	Uint32 i, count, index, len, size;
+    uint32_t i, count, index, len, size;
 
 	index = 0xFFFFFFFF;
 
@@ -1771,7 +1772,7 @@ static mqbdata* build_quickspell_data(const Uint32 spell_id)
 	str[0] = CAST_SPELL;
 	str[1] = count;
 
-	result = calloc(1, sizeof(mqbdata));
+    result = (mqbdata*)calloc(1, sizeof(mqbdata));
 
 	if (result == 0)
 	{
@@ -1807,9 +1808,9 @@ static mqbdata* build_quickspell_data(const Uint32 spell_id)
 void load_quickspells ()
 {
 	char fname[128];
-	Uint8 num_spells;
+    uint8_t num_spells;
 	FILE *fp;
-	Uint32 i, index;
+    uint32_t i, index;
 
 	// Grum: move this over here instead of at the end of the function,
 	// so that quickspells are always saved when the player logs in.
@@ -1896,7 +1897,7 @@ void save_quickspells()
 {
 	char fname[128];
 	FILE *fp;
-	Uint8 i;
+    uint8_t i;
 
 	if (!quickspells_loaded)
 		return;
@@ -2045,7 +2046,7 @@ int mouseover_quickspell_handler(window_info *win, int mx, int my)
 	return 0;
 }
 
-int click_quickspell_handler(window_info *win, int mx, int my, Uint32 flags)
+int click_quickspell_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 	int pos;
 
@@ -2111,8 +2112,8 @@ void init_quickspell()
 	if (quickspell_win < 0){
 		quickspell_win = create_window ("Quickspell", -1, 0, window_width - quickspell_x, quickspell_y, quickspell_x_len, get_quickspell_y_len(), ELW_CLICK_TRANSPARENT|ELW_TITLE_NONE|ELW_SHOW_LAST);
 		set_window_handler(quickspell_win, ELW_HANDLER_DISPLAY, &display_quickspell_handler);
-		set_window_handler(quickspell_win, ELW_HANDLER_CLICK, &click_quickspell_handler);
-		set_window_handler(quickspell_win, ELW_HANDLER_MOUSEOVER, &mouseover_quickspell_handler );
+        set_window_handler(quickspell_win, ELW_HANDLER_CLICK, (int (*)())&click_quickspell_handler);
+        set_window_handler(quickspell_win, ELW_HANDLER_MOUSEOVER, (int (*)())&mouseover_quickspell_handler );
 		cm_quickspells_id = cm_create(cm_quickspell_menu_str, &context_quickspell_handler);
 		cm_update_quickspells();
 	} else {
@@ -2125,7 +2126,7 @@ void init_quickspell()
 
 
 //CAST FUNCTIONS
-int spell_clear_handler()
+int spell_clear_handler(widget_list *,int,int,uint32_t)
 {
 	int i;
 
@@ -2138,19 +2139,19 @@ int spell_clear_handler()
 	return 1;
 }
 
-void send_spell(Uint8 *str, int len)
+void send_spell(uint8_t *str, int len)
 {
 	my_tcp_send(my_socket, str, len);
 	memcpy(last_spell_str, str, len);
 	last_spell_len = len;
 }
 
-int action_spell_keys(Uint32 key)
+int action_spell_keys(uint32_t key)
 {
 	size_t i;
-	Uint32 keys[] = {K_SPELL1, K_SPELL2, K_SPELL3, K_SPELL4, K_SPELL5, K_SPELL6,
+	uint32_t keys[] = {K_SPELL1, K_SPELL2, K_SPELL3, K_SPELL4, K_SPELL5, K_SPELL6,
 					 K_SPELL7, K_SPELL8, K_SPELL9, K_SPELL10, K_SPELL11, K_SPELL12 };
-	for (i=0; (i<sizeof(keys)/sizeof(Uint32)) & (i < num_quickbar_slots); i++)
+	for (i=0; (i<sizeof(keys)/sizeof(uint32_t)) & (i < num_quickbar_slots); i++)
 		if(key == keys[i])
 		{
 			if(mqb_data[i+1] && mqb_data[i+1]->spell_str[0])
@@ -2161,7 +2162,7 @@ int action_spell_keys(Uint32 key)
 }
 
 int prepare_for_cast(){
-	Uint8 str[20];
+    uint8_t str[20];
 	int count=0;
 	int sigils_no=0;
 	int i;
@@ -2203,7 +2204,7 @@ int prepare_for_cast(){
 	return sigils_no;
 }
 
-int cast_handler()
+int cast_handler(struct widget_list *,int , int, uint32_t)
 {
 	//Cast?
 
@@ -2284,8 +2285,8 @@ void display_sigils_menu()
 		sigils_win= create_window(win_sigils, our_root_win, 0, sigil_menu_x, sigil_menu_y, sigil_x_len, sigil_y_len, ELW_WIN_DEFAULT);
 
 		set_window_handler(sigils_win, ELW_HANDLER_DISPLAY, &display_sigils_handler );
-		set_window_handler(sigils_win, ELW_HANDLER_CLICK, &click_sigils_handler );
-		set_window_handler(sigils_win, ELW_HANDLER_MOUSEOVER, &mouseover_sigils_handler );
+        set_window_handler(sigils_win, ELW_HANDLER_CLICK, (int (*)())&click_sigils_handler );
+        set_window_handler(sigils_win, ELW_HANDLER_MOUSEOVER, (int (*)())&mouseover_sigils_handler );
 
 		cast_button_id=button_add_extended(sigils_win, cast_button_id, NULL, 0, 0, 0, 0, 0, 1.0f, 0.77f, 0.57f, 0.39f, cast_str);
 		widget_set_OnClick(sigils_win, cast_button_id, cast_handler);
@@ -2313,8 +2314,8 @@ void display_sigils_menu()
 		spell_win= create_window("Spells", our_root_win, 0, sigil_menu_x, sigil_menu_y, spell_x_len, spell_y_len_ext, ELW_WIN_DEFAULT);
 
 		set_window_handler(spell_win, ELW_HANDLER_DISPLAY, &display_spells_handler );
-		set_window_handler(spell_win, ELW_HANDLER_CLICK, &click_spells_handler );
-		set_window_handler(spell_win, ELW_HANDLER_MOUSEOVER, &mouseover_spells_handler );
+        set_window_handler(spell_win, ELW_HANDLER_CLICK, (int (*)())&click_spells_handler );
+        set_window_handler(spell_win, ELW_HANDLER_MOUSEOVER, (int (*)())&mouseover_spells_handler );
 
 		
 		cast2_button_id=button_add_extended(spell_win, cast2_button_id, NULL, 0, 0, 0, 0, 0, 1.0f, 0.77f, 0.57f, 0.39f, cast_str);
@@ -2336,8 +2337,8 @@ void display_sigils_menu()
 		spell_mini_win= create_window("Spells", our_root_win, 0, sigil_menu_x, sigil_menu_y, spell_mini_x_len, spell_mini_y_len, ELW_WIN_DEFAULT);
 
 		set_window_handler(spell_mini_win, ELW_HANDLER_DISPLAY, &display_spells_mini_handler );
-		set_window_handler(spell_mini_win, ELW_HANDLER_CLICK, &click_spells_mini_handler );
-		set_window_handler(spell_mini_win, ELW_HANDLER_MOUSEOVER, &mouseover_spells_mini_handler );
+        set_window_handler(spell_mini_win, ELW_HANDLER_CLICK, (int (*)())&click_spells_mini_handler );
+        set_window_handler(spell_mini_win, ELW_HANDLER_MOUSEOVER, (int (*)())&mouseover_spells_mini_handler );
 
 		hide_window(spell_mini_win);	
 		if(start_mini_spells) sigil_win=spell_mini_win;

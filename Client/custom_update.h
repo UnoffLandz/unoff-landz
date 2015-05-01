@@ -44,7 +44,7 @@ void stopp_custom_update();
  *
  * 		Starts the updates.
  */
-int command_update(char *text, int len);
+int command_update(const char *text, int len);
 
 /*!
  * \ingroup	update
@@ -52,7 +52,7 @@ int command_update(char *text, int len);
  *
  * 		Prints to the el console the current update status.
  */
-int command_update_status(char *text, int len);
+int command_update_status(const char *text, int len);
 
 extern int custom_update;
 

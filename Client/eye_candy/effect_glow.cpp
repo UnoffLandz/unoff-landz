@@ -14,9 +14,9 @@ namespace ec
 		const Vec3 _pos, const Vec3 _velocity, const coord_t _size,
 		const alpha_t _alpha, const color_t red, const color_t green,
 #ifdef	NEW_TEXTURES
-		const color_t blue, TextureEnum _texture, const Uint16 _LOD,
+		const color_t blue, TextureEnum _texture, const uint16_t _LOD,
 #else	/* NEW_TEXTURES */
-		const color_t blue, Texture* _texture, const Uint16 _LOD,
+		const color_t blue, Texture* _texture, const uint16_t _LOD,
 #endif	/* NEW_TEXTURES */
 		const GlowEffect::GlowType _type) :
 		Particle(_effect, _mover, _pos, _velocity,
@@ -36,13 +36,13 @@ namespace ec
 		pos = _pos;
 	}
 
-	bool GlowParticle::idle(const Uint64 delta_t)
+	bool GlowParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
 
 		const interval_t float_time = delta_t / 1000000.0;
-		const Uint64 age = get_time() - born;
+		const uint64_t age = get_time() - born;
 		switch (type)
 		{
 			case GlowEffect::REMOTE_HEAL_GLOW:
@@ -95,7 +95,7 @@ namespace ec
 			}
 			case GlowEffect::LEVEL_UP_DEFAULT_GLOW:
 			{
-				const Uint64 age = get_time() - born;
+				const uint64_t age = get_time() - born;
 				pos.y += float_time * (1.0 - (float)age * 0.000001 * (float)age
 					* 0.000001);
 				if (age < 950000)
@@ -111,7 +111,7 @@ namespace ec
 			case GlowEffect::LEVEL_UP_ATT_GLOW:
 			case GlowEffect::LEVEL_UP_DEF_GLOW:
 			{
-				const Uint64 age = get_time() - born;
+				const uint64_t age = get_time() - born;
 				if (age < 950000)
 					break;
 				if (alpha < 0.01)
@@ -229,12 +229,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 GlowParticle::get_texture()
+	uint32_t GlowParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint GlowParticle::get_texture(const Uint16 res_index)
+	GLuint GlowParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
@@ -247,7 +247,7 @@ namespace ec
 	;
 
 	GlowEffect::GlowEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
-		const GlowType _type, const Uint16 _LOD)
+		const GlowType _type, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "GlowEffect (" << this << ") created (" << type
@@ -875,7 +875,7 @@ namespace ec
 			std::cout << "GlowEffect (" << this << ") destroyed." << std::endl;
 	}
 
-	bool GlowEffect::idle(const Uint64 usec)
+	bool GlowEffect::idle(const uint64_t usec)
 	{
 		if (particles.size() == 0)
 			return false;
@@ -935,7 +935,7 @@ namespace ec
 			case LEVEL_UP_SUM_GLOW:
 			{
 				effect_center.y = pos->y;
-				const Uint64 age = get_time() - born;
+				const uint64_t age = get_time() - born;
 				const float age_f = (float)(age)/1000000.0f;
 				if (age_f < 4.0)
 				{

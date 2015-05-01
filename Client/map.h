@@ -16,12 +16,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+extern hash_table *server_marks;
+extern float mark_z_rot;
+extern int marks_3d;
+#define MARK_CLIP_POS 20
+#define MARK_DIST 20
 
-extern Uint32 map_flags;/**< The map flags - basically this will be obsolete with the next map format, but untill then it's good to have*/
+extern uint32_t map_flags;/**< The map flags - basically this will be obsolete with the next map format, but untill then it's good to have*/
 
 extern char dungeon; /**< inidicates whether we are in a dungeon (no sun) or not */
 
-/** @name ambient color values 
+/** @name ambient color values
  * @{ */
 extern float ambient_r;
 extern float ambient_g;
@@ -32,6 +37,9 @@ extern int map_type; /**< id of the type of map we are currently using */
 
 extern GLfloat* water_tile_buffer;
 extern GLfloat* terrain_tile_buffer;
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 /**
  * @ingroup maps
@@ -87,7 +95,7 @@ void load_map_marks(void);
  * @retval int  0 on error, 1 on success
  * @callgraph
  */
-int get_3d_objects_from_server (int nr_objs, const Uint8 *data, int len);
+int get_3d_objects_from_server (int nr_objs, const uint8_t *data, int len);
 
 /**
  * @ingroup maps
@@ -138,10 +146,10 @@ void destroy_map();
 
 typedef struct _s_mark{
 
-	int id;
-	int x,y;
-	char map_name[50];
-	char text[100];
+    int id;
+    int x,y;
+    char map_name[50];
+    char text[100];
 
 } server_mark;
 
@@ -154,17 +162,5 @@ void add_server_markers(void);
 void display_map_markers(void); //draw text
 void display_map_marks(void); //draw cross
 void change_3d_marks(int *rel);
-extern hash_table *server_marks;
-extern float mark_z_rot;
-extern int marks_3d;
-#define MARK_CLIP_POS 20
-#define MARK_DIST 20
-
-
-
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif	// _MAP_H_

@@ -22,8 +22,8 @@
 img_struct map_tiles[256];
 #endif
 
-unsigned char *tile_map;
-unsigned char *height_map;
+uint8_t *tile_map;
+uint8_t *height_map;
 int tile_map_size_x;
 int tile_map_size_y;
 int tile_list[256];
@@ -38,7 +38,7 @@ int terrain_buffer_usage = 0;
 
 void init_terrain_buffers(int terrain_buffer_size)
 {
-	terrain_tile_buffer = realloc(terrain_tile_buffer, terrain_buffer_size * 4 * 2 * sizeof(GLfloat));
+    terrain_tile_buffer = (GLfloat *)realloc(terrain_tile_buffer, terrain_buffer_size * 4 * 2 * sizeof(GLfloat));
 
 	if (have_extension(arb_vertex_buffer_object))
 	{
@@ -119,9 +119,9 @@ static __inline__ void build_terrain_buffer()
 void draw_quad_tiles(const unsigned int start, const unsigned int stop,
 	unsigned int idx, const unsigned int zero_id)
 {
-	Uint32 i, l, size;
-	Sint32 x, y;
-	Uint32 cur_id, last_id;
+    uint32_t i, l, size;
+    int32_t x, y;
+    uint32_t cur_id, last_id;
 #ifdef CLUSTER_INSIDES_OLD
 	short cluster = get_actor_cluster ();
 	short tile_cluster;

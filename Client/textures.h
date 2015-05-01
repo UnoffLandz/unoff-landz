@@ -59,11 +59,11 @@ typedef struct
 	char file_name[128];		/*!< the filename of the texture */
 	cache_item_struct *cache_ptr;	/*!< a pointer to the cached item */
 	GLuint id;			/*!< the id of the texture */
-	Uint32 hash;			/*!< hash value of the name */
-	Uint32 size;			/*!< size of the texture */
+	uint32_t hash;			/*!< hash value of the name */
+	uint32_t size;			/*!< size of the texture */
 	texture_type type;		/*!< the texture type, needed for loading and unloading */
-	Uint8 load_err;			/*!< if true, we tried to load this texture before and failed */
-	Uint8 alpha;			/*!< the texture has an alpha channel */
+	uint8_t load_err;			/*!< if true, we tried to load this texture before and failed */
+	uint8_t alpha;			/*!< the texture has an alpha channel */
 } texture_cache_t;
 
 /*!
@@ -77,7 +77,7 @@ typedef struct
  * \retval GLuint  	The texture handle in the cache.
  * \callgraph
  */
-Uint32 load_texture_cached(const char* file_name, const texture_type type);
+uint32_t load_texture_cached(const char* file_name, const texture_type type);
 
 /*!
  * \ingroup 	textures
@@ -129,7 +129,7 @@ void bind_texture_id(const GLuint id);
  * \param	handle The texture handle
  * \callgraph
  */
-void bind_texture(const Uint32 handle);
+void bind_texture(const uint32_t handle);
 
 /*!
  * \ingroup 	textures
@@ -142,7 +142,7 @@ void bind_texture(const Uint32 handle);
  * \param	handle The texture handle
  * \callgraph
  */
-void bind_texture_unbuffered(const Uint32 handle);
+void bind_texture_unbuffered(const uint32_t handle);
 
 /*!
  * \ingroup 	textures
@@ -151,10 +151,10 @@ void bind_texture_unbuffered(const Uint32 handle);
  *      	Returns the texture alpha. Is one if the texture has a usefull
  *		alpha value, else zero.
  *
- * \retval	Uint32 The texture alpha.
+ * \retval	uint32_t The texture alpha.
  * \callgraph
  */
-Uint32 get_texture_alpha(const Uint32 handle);
+uint32_t get_texture_alpha(const uint32_t handle);
 
 #ifdef	ELC
 
@@ -217,9 +217,9 @@ typedef struct
 	image_t image;			/*!< the image for the texture */
 	GLuint id;			/*!< the id of the texture */
 	GLuint new_id;			/*!< the id of the new texture */
-	Uint32 hash;			/*!< hash value of the files */
-	Uint32 used;			/*!< if this is used at the moment? */
-	Uint32 access_time;		/*!< last time used */
+	uint32_t hash;			/*!< hash value of the files */
+	uint32_t used;			/*!< if this is used at the moment? */
+	uint32_t access_time;		/*!< last time used */
 	texture_state_type state;	/*!< the texture states e.g. loading */
 } actor_texture_cache_t;
 
@@ -231,10 +231,10 @@ typedef struct
  *		enhanced actor structure.
  *
  * \param   	actor A pointer to the enhanced_actor structure
- * \retval	Uint32 The actor texture handle.
+ * \retval	uint32_t The actor texture handle.
  * \callgraph
  */
-Uint32 load_enhanced_actor(const enhanced_actor* actor, const char* name);
+uint32_t load_enhanced_actor(const enhanced_actor* actor, const char* name);
 
 /*!
  * \ingroup 	textures
@@ -245,10 +245,10 @@ Uint32 load_enhanced_actor(const enhanced_actor* actor, const char* name);
  *
  * \param   	handle The handle of the texture.
  * \param   	alpha The pointer for the alpha.
- * \retval	Uint32 Returns one if the texture is loaded, zero else.
+ * \retval	uint32_t Returns one if the texture is loaded, zero else.
  * \callgraph
  */
-Uint32 bind_actor_texture(const Uint32 handle, char* alpha);
+uint32_t bind_actor_texture(const uint32_t handle, char* alpha);
 
 /*!
  * \ingroup 	textures
@@ -259,7 +259,7 @@ Uint32 bind_actor_texture(const Uint32 handle, char* alpha);
  * \param   	handle The handle of the texture.
  * \callgraph
  */
-void free_actor_texture(const Uint32 handle);
+void free_actor_texture(const uint32_t handle);
 
 /*!
  * \ingroup 	textures
@@ -268,10 +268,10 @@ void free_actor_texture(const Uint32 handle);
  *      	Returns one if the actor texture is ready to use, zero else.
  *
  * \param   	handle The handle of the texture.
- * \retval	Uint32 Returns one if the texture is ready for use, zero else.
+ * \retval	uint32_t Returns one if the texture is ready for use, zero else.
  * \callgraph
  */
-Uint32 get_actor_texture_ready(const Uint32 handle);
+uint32_t get_actor_texture_ready(const uint32_t handle);
 
 /*!
  * \ingroup 	textures
@@ -282,7 +282,7 @@ Uint32 get_actor_texture_ready(const Uint32 handle);
  * \param   	handle The handle of the texture.
  * \callgraph
  */
-void use_ready_actor_texture(const Uint32 handle);
+void use_ready_actor_texture(const uint32_t handle);
 
 /*!
  * \ingroup 	textures
@@ -295,7 +295,7 @@ void use_ready_actor_texture(const Uint32 handle);
  * \param   	actor A pointer to the enhanced_actor structure
  * \callgraph
  */
-void change_enhanced_actor(const Uint32 handle, enhanced_actor* actor);
+void change_enhanced_actor(const uint32_t handle, enhanced_actor* actor);
 
 /*!
  * \ingroup 	textures
@@ -319,7 +319,7 @@ void dump_texture_cache();
 extern texture_cache_struct texture_cache[TEXTURE_CACHE_MAX]; /*!< global texture cache */
 typedef struct
 {
-	Uint8 *texture;	/*!< a pointer to the texture */
+	uint8_t *texture;	/*!< a pointer to the texture */
 	int	x_size;		/*!< the width of the texture in pixels */
 	int	y_size;		/*!< the height of the texture in pixels */
 	int	has_alpha;	/*!< was an alpha map applied to this texture? */
@@ -386,7 +386,7 @@ GLuint load_bmp8_color_key(texture_cache_struct * tex_cache_entry, int alpha);
  * \retval GLuint  	The texture ID as a GLuint.
  * \callgraph
  */
-GLuint load_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, Uint8 a);
+GLuint load_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, uint8_t a);
 
 /*!
  * \ingroup 	load_bmp
@@ -399,7 +399,7 @@ GLuint load_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, Uint8 a);
  * \retval GLuint  	The texture ID as a GLuint.
  * \callgraph
  */
-GLuint load_bmp8_fixed_alpha_with_transparent_color(texture_cache_struct * tex_cache_entry, Uint8 a,Uint8 tr,Uint8 tg,Uint8 tb);
+GLuint load_bmp8_fixed_alpha_with_transparent_color(texture_cache_struct * tex_cache_entry, uint8_t a,uint8_t tr,uint8_t tg,uint8_t tb);
 
 /*!
  * \ingroup 	reload_bmp
@@ -427,7 +427,7 @@ GLuint reload_bmp8_color_key(texture_cache_struct * tex_cache_entry, int alpha, 
  * \retval GLuint  	The texture ID as a GLuint.
  * \callgraph
  */
-GLuint reload_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, Uint8 a, GLuint texture);
+GLuint reload_bmp8_fixed_alpha(texture_cache_struct * tex_cache_entry, uint8_t a, GLuint texture);
 
 /*!
  * \ingroup 	cache
@@ -557,7 +557,7 @@ char * load_bmp8_color_key_no_texture_img(char * FileName, img_struct * img);
  * \retval GLuint  	The GL texture ID.
  * \callgraph
  */
-GLuint	load_bmp8_remapped_skin(char * FileName, Uint8 a, short skin, short hair, short eyes, short shirt,
+GLuint	load_bmp8_remapped_skin(char * FileName, uint8_t a, short skin, short hair, short eyes, short shirt,
 							   short pants, short boots);
 
 #ifdef	ELC
@@ -574,7 +574,7 @@ GLuint	load_bmp8_remapped_skin(char * FileName, Uint8 a, short skin, short hair,
  * \todo	Hmm, there might be a better way to do this - it can consume a lot of memory, yet many will actors have approximately the same texture. Currently every actor gets it's own texture loaded.
  * \callgraph
  */
-int		load_bmp8_enhanced_actor(enhanced_actor *this_actor, Uint8 a);
+int		load_bmp8_enhanced_actor(enhanced_actor *this_actor, uint8_t a);
 
 
 #endif	//ELC

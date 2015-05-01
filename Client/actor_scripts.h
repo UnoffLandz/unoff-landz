@@ -10,10 +10,6 @@
 
 #include "actors.h"			// Should we just move the function that needs this include away?
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*!
  * \ingroup	move_actors
  * \brief	Gives the motion vector of an actor for a given move.
@@ -105,7 +101,7 @@ void destroy_all_actors();
  *
  * \callgraph
  */
-void add_command_to_actor(int actor_id, unsigned char command);
+void add_command_to_actor(int actor_id, uint8_t command);
 
 void add_emote_command_to_actor(actor * act, emote_data *emote);
 void add_emote_to_actor(int actor_id, int emote_id);
@@ -186,9 +182,5 @@ int checkvisitedlist(int x, int y);
 int read_emotes_defs(const char *dir, const char *index);
 
 void free_emotes();
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif

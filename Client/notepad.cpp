@@ -133,7 +133,7 @@ static void accept_popup_window (INPUT_POPUP *ipu)
 }
 
 static int popup_cancel_button_handler(widget_list *w,
-	int UNUSED(mx), int UNUSED(my), Uint32 flags)
+    int UNUSED(mx), int UNUSED(my), uint32_t flags)
 {
 	INPUT_POPUP *ipu = ipu_from_widget(w);
 	if (ipu == NULL) return 0;
@@ -150,7 +150,7 @@ static int popup_cancel_button_handler(widget_list *w,
 }
 
 static int popup_ok_button_handler(widget_list *w,
-	int UNUSED(mx), int UNUSED(my), Uint32 flags)
+    int UNUSED(mx), int UNUSED(my), uint32_t flags)
 {
 	INPUT_POPUP *ipu = ipu_from_widget(w);
 	if (ipu == NULL) return 0;
@@ -164,7 +164,7 @@ static int popup_ok_button_handler(widget_list *w,
 }
 
 static int popup_keypress_handler(window_info *win,
-	int UNUSED(mx), int UNUSED(my), Uint32 key, Uint32 unikey)
+	int UNUSED(mx), int UNUSED(my), uint32_t key, uint32_t unikey)
 {
 	INPUT_POPUP *ipu = ipu_from_window(win);
 	if (ipu == NULL) return 0;
@@ -212,7 +212,7 @@ void display_popup_win (INPUT_POPUP *ipu, const char* label)
 
 	if(ipu->popup_win < 0)
 	{
-		Uint32 flags = ELW_WIN_DEFAULT & ~ELW_CLOSE_BOX;
+		uint32_t flags = ELW_WIN_DEFAULT & ~ELW_CLOSE_BOX;
 		ipu->popup_win = create_window (win_prompt, ipu->parent, 0, ipu->x, ipu->y, ipu->popup_x_len, ipu->popup_y_len, flags);
 
 		// clear the buffer
@@ -243,7 +243,7 @@ void display_popup_win (INPUT_POPUP *ipu, const char* label)
 		widget_move(ipu->popup_win, ipu->popup_ok, (ipu->popup_x_len - wok->len_x - wno->len_x)/3, ipu->popup_y_len - (wok->len_y + 5));
 		widget_move(ipu->popup_win, ipu->popup_no, wok->len_x + 2*(ipu->popup_x_len - wok->len_x - wno->len_x)/3, ipu->popup_y_len - (wno->len_y + 5));
 
-		set_window_handler (ipu->popup_win, ELW_HANDLER_KEYPRESS, popup_keypress_handler);
+        set_window_handler (ipu->popup_win, ELW_HANDLER_KEYPRESS, (int (*)())popup_keypress_handler);
 
 		if ((ipu->popup_win > -1) && (ipu->popup_win < windows_list.num_windows))
 			windows_list.window[ipu->popup_win].data = ipu;
@@ -343,7 +343,7 @@ void note_button_set_pos (int id)
 	}
 }
 
-static int note_button_scroll_handler()
+static int note_button_scroll_handler(struct widget_list *widget, int mx, int my, uint32_t flags)
 {
 	int i;
 
@@ -362,12 +362,12 @@ static void scroll_to_note_button(int nr)
 	if (row < pos)
 	{
 		vscrollbar_set_pos (main_note_tab_id, note_button_scroll_id, row);
-		note_button_scroll_handler ();
+        note_button_scroll_handler (NULL,0,0,0);
 	}
 	else if (row >= pos + max_nr_rows)
 	{
 		vscrollbar_set_pos (main_note_tab_id, note_button_scroll_id, row - max_nr_rows + 1);
-		note_button_scroll_handler ();
+        note_button_scroll_handler (NULL,0,0,0);
 	}
 }
 
@@ -413,7 +413,7 @@ static void init_note (int id, const char* name, const char* content)
 static void increase_note_storage(void)
 {
 	int new_size = note_list_size * 2;
-	note_list = realloc (note_list, new_size * sizeof (note));
+    note_list = (note *)realloc (note_list, new_size * sizeof (note));
 	memset(&note_list[note_list_size], 0, (new_size - note_list_size) * sizeof (note) );
 	note_list_size = new_size;
 }
@@ -425,7 +425,7 @@ static int notepad_load_file()
 
 	if (note_list == 0)
 	{
-		note_list = calloc (NOTE_LIST_INIT_SIZE, sizeof (note));
+        note_list = (note *)calloc (NOTE_LIST_INIT_SIZE, sizeof (note));
 		note_list_size = NOTE_LIST_INIT_SIZE;
 	}
 
@@ -490,7 +490,7 @@ static int notepad_load_file()
 }
 
 static int click_save_handler(widget_list *w, int UNUSED(mx), int UNUSED(my),
-	Uint32 flags)
+	uint32_t flags)
 {
 	// only handle mouse button clicks, not scroll wheels moves
 	// Update: don't check when saving on exit (w == NULL)
@@ -555,9 +555,9 @@ int notepad_save_file()
 
 
 static int notepad_remove_category(widget_list* UNUSED(w),
-	int UNUSED(mx), int UNUSED(my), Uint32 flags)
+	int UNUSED(mx), int UNUSED(my), uint32_t flags)
 {
-	static Uint32 last_click = 0;
+	static uint32_t last_click = 0;
 	int i, id = -1, cur_tab, t;
 
 	// only handle mouse button clicks, not scroll wheels moves
@@ -616,7 +616,7 @@ static int note_tab_destroy(window_info *w)
 	return 0;
 }
 
-static int mouseover_remove_handler()
+static int mouseover_remove_handler(struct widget_list *,int ,int)
 {
 	if (!disable_double_click && show_help_text)
 		note_message = dc_note_remove;
@@ -650,7 +650,7 @@ static void open_note_tab_continued(int id)
 }
 
 static int open_note_tab(widget_list* UNUSED(w),
-	int UNUSED(mx), int UNUSED(my), Uint32 flags)
+	int UNUSED(mx), int UNUSED(my), uint32_t flags)
 {
 	int i = 0;
 
@@ -723,7 +723,7 @@ static void notepad_add_continued(const char *name, void* UNUSED(data))
 
 
 static int notepad_add_category(widget_list* UNUSED(w),
-	int UNUSED(mx), int UNUSED(my), Uint32 flags)
+	int UNUSED(mx), int UNUSED(my), uint32_t flags)
 {
 	// only handle mouse button clicks, not scroll wheels moves
 	if ( (flags & ELW_MOUSE_BUTTON) == 0) return 0;
@@ -754,7 +754,7 @@ static int display_notepad_handler(window_info *win)
 }
 
 static int click_buttonwin_handler(window_info* UNUSED(win),
-	int UNUSED(mx), int UNUSED(my), Uint32 flags)
+	int UNUSED(mx), int UNUSED(my), uint32_t flags)
 {
 	widget_list *w = widget_find(main_note_tab_id, note_button_scroll_id);
 	if ((w == NULL) || (w->Flags & WIDGET_INVISIBLE))
@@ -762,12 +762,12 @@ static int click_buttonwin_handler(window_info* UNUSED(win),
 	if (flags&ELW_WHEEL_UP)
 	{
 		vscrollbar_scroll_up(main_note_tab_id, note_button_scroll_id);
-		note_button_scroll_handler();
+        note_button_scroll_handler(NULL,0,0,0);
 	}
 	else if(flags&ELW_WHEEL_DOWN)
 	{
 		vscrollbar_scroll_down(main_note_tab_id, note_button_scroll_id);
-		note_button_scroll_handler();
+        note_button_scroll_handler(NULL,0,0,0);
 	}
 	return 1;
 }
@@ -785,14 +785,14 @@ void fill_notepad_window()
 	note_button_width = (note_tabs_width - note_button_scroll_width - note_button_x_space - 15) / 2;
 
 	set_window_handler(notepad_win, ELW_HANDLER_DISPLAY, &display_notepad_handler);
-	set_window_handler(notepad_win, ELW_HANDLER_CLICK, &click_buttonwin_handler);
+    set_window_handler(notepad_win, ELW_HANDLER_CLICK, (int (*)())&click_buttonwin_handler);
 
 	note_tabcollection_id = tab_collection_add (notepad_win, NULL, 0, 5, note_tabs_width, note_tabs_height, 20);
 	widget_set_size (notepad_win, note_tabcollection_id, 0.7);
 	widget_set_color (notepad_win, note_tabcollection_id, 0.77f, 0.57f, 0.39f);
 	main_note_tab_id = tab_add (notepad_win, note_tabcollection_id, tab_main, 0, 0, 0);
 	widget_set_color (notepad_win, main_note_tab_id, 0.77f, 0.57f, 0.39f);
-	set_window_handler(main_note_tab_id, ELW_HANDLER_CLICK, &click_buttonwin_handler);
+    set_window_handler(main_note_tab_id, ELW_HANDLER_CLICK, (int (*)())&click_buttonwin_handler);
 
 	// Add Category
 	new_note_button_id = button_add(main_note_tab_id, NULL, button_new_category, 0, 0);
@@ -819,7 +819,8 @@ void fill_notepad_window()
 
 	note_button_scroll_id = vscrollbar_add (main_note_tab_id, NULL, note_tabs_width - note_button_scroll_width - 5, 50, note_button_scroll_width, note_button_scroll_height);
 	widget_set_OnClick (main_note_tab_id, note_button_scroll_id, note_button_scroll_handler);
-	widget_set_OnDrag (main_note_tab_id, note_button_scroll_id, note_button_scroll_handler);
+    widget_set_OnDrag (main_note_tab_id, note_button_scroll_id,
+                       (int (*)(widget_list *, int, int, uint32_t,int,int))note_button_scroll_handler);
 
 	// Add the note selection buttons and their scroll bar
 	for(i = 0; i < nr_notes; i++)

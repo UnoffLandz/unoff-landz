@@ -13,7 +13,7 @@ namespace ec
 	OuterSummonParticle::OuterSummonParticle(Effect* _effect,
 		ParticleMover* _mover, const Vec3 _pos, const Vec3 _velocity,
 		const coord_t _size, const alpha_t _alpha, const color_t red,
-		const color_t green, const color_t blue, const Uint16 _LOD) :
+		const color_t green, const color_t blue, const uint16_t _LOD) :
 		Particle(_effect, _mover, _pos, _velocity,
 			_size * (0.2 + randcoord()))
 	{
@@ -28,7 +28,7 @@ namespace ec
 		LOD = _LOD;
 	}
 
-	bool OuterSummonParticle::idle(const Uint64 delta_t)
+	bool OuterSummonParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -47,12 +47,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 OuterSummonParticle::get_texture()
+	uint32_t OuterSummonParticle::get_texture()
 	{
 		return base->get_texture(EC_FLARE);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint OuterSummonParticle::get_texture(const Uint16 res_index)
+	GLuint OuterSummonParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexFlare.get_texture(res_index);
 	}
@@ -66,7 +66,7 @@ namespace ec
 #else	/* NEW_TEXTURES */
 		const color_t green, const color_t blue, Texture* _texture,
 #endif	/* NEW_TEXTURES */
-		const Uint16 _LOD) :
+		const uint16_t _LOD) :
 		Particle(_effect, _mover, _pos, _velocity,
 			_size * (0.2 + randcoord()))
 	{
@@ -83,7 +83,7 @@ namespace ec
 		state = 0;
 	}
 
-	bool InnerSummonParticle::idle(const Uint64 delta_t)
+	bool InnerSummonParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -93,8 +93,8 @@ namespace ec
 
 		if (state == 0)
 		{
-			const Uint64 cur_time = get_time();
-			const Uint64 age = cur_time - born;
+			const uint64_t cur_time = get_time();
+			const uint64_t age = cur_time - born;
 			if (age > 1200000)
 				state = 1;
 		}
@@ -112,19 +112,19 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 InnerSummonParticle::get_texture()
+	uint32_t InnerSummonParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint InnerSummonParticle::get_texture(const Uint16 res_index)
+	GLuint InnerSummonParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 #endif	/* NEW_TEXTURES */
 
 	SummonEffect::SummonEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
-		const SummonType _type, const Uint16 _LOD)
+		const SummonType _type, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "SummonEffect (" << this << ") created (" << _type
@@ -848,7 +848,7 @@ namespace ec
 	{
 		if (fabs(_LOD - (float)LOD) < 1.0)
 			return;
-		const Uint16 rounded_LOD = (Uint16)round(_LOD);
+		const uint16_t rounded_LOD = (uint16_t)round(_LOD);
 		if (rounded_LOD <= desired_LOD)
 			LOD = rounded_LOD;
 		else
@@ -1149,7 +1149,7 @@ namespace ec
 		count_scalar = 3000 / LOD;
 	}
 
-	bool SummonEffect::idle(const Uint64 usec)
+	bool SummonEffect::idle(const uint64_t usec)
 	{
 		if (particles.size() == 0)
 			return false;
@@ -1157,8 +1157,8 @@ namespace ec
 		if (recall)
 			return true;
 
-		const Uint64 cur_time = get_time();
-		const Uint64 age = cur_time - born;
+		const uint64_t cur_time = get_time();
+		const uint64_t age = cur_time - born;
 		if (age < 1000000)
 		{
 			count += usec;

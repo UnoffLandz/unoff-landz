@@ -64,7 +64,7 @@ void print_sound_samples();
 void print_sounds_list();
 void print_sound_sources();
 #endif // DEBUG
-						   
+
 /*!
  * \ingroup other
  * \brief Initializes the sound system of EL
@@ -300,43 +300,43 @@ void clear_sound_data();
 
 void handle_walking_sound(actor *pActor, int def_snd);
 int check_sound_loops(unsigned int cookie);
-void check_sound_alerts(const Uint8* text, size_t len, Uint8 channel);
+void check_sound_alerts(const char *text, size_t len, uint8_t channel);
 #ifdef DEBUG_MAP_SOUND
 void print_sound_boundaries(int map);
 #endif // DEBUG_MAP_SOUND
 
 static __inline__ void do_click_sound(){
-	add_sound_object(get_index_for_sound_type_name("Button Click"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("Button Click"), 0, 0, 1);
 }
 static __inline__ void do_drag_item_sound(){
-	add_sound_object(get_index_for_sound_type_name("Drag Item"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("Drag Item"), 0, 0, 1);
 }
 static __inline__ void do_alert1_sound(){
-	add_sound_object(get_index_for_sound_type_name("alert1"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("alert1"), 0, 0, 1);
 }
 static __inline__ void do_drop_item_sound(){
-	add_sound_object(get_index_for_sound_type_name("Drop Item"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("Drop Item"), 0, 0, 1);
 }
 static __inline__ void do_get_item_sound(){
-	add_sound_object(get_index_for_sound_type_name("Get Item"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("Get Item"), 0, 0, 1);
 }
 static __inline__ void do_window_close_sound(){
-	add_sound_object(get_index_for_sound_type_name("Window Close"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("Window Close"), 0, 0, 1);
 }
 static __inline__ void do_icon_click_sound(){
-	add_sound_object(get_index_for_sound_type_name("Icon Click"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("Icon Click"), 0, 0, 1);
 }
 static __inline__ void do_error_sound(){
-	add_sound_object(get_index_for_sound_type_name("Error"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("Error"), 0, 0, 1);
 }
 static __inline__ void do_disconnect_sound(){
-	add_sound_object(get_index_for_sound_type_name("Disconnected"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("Disconnected"), 0, 0, 1);
 }
 static __inline__ void do_connect_sound(){
-	add_sound_object(get_index_for_sound_type_name("Connected"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("Connected"), 0, 0, 1);
 }
 static __inline__ void do_afk_sound(){
-	add_sound_object(get_index_for_sound_type_name("AFK Message"), 0, 0, 1);
+    add_sound_object(get_index_for_sound_type_name("AFK Message"), 0, 0, 1);
 }
 
 /////// MUSIC FUNCTIONALITY ///////////
@@ -398,7 +398,7 @@ void turn_music_on();
  *      Prints the details of the currently playing song in the console.
  *
  */
-int display_song_name();
+int display_song_name(const char *text, int len);
 
 /*!
  * \ingroup music

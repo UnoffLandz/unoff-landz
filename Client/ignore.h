@@ -80,7 +80,7 @@ int check_if_ignored (const char *name);
  * \param channel        the channel the message comes from
  * \retval int          true (1) if the sender of \a input_text is ignored, else false (0).
  */
-int pre_check_if_ignored (const char *input_text, int len, Uint8 channel);
+int pre_check_if_ignored (const char *input_text, int len, uint8_t channel);
 
 /*!
  * \ingroup loadsave
@@ -99,7 +99,7 @@ void load_ignores();
  *      Lists the names that are currently ignored by the actor, if any. The function is called, when the actor uses the #ignores command.
  *
  */
-int list_ignores();
+int list_ignores(const char *txt, int len);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -525,11 +525,11 @@ extern PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC ELglProgramLocalParameters4fvEXT;
 /*	GL_EXT_gpu_program_parameters	*/
 
 extern void init_opengl_extensions();
-extern Uint32 have_extension(extension_enum extension);
-extern Uint32 get_texture_units();
+extern uint32_t have_extension(extension_enum extension);
+extern uint32_t get_texture_units();
 
 extern const char* get_gl_version_str();
-extern GLboolean supports_gl_version(Uint8 major, Uint8 minor);
+extern GLboolean supports_gl_version(uint8_t major, uint8_t minor);
 
 #ifdef __cplusplus
 }

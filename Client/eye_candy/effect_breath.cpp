@@ -14,9 +14,9 @@ namespace ec
 		const Vec3 _pos, const Vec3 _velocity, const coord_t _size,
 		const alpha_t _alpha, const color_t red, const color_t green,
 #ifdef	NEW_TEXTURES
-		const color_t blue, TextureEnum _texture, const Uint16 _LOD,
+		const color_t blue, TextureEnum _texture, const uint16_t _LOD,
 #else	/* NEW_TEXTURES */
-		const color_t blue, Texture* _texture, const Uint16 _LOD,
+		const color_t blue, Texture* _texture, const uint16_t _LOD,
 #endif	/* NEW_TEXTURES */
 		const BreathEffect::BreathType _type) :
 		Particle(_effect, _mover, _pos, _velocity,
@@ -36,7 +36,7 @@ namespace ec
 		state = 0;
 	}
 
-	bool BreathParticle::idle(const Uint64 delta_t)
+	bool BreathParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -255,12 +255,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 BreathParticle::get_texture()
+	uint32_t BreathParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint BreathParticle::get_texture(const Uint16 res_index)
+	GLuint BreathParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
@@ -273,7 +273,7 @@ namespace ec
 #else	/* NEW_TEXTURES */
 		const coord_t _size, const alpha_t _alpha, Texture* _texture,
 #endif	/* NEW_TEXTURES */
-		const Uint16 _LOD, const BreathEffect::BreathType _type) :
+		const uint16_t _LOD, const BreathEffect::BreathType _type) :
 		Particle(_effect, _mover, _pos, _velocity)
 	{
 		texture = _texture;
@@ -343,7 +343,7 @@ namespace ec
 		return 0.0f;
 	}
 #else	/* NEW_TEXTURES */
-	void BreathSmokeParticle::draw(const Uint64 usec)
+	void BreathSmokeParticle::draw(const uint64_t usec)
 	{
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -353,7 +353,7 @@ namespace ec
 	}
 #endif	/* NEW_TEXTURES */
 
-	bool BreathSmokeParticle::idle(const Uint64 delta_t)
+	bool BreathSmokeParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -390,12 +390,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 BreathSmokeParticle::get_texture()
+	uint32_t BreathSmokeParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint BreathSmokeParticle::get_texture(const Uint16 res_index)
+	GLuint BreathSmokeParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
@@ -403,7 +403,7 @@ namespace ec
 
 	BreathEffect::BreathEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 		Vec3* _target, std::vector<ec::Obstruction*>* _obstructions,
-		const BreathType _type, const Uint16 _LOD, const percent_t _scale)
+		const BreathType _type, const uint16_t _LOD, const percent_t _scale)
 	{
 		if (EC_DEBUG)
 			std::cout << "BreathEffect (" << this << ") created." << std::endl;
@@ -526,7 +526,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool BreathEffect::idle(const Uint64 usec)
+	bool BreathEffect::idle(const uint64_t usec)
 	{
 		if (particles.size() == 0)
 			return false;
@@ -534,8 +534,8 @@ namespace ec
 		if (recall)
 			return true;
 
-		const Uint64 cur_time = get_time();
-		const Uint64 age = cur_time - born;
+		const uint64_t cur_time = get_time();
+		const uint64_t age = cur_time - born;
 		if (age > 1100000)
 			return true;
 

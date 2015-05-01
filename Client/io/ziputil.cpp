@@ -1,11 +1,14 @@
 #include "ziputil.h"
-#include <time.h>
-#include <string.h>
+
 #include "../xz/7zCrc.h"
 
-Uint32 convert_string_to_md5_digest(const char* str, MD5_DIGEST digest)
+#include <time.h>
+#include <string.h>
+#include <stdint.h>
+
+uint32_t convert_string_to_md5_digest(const char* str, MD5_DIGEST digest)
 {
-	Uint32 i, val;
+    uint32_t i, val;
 	char buffer[4];
 
 	if (str == 0)
@@ -34,7 +37,7 @@ Uint32 convert_string_to_md5_digest(const char* str, MD5_DIGEST digest)
 	return 0;
 }
 
-Uint32 convert_comment_string_to_md5_digest(const char* str, MD5_DIGEST digest)
+uint32_t convert_comment_string_to_md5_digest(const char* str, MD5_DIGEST digest)
 {
 	char md5_str[64];
 
@@ -45,8 +48,8 @@ Uint32 convert_comment_string_to_md5_digest(const char* str, MD5_DIGEST digest)
 	return convert_string_to_md5_digest(md5_str, digest);
 }
 
-Uint32 convert_md5_digest_to_comment_string(const MD5_DIGEST digest,
-	const Uint32 size, char* str)
+uint32_t convert_md5_digest_to_comment_string(const MD5_DIGEST digest,
+    const uint32_t size, char* str)
 {
 	if (size < 38)
 	{
@@ -64,8 +67,8 @@ Uint32 convert_md5_digest_to_comment_string(const MD5_DIGEST digest,
 	return 0;
 }
 
-Uint32 add_to_zip(const char* file_name, const Uint32 size,
-	const Uint8* buffer, zipFile dest, const char* comment)
+uint32_t add_to_zip(const char* file_name, const uint32_t size,
+	const uint8_t* buffer, zipFile dest, const char* comment)
 {
 	zip_fileinfo info;
 	time_t raw_time;
@@ -92,15 +95,15 @@ Uint32 add_to_zip(const char* file_name, const Uint32 size,
 	return 0;
 }
 
-Uint32 copy_from_zip(unzFile source, zipFile dest)
+uint32_t copy_from_zip(unzFile source, zipFile dest)
 {
 	char file_name[256];
 	char comment[128];
 	zip_fileinfo info;
 	unz_file_info64 src_info;
-	Uint64 size;
-	Uint8* buffer;
-	Uint32 crc;
+	uint64_t size;
+	uint8_t* buffer;
+    uint32_t crc;
 	int method, level;
 
 	memset(&info, 0, sizeof(zip_fileinfo));
@@ -114,7 +117,7 @@ Uint32 copy_from_zip(unzFile source, zipFile dest)
 	size = src_info.compressed_size;
 	crc = src_info.crc;
 
-	buffer = malloc(size);
+    buffer = (uint8_t*)malloc(size);
 
 	unzReadCurrentFile(source, buffer, size);
 	unzCloseCurrentFile(source);
@@ -136,8 +139,8 @@ Uint32 copy_from_zip(unzFile source, zipFile dest)
 	return 0;
 }
 
-static Uint32 check_crc_from_zip_current(unzFile source, const Uint32 size,
-	const Uint32 crc)
+static uint32_t check_crc_from_zip_current(unzFile source, const uint32_t size,
+    const uint32_t crc)
 {
 	void* buffer;
 
@@ -160,7 +163,7 @@ static Uint32 check_crc_from_zip_current(unzFile source, const Uint32 size,
 	return 0;
 }
 
-Uint32 check_crc_from_zip(unzFile source, const char* file_name)
+uint32_t check_crc_from_zip(unzFile source, const char* file_name)
 {
 	unz_file_info64 file_info;
 
@@ -179,7 +182,7 @@ Uint32 check_crc_from_zip(unzFile source, const char* file_name)
 		file_info.crc);
 }
 
-Uint32 check_md5_from_zip(unzFile source, const char* file_name,
+uint32_t check_md5_from_zip(unzFile source, const char* file_name,
 	const MD5_DIGEST digest)
 {
 	unz_file_info64 file_info;

@@ -20,7 +20,7 @@
 int view_buffs = 1;
 int buff_icon_size = 32;
 
-void update_actor_buffs(int actor_id, Uint32 in_buffs)
+void update_actor_buffs(int actor_id, uint32_t in_buffs)
 {
 	actor *act;
 #ifdef EXTRA_DEBUG
@@ -46,7 +46,7 @@ void update_actor_buffs(int actor_id, Uint32 in_buffs)
 			int i, num_buffs = 0;
 			for (i = 0; i < NUM_BUFFS; i++)
 			{
-				if (act->buffs & ((Uint32)pow(2, i))) {
+				if (act->buffs & ((uint32_t)pow(2, i))) {
 					num_buffs++;
 				}
 			}
@@ -129,25 +129,25 @@ void update_buff_eye_candy(int actor_id) {
 	if (act) {
 		int i = 0; // loop index
         // turn on eye candy effects
-		if (act->buffs & BUFF_SHIELD && act->ec_buff_reference[((Uint32)(log(BUFF_SHIELD)/log(2)))] == NULL) {
-			act->ec_buff_reference[((Uint32)(log(BUFF_SHIELD)/log(2)))] = ec_create_ongoing_shield2(act, 1.0, 1.0, (poor_man ? 6 : 10), 1.0);
+		if (act->buffs & BUFF_SHIELD && act->ec_buff_reference[((uint32_t)(log(BUFF_SHIELD)/log(2)))] == NULL) {
+			act->ec_buff_reference[((uint32_t)(log(BUFF_SHIELD)/log(2)))] = ec_create_ongoing_shield2(act, 1.0, 1.0, (poor_man ? 6 : 10), 1.0);
 		}
-		if (act->buffs & BUFF_MAGIC_PROTECTION && act->ec_buff_reference[((Uint32)(log(BUFF_MAGIC_PROTECTION)/log(2)))] == NULL) {
-			act->ec_buff_reference[((Uint32)(log(BUFF_MAGIC_PROTECTION)/log(2)))] = ec_create_ongoing_magic_protection2(act, 1.0, 1.0, (poor_man ? 6 : 10), 1.0);
+		if (act->buffs & BUFF_MAGIC_PROTECTION && act->ec_buff_reference[((uint32_t)(log(BUFF_MAGIC_PROTECTION)/log(2)))] == NULL) {
+			act->ec_buff_reference[((uint32_t)(log(BUFF_MAGIC_PROTECTION)/log(2)))] = ec_create_ongoing_magic_protection2(act, 1.0, 1.0, (poor_man ? 6 : 10), 1.0);
 		}
 /*
  * not yet implemented
-		if (act->buffs & BUFF_POISONED && act->ec_buff_reference[((Uint32)(log(BUFF_POISONED)/log(2)))] == NULL) {
-			act->ec_buff_reference[((Uint32)(log(BUFF_POISONED)/log(2)))] = ec_create_ongoing_poison2(act, 1.0, 1.0, (poor_man ? 6 : 10), 1.0);
+		if (act->buffs & BUFF_POISONED && act->ec_buff_reference[((uint32_t)(log(BUFF_POISONED)/log(2)))] == NULL) {
+			act->ec_buff_reference[((uint32_t)(log(BUFF_POISONED)/log(2)))] = ec_create_ongoing_poison2(act, 1.0, 1.0, (poor_man ? 6 : 10), 1.0);
 		}
 */
 // removed by Roja's request
-//		if (act->buffs & BUFF_MAGIC_IMMUNITY && act->ec_buff_reference[((Uint32)(log(BUFF_MAGIC_IMMUNITY)/log(2)))] == NULL) {
-//			act->ec_buff_reference[((Uint32)(log(BUFF_MAGIC_IMMUNITY)/log(2)))] = ec_create_ongoing_magic_immunity2(act, 1.0, 1.0, (poor_man ? 6 : 10), 1.0);
+//		if (act->buffs & BUFF_MAGIC_IMMUNITY && act->ec_buff_reference[((uint32_t)(log(BUFF_MAGIC_IMMUNITY)/log(2)))] == NULL) {
+//			act->ec_buff_reference[((uint32_t)(log(BUFF_MAGIC_IMMUNITY)/log(2)))] = ec_create_ongoing_magic_immunity2(act, 1.0, 1.0, (poor_man ? 6 : 10), 1.0);
 //		}
 		// turn off effects
 		for (i = 0; i < NUM_BUFFS; i++) {
-			if (act->ec_buff_reference[i] != NULL && !(act->buffs & ((Uint32)pow(2, i)))) {
+			if (act->ec_buff_reference[i] != NULL && !(act->buffs & ((uint32_t)pow(2, i)))) {
 				ec_recall_effect(act->ec_buff_reference[i]);
 				act->ec_buff_reference[i] = NULL;
 			}

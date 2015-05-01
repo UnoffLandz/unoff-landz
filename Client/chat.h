@@ -10,16 +10,13 @@
 #include "queue.h"
 #include "widgets.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define MAX_TEXT_MESSAGE_LENGTH 160 /*!< The server will disconnect us when we send longer messages */
 #define MAX_CHAT_TABS		12	/*!< Size of the \see channels array */
 #define MAX_ACTIVE_CHANNELS	10	/*!< Maximum number of channels in use */
 
-extern Uint32 active_channels[MAX_ACTIVE_CHANNELS];
-extern Uint8 current_channel;
+extern uint32_t active_channels[MAX_ACTIVE_CHANNELS];
+extern uint8_t current_channel;
 
 #define INPUT_MARGIN 4
 #define INPUT_HEIGHT (DEFAULT_FONT_Y_LEN + 2*INPUT_MARGIN) /* 1 line, 2 margins at 4px*/
@@ -61,7 +58,7 @@ void input_widget_move_to_win(int window_id);
  *
  * \callgraph
  */
-void set_active_channels (Uint8 active, const Uint32 *channels, int nchan);
+void set_active_channels (uint8_t active, const uint32_t *channels, int nchan);
 
 /*!
  * \ingroup chat_window
@@ -71,19 +68,19 @@ void set_active_channels (Uint8 active, const Uint32 *channels, int nchan);
  *
  * \param idx The channel index
  *
- * \retval Uint32 The channel number if \a idx is a valid channel index, 0 otherwise
+ * \retval uint32_t The channel number if \a idx is a valid channel index, 0 otherwise
  * \callgraph
  */
-Uint32 get_active_channel (Uint8 idx);
+uint32_t get_active_channel (uint8_t idx);
 
 /*! Structure to hold infos for a chat window tab  */
 typedef struct
 {
-	int tab_id;
-	int out_id;
-	Uint8 chan_nr;
-	int nr_lines;
-	char open, newchan, highlighted;
+    int tab_id;
+    int out_id;
+    uint8_t chan_nr;
+    int nr_lines;
+    char open, newchan, highlighted;
 } chat_channel;
 
 extern chat_channel channels[MAX_CHAT_TABS]; /*!< Infos about a chat window tabs  */
@@ -105,7 +102,7 @@ void clear_chat_wins (void);
  * \ingroup chat_window
  * \brief   Parse text as console input
  *
- *      A common routine to parse input.  Input can be local chat, 
+ *      A common routine to parse input.  Input can be local chat,
  * 	#commands, %options channel or personal chat.
  *
  * \param data       the input text
@@ -124,7 +121,7 @@ void parse_input(char *data, int len);
  * \retval int 1 if highlighted, 0 otherwise
  * \callgraph
  */
-int highlight_tab(const Uint8 channel);
+int highlight_tab(const uint8_t channel);
 
 /*!
  * \ingroup chat_window
@@ -171,9 +168,9 @@ void update_chat_window (text_message * msg, char highlight);
 void switch_to_chat_tab(int id, char click);
 /*!
  * \ingroup chat_window
- * \brief   Handle a keypress of the root window 
+ * \brief   Handle a keypress of the root window
  *
- *      Handles a keypress in the root window as if it were pressed in the chat window input field. 
+ *      Handles a keypress in the root window as if it were pressed in the chat window input field.
  *
  * \param key
  * \param unikey
@@ -181,7 +178,7 @@ void switch_to_chat_tab(int id, char click);
  * \retval int 1 if handled, 0 otherwise
  * \callgraph
  */
-int root_key_to_input_field (Uint32 key, Uint32 unikey);
+int root_key_to_input_field (uint32_t key, uint32_t unikey);
 
 /*!
  * \ingroup chat_window
@@ -193,7 +190,7 @@ int root_key_to_input_field (Uint32 key, Uint32 unikey);
  *
  * \callgraph
  */
-void paste_in_input_field (const Uint8 *text);
+void paste_in_input_field (const char *text);
 
 /*!
  * \ingroup chat_window
@@ -227,21 +224,21 @@ void chat_win_update_zoom (void);
 
 ///////////////////////////////////////////////////////////////////////
 
-typedef struct 
+typedef struct
 {
-	Uint8 channel;
-	int button;
-	char highlighted;
-	char * description;
+    uint8_t channel;
+    int button;
+    char highlighted;
+    char * description;
 } chat_tab;
 
 #define SPEC_CHANS 12 //11 are currently in use. read channels.xml for the list
 
 typedef struct
 {
-	Uint32 channel;
-	char * name;
-	char * description;
+    uint32_t channel;
+    char * name;
+    char * description;
 } chan_name;
 
 extern chat_tab tabs[MAX_CHAT_TABS]; /*!< info about chat tabs */
@@ -311,15 +308,15 @@ void init_channel_names (void);
  *
  * \callgraph
  */
-void put_string_in_input_field(const Uint8 *text);
+void put_string_in_input_field(const char *text);
 
-int command_jlc(char * text, int len);
+int command_jlc(const char * text, int len);
 
 void update_chat_win_buffers(void);
 
 void cleanup_chan_names(void);
 
-int chat_input_key(widget_list *widget, int mx, int my, Uint32 key, Uint32 unikey);
+int chat_input_key(widget_list *widget, int mx, int my, uint32_t key, uint32_t unikey);
 
 int resize_chat_handler(window_info *win, int width, int height);
 
@@ -335,8 +332,8 @@ int resize_chat_handler(window_info *win, int width, int height);
 
 typedef struct
 {
-	Uint32 nr;
-	int color;
+    uint32_t nr;
+    int color;
 } channelcolor;
 
 extern channelcolor channel_colors[MAX_CHANNEL_COLORS];
@@ -345,10 +342,7 @@ void load_channel_colors();
 
 void save_channel_colors();
 
-int command_channel_colors(char * text, int len);
+int command_channel_colors(const char * text, int len);
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif // def __CHAT_H__

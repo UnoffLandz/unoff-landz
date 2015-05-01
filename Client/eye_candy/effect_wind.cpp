@@ -165,13 +165,13 @@ namespace ec
 		hsv_to_rgb(hue, saturation, value, color[0], color[1], color[2]);
 	}
 
-	bool WindParticle::idle(const Uint64 delta_t)
+	bool WindParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
 
 		WindEffect* wind_effect = (WindEffect*)effect;
-		const Uint64 age = get_time() - born;
+		const uint64_t age = get_time() - born;
 		const interval_t usec = delta_t / 1000000.0;
 		const Vec3 cur_wind = get_wind_vec();
 
@@ -327,7 +327,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 WindParticle::get_texture() // Shouldn't be needed.  But just in case...
+	uint32_t WindParticle::get_texture() // Shouldn't be needed.  But just in case...
 	{
 		switch (type)
 		{
@@ -359,7 +359,7 @@ namespace ec
 		return 0.0f;
 	}
 #else	/* NEW_TEXTURES */
-	GLuint WindParticle::get_texture(const Uint16 res_index) // Shouldn't be needed.  But just in case...
+	GLuint WindParticle::get_texture(const uint16_t res_index) // Shouldn't be needed.  But just in case...
 	{
 		switch (type)
 		{
@@ -373,7 +373,7 @@ namespace ec
 		return 0; // Control should never reach here.
 	}
 
-	void WindParticle::draw(const Uint64 usec)
+	void WindParticle::draw(const uint64_t usec)
 	{
 		coord_t distance_squared = (base->camera - pos).planar_magnitude_squared();
 		if (distance_squared > MAX_DRAW_DISTANCE_SQUARED)
@@ -693,7 +693,7 @@ namespace ec
 		}
 	}
 
-	bool WindEffect::idle(const Uint64 usec)
+	bool WindEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 			return false;

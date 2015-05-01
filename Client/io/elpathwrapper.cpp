@@ -576,13 +576,13 @@ void remove_file_updates(char* filename, int custom)
 	remove(locbuffer);
 }
 
-int file_md5_check(FILE * fp, const unsigned char * md5)
+int file_md5_check(FILE * fp, const uint8_t * md5)
 {
 	MD5 local;
-	unsigned char digest[16];
+	uint8_t digest[16];
 	int res = 0;
 	int length;
-	unsigned char buffer[1024];
+	uint8_t buffer[1024];
 	
 	memset (digest, 0, sizeof (digest));
 	if (fp != NULL)
@@ -610,7 +610,7 @@ int file_md5_check(FILE * fp, const unsigned char * md5)
 	return res;
 }
 
-int file_temp_check(const char * filename, const unsigned char * md5)
+int file_temp_check(const char * filename, const uint8_t * md5)
 {
 	FILE* fp = NULL;
 
@@ -618,7 +618,7 @@ int file_temp_check(const char * filename, const unsigned char * md5)
 	return file_md5_check(fp, md5);
 }
 
-int file_update_check(char * filename, const unsigned char * md5, int custom)
+int file_update_check(char * filename, const uint8_t * md5, int custom)
 {
 	FILE* fp = NULL;
 	int res_d = 0;

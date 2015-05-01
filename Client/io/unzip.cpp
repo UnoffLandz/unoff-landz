@@ -65,6 +65,7 @@
 
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -211,7 +212,7 @@ local int unz64local_getByte OF((
 
 local int unz64local_getByte(const zlib_filefunc64_32_def* pzlib_filefunc_def, voidpf filestream, int *pi)
 {
-    unsigned char c;
+    uint8_t c;
     int err = (int)ZREAD64(*pzlib_filefunc_def,filestream,&c,1);
     if (err==1)
     {
@@ -412,7 +413,7 @@ extern int ZEXPORT unzStringFileNameCompare (const char*  fileName1,
 local ZPOS64_T unz64local_SearchCentralDir OF((const zlib_filefunc64_32_def* pzlib_filefunc_def, voidpf filestream));
 local ZPOS64_T unz64local_SearchCentralDir(const zlib_filefunc64_32_def* pzlib_filefunc_def, voidpf filestream)
 {
-    unsigned char* buf;
+    uint8_t* buf;
     ZPOS64_T uSizeFile;
     ZPOS64_T uBackRead;
     ZPOS64_T uMaxBack=0xffff; /* maximum size of global comment */
@@ -427,7 +428,7 @@ local ZPOS64_T unz64local_SearchCentralDir(const zlib_filefunc64_32_def* pzlib_f
     if (uMaxBack>uSizeFile)
         uMaxBack = uSizeFile;
 
-    buf = (unsigned char*)ALLOC(BUFREADCOMMENT+4);
+    buf = (uint8_t*)ALLOC(BUFREADCOMMENT+4);
     if (buf==NULL)
         return 0;
 
@@ -478,7 +479,7 @@ local ZPOS64_T unz64local_SearchCentralDir64 OF((
 local ZPOS64_T unz64local_SearchCentralDir64(const zlib_filefunc64_32_def* pzlib_filefunc_def,
                                       voidpf filestream)
 {
-    unsigned char* buf;
+    uint8_t* buf;
     ZPOS64_T uSizeFile;
     ZPOS64_T uBackRead;
     ZPOS64_T uMaxBack=0xffff; /* maximum size of global comment */
@@ -495,7 +496,7 @@ local ZPOS64_T unz64local_SearchCentralDir64(const zlib_filefunc64_32_def* pzlib
     if (uMaxBack>uSizeFile)
         uMaxBack = uSizeFile;
 
-    buf = (unsigned char*)ALLOC(BUFREADCOMMENT+4);
+    buf = (uint8_t*)ALLOC(BUFREADCOMMENT+4);
     if (buf==NULL)
         return 0;
 

@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 void display_special_effects(int do_render);
-void parse_special_effect(special_effect_enum sfx, const Uint16 *data);
+void parse_special_effect(special_effect_enum sfx, const uint16_t *data);
 
 #ifdef __cplusplus
 } // extern "C"

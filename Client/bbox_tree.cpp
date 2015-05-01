@@ -30,14 +30,14 @@ BBOX_ITEMS* main_bbox_tree_items = NULL;
 
 #define	NO_INDEX	0xFFFFFFFF
 
-static __inline__ Uint32 is_extra_first_sub_node(Uint32 extra)
+static __inline__ uint32_t is_extra_first_sub_node(uint32_t extra)
 {
 	return ((extra & EXTRA_FIRST_SUB_NODE) != 0);
 }
 
 void set_all_intersect_update_needed(BBOX_TREE* bbox_tree)
 {
-	Uint32 i;
+	uint32_t i;
 
 	if (bbox_tree != NULL)
 	{
@@ -47,9 +47,9 @@ void set_all_intersect_update_needed(BBOX_TREE* bbox_tree)
 	else BBOX_TREE_LOG_INFO("bbox_tree");
 }
 
-static __inline__ void adapt_intersect_list_size(BBOX_TREE* bbox_tree, Uint32 count)
+static __inline__ void adapt_intersect_list_size(BBOX_TREE* bbox_tree, uint32_t count)
 {
-	Uint32 size, idx;
+	uint32_t size, idx;
 
 	if (count == 0) count = 1;
 	idx = bbox_tree->cur_intersect_type;
@@ -63,7 +63,7 @@ static __inline__ void adapt_intersect_list_size(BBOX_TREE* bbox_tree, Uint32 co
 	}
 }
 
-static __inline__ void add_intersect_item_to_list(BBOX_TREE* bbox_tree, BBOX_ITEM* item, Uint32 idx)
+static __inline__ void add_intersect_item_to_list(BBOX_TREE* bbox_tree, BBOX_ITEM* item, uint32_t idx)
 {
 #ifdef CLUSTER_INSIDES
 	if (item->cluster && item->cluster != current_cluster) return;
@@ -73,38 +73,38 @@ static __inline__ void add_intersect_item_to_list(BBOX_TREE* bbox_tree, BBOX_ITE
 	bbox_tree->intersect[idx].count++;
 }
 
-static __inline__ void add_intersect_item(BBOX_TREE* bbox_tree, Uint32 index, Uint32 idx)
+static __inline__ void add_intersect_item(BBOX_TREE* bbox_tree, uint32_t index, uint32_t idx)
 {
 	add_intersect_item_to_list(bbox_tree, &bbox_tree->items[index], idx);
 }
 
-static __inline__ void add_intersect_items(BBOX_TREE* bbox_tree, Uint32 index, Uint32 count)
+static __inline__ void add_intersect_items(BBOX_TREE* bbox_tree, uint32_t index, uint32_t count)
 {
-	Uint32 i;
+	uint32_t i;
 
 	adapt_intersect_list_size(bbox_tree, count);
 	for (i = 0; i < count; i++) add_intersect_item(bbox_tree, index+i, bbox_tree->cur_intersect_type);
 }
 
-static __inline__ void add_dyn_intersect_item(BBOX_TREE* bbox_tree, Uint32 node, Uint32 index, Uint32 idx)
+static __inline__ void add_dyn_intersect_item(BBOX_TREE* bbox_tree, uint32_t node, uint32_t index, uint32_t idx)
 {
 	add_intersect_item_to_list(bbox_tree, &bbox_tree->nodes[node].dynamic_objects.items[index], idx);
 }
 
-static __inline__ void add_dyn_intersect_items(BBOX_TREE* bbox_tree, Uint32 node, Uint32 count)
+static __inline__ void add_dyn_intersect_items(BBOX_TREE* bbox_tree, uint32_t node, uint32_t count)
 {
-	Uint32 i;
+	uint32_t i;
 
 	adapt_intersect_list_size(bbox_tree, count);
 	for (i = 0; i < count; i++) add_dyn_intersect_item(bbox_tree, node, i, bbox_tree->cur_intersect_type);
 }
 
-static __inline__ int check_aabb_in_frustum(const AABBOX bbox, const FRUSTUM frustum, Uint32 in_mask, Uint32 *out_mask)
+static __inline__ int check_aabb_in_frustum(const AABBOX bbox, const FRUSTUM frustum, uint32_t in_mask, uint32_t *out_mask)
 {
 	VECTOR4 n, p;
 	VECTOR3 _n, _p;
 	float v;
-	Uint32 i, k, result;
+	uint32_t i, k, result;
 
 	result = INSIDE;
 	*out_mask = 0;
@@ -135,12 +135,12 @@ static __inline__ int check_aabb_in_frustum(const AABBOX bbox, const FRUSTUM fru
 	return result;
 }
 
-static __inline__ int check_aabb_in_frustum_no_out_mask(const AABBOX bbox, const FRUSTUM frustum, Uint32 in_mask)
+static __inline__ int check_aabb_in_frustum_no_out_mask(const AABBOX bbox, const FRUSTUM frustum, uint32_t in_mask)
 {
 	VECTOR4 n, p;
 	VECTOR3 _n, _p;
 	float v;
-	Uint32 i, k;
+	uint32_t i, k;
 
 	for (i = 0, k = 1; k <= in_mask; i++, k += k)
 	{
@@ -167,12 +167,12 @@ static __inline__ int check_aabb_in_frustum_no_out_mask(const AABBOX bbox, const
 	return INSIDE;
 }
 
-static __inline__ int check_aabb_outside_frustum(const AABBOX bbox, const FRUSTUM frustum, Uint32 in_mask)
+static __inline__ int check_aabb_outside_frustum(const AABBOX bbox, const FRUSTUM frustum, uint32_t in_mask)
 {
 	VECTOR4 n;
 	VECTOR3 _n;
 	float v;
-	Uint32 i, k;
+	uint32_t i, k;
 
 	for (i = 0, k = 1; k <= in_mask; i++, k += k)
 	{
@@ -191,12 +191,12 @@ static __inline__ int check_aabb_outside_frustum(const AABBOX bbox, const FRUSTU
 	return INTERSECT;
 }
 
-static __inline__ int check_aabb_inside_portals(const AABBOX bbox, const PLANE* portals, Uint32 count)
+static __inline__ int check_aabb_inside_portals(const AABBOX bbox, const PLANE* portals, uint32_t count)
 {
 	VECTOR4 n;
 	VECTOR3 _n;
 	float v;
-	Uint32 i, j, ret;
+	uint32_t i, j, ret;
 
 	for (i = 0; i < count; i++)
 	{
@@ -221,9 +221,9 @@ static __inline__ int check_aabb_inside_portals(const AABBOX bbox, const PLANE* 
 	return 0;
 }
 
-static __inline__ void add_items(BBOX_TREE* bbox_tree, Uint32 sub_node, Uint32 in_mask)
+static __inline__ void add_items(BBOX_TREE* bbox_tree, uint32_t sub_node, uint32_t in_mask)
 {
-	Uint32 idx1, idx2, size, i;
+	uint32_t idx1, idx2, size, i;
 
 	idx1 = bbox_tree->cur_intersect_type;
 	idx2 = bbox_tree->nodes[sub_node].items_index;
@@ -236,9 +236,9 @@ static __inline__ void add_items(BBOX_TREE* bbox_tree, Uint32 sub_node, Uint32 i
 	}
 }
 
-static __inline__ void add_dyn_items(BBOX_TREE* bbox_tree, Uint32 sub_node, Uint32 in_mask)
+static __inline__ void add_dyn_items(BBOX_TREE* bbox_tree, uint32_t sub_node, uint32_t in_mask)
 {
-	Uint32 idx, size, i;
+	uint32_t idx, size, i;
 
 	idx = bbox_tree->cur_intersect_type;
 	size = bbox_tree->nodes[sub_node].dynamic_objects.index;
@@ -250,9 +250,9 @@ static __inline__ void add_dyn_items(BBOX_TREE* bbox_tree, Uint32 sub_node, Uint
 	}
 }
 
-static __inline__ void merge_items(BBOX_TREE* bbox_tree, Uint32 sub_node, Uint32 in_mask, AABBOX* bbox)
+static __inline__ void merge_items(BBOX_TREE* bbox_tree, uint32_t sub_node, uint32_t in_mask, AABBOX* bbox)
 {
-	Uint32 idx1, idx2, size, i;
+	uint32_t idx1, idx2, size, i;
 
 	idx1 = bbox_tree->cur_intersect_type;
 	idx2 = bbox_tree->nodes[sub_node].items_index;
@@ -268,9 +268,9 @@ static __inline__ void merge_items(BBOX_TREE* bbox_tree, Uint32 sub_node, Uint32
 	}
 }
 
-static __inline__ void merge_dyn_items(BBOX_TREE* bbox_tree, Uint32 sub_node, Uint32 in_mask, AABBOX* bbox)
+static __inline__ void merge_dyn_items(BBOX_TREE* bbox_tree, uint32_t sub_node, uint32_t in_mask, AABBOX* bbox)
 {
-	Uint32 idx, size, i;
+	uint32_t idx, size, i;
 
 	idx = bbox_tree->cur_intersect_type;
 	size = bbox_tree->nodes[sub_node].dynamic_objects.index;
@@ -286,9 +286,9 @@ static __inline__ void merge_dyn_items(BBOX_TREE* bbox_tree, Uint32 sub_node, Ui
 	}
 }
 
-static __inline__ void check_sub_nodes(BBOX_TREE* bbox_tree, Uint32 sub_node, Uint32 in_mask)
+static __inline__ void check_sub_nodes(BBOX_TREE* bbox_tree, uint32_t sub_node, uint32_t in_mask)
 {
-	Uint32 out_mask, result, idx;
+	uint32_t out_mask, result, idx;
 
 	if (sub_node != NO_INDEX)
 	{
@@ -316,9 +316,9 @@ static __inline__ void check_sub_nodes(BBOX_TREE* bbox_tree, Uint32 sub_node, Ui
 	}
 }
 
-static __inline__ void calc_bbox_sub_nodes(BBOX_TREE* bbox_tree, Uint32 sub_node, Uint32 in_mask, AABBOX* bbox)
+static __inline__ void calc_bbox_sub_nodes(BBOX_TREE* bbox_tree, uint32_t sub_node, uint32_t in_mask, AABBOX* bbox)
 {
-	Uint32 out_mask, result, idx;
+	uint32_t out_mask, result, idx;
 
 	if (sub_node != NO_INDEX)
 	{
@@ -348,7 +348,7 @@ static __inline__ void calc_bbox_sub_nodes(BBOX_TREE* bbox_tree, Uint32 sub_node
 
 static __inline__ int light_depht_comp(BBOX_ITEM* a, BBOX_ITEM* b)
 {
-	Uint32 ai, bi;
+	uint32_t ai, bi;
 	float ax, ay, az, bx, by, bz, ad, bd;
 
 	ai = a->ID;
@@ -376,7 +376,7 @@ static __inline__ int light_depht_comp(BBOX_ITEM* a, BBOX_ITEM* b)
 static int comp_items(const void *in_a, const void *in_b)
 {
 	BBOX_ITEM *a, *b;
-	Uint32 am, bm;
+	uint32_t am, bm;
 
 	a = (BBOX_ITEM *)in_a;
 	b = (BBOX_ITEM *)in_b;
@@ -414,11 +414,11 @@ static int comp_items(const void *in_a, const void *in_b)
 
 static __inline__ void build_start_stop(BBOX_TREE* bbox_tree)
 {
-	Uint32 idx, i, cur_type, type;
+	uint32_t idx, i, cur_type, type;
 
 	idx = bbox_tree->cur_intersect_type;
-	memset(bbox_tree->intersect[idx].start, 0, TYPES_COUNT*sizeof(Uint32));
-	memset(bbox_tree->intersect[idx].stop, 0, TYPES_COUNT*sizeof(Uint32));
+	memset(bbox_tree->intersect[idx].start, 0, TYPES_COUNT*sizeof(uint32_t));
+	memset(bbox_tree->intersect[idx].stop, 0, TYPES_COUNT*sizeof(uint32_t));
 
 	if (bbox_tree->intersect[idx].count > 0)
 	{
@@ -444,11 +444,11 @@ static __inline__ void build_start_stop(BBOX_TREE* bbox_tree)
 	}
 }
 
-static __inline__ void delete_item_from_intersect_list(BBOX_TREE* bbox_tree, Uint32 ID, Uint32 type_mask)
+static __inline__ void delete_item_from_intersect_list(BBOX_TREE* bbox_tree, uint32_t ID, uint32_t type_mask)
 {
-	Uint32 i, j, k, size;
+	uint32_t i, j, k, size;
 	int start, stop;
-	Uint32 id;
+	uint32_t id;
 
 	for (i = 0; i < MAX_INTERSECTION_TYPES; i++)
 	{
@@ -482,7 +482,7 @@ static __inline__ void delete_item_from_intersect_list(BBOX_TREE* bbox_tree, Uin
 
 void check_bbox_tree(BBOX_TREE* bbox_tree)
 {
-	Uint32 idx;
+	uint32_t idx;
 
 	if (bbox_tree != NULL)
 	{
@@ -501,7 +501,7 @@ void check_bbox_tree(BBOX_TREE* bbox_tree)
 
 void calc_scene_bbox(BBOX_TREE* bbox_tree, AABBOX* bbox)
 {
-	Uint32 idx;
+	uint32_t idx;
 
 	if (bbox_tree != NULL)
 	{
@@ -515,7 +515,7 @@ void calc_scene_bbox(BBOX_TREE* bbox_tree, AABBOX* bbox)
 
 static __inline__ void free_bbox_tree_data(BBOX_TREE* bbox_tree)
 {
-	Uint32 i;
+	uint32_t i;
 
 	if (bbox_tree->items != NULL)
 	{
@@ -546,14 +546,14 @@ static __inline__ void free_bbox_tree_data(BBOX_TREE* bbox_tree)
 
 void clear_bbox_tree(BBOX_TREE* bbox_tree)
 {
-	Uint32 i;
+	uint32_t i;
 
 	if (bbox_tree != NULL)
 	{
 		for (i = 0; i < MAX_INTERSECTION_TYPES; i++)
 		{
-			memset(bbox_tree->intersect[i].start, 0, TYPES_COUNT*sizeof(Uint32));
-			memset(bbox_tree->intersect[i].stop, 0, TYPES_COUNT*sizeof(Uint32));
+			memset(bbox_tree->intersect[i].start, 0, TYPES_COUNT*sizeof(uint32_t));
+			memset(bbox_tree->intersect[i].stop, 0, TYPES_COUNT*sizeof(uint32_t));
 			bbox_tree->intersect[i].size = 0;
 			bbox_tree->intersect[i].count = 0;
 			bbox_tree->intersect[i].intersect_update_needed = 0;
@@ -583,7 +583,7 @@ static int Axis = 0;
 
 static int compboxes(const void *in_a, const void *in_b)
 {
-	const BBOX_ITEM *a = in_a, *b = in_b;
+    const BBOX_ITEM *a = (const BBOX_ITEM *)in_a, *b = (const BBOX_ITEM *)in_b;
 	float am, bm;
 
 	am = a->bbox.bbmin[Axis];
@@ -599,7 +599,7 @@ static int compboxes(const void *in_a, const void *in_b)
 
 #ifdef FASTER_MAP_LOAD
 static __inline__ void build_area_table(const BBOX_TREE *bbox_tree,
-	Uint32 a, Uint32  b, float *areas)
+	uint32_t a, uint32_t  b, float *areas)
 {
 	VECTOR3 bmin, bmax, len;
 	int i, j;
@@ -632,9 +632,9 @@ static __inline__ void build_area_table(const BBOX_TREE *bbox_tree,
 }
 
 static __inline__ void find_axis_and_bbox(const BBOX_TREE *bbox_tree,
-	Uint32 first, Uint32 last, Uint32 *ret, AABBOX *bbox)
+	uint32_t first, uint32_t last, uint32_t *ret, AABBOX *bbox)
 {
-	Uint32 i, a1, a2, a3;
+	uint32_t i, a1, a2, a3;
 	VECTOR3 bmin, bmax;
 	float d, e;
 
@@ -688,7 +688,7 @@ static __inline__ void find_axis_and_bbox(const BBOX_TREE *bbox_tree,
 	ret[2] = a3;
 }
 #else  // FASTER_MAP_LOAD
-static __inline__ void build_area_table(BBOX_TREE *bbox_tree, Uint32 a, Uint32  b, float *areas)
+static __inline__ void build_area_table(BBOX_TREE *bbox_tree, uint32_t a, uint32_t  b, float *areas)
 {
 	int i, imin, dir;
 	VECTOR3 bmin, bmax, len;
@@ -717,9 +717,9 @@ static __inline__ void build_area_table(BBOX_TREE *bbox_tree, Uint32 a, Uint32  
 	}
 }
 
-static __inline__ void find_axis(BBOX_TREE *bbox_tree, Uint32 first, Uint32 last, Uint32 *ret)
+static __inline__ void find_axis(BBOX_TREE *bbox_tree, uint32_t first, uint32_t last, uint32_t *ret)
 {
-	Uint32 i, a1, a2, a3;
+	uint32_t i, a1, a2, a3;
 	VECTOR3 bmin, bmax;
 	float d, e;
 
@@ -771,7 +771,7 @@ static __inline__ void find_axis(BBOX_TREE *bbox_tree, Uint32 first, Uint32 last
 	ret[2] = a3;
 }
 
-static __inline__ void calc_bbox(AABBOX *bbox, BBOX_TREE *bbox_tree, Uint32 first, Uint32 last)
+static __inline__ void calc_bbox(AABBOX *bbox, BBOX_TREE *bbox_tree, uint32_t first, uint32_t last)
 {
 	int i;
 	VECTOR3 bmin, bmax;
@@ -790,9 +790,9 @@ static __inline__ void calc_bbox(AABBOX *bbox, BBOX_TREE *bbox_tree, Uint32 firs
 }
 #endif // FASTER_MAP_LOAD
 
-static __inline__ Uint32 sort_and_split(BBOX_TREE* bbox_tree, Uint32 node, Uint32* index, Uint32 first, Uint32 last)
+static __inline__ uint32_t sort_and_split(BBOX_TREE* bbox_tree, uint32_t node, uint32_t* index, uint32_t first, uint32_t last)
 {
-	Uint32 size, i, j, axis[3];
+	uint32_t size, i, j, axis[3];
 	int best_loc;
 	float *area_left, *area_right;
 	float best_index, new_index;
@@ -814,8 +814,8 @@ static __inline__ Uint32 sort_and_split(BBOX_TREE* bbox_tree, Uint32 node, Uint3
 
 	if (size > 8)
 	{
-		area_left = malloc(size * sizeof(float));
-		area_right = malloc(size * sizeof(float));
+        area_left = (float *)malloc(size * sizeof(float));
+        area_right = (float *)malloc(size * sizeof(float));
 
 		for (j = 0; j < 3; j++)
 		{
@@ -891,7 +891,7 @@ static __inline__ Uint32 sort_and_split(BBOX_TREE* bbox_tree, Uint32 node, Uint3
 
 void init_bbox_tree(BBOX_TREE* bbox_tree, const BBOX_ITEMS *bbox_items)
 {
-	Uint32 size, index;
+	uint32_t size, index;
 
 	if (bbox_items != NULL)
 	{
@@ -913,9 +913,9 @@ void init_bbox_tree(BBOX_TREE* bbox_tree, const BBOX_ITEMS *bbox_items)
 	else BBOX_TREE_LOG_INFO("bbox_items");
 }
 
-static __inline__ void add_aabb_to_list(BBOX_ITEMS *bbox_items, const AABBOX bbox, Uint32 ID, Uint32 type, Uint32 texture_id)
+static __inline__ void add_aabb_to_list(BBOX_ITEMS *bbox_items, const AABBOX bbox, uint32_t ID, uint32_t type, uint32_t texture_id)
 {
-	Uint32 index, size;
+	uint32_t index, size;
 
 	index = bbox_items->index;
 	size = bbox_items->size;
@@ -938,14 +938,14 @@ static __inline__ void add_aabb_to_list(BBOX_ITEMS *bbox_items, const AABBOX bbo
 	bbox_items->index = index + 1;
 }
 
-void add_light_to_list(BBOX_ITEMS *bbox_items, Uint32 ID, const AABBOX bbox)
+void add_light_to_list(BBOX_ITEMS *bbox_items, uint32_t ID, const AABBOX bbox)
 {
 	add_aabb_to_list(bbox_items, bbox, ID, TYPE_LIGHT, 0);
 }
 
-static __inline__ Uint32 get_3D_type(Uint32 blend, Uint32 ground, Uint32 alpha, Uint32 self_lit)
+static __inline__ uint32_t get_3D_type(uint32_t blend, uint32_t ground, uint32_t alpha, uint32_t self_lit)
 {
-	Uint32 type;
+	uint32_t type;
 
 	type = 0;
 	if (!blend) type += 8;
@@ -975,9 +975,9 @@ static __inline__ Uint32 get_3D_type(Uint32 blend, Uint32 ground, Uint32 alpha, 
 	}
 }
 
-static __inline__ Uint32 get_3D_type_mask(Uint32 blend, Uint32 self_lit)
+static __inline__ uint32_t get_3D_type_mask(uint32_t blend, uint32_t self_lit)
 {
-	Uint32 type;
+	uint32_t type;
 
 	type = 0;
 	if (!blend) type += 2;
@@ -993,29 +993,29 @@ static __inline__ Uint32 get_3D_type_mask(Uint32 blend, Uint32 self_lit)
 	}
 }
 
-void add_3dobject_to_list(BBOX_ITEMS *bbox_items, Uint32 ID, const AABBOX bbox, Uint32 blend, Uint32 ground, Uint32 alpha, Uint32 self_lit, Uint32 texture_id)
+void add_3dobject_to_list(BBOX_ITEMS *bbox_items, uint32_t ID, const AABBOX bbox, uint32_t blend, uint32_t ground, uint32_t alpha, uint32_t self_lit, uint32_t texture_id)
 {
 	add_aabb_to_list(bbox_items, bbox, ID, get_3D_type(blend, ground, alpha, self_lit), texture_id);
 }
 
-static __inline__ Uint32 get_2D_type(Uint32 alpha)
+static __inline__ uint32_t get_2D_type(uint32_t alpha)
 {
 	if (alpha == 0) return TYPE_2D_NO_ALPHA_OBJECT;
 	else return TYPE_2D_ALPHA_OBJECT;
 }
 
-static __inline__ Uint32 get_2D_type_mask(Uint32 alpha)
+static __inline__ uint32_t get_2D_type_mask(uint32_t alpha)
 {
 	if (alpha == 0) return TYPE_MASK_2D_ALPHA_OBJECT;
 	else return TYPE_MASK_2D_NO_ALPHA_OBJECT;
 }
 
-void add_2dobject_to_list(BBOX_ITEMS *bbox_items, Uint32 ID, const AABBOX bbox, Uint32 alpha, Uint32 texture_id)
+void add_2dobject_to_list(BBOX_ITEMS *bbox_items, uint32_t ID, const AABBOX bbox, uint32_t alpha, uint32_t texture_id)
 {
 	add_aabb_to_list(bbox_items, bbox, ID, get_2D_type(alpha), texture_id);
 }
 
-static __inline__ Uint32 get_blend_type(Uint32 blend)
+static __inline__ uint32_t get_blend_type(uint32_t blend)
 {
 	switch (blend)
 	{
@@ -1034,39 +1034,39 @@ static __inline__ Uint32 get_blend_type(Uint32 blend)
 	}
 }
 
-static __inline__ Uint32 get_particle_type(Uint32 sblend, Uint32 dblend)
+static __inline__ uint32_t get_particle_type(uint32_t sblend, uint32_t dblend)
 {
 	return ((get_blend_type(sblend) << 4) + get_blend_type(dblend));
 }
 
-void add_particle_sys_to_list(BBOX_ITEMS *bbox_items, Uint32 ID, const AABBOX bbox, Uint32 sblend, Uint32 dblend)
+void add_particle_sys_to_list(BBOX_ITEMS *bbox_items, uint32_t ID, const AABBOX bbox, uint32_t sblend, uint32_t dblend)
 {
 	add_aabb_to_list(bbox_items, bbox, ID, TYPE_PARTICLE_SYSTEM, get_particle_type(sblend, dblend));
 }
 
-void add_terrain_to_list(BBOX_ITEMS *bbox_items, Uint32 ID, const AABBOX bbox, Uint32 texture_id)
+void add_terrain_to_list(BBOX_ITEMS *bbox_items, uint32_t ID, const AABBOX bbox, uint32_t texture_id)
 {
 	add_aabb_to_list(bbox_items, bbox, ID, TYPE_TERRAIN, texture_id);
 }
 
-static __inline__ Uint32 get_water_type(Uint32 reflectiv)
+static __inline__ uint32_t get_water_type(uint32_t reflectiv)
 {
 	if (reflectiv) return TYPE_REFLECTIV_WATER;
 	else return TYPE_NO_REFLECTIV_WATER;
 }
 
-static __inline__ Uint32 get_water_type_mask(Uint32 reflectiv)
+static __inline__ uint32_t get_water_type_mask(uint32_t reflectiv)
 {
 	if (reflectiv) return TYPE_MASK_REFLECTIV_WATER;
 	else return TYPE_MASK_NO_REFLECTIV_WATER;
 }
 
-void add_water_to_list(BBOX_ITEMS *bbox_items, Uint32 ID, const AABBOX bbox, Uint32 texture_id, Uint32 reflectiv)
+void add_water_to_list(BBOX_ITEMS *bbox_items, uint32_t ID, const AABBOX bbox, uint32_t texture_id, uint32_t reflectiv)
 {
 	add_aabb_to_list(bbox_items, bbox, ID, get_water_type(reflectiv), texture_id);
 }
 
-static __inline__ Uint32 check_aabb_aabb(const AABBOX bbox, const AABBOX dyn_bbox, float grow)
+static __inline__ uint32_t check_aabb_aabb(const AABBOX bbox, const AABBOX dyn_bbox, float grow)
 {
 	AABBOX new_bbox;
 	VECTOR3 len;
@@ -1084,9 +1084,9 @@ static __inline__ Uint32 check_aabb_aabb(const AABBOX bbox, const AABBOX dyn_bbo
 	else return 1;
 }
 
-static __inline__ void add_dynamic_item_to_node(BBOX_TREE *bbox_tree, Uint32 node, const AABBOX bbox, Uint32 ID, Uint32 type, Uint32 texture_id, Uint32 extra)
+static __inline__ void add_dynamic_item_to_node(BBOX_TREE *bbox_tree, uint32_t node, const AABBOX bbox, uint32_t ID, uint32_t type, uint32_t texture_id, uint32_t extra)
 {	
-	Uint32 index, size;
+	uint32_t index, size;
 
 	if (node != NO_INDEX)
 	{
@@ -1116,9 +1116,9 @@ static __inline__ void add_dynamic_item_to_node(BBOX_TREE *bbox_tree, Uint32 nod
 	}
 }
 
-static __inline__ int add_dynamic_aabb_to_abt_node(BBOX_TREE *bbox_tree, Uint32 node, const AABBOX bbox, Uint32 ID, Uint32 type, Uint32 texture_id)
+static __inline__ int add_dynamic_aabb_to_abt_node(BBOX_TREE *bbox_tree, uint32_t node, const AABBOX bbox, uint32_t ID, uint32_t type, uint32_t texture_id)
 {
-	Uint32 result, extra;
+	uint32_t result, extra;
 
 	if (node != NO_INDEX)
 	{
@@ -1139,9 +1139,9 @@ static __inline__ int add_dynamic_aabb_to_abt_node(BBOX_TREE *bbox_tree, Uint32 
 	else return 0;
 }
 
-static __inline__ void add_aabb_to_abt(BBOX_TREE *bbox_tree, const AABBOX bbox, Uint32 ID, Uint32 type, Uint32 texture_id, Uint32 dynamic)
+static __inline__ void add_aabb_to_abt(BBOX_TREE *bbox_tree, const AABBOX bbox, uint32_t ID, uint32_t type, uint32_t texture_id, uint32_t dynamic)
 {
-	Uint32 result;
+	uint32_t result;
 	
 	if (bbox_tree != NULL)
 	{
@@ -1152,39 +1152,39 @@ static __inline__ void add_aabb_to_abt(BBOX_TREE *bbox_tree, const AABBOX bbox, 
 	else BBOX_TREE_LOG_INFO("bbox_tree");
 }
 
-void add_light_to_abt(BBOX_TREE *bbox_tree, Uint32 ID, const AABBOX bbox, Uint32 dynamic)
+void add_light_to_abt(BBOX_TREE *bbox_tree, uint32_t ID, const AABBOX bbox, uint32_t dynamic)
 {
 	add_aabb_to_abt(bbox_tree, bbox, ID, TYPE_LIGHT, 0, dynamic);
 }
 
-void add_3dobject_to_abt(BBOX_TREE *bbox_tree, Uint32 ID, const AABBOX bbox, Uint32 blend, Uint32 ground, Uint32 alpha, Uint32 self_lit, Uint32 texture_id, Uint32 dynamic)
+void add_3dobject_to_abt(BBOX_TREE *bbox_tree, uint32_t ID, const AABBOX bbox, uint32_t blend, uint32_t ground, uint32_t alpha, uint32_t self_lit, uint32_t texture_id, uint32_t dynamic)
 {
 	add_aabb_to_abt(bbox_tree, bbox, ID, get_3D_type(blend, ground, alpha, self_lit), texture_id, dynamic);
 }
 
-void add_2dobject_to_abt(BBOX_TREE *bbox_tree, Uint32 ID, const AABBOX bbox, Uint32 alpha, Uint32 texture_id, Uint32 dynamic)
+void add_2dobject_to_abt(BBOX_TREE *bbox_tree, uint32_t ID, const AABBOX bbox, uint32_t alpha, uint32_t texture_id, uint32_t dynamic)
 {
 	add_aabb_to_abt(bbox_tree, bbox, ID, get_2D_type(alpha), texture_id, dynamic);
 }
 
-void add_particle_to_abt(BBOX_TREE *bbox_tree, Uint32 ID, const AABBOX bbox, Uint32 sblend, Uint32 dblend, Uint32 dynamic)
+void add_particle_to_abt(BBOX_TREE *bbox_tree, uint32_t ID, const AABBOX bbox, uint32_t sblend, uint32_t dblend, uint32_t dynamic)
 {
 	add_aabb_to_abt(bbox_tree, bbox, ID, TYPE_PARTICLE_SYSTEM, get_particle_type(sblend, dblend), dynamic);
 }
 
-void add_terrain_to_abt(BBOX_TREE *bbox_tree, Uint32 ID, const AABBOX bbox, Uint32 texture_id, Uint32 dynamic)
+void add_terrain_to_abt(BBOX_TREE *bbox_tree, uint32_t ID, const AABBOX bbox, uint32_t texture_id, uint32_t dynamic)
 {
 	add_aabb_to_abt(bbox_tree, bbox, ID, TYPE_TERRAIN, texture_id, dynamic);
 }
 
-void add_water_to_abt(BBOX_TREE *bbox_tree, Uint32 ID, const AABBOX bbox, Uint32 texture_id, Uint32 reflectiv, Uint32 dynamic)
+void add_water_to_abt(BBOX_TREE *bbox_tree, uint32_t ID, const AABBOX bbox, uint32_t texture_id, uint32_t reflectiv, uint32_t dynamic)
 {
 	add_aabb_to_abt(bbox_tree, bbox, ID, get_water_type(reflectiv), texture_id, dynamic);
 }
 
-static __inline__ Uint32 delete_dynamic_aabb_from_node(BBOX_TREE *bbox_tree, Uint32 node, Uint32 ID, Uint32 type_mask);
+static __inline__ uint32_t delete_dynamic_aabb_from_node(BBOX_TREE *bbox_tree, uint32_t node, uint32_t ID, uint32_t type_mask);
 
-static __inline__ void delete_dynamic_item_from_node(BBOX_TREE *bbox_tree, Uint32 node, Uint32 idx, Uint32 ID, Uint32 type_mask)
+static __inline__ void delete_dynamic_item_from_node(BBOX_TREE *bbox_tree, uint32_t node, uint32_t idx, uint32_t ID, uint32_t type_mask)
 {
 	int index, size, count;
 	
@@ -1221,10 +1221,10 @@ static __inline__ void delete_dynamic_item_from_node(BBOX_TREE *bbox_tree, Uint3
 	bbox_tree->nodes[node].dynamic_objects.size = size;
 }
 
-static __inline__ Uint32 dynamic_aabb_is_in_node(BBOX_TREE *bbox_tree, Uint32 node, Uint32 ID, Uint32 type_mask)
+static __inline__ uint32_t dynamic_aabb_is_in_node(BBOX_TREE *bbox_tree, uint32_t node, uint32_t ID, uint32_t type_mask)
 {
-	Uint32 i, result;
-	Uint32 id;
+	uint32_t i, result;
+	uint32_t id;
 
 	result = 0;
 	
@@ -1248,9 +1248,9 @@ static __inline__ Uint32 dynamic_aabb_is_in_node(BBOX_TREE *bbox_tree, Uint32 no
 	return result;
 }
 
-static __inline__ Uint32 delete_dynamic_aabb_from_node(BBOX_TREE *bbox_tree, Uint32 node, Uint32 ID, Uint32 type_mask)
+static __inline__ uint32_t delete_dynamic_aabb_from_node(BBOX_TREE *bbox_tree, uint32_t node, uint32_t ID, uint32_t type_mask)
 {
-	Uint32 i, result, idx1, idx2;
+	uint32_t i, result, idx1, idx2;
 	AABBOX new_bbox;
 
 	if (node != NO_INDEX && bbox_tree->nodes_count > 0)
@@ -1286,7 +1286,7 @@ static __inline__ Uint32 delete_dynamic_aabb_from_node(BBOX_TREE *bbox_tree, Uin
 	return 0;
 }
 
-static __inline__ void delete_aabb_from_abt(BBOX_TREE *bbox_tree, Uint32 ID, Uint32 type_mask)
+static __inline__ void delete_aabb_from_abt(BBOX_TREE *bbox_tree, uint32_t ID, uint32_t type_mask)
 {
 	if (bbox_tree != NULL)
 	{
@@ -1296,37 +1296,37 @@ static __inline__ void delete_aabb_from_abt(BBOX_TREE *bbox_tree, Uint32 ID, Uin
 	else BBOX_TREE_LOG_INFO("bbox_tree");
 }
 
-void delete_3dobject_from_abt(BBOX_TREE *bbox_tree, Uint32 ID, Uint32 blend, Uint32 self_lit)
+void delete_3dobject_from_abt(BBOX_TREE *bbox_tree, uint32_t ID, uint32_t blend, uint32_t self_lit)
 {
 	delete_aabb_from_abt(bbox_tree, ID, get_3D_type_mask(blend, self_lit));
 }
 
-void delete_2dobject_from_abt(BBOX_TREE *bbox_tree, Uint32 ID, Uint32 alpha)
+void delete_2dobject_from_abt(BBOX_TREE *bbox_tree, uint32_t ID, uint32_t alpha)
 {
 	delete_aabb_from_abt(bbox_tree, ID, get_2D_type_mask(alpha));
 }
 
-void delete_particle_from_abt(BBOX_TREE *bbox_tree, Uint32 ID)
+void delete_particle_from_abt(BBOX_TREE *bbox_tree, uint32_t ID)
 {
 	delete_aabb_from_abt(bbox_tree, ID, TYPE_MASK_PARTICLE_SYSTEM);
 }
 
-void delete_light_from_abt(BBOX_TREE *bbox_tree, Uint32 ID)
+void delete_light_from_abt(BBOX_TREE *bbox_tree, uint32_t ID)
 {
 	delete_aabb_from_abt(bbox_tree, ID, TYPE_MASK_LIGHT);
 }
 
-void delete_terrain_from_abt(BBOX_TREE *bbox_tree, Uint32 ID)
+void delete_terrain_from_abt(BBOX_TREE *bbox_tree, uint32_t ID)
 {
 	delete_aabb_from_abt(bbox_tree, ID, TYPE_MASK_TERRAIN);
 }
 
-void delete_water_from_abt(BBOX_TREE *bbox_tree, Uint32 ID, Uint32 reflectiv)
+void delete_water_from_abt(BBOX_TREE *bbox_tree, uint32_t ID, uint32_t reflectiv)
 {
 	delete_aabb_from_abt(bbox_tree, ID, get_water_type_mask(reflectiv));
 }
 
-BBOX_ITEMS* create_bbox_items(Uint32 size)
+BBOX_ITEMS* create_bbox_items(uint32_t size)
 {
 	BBOX_ITEMS* bbox_items;
 	
@@ -1358,7 +1358,7 @@ void free_bbox_items(BBOX_ITEMS* bbox_items)
 BBOX_TREE* build_bbox_tree()
 {
 	BBOX_TREE* bbox_tree;
-	Uint32 i;
+	uint32_t i;
 
 	bbox_tree = (BBOX_TREE*)malloc(sizeof(BBOX_TREE));
 	
@@ -1377,7 +1377,7 @@ BBOX_TREE* build_bbox_tree()
 	return bbox_tree;
 }
 
-static __inline__ void get_point_from_aabbox(VECTOR3 point, const AABBOX bbox, Uint32 number)
+static __inline__ void get_point_from_aabbox(VECTOR3 point, const AABBOX bbox, uint32_t number)
 {
 	VECTOR3I mask;
 	
@@ -1417,7 +1417,7 @@ static __inline__ void get_point_from_aabbox(VECTOR3 point, const AABBOX bbox, U
 	VSelect(point, bbox.bbmin, bbox.bbmax, mask);
 }
 
-static __inline__ void calculate_frustum_data(FRUSTUM_DATA data, const FRUSTUM frustum, const VECTOR3 light_dir, Uint32 mask)
+static __inline__ void calculate_frustum_data(FRUSTUM_DATA data, const FRUSTUM frustum, const VECTOR3 light_dir, uint32_t mask)
 {
 	VECTOR3 n;
 	VECTOR4 t;
@@ -1450,7 +1450,7 @@ static __inline__ void calculate_frustum_data(FRUSTUM_DATA data, const FRUSTUM f
 	}
 }
 
-static __inline__ int check_shadow_line_walk(const AABBOX bbox, const FRUSTUM frustum, const VECTOR3 light_dir, Uint32 mask, const float* hit)
+static __inline__ int check_shadow_line_walk(const AABBOX bbox, const FRUSTUM frustum, const VECTOR3 light_dir, uint32_t mask, const float* hit)
 {
 	AABBOX tmp_bbox;
 	VECTOR3 walk;
@@ -1479,7 +1479,7 @@ static __inline__ int check_shadow_line_walk(const AABBOX bbox, const FRUSTUM fr
 	else return OUTSIDE;
 }
 
-static __inline__ int check_shadow_lines(const AABBOX bbox, const FRUSTUM frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, Uint32 mask, Uint32 point_mask)
+static __inline__ int check_shadow_lines(const AABBOX bbox, const FRUSTUM frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, uint32_t mask, uint32_t point_mask)
 {
 	VECTOR3 _p;
 	VECTOR4 p;
@@ -1558,7 +1558,7 @@ static __inline__ int check_shadow_lines(const AABBOX bbox, const FRUSTUM frustu
 	else return INTERSECT;
 }
 
-static __inline__ int check_shadow_line_walk_outside(const AABBOX bbox, const FRUSTUM frustum, const VECTOR3 light_dir, Uint32 mask, const float* hit)
+static __inline__ int check_shadow_line_walk_outside(const AABBOX bbox, const FRUSTUM frustum, const VECTOR3 light_dir, uint32_t mask, const float* hit)
 {
 	AABBOX tmp_bbox;
 	VECTOR3 walk;
@@ -1579,7 +1579,7 @@ static __inline__ int check_shadow_line_walk_outside(const AABBOX bbox, const FR
 	return OUTSIDE;
 }
 
-static __inline__ int check_shadow_lines_outside(const AABBOX bbox, const FRUSTUM frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, Uint32 mask, Uint32 point_mask)
+static __inline__ int check_shadow_lines_outside(const AABBOX bbox, const FRUSTUM frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, uint32_t mask, uint32_t point_mask)
 {
 	VECTOR3 _p;
 	VECTOR4 p;
@@ -1649,10 +1649,10 @@ static __inline__ int check_shadow_lines_outside(const AABBOX bbox, const FRUSTU
 	return check_shadow_line_walk_outside(bbox, frustum, light_dir, mask, hit);
 }
 
-static __inline__ void add_dyn_items_shadow(BBOX_TREE* bbox_tree, Uint32 sub_node, const FRUSTUM frustum, Uint32 in_mask,
-	const FRUSTUM view_frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, Uint32 mask, Uint32 point_mask)
+static __inline__ void add_dyn_items_shadow(BBOX_TREE* bbox_tree, uint32_t sub_node, const FRUSTUM frustum, uint32_t in_mask,
+	const FRUSTUM view_frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, uint32_t mask, uint32_t point_mask)
 {
-	Uint32 idx, size, i;
+	uint32_t idx, size, i;
 
 	idx = bbox_tree->cur_intersect_type;
 	size = bbox_tree->nodes[sub_node].dynamic_objects.index;
@@ -1668,10 +1668,10 @@ static __inline__ void add_dyn_items_shadow(BBOX_TREE* bbox_tree, Uint32 sub_nod
 	}
 }
 
-static __inline__ void add_items_shadow(BBOX_TREE* bbox_tree, Uint32 sub_node, const FRUSTUM frustum, Uint32 in_mask,
-	const FRUSTUM view_frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, Uint32 mask, Uint32 point_mask)
+static __inline__ void add_items_shadow(BBOX_TREE* bbox_tree, uint32_t sub_node, const FRUSTUM frustum, uint32_t in_mask,
+	const FRUSTUM view_frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, uint32_t mask, uint32_t point_mask)
 {
-	Uint32 idx1, idx2, size, i;
+	uint32_t idx1, idx2, size, i;
 
 	idx1 = bbox_tree->cur_intersect_type;
 	idx2 = bbox_tree->nodes[sub_node].items_index;
@@ -1687,10 +1687,10 @@ static __inline__ void add_items_shadow(BBOX_TREE* bbox_tree, Uint32 sub_node, c
 	}
 }
 
-static __inline__ void check_sub_nodes_shadow(BBOX_TREE* bbox_tree, Uint32 sub_node, const FRUSTUM frustum, Uint32 in_mask,
-	const FRUSTUM view_frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, Uint32 mask, Uint32 point_mask)
+static __inline__ void check_sub_nodes_shadow(BBOX_TREE* bbox_tree, uint32_t sub_node, const FRUSTUM frustum, uint32_t in_mask,
+	const FRUSTUM view_frustum, const FRUSTUM_DATA data, const VECTOR3 light_dir, uint32_t mask, uint32_t point_mask)
 {
-	Uint32 out_mask, result;
+	uint32_t out_mask, result;
 	
 	if (sub_node != NO_INDEX)
 	{
@@ -1744,10 +1744,10 @@ static __inline__ int calculate_point_mask(const VECTOR3 light_dir)
 	return mask;
 }
 
-void check_bbox_tree_shadow(BBOX_TREE* bbox_tree, const FRUSTUM frustum, Uint32 mask, const FRUSTUM view_frustum,
-	Uint32 view_mask, const VECTOR3 light_dir)
+void check_bbox_tree_shadow(BBOX_TREE* bbox_tree, const FRUSTUM frustum, uint32_t mask, const FRUSTUM view_frustum,
+	uint32_t view_mask, const VECTOR3 light_dir)
 {
-	Uint32 idx, point_mask;
+	uint32_t idx, point_mask;
 	FRUSTUM_DATA data;
 
 	if (bbox_tree != NULL)
@@ -1768,9 +1768,9 @@ void check_bbox_tree_shadow(BBOX_TREE* bbox_tree, const FRUSTUM frustum, Uint32 
 	else BBOX_TREE_LOG_INFO("bbox_tree");
 }
 
-void set_frustum(BBOX_TREE* bbox_tree, const FRUSTUM frustum, Uint32 mask)
+void set_frustum(BBOX_TREE* bbox_tree, const FRUSTUM frustum, uint32_t mask)
 {
-	Uint32 idx;
+	uint32_t idx;
 
 	if (bbox_tree != NULL)
 	{
@@ -1781,9 +1781,9 @@ void set_frustum(BBOX_TREE* bbox_tree, const FRUSTUM frustum, Uint32 mask)
 	else BBOX_TREE_LOG_INFO("bbox_tree");
 }
 
-static __inline__ void reflection_portal_checks(BBOX_TREE* bbox_tree, const PLANE* portals, Uint32 count)
+static __inline__ void reflection_portal_checks(BBOX_TREE* bbox_tree, const PLANE* portals, uint32_t count)
 {
-	Uint32 i, j, idx;
+	uint32_t i, j, idx;
 	int start, stop;
 	
 	idx = bbox_tree->cur_intersect_type;
@@ -1802,9 +1802,9 @@ static __inline__ void reflection_portal_checks(BBOX_TREE* bbox_tree, const PLAN
 	}
 }
 
-void reflection_portal_check(BBOX_TREE* bbox_tree, const PLANE* portals, Uint32 count)
+void reflection_portal_check(BBOX_TREE* bbox_tree, const PLANE* portals, uint32_t count)
 {
-	Uint32 idx;
+	uint32_t idx;
 
 	if (bbox_tree != NULL)
 	{

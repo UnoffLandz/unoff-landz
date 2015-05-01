@@ -25,10 +25,10 @@ extern SDL_TimerID misc_timer;           /*!< misc_timer */
  *
  * \param   	some_int The last delay
  * \param   	data A void* to data, not used currently
- * \retval Uint32  	Uint32 The delay before it's called the next time
+ * \retval uint32_t  	uint32_t The delay before it's called the next time
  * \callgraph
  */
-Uint32 my_timer(Uint32 some_int, void * data);
+uint32_t my_timer(uint32_t some_int, void * data);
 
 /*!
  * \ingroup 	thread
@@ -38,10 +38,10 @@ Uint32 my_timer(Uint32 some_int, void * data);
  *
  * \param   	interval The time interval
  * \param   	data A void* to some data. It is not currently used.
- * \retval Uint32  	Uint32 The next interval
+ * \retval uint32_t  	uint32_t The next interval
  * \callgraph
  */
-Uint32 check_misc(Uint32 interval, void * data);
+uint32_t check_misc(uint32_t interval, void * data);
 #ifdef TIMER_CHECK
 /*!
  * \ingroup 	thread

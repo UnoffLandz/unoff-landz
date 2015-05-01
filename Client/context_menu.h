@@ -82,7 +82,7 @@ int cm_show_direct(size_t cm_id, int window_id, int widget_id);
  * \brief Called by \ref click_in_windows to prepare for activation checks.
  * \retval int 			1 if the activation mouse state is true (i.e. right click), otherwise 0
  */
-int cm_pre_show_check(Uint32 flags);
+int cm_pre_show_check(uint32_t flags);
 
 
 /*!

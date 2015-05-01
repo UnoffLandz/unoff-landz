@@ -22,7 +22,7 @@ namespace eternal_lands
 	}
 
 	void HardwareBuffer::set_size(const HardwareBufferType type,
-		const Uint64 size, const HardwareBufferUsageType usage)
+		const uint64_t size, const HardwareBufferUsageType usage)
 	{
 		m_size = size;
 		ELglBufferDataARB(type, size, 0, usage);

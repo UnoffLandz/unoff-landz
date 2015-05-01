@@ -61,7 +61,7 @@ struct cursors_struct
 {
 	int hot_x; /*!< x coordinate of the hot spot point. */
 	int hot_y; /*!< y coordinate of the hot spot point. */
-	Uint8 *cursor_pointer; /*!< pointer to the actual cursor */
+	uint8_t *cursor_pointer; /*!< pointer to the actual cursor */
 };
 
 #ifndef FASTER_MAP_LOAD

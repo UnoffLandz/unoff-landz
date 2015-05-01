@@ -46,7 +46,7 @@ namespace IconWindow
 	{
 		public:
 			virtual const char *get_help_message(void) const = 0;
-			virtual void set_flash(Uint32 seconds) = 0;
+			virtual void set_flash(uint32_t seconds) = 0;
 			virtual void set_highlight(bool is_highlighted) = 0;
 			virtual void update_highlight(void) = 0;
 			virtual std::pair<float, float> get_uv(void) = 0;
@@ -65,7 +65,7 @@ namespace IconWindow
 			Basic_Icon(int icon_id, int coloured_icon_id, const char * help_str, const std::vector<CommandQueue::Line> *lines = 0);
 			virtual ~Basic_Icon(void) { if (cq) delete cq; if (cm_valid(cm_menu_id)) cm_destroy(cm_menu_id); }
 			virtual const char *get_help_message(void) const { return help_message.c_str(); }
-			virtual void set_flash(Uint32 seconds) { flashing = 4*seconds; }
+			virtual void set_flash(uint32_t seconds) { flashing = 4*seconds; }
 			virtual void set_highlight(bool is_highlighted) { has_highlight = is_highlighted; }
 			virtual void update_highlight(void) { has_highlight = false; if (cq) cq->process(); }
 			virtual void action(void) { flashing = 0; do_icon_click_sound(); }
@@ -78,8 +78,8 @@ namespace IconWindow
 			bool has_highlight;				// true if the icon is highlighted
 			float u[2], v[2];				// icon image positions
 			std::string help_message;		// icon help message
-			Uint32 flashing;				// if non-zero, the number times left to flash
-			Uint32 last_flash_change;		// if flashing, the time the flashing state last changed
+			uint32_t flashing;				// if non-zero, the number times left to flash
+			uint32_t last_flash_change;		// if flashing, the time the flashing state last changed
 			std::vector<CommandQueue::Line> menu_lines; 	// context menu #command lines
 			CommandQueue::Queue *cq;		// Command queue for commands
 			size_t cm_menu_id;				// if this icon has a context menu, this is the id, otherwise CM_INIT_VALUE
@@ -106,7 +106,7 @@ namespace IconWindow
 					delete icons[i];
 			}
 			const char *get_help_message(void) const { return icons[get_index()]->get_help_message(); }
-			void set_flash(Uint32 seconds) { icons[get_index()]->set_flash(seconds); }
+			void set_flash(uint32_t seconds) { icons[get_index()]->set_flash(seconds); }
 			void set_highlight(bool is_highlighted) { icons[get_index()]->set_highlight(is_highlighted); }
 			void update_highlight(void) { icons[get_index()]->update_highlight(); }
 			std::pair<float, float> get_uv(void) { return icons[get_index()]->get_uv(); }
@@ -176,7 +176,7 @@ namespace IconWindow
 			{
 				if (!key_name.empty())
 				{
-					Uint32 value = get_key_value(key_name.c_str());
+					uint32_t value = get_key_value(key_name.c_str());
 					if (value)
 						do_keypress(value);
 				}
@@ -301,7 +301,7 @@ namespace IconWindow
 					delete icon_list[i];
 				icon_list.clear();
 			}
-			void flash(const char* name, Uint32 seconds)
+			void flash(const char* name, uint32_t seconds)
 			{
 				for (size_t i=0; i<icon_list.size(); ++i)
 					if (strcmp(name, icon_list[i]->get_help_message()) == 0)
@@ -648,7 +648,7 @@ static int	display_icons_handler(window_info *win)
 }
 
 //	Window callback mouse click
-static int	click_icons_handler(window_info *win, int mx, int my, Uint32 flags)
+static int	click_icons_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 	if ( (flags & ELW_MOUSE_BUTTON) == 0)
 		return 0; // only handle mouse button clicks, not scroll wheels moves;
@@ -660,7 +660,7 @@ static int	click_icons_handler(window_info *win, int mx, int my, Uint32 flags)
 }
 
 //	Reload the icons from file
-extern "C" int reload_icon_window(char *text, int len)
+extern "C" int reload_icon_window(const char *text, int len)
 {
 	reload_flag = true;
 	return 1;
@@ -673,7 +673,7 @@ extern "C" int get_icons_win_active_len(void)
 }
 
 //	Make the specified icon flash
-extern "C" void flash_icon(const char* name, Uint32 seconds)
+extern "C" void flash_icon(const char* name, uint32_t seconds)
 {
 	action_icons.flash(name, seconds);
 }

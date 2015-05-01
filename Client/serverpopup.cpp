@@ -103,7 +103,7 @@ static void set_text_line()
 
 
 /* scroll click handler, set the displayed text start to the new scroll position */
-static int scroll_click(widget_list *widget, int mx, int my, Uint32 flags)
+static int scroll_click(widget_list *widget, int mx, int my, uint32_t flags)
 {
 	scroll_line = vscrollbar_get_pos( server_popup_win, scroll_id );
 	set_text_line();
@@ -112,14 +112,14 @@ static int scroll_click(widget_list *widget, int mx, int my, Uint32 flags)
 
 
 /* scroll drag handler, set the displayed text start to the new scroll position */
-static int scroll_drag(widget_list *widget, int mx, int my, Uint32 flags, int dx, int dy)
+static int scroll_drag(widget_list *widget, int mx, int my, uint32_t flags, int dx, int dy)
 {
 	return scroll_click(widget, mx, my, flags);
 }
 
 
 /* if the mouse scroll wheel is used, move the scroll bar if we have one */
-int click_handler(window_info *win, int mx, int my, Uint32 flags)
+int click_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 	if (!actual_scroll_width){
 		return 1;
@@ -156,7 +156,7 @@ static void initialise()
 	
 
 /* destroy all the widgets, deallocate memory and destroy the main window */
-static int close_handler(widget_list *widget, int mx, int my, Uint32 flags)
+static int close_handler(widget_list *widget, int mx, int my, uint32_t flags)
 {
 	widget_destroy(server_popup_win, scroll_id);
 	widget_destroy(server_popup_win, buttonId);
@@ -294,7 +294,7 @@ void display_server_popup_win(const char * const message)
 	int winWidth = 0;
 	int winHeight = 0;
 	widget_list *button_widget = NULL;
-	Uint32 win_property_flags;
+	uint32_t win_property_flags;
 	
 	/* exit now if message empty */
 	if (!strlen(message)){
@@ -302,13 +302,13 @@ void display_server_popup_win(const char * const message)
 	}
 	
 	/* write the message to the log file */
-	write_to_log (CHAT_SERVER, (unsigned char*)message, strlen(message));
+	write_to_log (CHAT_SERVER, message, strlen(message));
 	
 	/* if the window already exists, copy new message to end */
 	if (server_popup_win >= 0){
 		
 		window_info *win = &windows_list.window[server_popup_win];
-		char *sep_str = "\n\n";
+        const char *sep_str = "\n\n";
 
 		/* resize to hold new message text + separator */
 		resize_text_message_data (&widget_text, widget_text.len + 2*(strlen(message)+strlen(sep_str)));
@@ -345,8 +345,8 @@ void display_server_popup_win(const char * const message)
 		win_property_flags = ELW_DRAGGABLE|ELW_USE_BACKGROUND|ELW_USE_BORDER|ELW_SHOW|ELW_ALPHA_BORDER|ELW_SWITCHABLE_OPAQUE;
 		server_popup_win = create_window( "", -1, 0,
 			server_popup_win_x, server_popup_win_y, winWidth, winHeight, win_property_flags);
-		set_window_handler( server_popup_win, ELW_HANDLER_RESIZE, &resize_handler);
-		set_window_handler( server_popup_win, ELW_HANDLER_CLICK, &click_handler);
+        set_window_handler( server_popup_win, ELW_HANDLER_RESIZE,(int (*)()) &resize_handler);
+        set_window_handler( server_popup_win, ELW_HANDLER_CLICK, (int (*)())&click_handler);
 	
 		/* create the OK button, setup its click handler and get its structure */
 		buttonId = button_add_extended (server_popup_win, buttonId, NULL, 0,

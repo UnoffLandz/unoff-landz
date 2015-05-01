@@ -27,7 +27,7 @@
 #include "fsaa/fsaa.h"
 #endif	/* FSAA */
 
-Uint32 flags;
+uint32_t flags;
 
 int window_width=640;
 int window_height=480;
@@ -1089,7 +1089,7 @@ void set_new_video_mode(int fs,int mode)
 #endif
 		{
 			if (!cache_e3d->cached_items[i]) continue;
-			obj= cache_e3d->cached_items[i]->cache_item;
+            obj= (e3d_object*)cache_e3d->cached_items[i]->cache_item;
 			free_e3d_va(obj);
 		}
 		CHECK_GL_ERRORS();

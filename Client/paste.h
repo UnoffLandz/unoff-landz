@@ -24,7 +24,7 @@ extern "C" {
  *
  * \callgraph
  */
-void do_paste(const Uint8 * buffer);
+void do_paste(const char *buffer);
 
 /*!
  * \brief this function is used to start paste to certain text_field.

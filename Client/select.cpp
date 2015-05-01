@@ -23,26 +23,26 @@
 
 struct SelectionData
 {
-	Uint32 type;
-	Uint32 id;
+	uint32_t type;
+	uint32_t id;
 };
 
 std::vector<SelectionData> selections;
 
-typedef std::map<Uint32, float> IndexMap;
+typedef std::map<uint32_t, float> IndexMap;
 
 bool read_selection = false;
 bool add_selection = false;
 
-const Uint32 select_size = 5;
-const Uint32 select_offset = 2;
+const uint32_t select_size = 5;
+const uint32_t select_offset = 2;
 const float select_scale = 2.0f;
 const float select_scale_max = 16.0f;
-Uint32 use_new_selection = 1;
+uint32_t use_new_selection = 1;
 
-static inline void update_color(Uint8 *color, GLfloat *colorf, const Uint32 index, const bool selectable)
+static inline void update_color(uint8_t *color, GLfloat *colorf, const uint32_t index, const bool selectable)
 {
-	Uint32 value;
+	uint32_t value;
 
 	value = index & 0x3FFF;
 
@@ -65,7 +65,7 @@ static inline void update_color(Uint8 *color, GLfloat *colorf, const Uint32 inde
 	colorf[3] = color[3] / 255.0f;
 }
 
-static inline float selection_type_scale(const Sint32 type)
+static inline float selection_type_scale(const int32_t type)
 {
 	switch (type)
 	{
@@ -84,9 +84,9 @@ static inline float selection_type_scale(const Sint32 type)
 	};
 }
 
-static inline void update_selection(Uint8 *color)
+static inline void update_selection(uint8_t *color)
 {
-	Uint32 i, j, idx, index;
+	uint32_t i, j, idx, index;
 	float t, count;
 	IndexMap indices;
 #ifndef	USE_BOOST
@@ -163,7 +163,7 @@ static inline void update_selection(Uint8 *color)
 	selections.clear();
 }
 
-Uint8 last_pixel_color[4];
+uint8_t last_pixel_color[4];
 
 static inline void old_reset_under_the_mouse()
 {
@@ -220,12 +220,12 @@ static inline int old_anything_under_the_mouse(int object_id, int object_type)
 
 extern "C" void reset_under_the_mouse()
 {
-	Uint8 color[4];
+	uint8_t color[4];
 	GLfloat colorf[4];
-	Uint8 buffer[4 * select_size * select_size];
-	Uint32 i;
-	Sint32 j;
-	Sint32 x, y;
+	uint8_t buffer[4 * select_size * select_size];
+	uint32_t i;
+	int32_t j;
+	int32_t x, y;
 
 	memset(color, 0, sizeof(color));
 	memset(colorf, 0, sizeof(colorf));

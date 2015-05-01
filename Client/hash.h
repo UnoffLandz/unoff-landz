@@ -45,6 +45,6 @@ int cmp_fn_int(void *key1, void *key2);
 unsigned long int hash_fn_str(void *key);
 int cmp_fn_str(void *key1, void *key2);
 
-Uint32 mem_hash(const void* str, const Uint32 len);
+uint32_t mem_hash(const void* str, const uint32_t len);
 
 #endif

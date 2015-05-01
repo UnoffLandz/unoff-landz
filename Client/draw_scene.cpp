@@ -102,11 +102,11 @@ int ground_detail_text;
 
 float clouds_movement_u=-8;
 float clouds_movement_v=-3;
-Uint32 last_clear_clouds=0;
+uint32_t last_clear_clouds=0;
 
 GLenum base_unit=GL_TEXTURE0_ARB,detail_unit=GL_TEXTURE1_ARB,shadow_unit=GL_TEXTURE2_ARB,extra_unit=GL_TEXTURE3_ARB,normal_map_unit=GL_TEXTURE4_ARB;
 
-Uint32 draw_delay = 0;
+uint32_t draw_delay = 0;
 
 
 void draw_scene()
@@ -157,9 +157,9 @@ void draw_scene()
 
 	/* stuff to do not every frame, twice a second is fine */
 	{
-		static Uint32 last_half_second_timer = 0;
+		static uint32_t last_half_second_timer = 0;
 		static int first_time = 1;
-		Uint32 current_time = SDL_GetTicks();
+		uint32_t current_time = SDL_GetTicks();
 		if (first_time)
 		{
 			last_half_second_timer = current_time;
@@ -487,8 +487,8 @@ void update_camera()
 					new_zoom_level = 1.0;
 					camera_tilt_duration = camera_zoom_duration = 0;
 					camera_tilt_speed = 0.0;
-					if (fabsf(tz + camera_z + 0.2) < fabsf(vect[2]) - 0.01)
-						rx = -90.0 + 180.0 * asinf((tz + camera_z + 0.2) / vect[2]) / M_PI;
+                    if (fabsf(tz + camera_z + 0.2f) < fabsf(vect[2]) - 0.01)
+                        rx = -90.0f + 180.0f * asinf((tz + camera_z + 0.2f) / vect[2]) / M_PI;
 				}
 				else if (new_zoom_level > old_zoom_level)
 				{
@@ -567,11 +567,11 @@ void update_camera()
 		if      (adjust >=  180) adjust -= 360.0;
 		else if (adjust <= -180) adjust += 360.0;
 		if (adjust > 35){
-			Uint8 str[2];
+			uint8_t str[2];
 			str[0] = TURN_LEFT;
 			my_tcp_send (my_socket, str, 1);
 		} else if (adjust < -35){
-			Uint8 str[2];
+			uint8_t str[2];
 			str[0] = TURN_RIGHT;
 			my_tcp_send (my_socket, str, 1);
 		}

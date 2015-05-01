@@ -28,16 +28,16 @@ namespace ec
 			}
 			;
 
-			virtual bool idle(const Uint64 delta_t);
+			virtual bool idle(const uint64_t delta_t);
 			void remove_neighbor(const CloudParticle*const p);
 			void add_incoming_neighbor(CloudParticle*const p);
 			void remove_incoming_neighbor(const CloudParticle*const p);
 #ifdef	NEW_TEXTURES
-			virtual Uint32 get_texture();
+			virtual uint32_t get_texture();
 			virtual float get_burn() const;
 #else	/* NEW_TEXTURES */
-			virtual GLuint get_texture(const Uint16 res_index);
-			virtual void draw(const Uint64 usec);
+			virtual GLuint get_texture(const uint16_t res_index);
+			virtual void draw(const uint64_t usec);
 #endif	/* NEW_TEXTURES */
 			virtual light_t estimate_light_level() const
 			{
@@ -69,7 +69,7 @@ namespace ec
 			CloudEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 				const color_t _hue_adjust, const color_t _saturation_adjust,
 				const float _density, BoundingRange* bounding_range,
-				const Uint16 _LOD);
+				const uint16_t _LOD);
 			~CloudEffect();
 
 			virtual EffectEnum get_type()
@@ -77,7 +77,7 @@ namespace ec
 				return EC_CLOUD;
 			}
 			;
-			bool idle(const Uint64 usec);
+			bool idle(const uint64_t usec);
 
 			BoundingMover* mover;
 			NoncheckingFilledBoundingSpawner* spawner;

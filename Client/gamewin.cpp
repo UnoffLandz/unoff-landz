@@ -496,7 +496,7 @@ int mouseover_game_handler (window_info *win, int mx, int my)
 }
 
 // this is the main part of the old check_mouse_click ()
-int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
+int click_game_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 	int flag_alt = flags & ELW_ALT;
 	int flag_ctrl = flags & ELW_CTRL;
@@ -551,7 +551,7 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 			if (!cm_banner_disabled)
 			{
 				/* show the banner control menu if right-clicked and over your actors banner */
-				static Uint32 reset_cursor_time = 0;
+				static uint32_t reset_cursor_time = 0;
 				static int cm_activate_when_cursor_is = -1;
 				extern int cm_mouse_over_banner;
 				/* activate the menu once in the cursor cycle - start-cursor reset after a couple of seconds inactivity */
@@ -658,7 +658,7 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 	// alternative drop method...
 	if (item_dragged >= 0 && item_dragged < ITEM_NUM_ITEMS)
 	{
-		Uint8 str[10];
+		uint8_t str[10];
 
 		if (flag_right)
 		{
@@ -668,7 +668,7 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 
 		str[0] = DROP_ITEM;
 		str[1] = item_list[item_dragged].pos;
-		*((Uint32 *) (str + 2)) = SDL_SwapLE32(item_quantity);
+		*((uint32_t *) (str + 2)) = SDL_SwapLE32(item_quantity);
 		my_tcp_send(my_socket, str, 6);
 		return 1;
 	}
@@ -703,7 +703,7 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 	{
 		case CURSOR_EYE:
 		{
-			Uint8 str[10];
+			uint8_t str[10];
 
 			if (object_under_mouse == -1)
 				return 1;
@@ -760,7 +760,7 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 			}
 			else if (spell_result==3)
 			{
-				Uint8 str[10];
+				uint8_t str[10];
 				
 				if (object_under_mouse >= 0 &&
 					(thing_under_the_mouse == UNDER_MOUSE_ANIMAL ||
@@ -783,7 +783,7 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 
 		case CURSOR_TRADE:
 		{
-			Uint8 str[10];
+			uint8_t str[10];
 
 			if (object_under_mouse == -1)
 				return 1;
@@ -799,7 +799,7 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 
 		case CURSOR_ATTACK:
 		{
-			Uint8 str[10];
+			uint8_t str[10];
 
 			if (object_under_mouse == -1)
 				return 1;
@@ -835,7 +835,7 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 		case CURSOR_USE_WITEM:
 		case CURSOR_TALK:
 		{
-			Uint8 str[10];
+			uint8_t str[10];
 
 			if (flag_alt && range_weapon_equipped)
 				return 1;
@@ -892,14 +892,14 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 
 		case CURSOR_HARVEST:
 		{
-			Uint8 str[10];
+			uint8_t str[10];
 
 			if (flag_alt && range_weapon_equipped)
 				return 1;
 			if (object_under_mouse == -1)
 				return 1;
 			str[0] = HARVEST;
-			*((Uint16 *)(str+1)) = SDL_SwapLE16((Uint16)object_under_mouse);
+            *((uint16_t *)(str+1)) = SDL_SwapLE16((uint16_t)object_under_mouse);
 			my_tcp_send (my_socket, str, 3);
 			return 1;
 			break;
@@ -975,7 +975,7 @@ int click_game_handler(window_info *win, int mx, int my, Uint32 flags)
 	return 1;
 }
 
-Uint32 next_fps_time = 0;	// made global so the other modes can keep it from goin stale
+uint32_t next_fps_time = 0;	// made global so the other modes can keep it from goin stale
 int last_count = 0;
 int display_game_handler (window_info *win)
 {
@@ -984,7 +984,7 @@ int display_game_handler (window_info *win)
 	static int fps[5]={100};
 	static int shadows_were_disabled=0;
 	static int eye_candy_was_disabled=0;
-	unsigned char str[180];
+	char str[180];
 	int i;
 	int any_reflection = 0;
 	int mouse_rate;
@@ -1237,7 +1237,7 @@ int display_game_handler (window_info *win)
 			if (times_FPS_below_3 > 10 && (shadows_on
 					|| use_eye_candy
 					)){
-				put_colored_text_in_buffer (c_red1, CHAT_SERVER, (unsigned char*)low_framerate_str, -1);
+                put_colored_text_in_buffer (c_red1, CHAT_SERVER, low_framerate_str, -1);
 				times_FPS_below_3 = 0;
 				if (shadows_on)
 				{
@@ -1359,10 +1359,10 @@ CHECK_GL_ERRORS();
 	return 1;
 }
 
-int check_quit_or_fullscreen (Uint32 key)
+int check_quit_or_fullscreen (uint32_t key)
 {
 	int alt_on = key & ELW_ALT;
-	Uint16 keysym = key & 0xffff;
+    uint16_t keysym = key & 0xffff;
 
 	// first, try to see if we pressed Alt+x or Ctrl+q, to quit.
 	if (key == K_QUIT || key == K_QUIT_ALT) 
@@ -1381,7 +1381,7 @@ int check_quit_or_fullscreen (Uint32 key)
 	return 1;
 }
 
-Uint8 key_to_char (Uint32 unikey)
+uint8_t key_to_char (uint32_t unikey)
 {
 	// convert keypad values (numlock on)
 	if (unikey >= SDLK_KP0 && unikey <= SDLK_KP_EQUALS)
@@ -1453,7 +1453,7 @@ void hide_all_windows(){
 		|| get_show_window(tab_info_win) > 0 || get_show_window(emotes_win) > 0 || get_show_window(range_win) > 0
 	){	//Okay, hide the open ones.
 		if (get_window_showable(ground_items_win) > 0){
-			unsigned char protocol_name;
+            uint8_t protocol_name;
 
 			hide_window (ground_items_win);
 			protocol_name= S_CLOSE_BAG;
@@ -1589,7 +1589,7 @@ void hide_all_windows(){
 
 static void toggle_sit_stand()
 {
-	Uint8 str[4];
+	uint8_t str[4];
 	//Send message to server...	
 	str[0]=SIT_DOWN;
 	str[1]=!you_sit;
@@ -1598,14 +1598,14 @@ static void toggle_sit_stand()
 
 // keypress handler common to all in-game root windows (game_root_win, 
 // console_root_win, and map_root_win)
-int keypress_root_common (Uint32 key, Uint32 unikey)
+int keypress_root_common (uint32_t key, uint32_t unikey)
 {
 	int alt_on = key & ELW_ALT;
 	int ctrl_on = key & ELW_CTRL;
-	Uint16 keysym = key & 0xffff;
+    uint16_t keysym = key & 0xffff;
 #ifdef DEBUG
 	int i;
-	Uint32 _cur_time= SDL_GetTicks();
+	uint32_t _cur_time= SDL_GetTicks();
 #endif
 	
 	if(check_quit_or_fullscreen(key))
@@ -1626,7 +1626,7 @@ int keypress_root_common (Uint32 key, Uint32 unikey)
 		}
 		if(line != NULL)
 		{
-			put_string_in_input_field((unsigned char*)line);
+			put_string_in_input_field(line);
 		}
 	}
 	else if(disconnected && !alt_on && !ctrl_on && !locked_to_console)
@@ -1948,7 +1948,7 @@ int keypress_root_common (Uint32 key, Uint32 unikey)
 			break;
 			case 2: //Window
 				widget = widget_find(chat_win, chat_tabcollection_id);
-				collection = widget->widget_info;
+                collection = (tab_collection *)widget->widget_info;
 				if(active_tab == collection->nr_tabs - 1)
 				{
 					next_tab = 2;
@@ -1984,7 +1984,7 @@ int keypress_root_common (Uint32 key, Uint32 unikey)
 				break;
 			case 2: //Window
 				widget = widget_find(chat_win, chat_tabcollection_id);
-				collection = widget->widget_info;
+                collection = (tab_collection *)widget->widget_info;
 				if(active_tab == 2)
 				{
 					next_tab = collection->nr_tabs - 1;
@@ -2030,9 +2030,9 @@ int keypress_root_common (Uint32 key, Uint32 unikey)
 	return 1; // we handled it
 }
 
-int text_input_handler (Uint32 key, Uint32 unikey)
+int text_input_handler (uint32_t key, uint32_t unikey)
 {
-	Uint8 ch = key_to_char (unikey);
+	uint8_t ch = key_to_char (unikey);
 
 	if (root_key_to_input_field(key, unikey))
 	{
@@ -2044,7 +2044,7 @@ int text_input_handler (Uint32 key, Uint32 unikey)
 	{
 		if(put_char_in_buffer (&input_text_line, ch, input_text_line.len)) {
 			if(input_widget) {
-				text_field *tf = input_widget->widget_info;
+                text_field *tf = (text_field *)input_widget->widget_info;
 				tf->cursor = tf->buffer->len;
 				if(input_widget->window_id == game_root_win) {
 					widget_unset_flags (input_widget->window_id, input_widget->id, WIDGET_DISABLED);
@@ -2079,9 +2079,9 @@ int text_input_handler (Uint32 key, Uint32 unikey)
 	return 1;
 }
 
-int keypress_game_handler (window_info *win, int mx, int my, Uint32 key, Uint32 unikey)
+int keypress_game_handler (window_info *win, int mx, int my, uint32_t key, uint32_t unikey)
 {
-	Uint16 keysym = key & 0xffff;
+    uint16_t keysym = key & 0xffff;
 
 	// first try the keypress handler for all root windows
 	if ( keypress_root_common (key, unikey) )
@@ -2095,13 +2095,13 @@ int keypress_game_handler (window_info *win, int mx, int my, Uint32 key, Uint32 
 	else if (key == K_TURNLEFT)
 	{
 		//Moved delay to my_tcp_send
-		Uint8 str[2];
+		uint8_t str[2];
 		str[0] = TURN_LEFT;
 		my_tcp_send (my_socket, str, 1);
 	}
 	else if (key == K_TURNRIGHT)
 	{
-		Uint8 str[2];
+		uint8_t str[2];
 		str[0] = TURN_RIGHT;
 		my_tcp_send (my_socket, str, 1);
 	}
@@ -2308,7 +2308,7 @@ int keypress_game_handler (window_info *win, int mx, int my, Uint32 key, Uint32 
 	// END OF TEST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	else
 	{
-		Uint8 ch = key_to_char (unikey);
+		uint8_t ch = key_to_char (unikey);
 
 		reset_tab_completer();
 		if (ch == '`' || key == K_CONSOLE)
@@ -2329,7 +2329,7 @@ int keypress_game_handler (window_info *win, int mx, int my, Uint32 key, Uint32 
 	return 1;
 }
 
-void do_keypress(Uint32 key)
+void do_keypress(uint32_t key)
 {
 	if (game_root_win >= 0)
 	{
@@ -2354,15 +2354,15 @@ void create_game_root_window (int width, int height)
 		game_root_win = create_window ("Game", -1, -1, 0, 0, width, height, ELW_TITLE_NONE|ELW_SHOW_LAST);
 		
 		set_window_handler (game_root_win, ELW_HANDLER_DISPLAY, &display_game_handler);
-		set_window_handler (game_root_win, ELW_HANDLER_CLICK, &click_game_handler);
-		set_window_handler (game_root_win, ELW_HANDLER_MOUSEOVER, &mouseover_game_handler);
-		set_window_handler (game_root_win, ELW_HANDLER_KEYPRESS, &keypress_game_handler);
+        set_window_handler (game_root_win, ELW_HANDLER_CLICK, (int (*)())&click_game_handler);
+        set_window_handler (game_root_win, ELW_HANDLER_MOUSEOVER, (int (*)())&mouseover_game_handler);
+        set_window_handler (game_root_win, ELW_HANDLER_KEYPRESS, (int (*)())&keypress_game_handler);
 		set_window_handler (game_root_win, ELW_HANDLER_SHOW, &show_game_handler);
 		set_window_handler (game_root_win, ELW_HANDLER_AFTER_SHOW, &update_have_display);
 		set_window_handler (game_root_win, ELW_HANDLER_HIDE, &update_have_display);
 
 		if(input_widget == NULL) {
-			Uint32 id;
+			uint32_t id;
 			if (dark_channeltext == 1)
 				set_text_message_color (&input_text_line, 0.6f, 0.6f, 0.6f);
 			else if (dark_channeltext == 2)

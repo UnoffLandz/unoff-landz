@@ -45,7 +45,7 @@ int url_win_x = 100;
 int url_win_y = 50;
 int url_win = -1;
 
-static const Uint32 url_win_sep = 5;
+static const uint32_t url_win_sep = 5;
 static const float url_win_text_zoom = 1.0;
 static const int max_url_count = 100;
 
@@ -53,15 +53,15 @@ static int url_scroll_id = 0;
 static int url_win_top_line = 0;
 static int url_win_x_len = 0;
 static int url_win_y_len = 0;
-static Uint32 url_win_max_string_width = 0;
+static uint32_t url_win_max_string_width = 0;
 static int url_win_help_x = 0;
 static int url_win_text_len_y = 0;
 static int url_win_text_start_y = 0;
 static int url_win_url_y_start = 0;
 static int url_win_full_url_y_len = 0;
 static int url_win_line_step = 0;
-static Uint32 url_win_clicktime = 0;
-static enum { URLW_EMPTY=1, URLW_CLEAR, URLW_OVER } url_win_status = URLW_EMPTY;
+static uint32_t url_win_clicktime = 0;
+static enum { URLW_UNKNOWN=0,URLW_EMPTY=1, URLW_CLEAR, URLW_OVER } url_win_status = URLW_EMPTY;
 static list_node_t *url_win_clicked_url = NULL;
 static list_node_t *url_win_hover_url = NULL;
 
@@ -427,8 +427,8 @@ CHECK_GL_ERRORS();
 		char *message[] = { urlcmd_none_str, urlwin_clear_str, urlwin_open_str };
 		int y_start = (url_win_text_start_y - 0.75 * url_win_text_zoom * DEFAULT_FONT_Y_LEN)/2;
 		glColor3f(1.0f,1.0f,1.0f);
-		draw_string_zoomed(url_win_help_x, y_start, (unsigned char *)message[url_win_status-1], 1, 0.75 * url_win_text_zoom);
-		url_win_status = (have_url_count) ?0 :URLW_EMPTY;
+        draw_string_zoomed(url_win_help_x, y_start, message[url_win_status-1], 1, 0.75 * url_win_text_zoom);
+        url_win_status = (have_url_count) ? URLW_UNKNOWN :URLW_EMPTY;
 	}
 	
 	/* display a page of url */
@@ -481,7 +481,7 @@ CHECK_GL_ERRORS();
 						
 			/* if the string length will fit in the window, just draw it */
 			if (dsp_string_len == strlen(((URLDATA *)local_head->data)->text))
-				draw_string_zoomed(url_win_sep, currenty, (unsigned char *)((URLDATA *)local_head->data)->text, 1, url_win_text_zoom);
+                draw_string_zoomed(url_win_sep, currenty, ((URLDATA *)local_head->data)->text, 1, url_win_text_zoom);
 			/* otherwise, draw a truncated version with "..." at the end */
 			else
 			{
@@ -489,10 +489,10 @@ CHECK_GL_ERRORS();
 				//	* url_win_text_zoom * DEFAULT_FONT_X_LEN / 12.0;
 				float toobig_width = (3*get_char_width('.'))
 					* url_win_text_zoom * DEFAULT_FONT_X_LEN / 12.0;
-				draw_string_zoomed_width(url_win_sep, currenty, (unsigned char *)((URLDATA *)local_head->data)->text,
+                draw_string_zoomed_width(url_win_sep, currenty, ((URLDATA *)local_head->data)->text,
 					url_win_sep + url_win_max_string_width - toobig_width, 1, url_win_text_zoom);
 				draw_string_zoomed(url_win_sep + url_win_max_string_width - toobig_width, currenty,
-					(unsigned char *)"..." , 1, url_win_text_zoom);
+                    "..." , 1, url_win_text_zoom);
 			}
 			
 			/* step down a line, do it now as the maths for mouse over below is easier */
@@ -527,7 +527,7 @@ CHECK_GL_ERRORS();
 				size_t help_substring_len = 0;
 				int dsp_start = 0;
 				int helpline = 0;
-				Uint32 currenttime = SDL_GetTicks();
+				uint32_t currenttime = SDL_GetTicks();
 				size_t full_help_len = strlen(((URLDATA *)local_head->data)->text) + 30;
 				char *full_help_text = (char *)malloc(sizeof(char) * full_help_len);
 	
@@ -686,7 +686,7 @@ static int context_url_handler(window_info *win, int widget_id, int mx, int my, 
 }
 
 /* act on scroll wheel in the main window or clicking a URL */
-static int click_url_handler(window_info *win, int mx, int my, Uint32 flags)
+static int click_url_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 	static size_t cm_id = CM_INIT_VALUE;
 
@@ -715,7 +715,7 @@ static int click_url_handler(window_info *win, int mx, int my, Uint32 flags)
 		else
 		{
 			/* open the URL but block double clicks */
-			Uint32 currentclicktime = SDL_GetTicks();
+			uint32_t currentclicktime = SDL_GetTicks();
 			if (currentclicktime < url_win_clicktime)
 				url_win_clicktime = 0; /* just in case we're running for 49 days :) */
 			if ((currentclicktime - url_win_clicktime > 1000) || (url_win_clicked_url != url_win_hover_url))
@@ -729,7 +729,7 @@ static int click_url_handler(window_info *win, int mx, int my, Uint32 flags)
 	return 0;
 }
 
-static int url_win_click_clear_all(widget_list *widget, int mx, int my, Uint32 flags)
+static int url_win_click_clear_all(widget_list *widget, int mx, int my, uint32_t flags)
 {
 	if ((flags & ELW_WHEEL_UP) || (flags & ELW_WHEEL_DOWN))
 		return 1;
@@ -744,14 +744,14 @@ static int url_win_mouseover_clear_all(widget_list *widget, int mx, int my)
 }
 
 
-static int url_win_scroll_click(widget_list *widget, int mx, int my, Uint32 flags)
+static int url_win_scroll_click(widget_list *widget, int mx, int my, uint32_t flags)
 {
 	url_win_top_line = vscrollbar_get_pos(url_win, url_scroll_id);
 	return 1;
 }
 
 
-static int url_win_scroll_drag(widget_list *widget, int mx, int my, Uint32 flags, int dx, int dy)
+static int url_win_scroll_drag(widget_list *widget, int mx, int my, uint32_t flags, int dx, int dy)
 {
 	return url_win_scroll_click(widget, mx, my, flags);
 }
@@ -760,8 +760,8 @@ static int url_win_scroll_drag(widget_list *widget, int mx, int my, Uint32 flags
 /* fill the URL window created as a tab. */
 void fill_url_window(void)
 {
-	const Uint32 scroll_width = 20;
-	const Uint32 cross_height = 20;
+	const uint32_t scroll_width = 20;
+	const uint32_t cross_height = 20;
 	int clear_all_button = 101;
 	widget_list *widget;
 
@@ -770,7 +770,7 @@ void fill_url_window(void)
 	url_win_y_len = INFO_TAB_HEIGHT;
 	url_win_max_string_width = url_win_x_len - (2*url_win_sep + scroll_width);
 	set_window_handler(url_win, ELW_HANDLER_DISPLAY, &display_url_handler );
-	set_window_handler(url_win, ELW_HANDLER_CLICK, &click_url_handler );
+    set_window_handler(url_win, ELW_HANDLER_CLICK,(int (*)()) &click_url_handler );
 
 	/* create the clear all button */
 	clear_all_button = button_add_extended (url_win, clear_all_button, NULL,

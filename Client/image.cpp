@@ -11,10 +11,10 @@
 #include <SDL.h>
 #include <xmmintrin.h>
 
-void unpack_rgba8_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
+void unpack_rgba8_sse2(const uint8_t* source, const uint32_t size, uint8_t* dest)
 {
 	__m128i t0, t1, t2;
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < (size / 16); i++)
 	{
@@ -30,10 +30,10 @@ void unpack_rgba8_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
 	}
 }
 
-void unpack_r5g6b5_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
+void unpack_r5g6b5_sse2(const uint8_t* source, const uint32_t size, uint8_t* dest)
 {
 	__m128i t0, t1, t2;
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < (size / 8); i++)
 	{
@@ -57,10 +57,10 @@ void unpack_r5g6b5_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
 	}
 }
 
-void unpack_rgb5a1_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
+void unpack_rgb5a1_sse2(const uint8_t* source, const uint32_t size, uint8_t* dest)
 {
 	__m128i t0, t1, t2;
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < (size / 8); i++)
 	{
@@ -83,10 +83,10 @@ void unpack_rgb5a1_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
 	}
 }
 
-void unpack_rgba4_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
+void unpack_rgba4_sse2(const uint8_t* source, const uint32_t size, uint8_t* dest)
 {
 	__m128i t0, t1, t2;
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < (size / 8); i++)
 	{
@@ -107,10 +107,10 @@ void unpack_rgba4_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
 	}
 }
 
-void unpack_a8_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
+void unpack_a8_sse2(const uint8_t* source, const uint32_t size, uint8_t* dest)
 {
 	__m128i t0;
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < (size / 4); i++)
 	{
@@ -123,10 +123,10 @@ void unpack_a8_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
 	}
 }
 
-void unpack_l8_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
+void unpack_l8_sse2(const uint8_t* source, const uint32_t size, uint8_t* dest)
 {
 	__m128i t0;
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < (size / 4); i++)
 	{
@@ -140,10 +140,10 @@ void unpack_l8_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
 	}
 }
 
-void unpack_la8_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
+void unpack_la8_sse2(const uint8_t* source, const uint32_t size, uint8_t* dest)
 {
 	__m128i t0, t1, t2;
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < (size / 8); i++)
 	{
@@ -158,10 +158,10 @@ void unpack_la8_sse2(const Uint8* source, const Uint32 size, Uint8* dest)
 	}
 }
 
-void replace_a8_rgba8_sse2(const Uint8* alpha, const Uint32 size, Uint8* source)
+void replace_a8_rgba8_sse2(const uint8_t* alpha, const uint32_t size, uint8_t* source)
 {
 	__m128i t0;
-	Uint32 i;
+	uint32_t i;
 
 	for (i = 0; i < (size / 4); i++)
 	{
@@ -175,10 +175,10 @@ void replace_a8_rgba8_sse2(const Uint8* alpha, const Uint32 size, Uint8* source)
 	}
 }
 
-void replace_alpha_rgba8_sse2(const Uint8 alpha, const Uint32 size, Uint8* source)
+void replace_alpha_rgba8_sse2(const uint8_t alpha, const uint32_t size, uint8_t* source)
 {
 	__m128i t0;
-	Uint32 i;
+	uint32_t i;
 
 	t0 = _mm_set1_epi8(alpha);
 
@@ -189,12 +189,12 @@ void replace_alpha_rgba8_sse2(const Uint8 alpha, const Uint32 size, Uint8* sourc
 	}
 }
 
-void blend_sse2(const Uint8* alpha, const Uint32 size, const Uint8* source0,
-	const Uint8* source1, Uint8* dest)
+void blend_sse2(const uint8_t* alpha, const uint32_t size, const uint8_t* source0,
+	const uint8_t* source1, uint8_t* dest)
 {
 	__m128i t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10;
 	__m128i t11;
-	Uint32 i;
+	uint32_t i;
 
 	LOG_DEBUG_VERBOSE("source0[0]: %d", source0[0]);
 	LOG_DEBUG_VERBOSE("&source0[0]: %p", &(source0[0]));
@@ -259,21 +259,21 @@ void blend_sse2(const Uint8* alpha, const Uint32 size, const Uint8* source0,
 	}
 }
 
-Uint32 check_pointer_aligment(const void* ptr)
+uint32_t check_pointer_aligment(const void* ptr)
 {
 	return (((ptrdiff_t)ptr) & 0x0F) == 0;
 }
 #endif
 
-void unpack(const Uint8* source, const Uint32 count, const Uint32 red,
-	const Uint32 green, const Uint32 blue, const Uint32 alpha, Uint8* dest)
+void unpack(const uint8_t* source, const uint32_t count, const uint32_t red,
+	const uint32_t green, const uint32_t blue, const uint32_t alpha, uint8_t* dest)
 {
-	Uint32 i, pixel, temp, bpp;
-	Uint32 r, g, b, a;
-	Uint32 red_shift, red_mask;
-	Uint32 green_shift, green_mask;
-	Uint32 blue_shift, blue_mask;
-	Uint32 alpha_shift, alpha_mask;
+	uint32_t i, pixel, temp, bpp;
+	uint32_t r, g, b, a;
+	uint32_t red_shift, red_mask;
+	uint32_t green_shift, green_mask;
+	uint32_t blue_shift, blue_mask;
+	uint32_t alpha_shift, alpha_mask;
 
 	bpp = popcount(red | green | blue | alpha) / 8;
 
@@ -315,19 +315,19 @@ void unpack(const Uint8* source, const Uint32 count, const Uint32 red,
 		temp = pixel >> red_shift;
 		temp = temp & red_mask;
 		temp = (temp * 255) / red_mask;
-		r = (Uint8)temp;
+		r = (uint8_t)temp;
 
 		/* Get Green component */
 		temp = pixel >> green_shift;
 		temp = temp & green_mask;
 		temp = (temp * 255) / green_mask;
-		g = (Uint8)temp;
+		g = (uint8_t)temp;
 
 		/* Get Blue component */
 		temp = pixel >> blue_shift;
 		temp = temp & blue_mask;
 		temp = (temp * 255) / blue_mask;
-		b = (Uint8)temp;
+		b = (uint8_t)temp;
 
 		/* Get Alpha component */
 		if (alpha_mask != 0)
@@ -335,7 +335,7 @@ void unpack(const Uint8* source, const Uint32 count, const Uint32 red,
 			temp = pixel >> alpha_shift;
 			temp = temp & alpha_mask;
 			temp = (temp * 255) / alpha_mask;
-			a = (Uint8)temp;
+			a = (uint8_t)temp;
 		}
 		else
 		{
@@ -349,8 +349,8 @@ void unpack(const Uint8* source, const Uint32 count, const Uint32 red,
 	}
 }
 
-void fast_unpack(const Uint8* source, const Uint32 size, const Uint32 red,
-	const Uint32 green, const Uint32 blue, const Uint32 alpha, Uint8* dest)
+void fast_unpack(const uint8_t* source, const uint32_t size, const uint32_t red,
+	const uint32_t green, const uint32_t blue, const uint32_t alpha, uint8_t* dest)
 {
 #ifdef	USE_SIMD
 	if (SDL_HasSSE2())
@@ -412,9 +412,9 @@ void fast_unpack(const Uint8* source, const Uint32 size, const Uint32 red,
 	unpack(source, size, red, green, blue, alpha, dest);
 }
 
-void fast_replace_a8_rgba8(const Uint8* alpha, const Uint32 size, Uint8* source)
+void fast_replace_a8_rgba8(const uint8_t* alpha, const uint32_t size, uint8_t* source)
 {
-	Uint32 i;
+	uint32_t i;
 
 #ifdef	USE_SIMD
 	if (SDL_HasSSE2())
@@ -433,9 +433,9 @@ void fast_replace_a8_rgba8(const Uint8* alpha, const Uint32 size, Uint8* source)
 	}	
 }
 
-void fast_replace_alpha_rgba8(const Uint8 alpha, const Uint32 size, Uint8* source)
+void fast_replace_alpha_rgba8(const uint8_t alpha, const uint32_t size, uint8_t* source)
 {
-	Uint32 i;
+	uint32_t i;
 
 #ifdef	USE_SIMD
 	if (SDL_HasSSE2())
@@ -454,10 +454,10 @@ void fast_replace_alpha_rgba8(const Uint8 alpha, const Uint32 size, Uint8* sourc
 	}	
 }
 
-void fast_blend(const Uint8* alpha, const Uint32 size, const Uint8* source0,
-	const Uint8* source1, Uint8* dest)
+void fast_blend(const uint8_t* alpha, const uint32_t size, const uint8_t* source0,
+	const uint8_t* source1, uint8_t* dest)
 {
-	Uint32 i, j, tmp;
+	uint32_t i, j, tmp;
 
 #ifdef	USE_SIMD
 	if (SDL_HasSSE2())

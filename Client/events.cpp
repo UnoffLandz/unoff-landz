@@ -37,7 +37,7 @@ int max_mark = 0;
 marking marks[MAX_MARKINGS];
 
 SDLMod  mod_key_status;
-//Uint32 last_turn_around=0;
+//uint32_t last_turn_around=0;
 
 int shift_on;
 int alt_on;
@@ -49,7 +49,7 @@ int osx_right_mouse_cam = 0;
 
 void	quick_use(int use_id)
 {
-	Uint8 quick_use_str[3];
+	uint8_t quick_use_str[3];
 	int	i;
 
 	for(i=0; i<ITEM_NUM_ITEMS; i++){
@@ -73,8 +73,8 @@ int HandleEvent (SDL_Event *event)
 	int done = 0;
 	int mouse_delta_x;
 	int mouse_delta_y;
-	Uint32 key = 0;
-	Uint32 flags = 0;
+	uint32_t key = 0;
+	uint32_t flags = 0;
 
 	if (event->type == SDL_NOEVENT) return 0;
 
@@ -110,7 +110,7 @@ int HandleEvent (SDL_Event *event)
 			if(!(SDL_GetAppState() & SDL_APPINPUTFOCUS)){
 				break;  //don't have focus, so we shouldn't be getting keystrokes
 			}
-			key=(Uint16)event->key.keysym.sym;
+			key=(uint16_t)event->key.keysym.sym;
 
 			//use the modifiers that were on when the key was pressed, not when we go to check
 			if (event->key.keysym.mod & KMOD_SHIFT) key |= ELW_SHIFT;
@@ -144,7 +144,7 @@ int HandleEvent (SDL_Event *event)
 				// But, compiz on Linux generates these events with every mouse click causing
 				// ctrl/alt/shift states to be unreadable.  Adding loss/gain timer can exclude
 				// the mouse click events while still catching genuein focus changes.
-				static Uint32 last_loss = 0;
+				static uint32_t last_loss = 0;
 				if (event->active.gain == 0)
 					last_loss = SDL_GetTicks();
 				else if (last_loss && (event->active.gain == 1) && ((SDL_GetTicks() - last_loss) > 250))

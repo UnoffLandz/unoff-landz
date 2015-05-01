@@ -18,7 +18,7 @@ namespace ec
 #else	/* NEW_TEXTURES */
 		const color_t green, const color_t blue, Texture* _texture,
 #endif	/* NEW_TEXTURES */
-		const Uint16 _LOD, const SelfMagicEffect::SelfMagicType _type) :
+		const uint16_t _LOD, const SelfMagicEffect::SelfMagicType _type) :
 		Particle(_effect, _mover, _pos, _velocity,
 			_size * (0.5 + randcoord()) * 13 / (_LOD + 3))
 	{
@@ -36,7 +36,7 @@ namespace ec
 		state = 0;
 	}
 
-	bool SelfMagicParticle::idle(const Uint64 delta_t)
+	bool SelfMagicParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -225,19 +225,19 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 SelfMagicParticle::get_texture()
+	uint32_t SelfMagicParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint SelfMagicParticle::get_texture(const Uint16 res_index)
+	GLuint SelfMagicParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 #endif	/* NEW_TEXTURES */
 
 	SelfMagicEffect::SelfMagicEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
-		const SelfMagicType _type, const Uint16 _LOD)
+		const SelfMagicType _type, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "SelfMagicEffect (" << this << ") created (" << _type
@@ -626,7 +626,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool SelfMagicEffect::idle(const Uint64 usec)
+	bool SelfMagicEffect::idle(const uint64_t usec)
 	{
 		if (particles.size() == 0)
 		{
@@ -664,8 +664,8 @@ namespace ec
 
 		effect_center.y += usec / 1500000.0;
 
-		const Uint64 cur_time = get_time();
-		const Uint64 age = cur_time - born;
+		const uint64_t cur_time = get_time();
+		const uint64_t age = cur_time - born;
 		switch (type)
 		{
 			case HEAL:
@@ -775,7 +775,7 @@ namespace ec
 		return true;
 	}
 
-	void SelfMagicEffect::draw(const Uint64 usec)
+	void SelfMagicEffect::draw(const uint64_t usec)
 	{
 #ifdef	NEW_TEXTURES
 		if (capless_cylinders != 0)

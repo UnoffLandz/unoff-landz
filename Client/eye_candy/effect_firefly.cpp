@@ -33,7 +33,7 @@ namespace ec
 		max_height = _max_height;
 	}
 
-	bool FireflyParticle::idle(const Uint64 delta_t)
+	bool FireflyParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -79,12 +79,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 FireflyParticle::get_texture()
+	uint32_t FireflyParticle::get_texture()
 	{
 		return base->get_texture(EC_VOID);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint FireflyParticle::get_texture(const Uint16 res_index)
+	GLuint FireflyParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexVoid.get_texture(res_index);
 	}
@@ -136,7 +136,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool FireflyEffect::idle(const Uint64 usec)
+	bool FireflyEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 		{

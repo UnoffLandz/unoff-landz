@@ -7,7 +7,7 @@
 
 int queue_initialise (queue_t **queue)
 {
-	(*queue) = malloc(sizeof(queue_t));
+    (*queue) = (queue_t*)malloc(sizeof(queue_t));
 
 	if ((*queue) == 0)
 	{
@@ -16,7 +16,7 @@ int queue_initialise (queue_t **queue)
 		return 0;
 	}
 
-	(*queue)->front = malloc(sizeof(node_t));
+    (*queue)->front = (node_t*)malloc(sizeof(node_t));
 
 	/* Create a dummy node that's always at the front of our queue */
 	if ((*queue)->front == 0)
@@ -47,7 +47,7 @@ int queue_push (queue_t *queue, void *item)
 		return 0;
 	}
 
-	newnode = malloc(sizeof(node_t));
+    newnode = (node_t*)malloc(sizeof(node_t));
 
 	if (newnode == 0)
 	{
@@ -223,7 +223,7 @@ int queue_push_signal(queue_t *queue, void *item)
 		return 0;
 	}
 
-	node = malloc(sizeof(node_t));
+    node = (node_t*)malloc(sizeof(node_t));
 
 	if (node == 0)
 	{

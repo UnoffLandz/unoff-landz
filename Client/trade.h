@@ -22,7 +22,7 @@ typedef struct {
 	int type;
 	int image_id;
 	int quantity;
-	Uint16 id;
+	uint16_t id;
 } trade_item;
 
 /*!
@@ -53,7 +53,7 @@ void display_trade_menu();
  * \param   	player_name A char * to the network data
  * \param   	len The length of the network data
  */
-void get_trade_partner_name (const Uint8 *player_name, int len);
+void get_trade_partner_name (const uint8_t *player_name, int len);
 
 /*!
  * \ingroup 	trade
@@ -65,7 +65,7 @@ void get_trade_partner_name (const Uint8 *player_name, int len);
  *
  * \callgraph
  */
-void get_your_trade_objects (const Uint8 *data);
+void get_your_trade_objects (const uint8_t *data);
 
 /*!
  * \ingroup 	trade
@@ -75,7 +75,7 @@ void get_your_trade_objects (const Uint8 *data);
  *
  * \param   	data The network data.
  */
-void put_item_on_trade (const Uint8 *data);
+void put_item_on_trade (const uint8_t *data);
 
 /*!
  * \ingroup 	trade
@@ -85,7 +85,7 @@ void put_item_on_trade (const Uint8 *data);
  *
  * \param   	data The trade data
  */
-void remove_item_from_trade (const Uint8 *data);
+void remove_item_from_trade (const uint8_t *data);
 
 #ifdef __cplusplus
 } // extern "C"

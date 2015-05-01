@@ -35,10 +35,10 @@ SDL_TimerID draw_scene_timer=0;
 int normal_animation_timer=0;
 
 #ifdef TIMER_CHECK
-static Uint32 last_my_timer=0;
+static uint32_t last_my_timer=0;
 #endif
 
-Uint32 my_timer(Uint32 interval, void * data)
+uint32_t my_timer(uint32_t interval, void * data)
 {
 	int	new_time;
 	SDL_Event e;
@@ -133,9 +133,9 @@ that aren't too critical in here...*/
 
 SDL_TimerID misc_timer=0;
 #ifdef TIMER_CHECK
-static Uint32 misc_timer_clock=0;
+static uint32_t misc_timer_clock=0;
 #endif
-Uint32 check_misc(Uint32 interval, void * data)
+uint32_t check_misc(uint32_t interval, void * data)
 {
 #ifdef TIMER_CHECK
 	misc_timer_clock=SDL_GetTicks();//This isn't accurate, but it's not needed here...

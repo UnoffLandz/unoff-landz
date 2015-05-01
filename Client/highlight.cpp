@@ -42,7 +42,8 @@ highlight_marker *get_free_highlight_marker(short x, short y) {
 
 void add_highlight(short x, short y, int type) {
 	highlight_marker *m = get_free_highlight_marker(x, y);
-	if (m == NULL) return;
+    if (m == NULL)
+        return;
 	
 	m->x = x;
 	m->y = y;

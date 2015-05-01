@@ -134,7 +134,7 @@ void draw_2d_object(obj_2d *object_id)
 			x1=x_pos+x1;
 			y1=y_pos+y1;
 
-			ELglMultiTexCoord2fARB(base_unit,u_start,v_start);
+            ELglMultiTexCoord2fARB(base_unit,u_start,v_start);
 			ELglMultiTexCoord2fARB(detail_unit,x1/texture_scale
 								 +clouds_movement_u,y1/texture_scale
 								 +clouds_movement_v);
@@ -188,12 +188,12 @@ CHECK_GL_ERRORS();
 }
 
 #ifdef FASTER_MAP_LOAD
-static void parse_2d0(const char* desc, Uint32 len, const char* cur_dir,
+static void parse_2d0(const char* desc, uint32_t len, const char* cur_dir,
 	obj_2d_def *def)
 {
 	char name[256], value[256];
 	const char *cp, *cp_end;
-	Uint32 i;
+    uint32_t i;
 
 	int file_x_len = -1, file_y_len = -1;
 	int u_start = -1, u_end = -1, v_start = -1, v_end = -1;
@@ -311,7 +311,7 @@ static obj_2d_def* load_obj_2d_def(const char *file_name)
 		return NULL;
 	}
 
-	obj_file_mem = el_get_pointer(file);
+    obj_file_mem = (char *)el_get_pointer(file);
 	if (!obj_file_mem)
 	{
 		LOG_ERROR("%s: %s (read)\"%s\"\n", reg_error_str, cant_open_file, file_name);
@@ -321,7 +321,7 @@ static obj_2d_def* load_obj_2d_def(const char *file_name)
 	f_size = el_get_size(file);
 
 	//ok, the file is loaded, so parse it
-	cur_object=calloc(1, sizeof(obj_2d_def));
+    cur_object=(obj_2d_def *)calloc(1, sizeof(obj_2d_def));
 	my_strncp(cur_object->file_name, file_name,
 		sizeof(cur_object->file_name));
 	parse_2d0(obj_file_mem, f_size, cur_dir, cur_object);
@@ -489,7 +489,8 @@ static obj_2d_def* load_obj_2d_def(const char *file_name)
 static int cache_cmp_string(const void* str, const void *dptr)
 {
 	const obj_2d_def *def = *((const obj_2d_def**)dptr);
-	return strcmp(str, def->file_name);
+    const char *srch = (const char *)str;
+    return strcmp(srch, def->file_name);
 }
 
 //Tests to see if an obj_2d object is already loaded.
@@ -500,7 +501,7 @@ static obj_2d_def* load_obj_2d_def_cache(const char* file_name)
 	obj_2d_def *def, **defp;
 	int i;
 
-	defp = bsearch(file_name, obj_2d_def_cache,
+    defp = (obj_2d_def **)bsearch(file_name, obj_2d_def_cache,
 		obj_2d_cache_used, sizeof(obj_2d_def*),
 		cache_cmp_string);
 	if (defp)
@@ -666,7 +667,7 @@ int add_2d_obj(int id_hint, const char* file_name,
 		return -1;
 	}
 
-	our_object = calloc(1, sizeof(obj_2d));
+    our_object = (obj_2d *)calloc(1, sizeof(obj_2d));
 	our_object->x_pos = x_pos;
 	our_object->y_pos = y_pos;
 	our_object->z_pos = z_pos;
@@ -1070,9 +1071,9 @@ void destroy_all_2d_object_defs()
 }
 
 // for support of the 1.0.3 server, change if an object is to be displayed or not
-void set_2d_object (Uint8 display, const void *ptr, int len)
+void set_2d_object (uint8_t display, const void *ptr, int len)
 {
-	const Uint32 *id_ptr = ptr;
+    const uint32_t *id_ptr = (const uint32_t *)ptr;
 	
 	// first look for the override to process ALL objects
 	if (len < sizeof(*id_ptr) ){
@@ -1088,7 +1089,7 @@ void set_2d_object (Uint8 display, const void *ptr, int len)
 		int idx = 0;
 		
 		while(len >= sizeof(*id_ptr)){
-			Uint32 obj_id = SDL_SwapLE32(id_ptr[idx]);
+            uint32_t obj_id = SDL_SwapLE32(id_ptr[idx]);
 			
 			if(obj_id < MAX_OBJ_2D && obj_2d_list[obj_id]){
 				obj_2d_list[obj_id]->display= display;
@@ -1100,9 +1101,9 @@ void set_2d_object (Uint8 display, const void *ptr, int len)
 }
 
 // for future expansion
-void state_2d_object (Uint8 state, const void *ptr, int len)
+void state_2d_object (uint8_t state, const void *ptr, int len)
 {
-	const Uint32 *id_ptr = ptr;
+    const uint32_t *id_ptr = (const uint32_t *)ptr;
 	
 	// first look for the override to process ALL objects
 	if (len < sizeof(*id_ptr) ){
@@ -1118,7 +1119,7 @@ void state_2d_object (Uint8 state, const void *ptr, int len)
 		int idx = 0;
 		
 		while(len >= sizeof(*id_ptr)){
-			Uint32 obj_id = SDL_SwapLE32(id_ptr[idx]);
+            uint32_t obj_id = SDL_SwapLE32(id_ptr[idx]);
 			
 			if(obj_id < MAX_OBJ_2D && obj_2d_list[obj_id]){
 				obj_2d_list[obj_id]->state= state;

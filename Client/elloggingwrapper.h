@@ -60,7 +60,7 @@ void set_log_level(const LogLevelType log_level);
  * @param line Line of the error.
  * @param message Error message.
  */
-void log_error(const char* file, const Uint32 line, const char* message, ...);
+void log_error(const char* file, const uint32_t line, const char* message, ...);
 
 /**
  * @ingroup logging
@@ -70,7 +70,7 @@ void log_error(const char* file, const Uint32 line, const char* message, ...);
  * @param line Line of the warning.
  * @param message Warning message.
  */
-void log_warning(const char* file, const Uint32 line, const char* message, ...);
+void log_warning(const char* file, const uint32_t line, const char* message, ...);
 
 /**
  * @ingroup logging
@@ -80,7 +80,7 @@ void log_warning(const char* file, const Uint32 line, const char* message, ...);
  * @param line Line of the info.
  * @param message Info message.
  */
-void log_info(const char* file, const Uint32 line, const char* message, ...);
+void log_info(const char* file, const uint32_t line, const char* message, ...);
 
 /**
  * @ingroup logging
@@ -90,7 +90,7 @@ void log_info(const char* file, const Uint32 line, const char* message, ...);
  * @param line Line of the debug message.
  * @param message Debug message.
  */
-void log_debug(const char* file, const Uint32 line, const char* message, ...);
+void log_debug(const char* file, const uint32_t line, const char* message, ...);
 
 /**
  * @ingroup logging
@@ -100,7 +100,7 @@ void log_debug(const char* file, const Uint32 line, const char* message, ...);
  * @param line Line of the debug verbose message.
  * @param message Debug verbose message.
  */
-void log_debug_verbose(const char* file, const Uint32 line,
+void log_debug_verbose(const char* file, const uint32_t line,
 	const char* message, ...);
 
 /**
@@ -111,7 +111,7 @@ void log_debug_verbose(const char* file, const Uint32 line,
  * @param line Line of the debug mark.
  * @param name Name of the debug mark.
  */
-void enter_debug_mark(const char* file, const Uint32 line,
+void enter_debug_mark(const char* file, const uint32_t line,
 	const char* name);
 
 /**
@@ -122,7 +122,7 @@ void enter_debug_mark(const char* file, const Uint32 line,
  * @param line Line of the debug mark.
  * @param name Name of the debug mark.
  */
-void leave_debug_mark(const char* file, const Uint32 line,
+void leave_debug_mark(const char* file, const uint32_t line,
 	const char* name);
 
 /**
@@ -136,27 +136,25 @@ int command_log_level(char *text, int len);
 
 void init_thread_log(const char* name);
 
-#define LOG_ERROR(msg, args ...) log_error(__FILE__, __LINE__, msg, ## args)
-#define LOG_WARNING(msg, args ...) log_warning(__FILE__, __LINE__, msg,	\
-	## args)
-#define LOG_INFO(msg, args ...) log_info(__FILE__, __LINE__, msg, ## args)
+#define LOG_ERROR(...) log_error(__FILE__, __LINE__, __VA_ARGS__)
+#define LOG_WARNING(...) log_warning(__FILE__, __LINE__, __VA_ARGS__)
+#define LOG_INFO(...) log_info(__FILE__, __LINE__, __VA_ARGS__)
 #ifdef FASTER_MAP_LOAD
-#define LOG_DEBUG(msg, args ...)\
+#define LOG_DEBUG(...)\
 	do\
 	{\
 		if (get_log_level() >= llt_debug)\
-			log_debug(__FILE__, __LINE__, msg, ## args);\
+            log_debug(__FILE__, __LINE__, __VA_ARGS__);\
 	} while(0)
-#define LOG_DEBUG_VERBOSE(msg, args ...)\
+#define LOG_DEBUG_VERBOSE(...)\
 	do\
 	{\
 		if (get_log_level() >= llt_debug_verbose)\
-			log_debug_verbose(__FILE__, __LINE__, msg, ## args);\
+            log_debug_verbose(__FILE__, __LINE__, __VA_ARGS__);\
 	} while(0)
 #else  // FASTER_MAP_LOAD
-#define LOG_DEBUG(msg, args ...) log_debug(__FILE__, __LINE__, msg, ## args)
-#define LOG_DEBUG_VERBOSE(msg, args ...) log_debug_verbose(__FILE__,	\
-	__LINE__, msg, ## args)
+#define LOG_DEBUG(...) log_debug(__FILE__, __LINE__, __VA_ARGS__)
+#define LOG_DEBUG_VERBOSE(...) log_debug_verbose(__FILE__,__LINE__, __VA_ARGS__)
 #endif // FASTER_MAP_LOAD
 #define ENTER_DEBUG_MARK(name) enter_debug_mark(__FILE__, __LINE__, name)
 #define LEAVE_DEBUG_MARK(name) leave_debug_mark(__FILE__, __LINE__, name)

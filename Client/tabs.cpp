@@ -18,22 +18,22 @@ int tab_stats_collection_id = 16;
 int tab_stats_x = 150;
 int tab_stats_y = 70;
 unsigned tab_selected = 0;
-Uint16 tab_stats_len_x = STATS_TAB_WIDTH + 2*TAB_MARGIN;
-Uint16 tab_stats_len_y = STATS_TAB_HEIGHT + TAB_TAG_HEIGHT + 2*TAB_MARGIN;
+uint16_t tab_stats_len_x = STATS_TAB_WIDTH + 2*TAB_MARGIN;
+uint16_t tab_stats_len_y = STATS_TAB_HEIGHT + TAB_TAG_HEIGHT + 2*TAB_MARGIN;
 
 int tab_help_win = -1;
 int tab_help_collection_id = 17;
 int tab_help_x = 150;
 int tab_help_y = 70;
-Uint16 tab_help_len_x = HELP_TAB_WIDTH + 2*TAB_MARGIN;
-Uint16 tab_help_len_y = HELP_TAB_HEIGHT + TAB_TAG_HEIGHT + 2*TAB_MARGIN;
+uint16_t tab_help_len_x = HELP_TAB_WIDTH + 2*TAB_MARGIN;
+uint16_t tab_help_len_y = HELP_TAB_HEIGHT + TAB_TAG_HEIGHT + 2*TAB_MARGIN;
 
 int tab_info_win = -1;
 int tab_info_collection_id = 18;
 int tab_info_x = 150;
 int tab_info_y = 70;
-Uint16 tab_info_len_x = INFO_TAB_WIDTH + 2*TAB_MARGIN;
-Uint16 tab_info_len_y = INFO_TAB_HEIGHT + TAB_TAG_HEIGHT + 2*TAB_MARGIN;
+uint16_t tab_info_len_x = INFO_TAB_WIDTH + 2*TAB_MARGIN;
+uint16_t tab_info_len_y = INFO_TAB_HEIGHT + TAB_TAG_HEIGHT + 2*TAB_MARGIN;
 
 int display_tab_stats_handler () 
 {

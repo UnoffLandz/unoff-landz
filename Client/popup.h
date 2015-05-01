@@ -22,14 +22,14 @@ extern "C" {
 
 typedef list_node_t    popup_node_t;
 typedef list_node_t    popup_option_node_t;
-typedef Uint8          popup_option_type_t;
-typedef Uint8          popup_option_group_t;
-typedef Uint16         popup_id_t;
+typedef uint8_t          popup_option_type_t;
+typedef uint8_t          popup_option_group_t;
+typedef uint16_t         popup_id_t;
 
 /* Union for values to be sent back to server */
 
 typedef union {
-	Uint8 uint8;                       /* U8 for radio buttons and one-click text */
+	uint8_t uint8;                       /* U8 for radio buttons and one-click text */
 	char *str;                         /* string for text entries */
 } popup_option_value_t;
 
@@ -121,7 +121,7 @@ popup_t *popup_create( const char *title, popup_id_t popup_id, int persistent );
 void popup_set_text( popup_t *this_popup, const char *text );
 void popup_finish_setup( popup_t *this_popup );
 void popup_set_callback( popup_t *popup, popup_callback_t callback );
-void popup_create_from_network( const unsigned char *payload, size_t size );
+void popup_create_from_network( const uint8_t *payload, size_t size );
 
 /*
  Server to Client Protocol definition:
@@ -134,12 +134,12 @@ void popup_create_from_network( const unsigned char *payload, size_t size );
  +------+--------+------------+--------------------------------------+
  | Size | Type   | Name       | Description                          |
  +------+--------+------------+--------------------------------------+
- | 2    | Uint16 | PopupID    | Unique ID for this popup.            |
- | 1    | Uint8  | Flags      | Popup flags. Reserved for expansion. |
- | 1    | Uint8  | Title Size | Size (in chars) of popup title (*)   |
+ | 2    | uint16_t | PopupID    | Unique ID for this popup.            |
+ | 1    | uint8_t  | Flags      | Popup flags. Reserved for expansion. |
+ | 1    | uint8_t  | Title Size | Size (in chars) of popup title (*)   |
  | A    | char[] | Title      | Popup title.                         |
- | 2    | Uint16 | SizeHint   | Hint of the desired popup width      |
- | 1    | Uint8  | Text Size  | Text size in the popup (*)           |
+ | 2    | uint16_t | SizeHint   | Hint of the desired popup width      |
+ | 1    | uint8_t  | Text Size  | Text size in the popup (*)           |
  | B    | char[] | Text       | Text to be displayed by the popup.   |
  +------+--------+------------+--------------------------------------+
 
@@ -151,9 +151,9 @@ void popup_create_from_network( const unsigned char *payload, size_t size );
  +------+--------+------------------+------------------------------+
  | Size | Type   | Name             | Description                  |
  +------+--------+------------------+------------------------------+
- | 1    | Uint8  | Option Type (**) | The option type.             |
- | 1    | Uint8  | Group ID         | Group ID for this option     |
- | 1    | Uint8  | Text size        | Size of text (*)             |
+ | 1    | uint8_t  | Option Type (**) | The option type.             |
+ | 1    | uint8_t  | Group ID         | Group ID for this option     |
+ | 1    | uint8_t  | Text size        | Size of text (*)             |
  | C    | char[] | Text             | Option text                  |
  +------+--------+------------------+------------------------------+
 
@@ -161,7 +161,7 @@ void popup_create_from_network( const unsigned char *payload, size_t size );
  +------+--------+------------------+------------------------------+
  | Size | Type   | Name             | Description                  |
  +------+--------+------------------+------------------------------+
- | 1    | Uint8  | Value ID         | Value to be sent back (***)  |
+ | 1    | uint8_t  | Value ID         | Value to be sent back (***)  |
  +------+--------+------------------+------------------------------+
 
  Text options do not include anything more than the option header.
@@ -183,7 +183,7 @@ void popup_create_from_network( const unsigned char *payload, size_t size );
  +------+--------+------------+--------------------------------------+
  | Size | Type   | Name       | Description                          |
  +------+--------+------------+--------------------------------------+
- | 2    | Uint16 | PopupID    | Unique ID for this popup.            |
+ | 2    | uint16_t | PopupID    | Unique ID for this popup.            |
  +------+--------+------------+--------------------------------------+
 
  Follows one or more entries:
@@ -191,8 +191,8 @@ void popup_create_from_network( const unsigned char *payload, size_t size );
  +------+--------+------------+--------------------------------------+
  | Size | Type   | Name       | Description                          |
  +------+--------+------------+--------------------------------------+
- | 1    | Uint8  | group      | Group ID                             |
- | 1    | Uint8  | Value ID   | Value ID for this option             |
+ | 1    | uint8_t  | group      | Group ID                             |
+ | 1    | uint8_t  | Value ID   | Value ID for this option             |
  +------+--------+------------+--------------------------------------+
 
  If value ID == 0, then this is a textual entry option, so the text follows:
@@ -200,7 +200,7 @@ void popup_create_from_network( const unsigned char *payload, size_t size );
  +------+--------+------------+--------------------------------------+
  | Size | Type   | Name       | Description                          |
  +------+--------+------------+--------------------------------------+
- | 1    | Uint8  | Text size  | Size of text entered (*)             |
+ | 1    | uint8_t  | Text size  | Size of text entered (*)             |
  | D    | char[] | Text       | Option text                          |
  +------+--------+------------+--------------------------------------+
 

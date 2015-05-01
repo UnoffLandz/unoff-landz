@@ -130,7 +130,7 @@ int name_is_valid(const char *name)
 int get_name_from_text(const char * input_text, int len, int type, int offset, char * name)
 {
 	int i, do_break;
-	Uint8 ch;
+	uint8_t ch;
 	
 	for (i = 0; i < MAX_USERNAME_LENGTH - 1 && (i + offset) < len; i++)
 	{
@@ -168,7 +168,7 @@ int get_name_from_text(const char * input_text, int len, int type, int offset, c
 }
 
 // Returns 1 if ignored, 0 if not ignored
-int pre_check_if_ignored (const char *input_text, int len, Uint8 channel)
+int pre_check_if_ignored (const char *input_text, int len, uint8_t channel)
 {
 	int offset;
 	char name[MAX_USERNAME_LENGTH] = {0};
@@ -268,14 +268,14 @@ int pre_check_if_ignored (const char *input_text, int len, Uint8 channel)
 }
 
 
-void load_ignores_list(char * file_name)
+void load_ignores_list(const char * file_name)
 {
 	int f_size;
 	FILE *f = NULL;
 	char * ignore_list_mem;
 	int i,j;
 	char name[64];
-	Uint8 ch;
+	uint8_t ch;
 	size_t ret;
 
 	f = open_file_config(file_name, "rb");
@@ -344,7 +344,7 @@ void load_ignores()
 	if(use_global_ignores)load_ignores_list("global_ignores.txt");
 }
 
-int list_ignores()
+int list_ignores(const char *txt,int len)
 {
 	int i;
 	char str[MAX_IGNORES*19];

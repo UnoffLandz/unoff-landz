@@ -20,12 +20,12 @@
 // lower 7 bits - ybits
 #define BOTTOM_MASK  0x007f
 
-Uint16 compress_normal(const float *normal)
+uint16_t compress_normal(const float *normal)
 {
 	float tmp[3];
 	float w;
-	Uint32 xbits, ybits;
-	Uint16 result;
+	uint32_t xbits, ybits;
+	uint16_t result;
 
 	result = 0;
 
@@ -56,8 +56,8 @@ Uint16 compress_normal(const float *normal)
 	// a little slower... old pack was 4 multiplies and 2 adds. 
 	// This is 2 multiplies, 2 adds, and a divide....
 	w = 126.0f / (tmp[0] + tmp[1] + tmp[2]);
-	xbits = (Uint32)(tmp[0] * w);
-	ybits = (Uint32)(tmp[1] * w);
+	xbits = (uint32_t)(tmp[0] * w);
+	ybits = (uint32_t)(tmp[1] * w);
 
 	// Now we can be sure that 0<=xp<=126, 0<=yp<=126, 0<=xp+yp<=126
 
@@ -77,9 +77,9 @@ Uint16 compress_normal(const float *normal)
 	return result;
 }
 
-void uncompress_normal(const Uint16 value, float *normal)
+void uncompress_normal(const uint16_t value, float *normal)
 {
-	Uint32 x, y;
+	uint32_t x, y;
 	float len;
 
 	/**

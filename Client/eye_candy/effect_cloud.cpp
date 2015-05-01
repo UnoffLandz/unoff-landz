@@ -34,7 +34,7 @@ namespace ec
 		normal = Vec3(0.0, 1.0, 0.0);
 	}
 
-	bool CloudParticle::idle(const Uint64 delta_t)
+	bool CloudParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -184,7 +184,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 CloudParticle::get_texture()
+	uint32_t CloudParticle::get_texture()
 	{
 		return base->get_texture(EC_SIMPLE);
 	}
@@ -194,12 +194,12 @@ namespace ec
 		return 0.0f;
 	}
 #else	/* NEW_TEXTURES */
-	GLuint CloudParticle::get_texture(const Uint16 res_index)
+	GLuint CloudParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexSimple.get_texture(res_index);
 	}
 
-	void CloudParticle::draw(const Uint64 usec)
+	void CloudParticle::draw(const uint64_t usec)
 	{
 		glEnable(GL_LIGHTING);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -271,7 +271,7 @@ namespace ec
 
 	CloudEffect::CloudEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 		const color_t _hue_adjust, const color_t _saturation_adjust,
-		const float _density, BoundingRange* bounding_range, const Uint16 _LOD)
+		const float _density, BoundingRange* bounding_range, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "CloudEffect (" << this << ") created (" << *_pos
@@ -337,7 +337,7 @@ namespace ec
 			std::cout << "CloudEffect (" << this << ") destroyed." << std::endl;
 	}
 
-	bool CloudEffect::idle(const Uint64 usec)
+	bool CloudEffect::idle(const uint64_t usec)
 	{
 		if (recall && (particles.size() == 0))
 			return false;

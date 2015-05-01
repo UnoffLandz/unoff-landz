@@ -166,7 +166,7 @@ namespace CommandQueue
 			return;
 
 		// delay consecutive commands by a small amount to avoid spamming
-		Uint32 curr_time = SDL_GetTicks();
+		uint32_t curr_time = SDL_GetTicks();
 		if ((curr_time >= last_time) && ((curr_time - wait_time_ms) < last_time))
 			return;
 
@@ -214,7 +214,7 @@ namespace CommandQueue
 	//
 	//	Set the delay between executing commands on a single user menu line
 	//
-	void Queue::set_wait_time_ms(Uint32 time_ms)
+	void Queue::set_wait_time_ms(uint32_t time_ms)
 	{
 		if (time_ms > min_wait_time_ms)
 			wait_time_ms = time_ms;
@@ -223,8 +223,8 @@ namespace CommandQueue
 	}
 
 	//	protect the server - the minimum wait time, in milli-seconds, between executing commands
-	const Uint32 Queue::min_wait_time_ms = 500;
-	Uint32 Queue::wait_time_ms = Queue::min_wait_time_ms;
+	const uint32_t Queue::min_wait_time_ms = 500;
+	uint32_t Queue::wait_time_ms = Queue::min_wait_time_ms;
 
 
 	//
@@ -288,7 +288,7 @@ namespace CommandQueue
 //
 extern "C"
 {
-	void set_command_queue_wait_time_ms(Uint32 wait_time_ms)
+	void set_command_queue_wait_time_ms(uint32_t wait_time_ms)
 	{
 		CommandQueue::Queue::set_wait_time_ms(wait_time_ms);
 	}

@@ -29,7 +29,7 @@ typedef struct
 	int pos;
 	int image_id;
 	int quantity;
-	Uint16 id; //server id
+	uint16_t id; //server id
 } ground_item;
 
 extern int view_ground_items; /*!< flag that indicates whether we should display ground items or not */
@@ -38,7 +38,7 @@ extern int ground_items_menu_x;
 extern int ground_items_menu_y;
 extern int ground_items_menu_x_len;
 extern int ground_items_menu_y_len;
-extern Uint32 ground_items_empty_next_bag;
+extern uint32_t ground_items_empty_next_bag;
 
 /*!
  * \name windows handlers
@@ -58,7 +58,7 @@ extern int ground_items_win; /*!< ground items windows handler */
  * \note No sanity checks whether \a pos is a valid index are performed. This is possibly a bug.
  * \bug Does not perform sanity checks for the parameter \a pos.
  */
-void remove_item_from_ground(Uint8 pos);
+void remove_item_from_ground(uint8_t pos);
 
 /*!
  * \ingroup item
@@ -72,7 +72,7 @@ void remove_item_from_ground(Uint8 pos);
  * \bug Doesn't perform any sanity checks on the given \a data.
  *
  */
-void get_bag_item (const Uint8 *data);
+void get_bag_item (const uint8_t *data);
 
 /*!
  * \ingroup item
@@ -87,7 +87,7 @@ void get_bag_item (const Uint8 *data);
  * \note No sanity checks for \a data are performed. This may be a possible bug.
  * \bug Doesn't perform any sanity checks on the given \a data.
  */
-void get_bags_items_list (const Uint8 *data);
+void get_bags_items_list (const uint8_t *data);
 
 /*!
  * \ingroup item
@@ -116,7 +116,7 @@ void put_bag_on_ground(int bag_x,int bag_y,int bag_id);
  * \note No sanity checks on \a data are performed. This may be a possible bug.
  * \bug No sanity checks on \a data are performed.
  */
-void add_bags_from_list (const Uint8 *data);
+void add_bags_from_list (const uint8_t *data);
 
 /*!
  * \ingroup item

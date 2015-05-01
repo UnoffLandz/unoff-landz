@@ -21,12 +21,12 @@ extern "C" {
  */
 /*! @{ */
 typedef enum {
-	S_SUCCES = 1,
-	S_FAILED,
-	S_INVALID,
-	S_SELECT_TARGET,
-	S_SELECT_TELE_LOCATION,
-	S_NAME,
+    S_SUCCES = 1,
+    S_FAILED,
+    S_INVALID,
+    S_SELECT_TARGET,
+    S_SELECT_TELE_LOCATION,
+    S_NAME,
 } spell_errors;
 /*! @} */
 
@@ -48,13 +48,13 @@ extern int sigil_menu_y;
 
 extern int sigils_text;
 
-extern Uint8 spell_text[256]; /*!< buffer for the spell text */
+extern char spell_text[256]; /*!< buffer for the spell text */
 
 extern int have_error_message; /*!< flag that indicates whether we got an error message */
 
 extern int spell_result;
 
-extern Uint8 last_spell_str[20];
+extern char last_spell_str[20];
 extern int last_spell_len;
 
 
@@ -114,7 +114,7 @@ void remove_active_spell(int pos);
  *
  * \param my_spell_list the spell list to use for active_spells.
  */
-void get_active_spell_list (const Uint8 *my_spell_list);
+void get_active_spell_list (const uint8_t *my_spell_list);
 
 /*!
  * \ingroup spells_window
@@ -144,7 +144,7 @@ void display_sigils_menu();
  *
  * \param sigils_we_have    the mask to determine the sigils which the actor has.
  */
-void get_sigils_we_have(Uint32 sigils_we_have, Uint32 sigils2);
+void get_sigils_we_have(uint32_t sigils_we_have, uint32_t sigils2);
 
 /*!
  * \ingroup spells_window
@@ -166,7 +166,7 @@ void process_network_spell (const char * data, int len);
  * \param str the spell message
  * \param len the length of the spell message
  */
-void send_spell(Uint8 *str, int len);
+void send_spell(uint8_t *str, int len);
 
 /*!
  * \ingroup other
@@ -174,7 +174,7 @@ void send_spell(Uint8 *str, int len);
  *
  * 	returns 1 if it is a quickspell, otherwise 0.
  *
- */int action_spell_keys(Uint32 key);
+ */int action_spell_keys(uint32_t key);
 
 void load_quickspells();
 void save_quickspells();
@@ -190,7 +190,7 @@ void draw_spell_icon_strings(void);
 extern int show_poison_count;
 
 #undef BUFF_DURATION_DEBUG
-void here_is_a_buff_duration(Uint8 duration);
+void here_is_a_buff_duration(uint8_t duration);
 void check_then_do_buff_duration_request(void);
 int command_buff_duration(char *text, int len);
 

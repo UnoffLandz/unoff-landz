@@ -28,7 +28,7 @@ extern "C" {
  * @return Returns one if the id is from a dds file, zero else.
  * @callgraph
  */
-Uint32 check_dds(const Uint8 *ID);
+uint32_t check_dds(const uint8_t *ID);
 
 #ifdef	NEW_TEXTURES
 /**
@@ -49,8 +49,8 @@ Uint32 check_dds(const Uint8 *ID);
  * @see texture_compression_type
  * @callgraph
  */
-Uint32 load_dds(el_file_ptr file, const Uint32 compression, const Uint32 unpack,
-	const Uint32 strip_mipmaps, const Uint32 base_level,
+uint32_t load_dds(el_file_ptr file, const uint32_t compression, const uint32_t unpack,
+	const uint32_t strip_mipmaps, const uint32_t base_level,
 	image_t* image);
 
 /**
@@ -65,7 +65,7 @@ Uint32 load_dds(el_file_ptr file, const Uint32 compression, const Uint32 unpack,
  * @return Returns one if everything is ok, zero else.
  * @callgraph
  */
-Uint32 get_dds_information(el_file_ptr file, image_t* image);
+uint32_t get_dds_information(el_file_ptr file, image_t* image);
 #else	/* NEW_TEXTURES */
 void* load_dds(el_file_ptr file, int *width, int *height);
 #endif	/* NEW_TEXTURES */

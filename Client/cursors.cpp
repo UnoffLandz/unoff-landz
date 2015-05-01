@@ -41,7 +41,7 @@ char harvestable_objects[300][80];
 char entrable_objects[300][80];
 #endif
 
-Uint8 *cursors_mem=NULL;
+uint8_t *cursors_mem=NULL;
 int cursors_x_length;
 int cursors_y_length;
 
@@ -128,8 +128,8 @@ int is_entrable(const char* fname)
 void load_cursors()
 {
 	int cursors_colors_no, x, y, i;
-	Uint8 * cursors_mem_bmp;
-	Uint8 cur_color;
+	uint8_t * cursors_mem_bmp;
+	uint8_t cur_color;
 	el_file_ptr file;
 
 	file = el_open("textures/cursors.bmp");
@@ -140,7 +140,7 @@ void load_cursors()
 		return;
 	}
 
-	if ((cursors_mem_bmp = el_get_pointer(file)) == NULL)
+    if ((cursors_mem_bmp = (uint8_t *)el_get_pointer(file)) == NULL)
 	{
 		el_close(file);
 		LOG_ERROR("%s: %s (read) [%s]\n", reg_error_str, cursors_file_str, "textures/cursors.bmp");
@@ -157,7 +157,7 @@ void load_cursors()
 
 	//ok, now transform the bitmap in cursors info
 	if(cursors_mem) free(cursors_mem);
-	cursors_mem = (Uint8 *)calloc ( cursors_x_length*cursors_y_length*2, sizeof(char));
+	cursors_mem = (uint8_t *)calloc ( cursors_x_length*cursors_y_length*2, sizeof(char));
 
 	for(y=cursors_y_length-1;y>=0;y--)
 		{
@@ -205,15 +205,15 @@ void cursors_cleanup(void)
 void assign_cursor(int cursor_id)
 {
 	int hot_x,hot_y,x,y,i,cur_color,cur_byte,cur_bit;
-	Uint8 cur_mask=0;
-	Uint8 cursor_data[16*16/8];
-	Uint8 cursor_mask[16*16/8];
-	Uint8 *cur_cursor_mem;
+	uint8_t cur_mask=0;
+	uint8_t cursor_data[16*16/8];
+	uint8_t cursor_mask[16*16/8];
+	uint8_t *cur_cursor_mem;
 	//clear the data and mask
 	for(i=0;i<16*16/8;i++)cursor_data[i]=0;
 	for(i=0;i<16*16/8;i++)cursor_mask[i]=0;
 
-	cur_cursor_mem=(Uint8 *)calloc(16*16*2, sizeof(char));
+	cur_cursor_mem=(uint8_t *)calloc(16*16*2, sizeof(char));
 
 	i=0;
 	for(y=0;y<cursors_y_length;y++)
@@ -276,7 +276,7 @@ void assign_cursor(int cursor_id)
 
 	hot_x=cursors_array[cursor_id].hot_x;
 	hot_y=cursors_array[cursor_id].hot_y;
-	cursors_array[cursor_id].cursor_pointer=(Uint8 *)SDL_CreateCursor(cursor_data,cursor_mask,16,16,hot_x,hot_y);
+	cursors_array[cursor_id].cursor_pointer=(uint8_t *)SDL_CreateCursor(cursor_data,cursor_mask,16,16,hot_x,hot_y);
     free(cur_cursor_mem);
 }
 

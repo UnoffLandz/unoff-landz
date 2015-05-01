@@ -74,7 +74,7 @@ typedef struct {
 	int type;
 	float x_pos;
 	float y_pos;
-	Uint32 time;
+	uint32_t time;
 } thunder;
 
 typedef struct {
@@ -95,7 +95,7 @@ int lightnings_defs_count = 0;
 thunder thunders[MAX_THUNDERS];
 int thunders_count = 0;
 
-Uint32 lightning_stop = 0;
+uint32_t lightning_stop = 0;
 int lightning_type;
 float lightning_position[4] = {0.0, 0.0, 100.0, 1.0};
 float lightning_sky_position[4] = {0.0, 0.0, 0.0, 1.0};
@@ -214,7 +214,7 @@ void weather_set_area(int area, float x, float y, float radius, int type, float 
 #endif // DEBUG
 }
 
-void weather_get_from_server(const Uint8* data)
+void weather_get_from_server(const uint8_t* data)
 {
 /*
 	//first, catch non-precipitations
@@ -408,8 +408,8 @@ void update_weather_type(int type, float x, float y, float z, int ticks)
 
 void weather_update()
 {
-	static Uint32 last_update = 0;
-	Uint32 ticks = cur_time - last_update;
+	static uint32_t last_update = 0;
+	uint32_t ticks = cur_time - last_update;
 	int i;
 
 	update_wind();
@@ -716,7 +716,7 @@ float weather_get_lightning_intensity(float x, float y)
 #ifdef NEW_SOUND
 void weather_sound_control()
 {
-	static Uint32 last_sound_update = 0;
+	static uint32_t last_sound_update = 0;
 	int i;
 
 	if (cur_time < last_sound_update + 200) return;

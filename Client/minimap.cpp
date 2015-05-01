@@ -164,7 +164,7 @@ static __inline__ void draw_actor_points(float zoom_multip, float px, float py)
 				elglColourN("minimap.pkable");
 			else if(a->is_enhanced_model && is_in_buddylist(a->actor_name))
 				elglColourN("minimap.buddy");
-			else if (is_color ((unsigned char)a->actor_name[0]))
+            else if (is_color ((uint8_t)a->actor_name[0]))
 			{
 				if(a->is_enhanced_model && is_in_buddylist(a->actor_name))
 					elglColourN("minimap.buddy");
@@ -614,7 +614,7 @@ static void decrease_zoom()
 		minimap_tiles_distance = 144;
 }
 
-int click_minimap_handler(window_info * win, int mx, int my, Uint32 flags)
+int click_minimap_handler(window_info * win, int mx, int my, uint32_t flags)
 {
 	int close_button_x = win->len_x/2 + 32 - 1;
 	if(left_click)
@@ -651,9 +651,9 @@ int click_minimap_handler(window_info * win, int mx, int my, Uint32 flags)
 	return 0;
 }
 
-int keypress_minimap_handler (window_info *win, int mx, int my, Uint32 key, Uint32 unikey)
+int keypress_minimap_handler (window_info *win, int mx, int my, uint32_t key, uint32_t unikey)
 {
-	Uint16 keysym = key & 0xffff;
+    uint16_t keysym = key & 0xffff;
 
 	if (is_within_radius(mx,my-ELW_TITLE_HEIGHT,float_minimap_size/2,float_minimap_size/2,float_minimap_size/2))
 	{
@@ -812,7 +812,7 @@ CHECK_GL_ERRORS();
 #endif //OPENGL_TRACE
 }
 
-int mouseover_minimap_handler(window_info * win, int mx, int my, Uint32 flags)
+int mouseover_minimap_handler(window_info * win, int mx, int my, uint32_t flags)
 {
 	if(is_within_radius(mx,my-ELW_TITLE_HEIGHT,float_minimap_size/2,float_minimap_size/2,float_minimap_size/2) ||
 		((mx > win->len_x/2-32) && (mx < win->len_x/2+32+ELW_TITLE_HEIGHT) && (my >= 0) && (my <= 2*ELW_TITLE_HEIGHT)))
@@ -848,9 +848,9 @@ void display_minimap()
 		minimap_win = create_window(win_minimap, windows_on_top?-1:game_root_win, 0, minimap_win_x, minimap_win_y, 
 			minimap_size, minimap_size+ELW_TITLE_HEIGHT, ELW_CLICK_TRANSPARENT|ELW_SHOW|ELW_TITLE_NAME|ELW_ALPHA_BORDER|ELW_SWITCHABLE_OPAQUE|ELW_DRAGGABLE);
 		set_window_handler(minimap_win, ELW_HANDLER_DISPLAY, &display_minimap_handler);	
-		set_window_handler(minimap_win, ELW_HANDLER_CLICK, &click_minimap_handler);	
-		set_window_handler(minimap_win, ELW_HANDLER_MOUSEOVER, &mouseover_minimap_handler);	
-		set_window_handler(minimap_win, ELW_HANDLER_KEYPRESS, &keypress_minimap_handler );
+        set_window_handler(minimap_win, ELW_HANDLER_CLICK, (int (*)())&click_minimap_handler);
+        set_window_handler(minimap_win, ELW_HANDLER_MOUSEOVER, (int (*)())&mouseover_minimap_handler);
+        set_window_handler(minimap_win, ELW_HANDLER_KEYPRESS, (int (*)())&keypress_minimap_handler );
 		win = &(windows_list.window[minimap_win]);
 		win->owner_drawn_title_bar = 1;
 		change_minimap();

@@ -27,7 +27,7 @@ typedef struct
 	int maxlen, rows, accept_do_not_close, allow_nonprint_chars;
 	void (*popup_cancel)(void *);
 	void (*popup_input)(const char *, void *);
-	Uint32 text_flags;
+	uint32_t text_flags;
 	text_message popup_text;
 	void *data;
 } INPUT_POPUP;

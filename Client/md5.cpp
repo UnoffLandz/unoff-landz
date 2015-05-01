@@ -97,7 +97,7 @@ void MD5Open(MD5 *md5)
 
 /* MD5 basic transformation. Transforms state based on block. */
 
-static void MD5Transform(UINT4 state[4], const unsigned char block[64])
+static void MD5Transform(UINT4 state[4], const uint8_t block[64])
 {
   UINT4 a = state[0], b = state[1], c = state[2], d = state[3], x[16];
   /* Move contents of block to x, putting bytes in little-endian order. */
@@ -205,7 +205,7 @@ void MD5Digest(MD5 *md5, const void *input, unsigned int inputLen)
     memcpy(&md5->buffer[index], input, partLen);
     MD5Transform(md5->state, md5->buffer);
     for (i = partLen; i + 63 < inputLen; i += 64)
-      MD5Transform(md5->state, (unsigned char *) input + i);
+      MD5Transform(md5->state, (uint8_t *) input + i);
     index = 0;
   }
   else
@@ -226,9 +226,9 @@ void MD5Digest(MD5 *md5, const void *input, unsigned int inputLen)
 
 void MD5Close(MD5 *md5, MD5_DIGEST digest)
 {
-  unsigned char bits[8];
+  uint8_t bits[8];
   unsigned int index, padLen;
-  static unsigned char PADDING[64] =
+  static uint8_t PADDING[64] =
   {
     0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

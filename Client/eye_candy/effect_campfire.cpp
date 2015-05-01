@@ -18,7 +18,7 @@ namespace ec
 	CampfireParticle::CampfireParticle(Effect* _effect, ParticleMover* _mover,
 		const Vec3 _pos, const Vec3 _velocity, const color_t hue_adjust,
 		const color_t saturation_adjust, const float _scale,
-		const float _sqrt_scale, const int _state, const Uint16 _LOD) :
+		const float _sqrt_scale, const int _state, const uint16_t _LOD) :
 		Particle(_effect, _mover, _pos, _velocity)
 	{
 		state = _state;
@@ -67,7 +67,7 @@ namespace ec
 #endif
 	}
 
-	bool CampfireParticle::idle(const Uint64 delta_t)
+	bool CampfireParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -109,7 +109,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 CampfireParticle::get_texture()
+	uint32_t CampfireParticle::get_texture()
 	{
 		if (state == 0)
 		{
@@ -133,7 +133,7 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	GLuint CampfireParticle::get_texture(const Uint16 res_index)
+	GLuint CampfireParticle::get_texture(const uint16_t res_index)
 	{
 		if (state == 0)
 			return base->TexFlare.get_texture(res_index);
@@ -141,7 +141,7 @@ namespace ec
 			return base->TexSimple.get_texture(res_index);
 	}
 
-	void CampfireParticle::draw(const Uint64 usec)
+	void CampfireParticle::draw(const uint64_t usec)
 	{
 		if (state == 0)
 		{
@@ -159,7 +159,7 @@ namespace ec
 	CampfireBigParticle::CampfireBigParticle(Effect* _effect,
 		ParticleMover* _mover, const Vec3 _pos, const Vec3 _velocity,
 		const color_t hue_adjust, const color_t saturation_adjust,
-		const float _sqrt_scale, const Uint16 _LOD) :
+		const float _sqrt_scale, const uint16_t _LOD) :
 		Particle(_effect, _mover, _pos, _velocity)
 	{
 		const float LOD = _LOD / 10.0;
@@ -184,7 +184,7 @@ namespace ec
 		flare_frequency = 2.0;
 	}
 
-	bool CampfireBigParticle::idle(const Uint64 delta_t)
+	bool CampfireBigParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
@@ -193,12 +193,12 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 CampfireBigParticle::get_texture()
+	uint32_t CampfireBigParticle::get_texture()
 	{
 		return base->get_texture(EC_FLARE);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint CampfireBigParticle::get_texture(const Uint16 res_index)
+	GLuint CampfireBigParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexFlare.get_texture(res_index);
 	}
@@ -206,7 +206,7 @@ namespace ec
 
 	CampfireEffect::CampfireEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
 		std::vector<ec::Obstruction*>* _obstructions, const color_t _hue_adjust,
-		const color_t _saturation_adjust, const float _scale, const Uint16 _LOD)
+		const color_t _saturation_adjust, const float _scale, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "CampfireEffect (" << this << ") created."
@@ -273,7 +273,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool CampfireEffect::idle(const Uint64 usec)
+	bool CampfireEffect::idle(const uint64_t usec)
 	{
 		if ((recall) && (particles.size() == 0))
 			return false;

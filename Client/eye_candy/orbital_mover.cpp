@@ -11,7 +11,7 @@ namespace ec
 	{
 	}
 
-	void OrbitalMover::move(Particle& p, Uint64 usec)
+	void OrbitalMover::move(Particle& p, uint64_t usec)
 	{
 		float elapsed = get_time() - p.born;
 

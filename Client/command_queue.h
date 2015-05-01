@@ -15,7 +15,7 @@ extern "C"
  *
  * \param wait_time_ms the time in milli-seconds.  If less than the mimimum, the minimum is used.
  */
-void set_command_queue_wait_time_ms(Uint32 wait_time_ms);
+void set_command_queue_wait_time_ms(uint32_t wait_time_ms);
 
 
 #ifdef __cplusplus

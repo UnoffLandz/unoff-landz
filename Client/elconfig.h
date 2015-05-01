@@ -26,7 +26,7 @@ extern int sdl_cursors;
 extern float pointer_size;
 #endif // NEW_CURSOR
 #ifdef	NEW_TEXTURES
-extern Uint32 max_actor_texture_handles;
+extern uint32_t max_actor_texture_handles;
 #endif	/* NEW_TEXTURES */
 
 extern int write_ini_on_exit; /*< variable that determines if el.ini file is rewritten on exit of the program */
@@ -39,18 +39,18 @@ extern int gy_adjust;
  */
 typedef enum
 {
-	OPT_BOOL = 1,      // Change variable                   func(int*)
-	OPT_STRING,        // Change string                     func(char*,char*)
-	OPT_FLOAT,         // Change float                      func(float*,float*)
-	OPT_INT,           // Change int                        func(int*,int)
-	OPT_SPECINT = OPT_INT, // Multiple ints, non-default func   func(int*,int)
-	OPT_MULTI,         // INT with multiselect widget
-	OPT_MULTI_H,       // INT with multiselect widget, horizontal
-	OPT_PASSWORD,
-	OPT_FLOAT_F,       // Change float with functions that returns max and min values  func(float*,float*), max/min float func()
-	OPT_INT_F,         // Change int with functions that returns max and min values    func(int*,int), max/min int func()
-	OPT_BOOL_INI,      // Boolean value that is only read from and written to the ini file
-	OPT_INT_INI	   // Int value that is only read from the ini file
+    OPT_BOOL = 1,      // Change variable                   func(int*)
+    OPT_STRING,        // Change string                     func(char*,char*)
+    OPT_FLOAT,         // Change float                      func(float*,float*)
+    OPT_INT,           // Change int                        func(int*,int)
+    OPT_SPECINT = OPT_INT, // Multiple ints, non-default func   func(int*,int)
+    OPT_MULTI,         // INT with multiselect widget
+    OPT_MULTI_H,       // INT with multiselect widget, horizontal
+    OPT_PASSWORD,
+    OPT_FLOAT_F,       // Change float with functions that returns max and min values  func(float*,float*), max/min float func()
+    OPT_INT_F,         // Change int with functions that returns max and min values    func(int*,int), max/min int func()
+    OPT_BOOL_INI,      // Boolean value that is only read from and written to the ini file
+    OPT_INT_INI	   // Int value that is only read from the ini file
 } option_type;
 
 /*!
@@ -58,10 +58,10 @@ typedef enum
  */
 typedef enum
 {
-	COMMAND_LINE_SHORT_VAR,	/*!< for abbreviated variable names from the command line */
-	COMMAND_LINE_LONG_VAR,	/*!< for full variable names from the command line */
-	INI_FILE_VAR,		/*!< for variables names from el.ini */
-	IN_GAME_VAR		/*!< for names of variables changed in the games */
+    COMMAND_LINE_SHORT_VAR,	/*!< for abbreviated variable names from the command line */
+    COMMAND_LINE_LONG_VAR,	/*!< for full variable names from the command line */
+    INI_FILE_VAR,		/*!< for variables names from el.ini */
+    IN_GAME_VAR		/*!< for names of variables changed in the games */
 } var_name_type;
 
 void display_elconfig_win(void);
@@ -168,7 +168,7 @@ void change_windows_on_top(int *var);
  * \param name       the name of the variable to add to
  * \param str      the text for the option
  */
-void add_multi_option(char * name, char * str);
+void add_multi_option(const char * name, const char * str);
 
 void change_windowed_chat (int *wc, int val);
 

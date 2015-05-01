@@ -10,8 +10,8 @@
 
 #include <SDL_types.h>
 
-Uint16 compress_normal(const float *normal);
-void uncompress_normal(const Uint16 value, float *normal);
+uint16_t compress_normal(const float *normal);
+void uncompress_normal(const uint16_t value, float *normal);
 
 #endif	/* _NORMAL_H_ */
 

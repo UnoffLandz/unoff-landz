@@ -53,7 +53,7 @@ static __inline__ PF_TILE *pf_get_tile(int x, int y)
 }
 #else
 #define pf_get_tile(x, y) \
-	(((x) >= tile_map_size_x*6 || (y) >= tile_map_size_y*6 || ((Sint32)(x)) < 0 || ((Sint32)(y)) < 0) ? NULL : &pf_tile_map[(y)*tile_map_size_x*6+(x)])
+    (((x) >= tile_map_size_x*6 || (y) >= tile_map_size_y*6 || ((int32_t)(x)) < 0 || ((int32_t)(y)) < 0) ? NULL : &pf_tile_map[(y)*tile_map_size_x*6+(x)])
 #endif
 
 static PF_TILE *pf_get_next_open_tile()
@@ -143,7 +143,7 @@ static void pf_add_tile_to_open_list(PF_TILE *current, PF_TILE *neighbour)
 	neighbour->state = PF_STATE_OPEN;
 }
 
-static Uint32 pf_movement_timer_callback(Uint32 interval, void* UNUSED(param))
+static uint32_t pf_movement_timer_callback(uint32_t interval, void* UNUSED(param))
 {
 	SDL_Event e;
 
@@ -181,7 +181,7 @@ int pf_find_path(int x, int y)
 		pf_tile_map[i].parent = NULL;
 	}
 
-	pf_open.tiles = calloc(tile_map_size_x*tile_map_size_y*6*6, sizeof(PF_TILE*));
+    pf_open.tiles = (PF_TILE**)calloc(tile_map_size_x*tile_map_size_y*6*6, sizeof(PF_TILE*));
 	pf_open.count = 0;
 
 	pf_add_tile_to_open_list(NULL, pf_src_tile);
@@ -328,7 +328,7 @@ void pf_move()
 				}
 			}
 			if (pf_cur_tile) {
-				Uint8 str[5];
+				uint8_t str[5];
 
 				str[0] = MOVE_TO;
 				*((short *)(str+1)) = SDL_SwapLE16((short)pf_cur_tile->x);
@@ -342,7 +342,7 @@ void pf_move()
 		for (pf_cur_tile = pf_dst_tile; pf_cur_tile; pf_cur_tile = pf_cur_tile->parent) {
 			if (PF_DIFF(x, pf_cur_tile->x) <= 12 && PF_DIFF(y, pf_cur_tile->y) <= 12
 			&& !pf_is_tile_occupied(pf_cur_tile->x, pf_cur_tile->y)) {
-				Uint8 str[5];
+				uint8_t str[5];
 
 				str[0] = MOVE_TO;
 				*((short *)(str+1)) = SDL_SwapLE16((short)pf_cur_tile->x);

@@ -48,12 +48,12 @@ namespace ec
 				return EC_WIND;
 			}
 			;
-			bool idle(const Uint64 usec);
+			bool idle(const uint64_t usec);
 			virtual void request_LOD(const float _LOD)
 			{
 				if (fabs(_LOD - (float)LOD) < 1.0)
 					return;
-				const Uint16 rounded_LOD = (Uint16)round(_LOD);
+				const uint16_t rounded_LOD = (uint16_t)round(_LOD);
 				if (rounded_LOD <= desired_LOD)
 					LOD = rounded_LOD;
 				else
@@ -91,13 +91,13 @@ namespace ec
 			{
 			}
 
-			virtual bool idle(const Uint64 delta_t);
+			virtual bool idle(const uint64_t delta_t);
 #ifdef	NEW_TEXTURES
-			virtual Uint32 get_texture();
+			virtual uint32_t get_texture();
 			virtual float get_burn() const;
 #else	/* NEW_TEXTURES */
-			virtual GLuint get_texture(const Uint16 res_index);
-			virtual void draw(const Uint64 usec);
+			virtual GLuint get_texture(const uint16_t res_index);
+			virtual void draw(const uint64_t usec);
 #endif	/* NEW_TEXTURES */
 			virtual light_t estimate_light_level() const
 			{
@@ -114,7 +114,7 @@ namespace ec
 			coord_t min_height;
 			coord_t max_height;
 			WindEffect::WindType type;
-			Uint8 subtype;
+			uint8_t subtype;
 			Vec3 rotation_axes[3];
 			percent_t axis_weights[3];
 			Quaternion quaternion;

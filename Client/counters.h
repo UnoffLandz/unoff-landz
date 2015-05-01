@@ -14,7 +14,7 @@ void set_now_harvesting(void);
 
 extern char harvest_name[32];
 extern int counters_win;
-extern Uint32 disconnect_time;
+extern uint32_t disconnect_time;
 extern char last_spell_name[60];
 extern unsigned int floating_counter_flags;
 extern int floating_session_counters;
@@ -42,7 +42,7 @@ void increment_summon_counter(char *string);
 int chat_to_counters_command(const char *text, int len);
 void catch_counters_text(const char* text);
 
-void counters_set_product_info(char *name, int count);
+void counters_set_product_info(const char *name, int count);
 void counters_set_spell_name(int spell_id, char *name, int len);
 int is_death_message (const char * RawText);
 

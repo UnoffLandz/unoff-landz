@@ -95,7 +95,7 @@ void cal_play_anim_sound(actor *pActor, struct cal_anim anim, int is_emote){
 
 void cal_reset_emote_anims(actor *pActor, int cycles_too){
 
-	struct CalMixer *mixer;
+    CalMixer *mixer;
 	emote_anim *cur_emote;
 
 	if (pActor==NULL)
@@ -135,8 +135,8 @@ void cal_reset_emote_anims(actor *pActor, int cycles_too){
 
 
 void cal_actor_set_emote_anim(actor *pActor, emote_frame *anims){
-	struct CalMixer *mixer;
-	struct cal_anim *action;
+    CalMixer *mixer;
+    cal_anim *action;
 	hash_entry *he;
 	emote_anim *cur_emote;
 	int i;
@@ -156,7 +156,7 @@ void cal_actor_set_emote_anim(actor *pActor, emote_frame *anims){
 
 	for(i=0;i<anims->nframes;i++) {
 		//printf("adding frame %i: %i\n",i,anims->ids[i]);
-		he=hash_get(actors_defs[pActor->actor_type].emote_frames,(void*)(NULL+anims->ids[i]));
+        he=hash_get(actors_defs[pActor->actor_type].emote_frames,(void*)(anims->ids[i]));
 		if(!he) continue;
 		action = (struct cal_anim*) he->item;
 		//printf("duration scale %f\n",action->duration_scale);
@@ -218,7 +218,7 @@ void handle_cur_emote(actor *pActor){
 void cal_actor_set_anim_delay(int id, struct cal_anim anim, float delay)
 {
 	actor *pActor = actors_list[id];
-	struct CalMixer *mixer;
+    CalMixer *mixer;
 	int i;
 
 	//char str[255];
@@ -371,12 +371,12 @@ struct cal_anim cal_load_anim(actor_types *act, const char *str, int duration)
 #endif	//NEW_SOUND
 {
 	char fname[255]={0};
-	struct cal_anim res={-1,cycle,0,0.0f
+    CalCoreAnimation *coreanim;
+    cal_anim res={-1,cycle,0,0.0f
 #ifdef NEW_SOUND
 	,-1
 #endif  //NEW_SOUND
 	};
-	struct CalCoreAnimation *coreanim;
 #ifdef NEW_SOUND
 	int i;
 #endif  //NEW_SOUND
@@ -432,7 +432,7 @@ void cal_render_bones(actor *act)
 	int nrPoints;
 	int currLine;
 	int currPoint;
-	struct CalSkeleton *skel;
+    CalSkeleton *skel;
 
 	skel=CalModel_GetSkeleton(act->calmodel);
 	nrLines = CalSkeleton_GetBoneLines(skel,&lines[0][0][0]);
@@ -497,7 +497,7 @@ void cal_render_bones(actor *act)
 		GLdouble model[16], proj[16];
 		GLint view[4];
 		GLdouble px,py,pz;
-		unsigned char buf[16];
+        uint8_t buf[16];
 		float font_size_x = SMALL_INGAME_FONT_X_LEN/ALT_INGAME_FONT_X_LEN;
 		float font_size_y = SMALL_INGAME_FONT_Y_LEN/ALT_INGAME_FONT_X_LEN;
 
@@ -548,7 +548,7 @@ CHECK_GL_ERRORS();
 }
 
 
-static __inline__ void render_submesh(int meshId, int submeshCount, struct CalRenderer * pCalRenderer, float meshVertices[30000][3], float meshNormals[30000][3], float meshTextureCoordinates[30000][2], CalIndex meshFaces[50000][3], Uint32 use_lightning, Uint32 use_textures)
+static __inline__ void render_submesh(int meshId, int submeshCount, CalRenderer * pCalRenderer, float meshVertices[30000][3], float meshNormals[30000][3], float meshTextureCoordinates[30000][2], CalIndex meshFaces[50000][3], uint32_t use_lightning, uint32_t use_textures)
 {
 	int submeshId;
 	int faceCount=0;
@@ -609,20 +609,20 @@ CHECK_GL_ERRORS();
 }
 
 
-void cal_render_actor(actor *act, Uint32 use_lightning, Uint32 use_textures, Uint32 use_glow)
+void cal_render_actor(actor *act, uint32_t use_lightning, uint32_t use_textures, uint32_t use_glow)
 {
-	struct CalRenderer *pCalRenderer;
+    CalRenderer *pCalRenderer;
 	int meshCount,meshId,submeshCount/*,submeshId, vertexCount*/;
 	float points[1024][3];
 	static float meshVertices[30000][3];
 	static float meshNormals[30000][3];
 	static float meshTextureCoordinates[30000][2];
 	static CalIndex meshFaces[50000][3];
-	struct CalSkeleton *skel;
-	struct CalMesh *_mesh;
-	struct CalCoreMesh *_coremesh;
-	struct CalCoreMesh *_weaponmesh;
-	struct CalCoreMesh *_shieldmesh;
+    CalSkeleton *skel;
+    CalMesh *_mesh;
+    CalCoreMesh *_coremesh;
+    CalCoreMesh *_weaponmesh;
+    CalCoreMesh *_shieldmesh;
 	//int boneid=-1;
 	float reverse_scale;
 	//int glow=-1;
@@ -829,9 +829,9 @@ CHECK_GL_ERRORS();
 
 void cal_get_actor_bone_local_position(actor *in_act, int in_bone_id, float *in_shift, float *out_pos)
 {
-	struct CalSkeleton *skel;
-	struct CalBone *bone;
-	struct CalVector *point;
+    CalSkeleton *skel;
+    CalBone *bone;
+    CalVector *point;
 
     if (in_bone_id < 0) return;
 
@@ -845,8 +845,8 @@ void cal_get_actor_bone_local_position(actor *in_act, int in_bone_id, float *in_
 	memcpy(out_pos, CalVector_Get(point), 3*sizeof(float));
 
 	if (in_shift) {
-		struct CalQuaternion *rot;
-		struct CalVector *vect;
+        CalQuaternion *rot;
+        CalVector *vect;
 		float *tmp;
 		rot = CalBone_GetRotationAbsolute(bone);
 		vect = CalVector_New();

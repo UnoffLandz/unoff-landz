@@ -30,7 +30,7 @@ namespace ec
 		return 0.0f;
 	}
 #else	/* NEW_TEXTURES */
-	void BagParticle::draw(const Uint64 usec)
+	void BagParticle::draw(const uint64_t usec)
 	{
 		glEnable(GL_LIGHTING);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -67,12 +67,12 @@ namespace ec
 	}
 #endif	/* NEW_TEXTURES */
 
-	bool BagParticle::idle(const Uint64 delta_t)
+	bool BagParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
 
-		const Uint64 age = get_time() - born;
+		const uint64_t age = get_time() - born;
 		const interval_t float_time = delta_t / 1000000.0;
 		if (age > 220000)
 		{
@@ -88,19 +88,19 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 BagParticle::get_texture()
+	uint32_t BagParticle::get_texture()
 	{
 		return base->get_texture(EC_FLARE);
 	}
 #else	/* NEW_TEXTURES */
-	GLuint BagParticle::get_texture(const Uint16 res_index)
+	GLuint BagParticle::get_texture(const uint16_t res_index)
 	{
 		return base->TexFlare.get_texture(res_index);
 	}
 #endif	/* NEW_TEXTURES */
 
 	BagEffect::BagEffect(EyeCandy* _base, bool* _dead, Vec3* _pos,
-		const bool _picked_up, const Uint16 _LOD)
+		const bool _picked_up, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "BagEffect (" << this << ") created." << std::endl;
@@ -138,7 +138,7 @@ namespace ec
 			std::cout << "BagEffect (" << this << ") destroyed." << std::endl;
 	}
 
-	bool BagEffect::idle(const Uint64 usec)
+	bool BagEffect::idle(const uint64_t usec)
 	{
 		if (particles.size() == 0)
 			return false;

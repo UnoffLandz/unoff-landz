@@ -31,12 +31,12 @@ extern int auto_camera; /*!< if this is true, we are using the auto camera */
 
 extern int action_mode; /*!< contains the current action type */
 
-/*! \name Mouse movement coordinates 
+/*! \name Mouse movement coordinates
  * @{ */
 extern int mouse_x; /*!< current x coordinate of the mouse */
 extern int mouse_y; /*!< current y coordinate of the mouse */
 
-/*! \name Mouse buttons 
+/*! \name Mouse buttons
  * @{ */
 extern int right_click; /*!< indicates the right mouse button was clicked */
 extern int middle_click; /*!< indicates the middle mouse button was clicked */
@@ -82,8 +82,8 @@ extern int auto_disable_ranging_lock;
  */
 typedef struct
 {
-	int supported; /*!< 0 if this mode is supported, else != 0 */
-	int selected; /*!< 0 if this mode is selected, else != 0 */
+    int supported; /*!< 0 if this mode is supported, else != 0 */
+    int selected; /*!< 0 if this mode is selected, else != 0 */
 }mode_flag;
 
 /*!
@@ -91,17 +91,17 @@ typedef struct
  */
 typedef struct
 {
-	int width;
-	int height;
-	int bpp;
-	char *name;
-	mode_flag flags;
+    int width;
+    int height;
+    int bpp;
+    char *name;
+    mode_flag flags;
 } video_mode_t;
 
 extern video_mode_t video_modes[]; /*!< global array of available video modes */
 extern const int video_modes_count;
 
-extern Uint32 click_time;
+extern uint32_t click_time;
 
 extern int ati_click_workaround; /*!< if non-zero, arbitrarily multiply the read depth value by 256 to hopefully get a more reasonable value */
 
@@ -110,12 +110,12 @@ extern int ati_click_workaround; /*!< if non-zero, arbitrarily multiply the read
  */
 struct draw_map
 {
-	short cont;
-	unsigned short x_start;
-	unsigned short y_start;
-	unsigned short x_end;
-	unsigned short y_end;       
-	char *name;
+    short cont;
+    unsigned short x_start;
+    unsigned short y_start;
+    unsigned short x_end;
+    unsigned short y_end;
+    char *name;
 };
 
 extern int cur_map; /*!< id of the map we are currently on */
@@ -132,7 +132,7 @@ extern float mapmark_zoom; /*!< scaling factor for the mapmark text */
  * \ingroup loadsave
  * \brief Read the map info file
  *
- *	Reads the mapinfo file which contains the information on where 
+ *	Reads the mapinfo file which contains the information on where
  *	the game maps are located on the continent map
  *
  * \callgraph
@@ -225,7 +225,7 @@ void draw_console_pic(int which_texture);
  *
  * \param ch    the char to add to \ref username_str
  */
-void add_char_to_username(unsigned char ch);
+void add_char_to_username(uint8_t ch);
 
 /*!
  * \ingroup interface
@@ -235,7 +235,7 @@ void add_char_to_username(unsigned char ch);
  *
  * \param ch    the char to add to \ref password_str
  */
-void add_char_to_password(unsigned char ch);
+void add_char_to_password(uint8_t ch);
 
 /*!
  * \ingroup display_2d
@@ -252,7 +252,7 @@ void add_char_to_password(unsigned char ch);
  * \param x_end     x coordinate of the scene end
  * \param y_end     y coordinate of the scene end
  */
-void draw_2d_thing(float u_start,float v_start,float u_end,float v_end,int x_start, 
+void draw_2d_thing(float u_start,float v_start,float u_end,float v_end,int x_start,
 int y_start,int x_end,int y_end);
 
 /*!
@@ -353,7 +353,7 @@ void delete_mark_on_map_on_mouse_position();
  *
  * \pre If the position is outside the map area, this function will return without performing any actions.
  */
-int put_mark_on_position(int map_x, int map_y, char * name);
+int put_mark_on_position(int map_x, int map_y, const char * name);
 
 /*!
  * \ingroup interfaces
@@ -378,7 +378,7 @@ void put_mark_on_map_on_mouse_position();
  *
  * \pre If we don't have an active actor, this function won't perform any actions further actions.
  */
-int put_mark_on_current_position(char *name);
+int put_mark_on_current_position(const char *name);
 
 /*!
  * \ingroup interfaces
@@ -411,7 +411,7 @@ void hide_all_root_windows ();
  *
  * \callgraph
  */
-void resize_all_root_windows (Uint32 w, Uint32 h);
+void resize_all_root_windows (uint32_t w, uint32_t h);
 
 #ifdef __cplusplus
 } // extern "C"

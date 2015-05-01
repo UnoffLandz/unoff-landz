@@ -10,52 +10,48 @@
 
 #include "platform.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef	MAKEFOURCC
 	#define MAKEFOURCC(c0, c1, c2, c3) (c0 | (c1 << 8) | (c2 << 16) | (c3 << 24))
 #endif	/* MAKEFOURCC */
 
 typedef struct DdsPixelFormat
 {
-	Uint32 m_size;
-	Uint32 m_flags;
-	Uint32 m_fourcc;
-	Uint32 m_bit_count;
-	Uint32 m_red_mask;
-	Uint32 m_green_mask;
-	Uint32 m_blue_mask;
-	Uint32 m_alpha_mask;
+	uint32_t m_size;
+	uint32_t m_flags;
+	uint32_t m_fourcc;
+	uint32_t m_bit_count;
+	uint32_t m_red_mask;
+	uint32_t m_green_mask;
+	uint32_t m_blue_mask;
+	uint32_t m_alpha_mask;
 } DdsPixelFormat;
 
 typedef struct DdsCaps
 {
-	Uint32 m_caps1;
-	Uint32 m_caps2;
-	Uint32 m_caps3;
-	Uint32 m_caps4;
+	uint32_t m_caps1;
+	uint32_t m_caps2;
+	uint32_t m_caps3;
+	uint32_t m_caps4;
 } DdsCaps;
 
 typedef struct DdsHeader
 {
-	Uint32 m_size;
-	Uint32 m_flags;
-	Uint32 m_height;
-	Uint32 m_width;
-	Uint32 m_size_or_pitch;
-	Uint32 m_depth;
-	Uint32 m_mipmap_count;
-	Uint32 m_reserved1[11];
+	uint32_t m_size;
+	uint32_t m_flags;
+	uint32_t m_height;
+	uint32_t m_width;
+	uint32_t m_size_or_pitch;
+	uint32_t m_depth;
+	uint32_t m_mipmap_count;
+	uint32_t m_reserved1[11];
 	DdsPixelFormat m_pixel_format;
 	DdsCaps m_caps;
-	Uint32 m_reserved2;
+	uint32_t m_reserved2;
 } DdsHeader;
 
-#define DDS_PIXEL_FORMAT_SIZE	(8 * sizeof(Uint32))
-#define DDS_CAPS_SIZE		(4 * sizeof(Uint32))
-#define DDS_HEADER_SIZE		(19 * sizeof(Uint32) + DDS_PIXEL_FORMAT_SIZE + DDS_CAPS_SIZE)
+#define DDS_PIXEL_FORMAT_SIZE	(8 * sizeof(uint32_t))
+#define DDS_CAPS_SIZE		(4 * sizeof(uint32_t))
+#define DDS_HEADER_SIZE		(19 * sizeof(uint32_t) + DDS_PIXEL_FORMAT_SIZE + DDS_CAPS_SIZE)
 
 /* Header caps. */
 #define DDSD_CAPS			0x00000001
@@ -151,30 +147,26 @@ typedef struct DdsHeader
 
 typedef struct DXTColorBlock
 {
-	Uint16 m_colors[2];
-	Uint8 m_indices[4];
+	uint16_t m_colors[2];
+	uint8_t m_indices[4];
 } DXTColorBlock;
 
 typedef struct DXTExplicitAlphaBlock
 {
-	Uint16 m_alphas[4];
+	uint16_t m_alphas[4];
 } DXTExplicitAlphaBlock;
 
 typedef struct DXTInterpolatedAlphaBlock
 {
-	Uint8 m_alphas[2];
-	Uint8 m_indices[6];
+	uint8_t m_alphas[2];
+	uint8_t m_indices[6];
 } DXTInterpolatedAlphaBlock;
 
-void unpack_dxt1(DXTColorBlock *block, Uint8 *values);
-void unpack_dxt3(DXTExplicitAlphaBlock *alpha_block, DXTColorBlock *color_block, Uint8 *values);
-void unpack_dxt5(DXTInterpolatedAlphaBlock *alpha_block, DXTColorBlock *color_block, Uint8 *values);
-void unpack_ati1(DXTInterpolatedAlphaBlock *block, Uint8 *values);
+void unpack_dxt1(DXTColorBlock *block, uint8_t *values);
+void unpack_dxt3(DXTExplicitAlphaBlock *alpha_block, DXTColorBlock *color_block, uint8_t *values);
+void unpack_dxt5(DXTInterpolatedAlphaBlock *alpha_block, DXTColorBlock *color_block, uint8_t *values);
+void unpack_ati1(DXTInterpolatedAlphaBlock *block, uint8_t *values);
 void unpack_ati2(DXTInterpolatedAlphaBlock *first_block, DXTInterpolatedAlphaBlock *second_block,
-	Uint8 *values);
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
+	uint8_t *values);
 
 #endif	/* _DDS_H_ */

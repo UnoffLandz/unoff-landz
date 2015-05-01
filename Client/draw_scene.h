@@ -9,10 +9,6 @@
 #include "platform.h"
 #include "elwindows.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern float camera_x, camera_y, camera_z;
 extern float rx,ry,rz;
 extern float camera_rotation_speed; /*!< current speed for rotations of the camera */
@@ -64,11 +60,11 @@ extern float clouds_movement_u; /*!< offset for the u coordinate */
 extern float clouds_movement_v; /*!< offset for the v coordinate */
 /*! @} */
 
-extern Uint32 last_clear_clouds; /*!< timestamp when the clouds cache gets cleared last time */
+extern uint32_t last_clear_clouds; /*!< timestamp when the clouds cache gets cleared last time */
 
 extern int read_mouse_now; /*!< flag to indicate to reread the status of the mouse */
 
-extern Uint32 draw_delay; /*< the number of milliseconds to wait after drawing a frame */
+extern uint32_t draw_delay; /*< the number of milliseconds to wait after drawing a frame */
 
 extern GLenum base_unit,detail_unit,shadow_unit,extra_unit,normal_map_unit;
 
@@ -130,8 +126,5 @@ void CalculateFrustum();
  */
 int update_have_display(window_info *win);
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif

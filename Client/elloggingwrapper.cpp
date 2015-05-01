@@ -37,7 +37,7 @@ extern "C" void set_log_level(const LogLevelType log_level)
 	el::set_log_level(static_cast<el::LogLevelType>(log_level));
 }
 
-extern "C" void log_error(const char* file, const Uint32 line,
+extern "C" void log_error(const char* file, const uint32_t line,
 	const char* message, ...)
 {
 	va_list ap;
@@ -66,7 +66,7 @@ extern "C" void log_error(const char* file, const Uint32 line,
 	el::log_message(el::llt_error, err_msg, file, line);
 }
 
-extern "C" void log_warning(const char* file, const Uint32 line,
+extern "C" void log_warning(const char* file, const uint32_t line,
 	const char* message, ...)
 {
 	va_list ap;
@@ -95,7 +95,7 @@ extern "C" void log_warning(const char* file, const Uint32 line,
 	el::log_message(el::llt_warning, err_msg, file, line);
 }
 
-extern "C" void log_info(const char* file, const Uint32 line,
+extern "C" void log_info(const char* file, const uint32_t line,
 	const char* message, ...)
 {
 	va_list ap;
@@ -124,7 +124,7 @@ extern "C" void log_info(const char* file, const Uint32 line,
 	el::log_message(el::llt_info, err_msg, file, line);
 }
 
-extern "C" void log_debug(const char* file, const Uint32 line,
+extern "C" void log_debug(const char* file, const uint32_t line,
 	const char* message, ...)
 {
 	va_list ap;
@@ -153,7 +153,7 @@ extern "C" void log_debug(const char* file, const Uint32 line,
 	el::log_message(el::llt_debug, err_msg, file, line);
 }
 
-extern "C" void log_debug_verbose(const char* file, const Uint32 line,
+extern "C" void log_debug_verbose(const char* file, const uint32_t line,
 	const char* message, ...)
 {
 	va_list ap;
@@ -182,7 +182,7 @@ extern "C" void log_debug_verbose(const char* file, const Uint32 line,
 	el::log_message(el::llt_debug_verbose, err_msg, file, line);
 }
 
-extern "C" void enter_debug_mark(const char* file, const Uint32 line,
+extern "C" void enter_debug_mark(const char* file, const uint32_t line,
 	const char* name)
 {
 	assert(name != 0);
@@ -191,7 +191,7 @@ extern "C" void enter_debug_mark(const char* file, const Uint32 line,
 	el::enter_debug_mark(name, file, line);
 }
 
-extern "C" void leave_debug_mark(const char* file, const Uint32 line,
+extern "C" void leave_debug_mark(const char* file, const uint32_t line,
 	const char* name)
 {
 	assert(name != 0);

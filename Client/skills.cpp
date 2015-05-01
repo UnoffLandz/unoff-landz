@@ -55,7 +55,7 @@ CHECK_GL_ERRORS();
 				glColor3f(0.3,0.6,1.0);
 				else
 				glColor3f(t->r,t->g,t->b);
-				draw_string(t->x,t->y-j,(unsigned char*)t->text,1);
+				draw_string(t->x,t->y-j,t->text,1);
 			}
 			else
 			{
@@ -63,7 +63,7 @@ CHECK_GL_ERRORS();
 				glColor3f(0.3,0.6,1.0);
 				else
 				glColor3f(t->r,t->g,t->b);
-				draw_string_small(t->x,t->y-j,(unsigned char*)t->text,1);
+				draw_string_small(t->x,t->y-j,t->text,1);
 			}
 		}
 		t=t->Next;
@@ -100,7 +100,7 @@ CHECK_GL_ERRORS();
 	return 1;
 }
 
-int click_skills_handler(window_info *win, int mx, int my, Uint32 flags)
+int click_skills_handler(window_info *win, int mx, int my, uint32_t flags)
 {
 	_Text *t=Page[skillspage].T.Next;
 
@@ -144,7 +144,7 @@ void fill_skills_win ()
 	}
 	skillspage = i;
 	set_window_handler (skills_win, ELW_HANDLER_DISPLAY, &display_skills_handler);
-	set_window_handler (skills_win, ELW_HANDLER_CLICK, &click_skills_handler);
+    set_window_handler (skills_win, ELW_HANDLER_CLICK, (int (*)())&click_skills_handler);
 
 	skills_menu_scroll_id = vscrollbar_add_extended(skills_win, skills_menu_scroll_id, NULL, skills_menu_x_len-20, 0, 20, skills_menu_y_len, 0, 1.0, 0.77f, 0.57f, 0.39f, 0, 30, Page[skillspage].max_y);
 }

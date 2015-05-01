@@ -18,7 +18,7 @@ namespace ec
 #else	/* NEW_TEXTURES */
 		const color_t green, const color_t blue, Texture* _texture,
 #endif	/* NEW_TEXTURES */
-		const Uint16 _LOD, const HarvestingEffect::HarvestingType _type) :
+		const uint16_t _LOD, const HarvestingEffect::HarvestingType _type) :
 		Particle(_effect, _mover, _pos, _velocity,
 			_size * (0.5 + randcoord()) * 15 / (_LOD + 5))
 	{
@@ -35,13 +35,13 @@ namespace ec
 		state = 0;
 	}
 
-	bool HarvestingParticle::idle(const Uint64 delta_t)
+	bool HarvestingParticle::idle(const uint64_t delta_t)
 	{
 		if (effect->recall)
 			return false;
 
 		const interval_t float_time = delta_t / 1000000.0;
-		const Uint64 age = get_time() - born;
+		const uint64_t age = get_time() - born;
 		switch (type)
 		{
 			case HarvestingEffect::RADON_POUCH:
@@ -154,7 +154,7 @@ namespace ec
 	}
 
 #ifdef	NEW_TEXTURES
-	Uint32 HarvestingParticle::get_texture()
+	uint32_t HarvestingParticle::get_texture()
 	{
 		return base->get_texture(texture);
 	}
@@ -175,12 +175,12 @@ namespace ec
 		}
 	}
 #else	/* NEW_TEXTURES */
-	GLuint HarvestingParticle::get_texture(const Uint16 res_index)
+	GLuint HarvestingParticle::get_texture(const uint16_t res_index)
 	{
 		return texture->get_texture(res_index);
 	}
 
-	void HarvestingParticle::draw(const Uint64 usec)
+	void HarvestingParticle::draw(const uint64_t usec)
 	{
 		if (((type == HarvestingEffect::RADON_POUCH) && (state == 0)) || (type
 			== HarvestingEffect::MOTHER_NATURE) || (type
@@ -216,7 +216,7 @@ namespace ec
 	;
 
 	HarvestingEffect::HarvestingEffect(EyeCandy* _base, bool* _dead,
-		Vec3* _pos, const HarvestingType _type, const Uint16 _LOD)
+		Vec3* _pos, const HarvestingType _type, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "HarvestingEffect (" << this << ") created (" << type
@@ -464,7 +464,7 @@ namespace ec
 	}
 
 	HarvestingEffect::HarvestingEffect(EyeCandy* _base, bool* _dead,
-		Vec3* _pos, Vec3* _pos2, const HarvestingType _type, const Uint16 _LOD)
+		Vec3* _pos, Vec3* _pos2, const HarvestingType _type, const uint16_t _LOD)
 	{
 		if (EC_DEBUG)
 			std::cout << "HarvestingEffect (" << this << ") created (" << type
@@ -530,7 +530,7 @@ namespace ec
 				<< std::endl;
 	}
 
-	bool HarvestingEffect::idle(const Uint64 usec)
+	bool HarvestingEffect::idle(const uint64_t usec)
 	{
 		if (particles.size() == 0)
 			return false;
@@ -542,7 +542,7 @@ namespace ec
 		{
 			case BEES:
 			{
-				const Uint64 age = get_time() - born;
+				const uint64_t age = get_time() - born;
 				const float age_f = (float)(age)/1000000;
 				if (age_f > 1.0f)
 					direction.y = randfloat(1.25);

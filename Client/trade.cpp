@@ -66,7 +66,7 @@ int display_trade_handler(window_info *win)
 		glColor3f(1.0f,0.0f,0.0f);
 	}
 	
-	draw_string_small(x+33-strlen(accept_str)*4, button_y_top+2, (unsigned char*)accept_str, 1);
+	draw_string_small(x+33-strlen(accept_str)*4, button_y_top+2, accept_str, 1);
 
 	if(trade_other_accepted<=0){    // RED
 		glColor3f(1.0f,0.0f,0.0f);
@@ -76,16 +76,16 @@ int display_trade_handler(window_info *win)
 		glColor3f(0.0f,1.0f,0.0f);
 	}
 	
-	draw_string_small(x+6*33-strlen(accept_str)*4, button_y_top+2, (unsigned char*)accept_str, 1);
+	draw_string_small(x+6*33-strlen(accept_str)*4, button_y_top+2, accept_str, 1);
 	
 	glColor3f(0.77f,0.57f,0.39f);	
 	
 	//Draw the trade session names
-	draw_string_small(10+2*33-strlen(you_str)*4,11,(unsigned char*)you_str,1);
-	draw_string_small(10+7*33-strlen(other_player_trade_name)*4,11,(unsigned char*)other_player_trade_name,1);
+	draw_string_small(10+2*33-strlen(you_str)*4,11,you_str,1);
+	draw_string_small(10+7*33-strlen(other_player_trade_name)*4,11,other_player_trade_name,1);
 
 	//Draw the X for aborting the trade
-	draw_string(win->len_x-(ELW_BOX_SIZE-4), 2, (unsigned char*)"X", 1);
+	draw_string(win->len_x-(ELW_BOX_SIZE-4), 2, "X", 1);
 	
 	glColor3f(1.0f,1.0f,1.0f);
 	
@@ -112,7 +112,7 @@ int display_trade_handler(window_info *win)
 			this_texture=get_items_texture(your_trade_list[i].image_id/25);
 
 #ifdef	NEW_TEXTURES
-			if (this_texture != -1)
+            if (this_texture != (GLuint)-1)
 			{
 				bind_texture(this_texture);
 			}
@@ -131,9 +131,9 @@ int display_trade_handler(window_info *win)
 			
 			safe_snprintf(str, sizeof(str), "%i",your_trade_list[i].quantity);
 			if ((mouse_over_your_trade_pos == i) && enlarge_text())
-				draw_string_shadowed(x_start,(i&1)?(y_end-12):(y_end-22),(unsigned char*)str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
+				draw_string_shadowed(x_start,(i&1)?(y_end-12):(y_end-22),str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
 			else
-				draw_string_small_shadowed(x_start,(i&1)?(y_end-12):(y_end-22),(unsigned char*)str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
+				draw_string_small_shadowed(x_start,(i&1)?(y_end-12):(y_end-22),str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
 			//by doing the images in reverse, you can't cover up the digits>4
 			//also, by offsetting each one, numbers don't overwrite each other:
 			//before: 123456 in one box and 56 in the other could allow
@@ -185,16 +185,16 @@ int display_trade_handler(window_info *win)
 			
 			safe_snprintf(str, sizeof(str), "%i",others_trade_list[i].quantity);
 			if ((mouse_over_others_trade_pos == i) && enlarge_text())
-				draw_string_shadowed(x_start,(!(i&1))?(y_end-12):(y_end-22),(unsigned char*)str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
+				draw_string_shadowed(x_start,(!(i&1))?(y_end-12):(y_end-22),str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
 			else
-				draw_string_small_shadowed(x_start,(!(i&1))?(y_end-12):(y_end-22),(unsigned char*)str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
+				draw_string_small_shadowed(x_start,(!(i&1))?(y_end-12):(y_end-22),str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
 
 			if(storage_available && others_trade_list[i].type==ITEM_BANK){
 				str[0]='s';
 				str[1]='t';
 				str[2]='o';
 				str[3]=0;
-				draw_string_small_shadowed(x_start,y_start-1,(unsigned char*)str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
+				draw_string_small_shadowed(x_start,y_start-1,str,1,1.0f,1.0f,1.0f,0.0f,0.0f,0.0f);
 			}
 		}
 	}
@@ -242,10 +242,10 @@ int display_trade_handler(window_info *win)
 	//now, draw the inventory text, if any.
 	if (last_items_string_id != inventory_item_string_id)
 	{		
-		put_small_text_in_box((unsigned char*)inventory_item_string, strlen(inventory_item_string), win->len_x-8, items_string);
+		put_small_text_in_box(inventory_item_string, strlen(inventory_item_string), win->len_x-8, items_string);
 		last_items_string_id = inventory_item_string_id;
 	}
-	draw_string_small(4,button_y_bot+5,(unsigned char*)items_string,3);
+	draw_string_small(4,button_y_bot+5,items_string,3);
 
 	if (tool_tip_str != NULL)
 	{
@@ -261,9 +261,9 @@ CHECK_GL_ERRORS();
 }
 
 
-int click_trade_handler(window_info *win, int mx, int my, Uint32 flags)
+static int click_trade_handler(window_info *win, int mx, int my, uint32_t flags)
 {
-	Uint8 str[256];
+	uint8_t str[256];
 	int left_click = flags & ELW_LEFT_MOUSE;
 	int right_click = flags & ELW_RIGHT_MOUSE;
 	int trade_quantity_storage_offset = 3; /* Offset of trade quantity in packet. Can be 3 or 4 */
@@ -287,24 +287,26 @@ int click_trade_handler(window_info *win, int mx, int my, Uint32 flags)
 		str[0]=PUT_OBJECT_ON_TRADE;
 		str[1]=ITEM_INVENTORY;
 		str[2]=item_list[item_dragged].pos;
-		*((Uint32 *)(str+3))= SDL_SwapLE32(item_quantity);
+		*((uint32_t *)(str+3))= SDL_SwapLE32(item_quantity);
 		my_tcp_send(my_socket,str,7);
 		do_drop_item_sound();
 		return 1;
-	} else if(storage_available && left_click && storage_item_dragged!=-1){
+    }
+    if(storage_available && left_click && storage_item_dragged!=-1){
 		str[0]=PUT_OBJECT_ON_TRADE;
 		str[1]=ITEM_BANK;
 		if ( storage_items[storage_item_dragged].pos > 255 ) {
-			*((Uint16 *)(str+2))= SDL_SwapLE16(storage_items[storage_item_dragged].pos);
+            *((uint16_t *)(str+2))= SDL_SwapLE16(storage_items[storage_item_dragged].pos);
 			trade_quantity_storage_offset++; /* Offset is 1 byte ahead now */
 		} else {
 			str[2]=storage_items[storage_item_dragged].pos;
 		}
-		*((Uint32 *)(str+trade_quantity_storage_offset))= SDL_SwapLE32(item_quantity);
+		*((uint32_t *)(str+trade_quantity_storage_offset))= SDL_SwapLE32(item_quantity);
 		my_tcp_send(my_socket,str, 4 + trade_quantity_storage_offset );
 		do_drop_item_sound();
 		return 1;
-	} else if(mx>10 && mx<10+4*33 && my>30 && my<30+4*33){
+    }
+    if(mx>10 && mx<10+4*33 && my>30 && my<30+4*33){
 		int pos=get_mouse_pos_in_grid (mx, my, 4, 4, 10, 30, 33, 33);
 		
 		if (pos >= 0 && your_trade_list[pos].quantity)
@@ -317,14 +319,15 @@ int click_trade_handler(window_info *win, int mx, int my, Uint32 flags)
 			} else {
 				str[0]=REMOVE_OBJECT_FROM_TRADE;
 				str[1]=pos;
-				*((Uint32 *)(str+2))=SDL_SwapLE32(item_quantity);
+				*((uint32_t *)(str+2))=SDL_SwapLE32(item_quantity);
 				my_tcp_send(my_socket,str,6);
 				do_drag_item_sound();
 			}
 		}
 
 		return 1;
-	} else if(mx>10+5*33 && mx<10+9*33 && my>30 && my<30+4*33){
+    }
+    if(mx>10+5*33 && mx<10+9*33 && my>30 && my<30+4*33){
 		int pos=get_mouse_pos_in_grid(mx, my, 4, 4, 10+5*33, 30, 33, 33);
 
 		if (pos >= 0 && others_trade_list[pos].quantity)
@@ -343,7 +346,8 @@ int click_trade_handler(window_info *win, int mx, int my, Uint32 flags)
 		}
 
 		return 1;
-	} else if(mx>10+33 && mx<10+33+66 && my>button_y_top && my<button_y_bot) {
+    }
+    if(mx>10+33 && mx<10+33+66 && my>button_y_top && my<button_y_bot) {
 		//check to see if we hit the Accept box
 		if(trade_you_accepted==2 || right_click){
 			str[0]= REJECT_TRADE;
@@ -365,8 +369,8 @@ int click_trade_handler(window_info *win, int mx, int my, Uint32 flags)
 		return 1;
 	}
 
-	else if (my > button_y_bot+5) {
-		static Uint32 last_click = 0;
+    if (my > button_y_bot+5) {
+		static uint32_t last_click = 0;
 		if (safe_button_click(&last_click)) {
 			set_shown_string(0,"");
 			return 1;
@@ -411,7 +415,7 @@ int mouseover_trade_handler(window_info *win, int mx, int my)
 	return 0;
 }
 
-void get_trade_partner_name (const Uint8 *player_name, int len)
+void get_trade_partner_name (const uint8_t *player_name, int len)
 {
 	int i;
 
@@ -423,7 +427,7 @@ void get_trade_partner_name (const Uint8 *player_name, int len)
 }
 
 
-void get_your_trade_objects (const Uint8 *data)
+void get_your_trade_objects (const uint8_t *data)
 {
 	int i;
 
@@ -446,40 +450,40 @@ void get_your_trade_objects (const Uint8 *data)
 	view_window(&trade_win, -1);
 }
 
-void put_item_on_trade (const Uint8 *data)
+void put_item_on_trade (const uint8_t *data)
 {
 	int pos;
 
 	pos=data[7];
 	if(!data[8])
 	{
-		your_trade_list[pos].image_id=SDL_SwapLE16(*((Uint16 *)(data)));
-		your_trade_list[pos].quantity+=SDL_SwapLE32(*((Uint32 *)(data+2)));
+        your_trade_list[pos].image_id=SDL_SwapLE16(*((uint16_t *)(data)));
+		your_trade_list[pos].quantity+=SDL_SwapLE32(*((uint32_t *)(data+2)));
 		your_trade_list[pos].type=data[6];
 		if (item_uid_enabled)
-			your_trade_list[pos].id=SDL_SwapLE16(*((Uint16 *)(data+9)));
+            your_trade_list[pos].id=SDL_SwapLE16(*((uint16_t *)(data+9)));
 		else
 			your_trade_list[pos].id=unset_item_uid;
 	}
 	else
 	{
-		others_trade_list[pos].image_id=SDL_SwapLE16(*((Uint16 *)(data)));
-		others_trade_list[pos].quantity+=SDL_SwapLE32(*((Uint32 *)(data+2)));
+        others_trade_list[pos].image_id=SDL_SwapLE16(*((uint16_t *)(data)));
+		others_trade_list[pos].quantity+=SDL_SwapLE32(*((uint32_t *)(data+2)));
 		others_trade_list[pos].type=data[6];
 		if (item_uid_enabled)
-			others_trade_list[pos].id=SDL_SwapLE16(*((Uint16 *)(data+9)));
+            others_trade_list[pos].id=SDL_SwapLE16(*((uint16_t *)(data+9)));
 		else
 			others_trade_list[pos].id=unset_item_uid;
 	}
 }
 
-void remove_item_from_trade (const Uint8 *data)
+void remove_item_from_trade (const uint8_t *data)
 {
 	int pos;
 	int quantity;
 
 	pos=data[4];
-	quantity=SDL_SwapLE32(*((Uint32 *)(data)));
+	quantity=SDL_SwapLE32(*((uint32_t *)(data)));
 
 	if(!data[5])
 	{
@@ -500,9 +504,9 @@ void display_trade_menu()
 		}
 		trade_win= create_window(win_trade, our_root_win, 0, trade_menu_x, trade_menu_y, trade_menu_x_len, trade_menu_y_len, (ELW_WIN_DEFAULT& ~ELW_CLOSE_BOX));
 
-		set_window_handler(trade_win, ELW_HANDLER_DISPLAY, &display_trade_handler );
-		set_window_handler(trade_win, ELW_HANDLER_CLICK, &click_trade_handler );
-		set_window_handler(trade_win, ELW_HANDLER_MOUSEOVER, &mouseover_trade_handler );
+        set_window_handler(trade_win, ELW_HANDLER_DISPLAY, (int (*)())&display_trade_handler );
+        set_window_handler(trade_win, ELW_HANDLER_CLICK, (int (*)())&click_trade_handler );
+        set_window_handler(trade_win, ELW_HANDLER_MOUSEOVER, (int (*)())&mouseover_trade_handler );
 	} else {
 		show_window(trade_win);
 		select_window(trade_win);

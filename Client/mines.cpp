@@ -26,7 +26,7 @@ mine_types mine_defs[MAX_MINE_DEFS];
 mine mine_list[NUM_MINES];
 int num_mine_defs = 0;
 
-char * get_mine_e3d(mine_type)
+char * get_mine_e3d(int mine_type)
 {
 	int i;
 	// Search the array for the required mine type
@@ -78,9 +78,9 @@ void put_mine_on_ground(int mine_x, int mine_y, int mine_type, int mine_id)
 	mine_list[mine_id].obj_3d_id = obj_3d_id;
 }
 
-void add_mines_from_list (const Uint8 *data)
+void add_mines_from_list (const uint8_t *data)
 {
-	Uint16 mines_no;
+    uint16_t mines_no;
 	int i;
 	int mine_x, mine_y, mine_type, my_offset;
 	float x, y, z;
@@ -96,10 +96,10 @@ void add_mines_from_list (const Uint8 *data)
 	for (i = 0; i < mines_no; i++)
 	{
 		my_offset = i * 6 + 1;
-		mine_x = SDL_SwapLE16(*((Uint16 *)(data + my_offset)));
-		mine_y = SDL_SwapLE16(*((Uint16 *)(data + my_offset + 2)));
-		mine_id = *((Uint8 *)(data + my_offset + 4));
-		mine_type = *((Uint8 *)(data + my_offset + 5));
+        mine_x = SDL_SwapLE16(*((uint16_t *)(data + my_offset)));
+        mine_y = SDL_SwapLE16(*((uint16_t *)(data + my_offset + 2)));
+		mine_id = *((uint8_t *)(data + my_offset + 4));
+		mine_type = *((uint8_t *)(data + my_offset + 5));
 		if (mine_id >= NUM_MINES)
 		{
 			continue;
@@ -204,7 +204,7 @@ void load_mines_config()
 {
 	xmlDoc *doc;
 	xmlNode *root = NULL;
-	char *file = "mines.xml";
+    const char *file = "mines.xml";
 
 	if ((doc = xmlReadFile(file, NULL, 0)) == NULL)
 	{
