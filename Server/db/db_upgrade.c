@@ -21,42 +21,46 @@ static bool fexist(const char *dbname) {
     return true;
 }
 static int fcopy(const char *dbname,const char *newdbname) {
-    FILE *fsrc;
-    FILE *ftgt;
-    char buf[1024];
 
-    fsrc = fopen(dbname,"r");
+    FILE *fsrc = fopen(dbname,"r");
     if(!fsrc) {
         return -1;
     }
-    ftgt = fopen(newdbname,"w");
+
+    FILE *ftgt = fopen(newdbname,"w");
     if(!ftgt) {
+        fclose(fsrc);
         return -1;
     }
+
+    int result = 0;
     size_t sz;
+    char buf[1024];
     while((sz=fread(buf,1,1024,fsrc))==1024) {
         if(sz!=fwrite(buf,1,sz,ftgt)) {
-            goto ERROR;
+            result = -1;
+            goto FIN;
         }
         if(ferror(fsrc)||ferror(ftgt)) {
-            goto ERROR;
+            result = -1;
+            goto FIN;
         }
     }
     if(sz>0 && (sz!=fwrite(buf,1,sz,ftgt))) {
-        goto ERROR;
+        result = -1;
+        goto FIN;
     }
-    return 0;
-ERROR:
+FIN:
     fclose(fsrc);
     fclose(ftgt);
-    return -1;
+    return result;
 }
 
 static char *create_backup_name(const char *dbname,int ver) {
     char buf[4096];
     snprintf(buf,sizeof(buf),"ver_%d_of_%s",ver,dbname);
-    char *res = (char *)malloc(strlen(buf));
-    strncpy(res,buf,strlen(buf));
+    char *res = (char *)malloc(strlen(buf)+1);
+    strncpy(res,buf,strlen(buf)+1);
     return res;
 }
 static int create_backup(const char *dbname,int ver) {
@@ -103,9 +107,6 @@ static int upgrade_v0_to_v1(const char *dbname) {
     int rc;
     char *err_msg = NULL;
 
-    if(-1==create_backup(dbname,0))
-        return -1;
-
     rc = sqlite3_open(dbname, &db);
 
     if( rc !=SQLITE_OK ) {
@@ -136,8 +137,8 @@ struct upgrade_array_entry {
 };
 
 struct upgrade_array_entry entries[] = {
-    { 0, 1, upgrade_v0_to_v1},
-    { 0, 0, NULL}
+{ 0, 1, upgrade_v0_to_v1},
+{ 0, 0, NULL}
 };
 
 
@@ -157,6 +158,7 @@ int upgrade_database(const char *dbname) {
     int old_version;
     int new_version;
     if(!fexist(dbname)) {
+        fprintf(stderr,"Cannot upgrade database %s - no such file\n",dbname);
         return -1;
     }
     old_version = current_database_version(dbname);
@@ -167,6 +169,12 @@ int upgrade_database(const char *dbname) {
         if(!entry)
             return -1;
         printf("DB version update %d to %d:",entry->from_version,entry->to_version);
+
+        // backup is created before calling each upgrade function
+        if(-1==create_backup(dbname,old_version)) {
+            return -1;
+        }
+
         if(0==entry->fn(dbname)) {
             old_version = entry->to_version; // version upgrade successful
             printf("OK\n");
