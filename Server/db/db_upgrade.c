@@ -68,6 +68,12 @@ static int create_backup(const char *dbname,int ver) {
     char *bak_fname = create_backup_name(dbname,ver);
 
     printf("UPGRADE [v%d]: Creating database backup - %s\n",ver,bak_fname);
+    if(fexist(bak_fname)) {
+        printf("UPGRADE [v%d]: Backup file [%s] already exists - "
+               "I'm not sure what to do, if it's old failed backup remove it by hand and retry\n",bak_fname);
+        return -1;
+
+    }
     copy_result = fcopy(dbname,bak_fname);
     free(bak_fname);
     if(-1==copy_result) {
@@ -87,7 +93,9 @@ static int callback(void *unused, int argc, char **argv, char **azColName){
 }
 static int set_db_version(sqlite3 *db,int new_version) {
     char *err_msg = NULL;
-    int rc = sqlite3_exec(db,"UPDATE GAME_DATA_TABLE SET db_version = 1 WHERE true",callback,0,&err_msg);
+    char buf[512];
+    snprintf(buf,512,"UPDATE GAME_DATA_TABLE SET db_version = %d",new_version);
+    int rc = sqlite3_exec(db,buf,callback,0,&err_msg);
     if( rc != SQLITE_OK ) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
         sqlite3_free(err_msg);
@@ -112,7 +120,7 @@ static int upgrade_v0_to_v1(const char *dbname) {
     if( rc !=SQLITE_OK ) {
         return -1;
     }
-    rc = sqlite3_exec(db,"ALTER TABLE GAME_DATA_TABLE ADD COLUMN db_version int",callback,0,&err_msg);
+    rc = sqlite3_exec(db,"ALTER TABLE GAME_DATA_TABLE ADD COLUMN db_version INTEGER",callback,0,&err_msg);
     if( rc != SQLITE_OK ){
         fprintf("UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
         sqlite3_free(err_msg);
@@ -120,6 +128,7 @@ static int upgrade_v0_to_v1(const char *dbname) {
         return -1;
     }
     set_db_version(db,1);
+    sqlite3_close(db);
     fprintf("UPGRADE [v%d]: Success\n",1);
     return 0;
 }
@@ -163,8 +172,11 @@ int upgrade_database(const char *dbname) {
     }
     old_version = current_database_version(dbname);
     new_version = CURRENT_DB_VERSION;
-
-    while(old_version!=new_version) {
+    if(old_version>new_version) {
+        fprintf(stderr,"Cannot update database : database is newer than server !\n");
+        return -1;
+    }
+    while(old_version<new_version) {
         const struct upgrade_array_entry *entry = find_upgrade_entry(old_version);
         if(!entry)
             return -1;
