@@ -777,7 +777,7 @@ int main(int argc, char *argv[]){
         }
         case 'C': { // create database
 
-            if(argc>1){
+            if(argc>2){
 
                 open_database(argv[2]);
             }else open_database(DATABASE_FILE_NAME);
@@ -786,7 +786,7 @@ int main(int argc, char *argv[]){
             break;
         }
         case 'U': { // upgrade database
-            const char *db_filename = (argc>1) ? argv[2] : DATABASE_FILE_NAME;
+            const char *db_filename = (argc>2) ? argv[2] : DATABASE_FILE_NAME;
             // perform upgrade
             return upgrade_database(db_filename);
         }
