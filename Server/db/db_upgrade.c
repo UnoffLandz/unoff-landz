@@ -1,5 +1,6 @@
 #include "database_functions.h"
 
+#include "../file_functions.h"
 
 #include <sqlite3.h>
 #include <stdint.h>
@@ -11,50 +12,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// DB Upgrade helper functions
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-static bool fexist(const char *dbname) {
-    FILE *fp = fopen(dbname,"r");
-    if(!fp)
-        return false;
-    fclose(fp);
-    return true;
-}
-static int fcopy(const char *dbname,const char *newdbname) {
-
-    FILE *fsrc = fopen(dbname,"r");
-    if(!fsrc) {
-        return -1;
-    }
-
-    FILE *ftgt = fopen(newdbname,"w");
-    if(!ftgt) {
-        fclose(fsrc);
-        return -1;
-    }
-
-    int result = 0;
-    size_t sz;
-    char buf[1024];
-    while((sz=fread(buf,1,1024,fsrc))==1024) {
-        if(sz!=fwrite(buf,1,sz,ftgt)) {
-            result = -1;
-            goto FIN;
-        }
-        if(ferror(fsrc)||ferror(ftgt)) {
-            result = -1;
-            goto FIN;
-        }
-    }
-    if(sz>0 && (sz!=fwrite(buf,1,sz,ftgt))) {
-        result = -1;
-        goto FIN;
-    }
-FIN:
-    fclose(fsrc);
-    fclose(ftgt);
-    return result;
-}
 
 static char *create_backup_name(const char *dbname,int ver) {
     char buf[4096];
@@ -68,9 +25,9 @@ static int create_backup(const char *dbname,int ver) {
     char *bak_fname = create_backup_name(dbname,ver);
 
     printf("UPGRADE [v%d]: Creating database backup - %s\n",ver,bak_fname);
-    if(fexist(bak_fname)) {
+    if(file_exists(bak_fname)) {
         printf("UPGRADE [v%d]: Backup file [%s] already exists - "
-               "I'm not sure what to do, if it's old failed backup remove it by hand and retry\n",bak_fname);
+               "I'm not sure what to do, if it's old failed backup remove it by hand and retry\n",ver,bak_fname);
         return -1;
 
     }
@@ -166,7 +123,7 @@ int upgrade_database(const char *dbname) {
 
     int old_version;
     int new_version;
-    if(!fexist(dbname)) {
+    if(!file_exists(dbname)) {
         fprintf(stderr,"Cannot upgrade database %s - no such file\n",dbname);
         return -1;
     }

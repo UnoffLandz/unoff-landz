@@ -76,6 +76,8 @@ To compile server, link with the following libraries :
 
 struct ev_io *libevlist[MAX_CLIENTS] = {NULL};
 
+extern int current_database_version(const char *dbaname);
+
 //declare prototypes
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
@@ -127,8 +129,16 @@ void start_server(char *db_filename){
         printf("database file [%s] not found\n", db_filename);
         log_event(EVENT_ERROR, "database file [%s] not found", db_filename);
         stop_server();
+        return;
     }
-    else open_database(db_filename);
+
+    int old_version = current_database_version(db_filename);
+    if(old_version != CURRENT_DB_VERSION) {
+        printf("Wrong database version - use -U option to upgrade your database\n");
+        return;
+    }
+
+    open_database(db_filename);
 
     //check the database table count
     int tbl_count=database_table_count();
