@@ -305,3 +305,20 @@ void log_sqlite_error(char *error_type, const char *function_name, const char *m
 
         stop_server();
 }
+
+void log_packet(int connection, unsigned char *packet){
+
+    /** public function - see header */
+
+    char text_out[1024]="";
+    int data_length=packet[1]+(packet[2]*256)-1;
+
+    int i=0;
+    for(i=0; i<data_length+2; i++){
+
+        sprintf(text_out, "%s %i", text_out, packet[i]);
+    }
+
+    log_event(EVENT_PACKET,"Receive from [%i]%s", connection, text_out);
+}
+

@@ -84,4 +84,15 @@ void initialise_logs();
 */
 void log_sqlite_error(char *error_type, const char *function_name, const char *module_name, int line_number, int return_code, const char *sql_stmt);
 
+
+/** RESULT  : logs a protocol packet
+
+    RETURNS : void
+
+    PURPOSE : code reuse
+
+    NOTES   :
+*/
+void log_packet(int connection, unsigned char *packet);
+
 #endif // LOGGING_H_INCLUDED
