@@ -33,7 +33,7 @@ struct channel_node_type{
     char description[80];
     int new_chars;
 };
-struct channel_node_type channel[MAX_CHANNELS];
+extern struct channel_node_type channel[MAX_CHANNELS];
 
 enum { //return values from process_guild_chat
     GM_INVALID,

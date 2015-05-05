@@ -31,6 +31,8 @@
 #include "db/database_functions.h"
 #include "idle_buffer.h"
 
+struct channel_node_type channel[MAX_CHANNELS];
+
 int is_player_in_chan(int connection, int chan){
 
     /** public function - see header */
