@@ -32,15 +32,4 @@ struct season_type{
 };
 struct season_type season[MAX_SEASONS];
 
-
-/** RESULT  : sends the verbose date to the client
-
-    RETURNS : void
-
-    PURPOSE : code resuse
-
-    NOTES   :
-**/
-void send_verbose_date(int connection, int game_days);
-
 #endif // SEASON_H_INCLUDED
