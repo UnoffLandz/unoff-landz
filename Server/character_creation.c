@@ -17,6 +17,7 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
+#include "character_creation.h"
 
 #include <string.h> //support for memcpy
 #include <stdio.h> //support for sprintf

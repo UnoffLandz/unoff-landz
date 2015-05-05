@@ -28,7 +28,7 @@ struct vector_type{
     int y;
     unsigned char move_cmd;
 };
-struct vector_type vector[8];
+extern struct vector_type vector[8];
 
 
 /** RESULT  : loads movement vector array with values

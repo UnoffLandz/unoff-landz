@@ -30,6 +30,6 @@ struct map_object_type{
     enum {NON_HARVESTABLE, HARVESTABLE}harvestable;
     enum {EDIBLE, INEDIBLE}edible;
 };
-struct map_object_type map_object[MAX_MAP_OBJECTS];
+extern struct map_object_type map_object[MAX_MAP_OBJECTS];
 
 #endif // MAP_OBJECTS_H_INCLUDED

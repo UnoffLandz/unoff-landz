@@ -103,7 +103,7 @@ struct map_list_type {
     int count;
     struct map_node_type map[MAX_MAPS];
 };
-struct map_list_type maps;
+extern struct map_list_type maps;
 
 
 /** RESULT  : calculates the distance between two entities on a map

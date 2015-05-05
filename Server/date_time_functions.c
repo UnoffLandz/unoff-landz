@@ -16,6 +16,7 @@
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
+#include "date_time_functions.h"
 
 #include <stdio.h> //support for sprintf
 #include <time.h> //support for time_t datatype
@@ -28,6 +29,9 @@
 #include "server_messaging.h"
 #include "server_start_stop.h"
 #include "server_protocol_functions.h"
+
+struct timeval time_check;//output struct for gettimeofday function
+struct season_type season[MAX_SEASONS];
 
 void get_time_stamp_str(time_t raw_time, char *buffer){
 

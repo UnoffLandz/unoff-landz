@@ -16,9 +16,12 @@
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
+#include "gender.h"
 
 #include "clients.h"
 #include "character_type.h"
+
+struct gender_type gender[MAX_GENDER];
 
 int get_char_gender_id(int connection){
 

@@ -30,6 +30,8 @@
 #include "broadcast_actor_functions.h"
 #include "server_start_stop.h"
 
+struct map_list_type maps;
+
 int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
 
     /** public function - see header */

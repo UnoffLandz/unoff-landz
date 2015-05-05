@@ -20,6 +20,8 @@
 #ifndef GUILD_H_INCLUDED
 #define GUILD_H_INCLUDED
 
+#include <time.h>
+
 #define MAX_GUILDS 10
 
 struct guild_node_type {
@@ -34,6 +36,6 @@ struct guild_list_type {
 
     struct guild_node_type guild[MAX_GUILDS];
 };
-struct guild_list_type guilds;
+extern struct guild_list_type guilds;
 
 #endif // GUILD_H_INCLUDED

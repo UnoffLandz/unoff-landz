@@ -34,7 +34,7 @@ struct item_type{
     int organic_nexus;
     int vegetal_nexus;
 };
-struct item_type item[MAX_ITEMS];
+extern struct item_type item[MAX_ITEMS];
 
 
 #endif // ITEMS_H_INCLUDED

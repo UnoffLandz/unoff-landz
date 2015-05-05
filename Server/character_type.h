@@ -27,6 +27,6 @@ struct character_type_type{
     int gender_id;
     int char_count;
 };
-struct character_type_type character_type[MAX_CHARACTER_TYPES];
+extern struct character_type_type character_type[MAX_CHARACTER_TYPES];
 
 #endif // CHARACTER_TYPE_H_INCLUDED

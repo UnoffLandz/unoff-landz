@@ -36,6 +36,6 @@ struct game_data_type {
     int start_map_tile;
     int year_length;
 };
-struct game_data_type game_data;
+extern struct game_data_type game_data;
 
 #endif // GAME_DATA_H_INCLUDED

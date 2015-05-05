@@ -34,6 +34,8 @@
 #include "server_protocol_functions.h"
 #include "characters.h"
 
+struct client_node_type character;
+
 int get_char_visual_range(int connection){
 
     /** public function - see header */

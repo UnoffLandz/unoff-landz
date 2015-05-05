@@ -29,7 +29,7 @@ struct client_inventory_type {
         int slot;
         int flags;
 };
-struct client_inventory_type client_inventory;
+extern struct client_inventory_type client_inventory;
 
 
 /** RESULT  : calculates the maximum carry capacity for a char

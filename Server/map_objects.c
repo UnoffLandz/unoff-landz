@@ -16,6 +16,7 @@
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
+#include "map_objects.h"
 
 #include <stdio.h> //support for printf (testing)
 #include <string.h> //support for memcpy
@@ -24,3 +25,5 @@
 #include "string_functions.h"
 #include "map_objects.h"
 #include "global.h"
+
+struct map_object_type map_object[MAX_MAP_OBJECTS];

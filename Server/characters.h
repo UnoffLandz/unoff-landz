@@ -122,7 +122,7 @@ enum { // helmet type
     HELMET_NONE,
 };
 
-struct client_node_type character;
+extern struct client_node_type character;
 
 /** RESULT  : calculates the visual range of a char
 

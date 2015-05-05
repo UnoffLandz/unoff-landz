@@ -30,6 +30,6 @@ struct season_type{
     int start_day;
     int end_day;
 };
-struct season_type season[MAX_SEASONS];
+extern struct season_type season[MAX_SEASONS];
 
 #endif // SEASON_H_INCLUDED

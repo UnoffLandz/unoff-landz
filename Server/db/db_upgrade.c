@@ -137,7 +137,7 @@ int upgrade_database(const char *dbname) {
         const struct upgrade_array_entry *entry = find_upgrade_entry(old_version);
         if(!entry)
             return -1;
-        printf("DB version update %d to %d:",entry->from_version,entry->to_version);
+        fprintf(stdout,"DB version update %d to %d:",entry->from_version,entry->to_version);
 
         // backup is created before calling each upgrade function
         if(-1==create_backup(dbname,old_version)) {
@@ -146,10 +146,10 @@ int upgrade_database(const char *dbname) {
 
         if(0==entry->fn(dbname)) {
             old_version = entry->to_version; // version upgrade successful
-            printf("OK\n");
+            fprintf(stdout,"OK\n");
         }
         else {
-            printf("FAILED\n");
+            fprintf(stdout,"FAILED\n");
             return -1;
         }
     }

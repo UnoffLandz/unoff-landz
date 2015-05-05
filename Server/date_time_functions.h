@@ -24,7 +24,7 @@
 #include <sys/time.h>   // supports time_t data type
 
 
-struct timeval time_check;//output struct for gettimeofday function
+extern struct timeval time_check;//output struct for gettimeofday function
 
 /** RESULT  : gets a time stamp in format 'hh:mm:ss'
 

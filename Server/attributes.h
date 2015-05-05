@@ -24,13 +24,13 @@
 
 #define MAX_PICKPOINTS 50
 
-struct {
+struct attribute_ {
 
     int night_vision[MAX_PICKPOINTS];
     int day_vision[MAX_PICKPOINTS];
     int carry_capacity[MAX_PICKPOINTS];
-}attribute[MAX_RACES];
-
+};
+extern struct attribute_ attribute[MAX_RACES];
 enum{
 
     ATTR_CARRY_CAPACITY=1,

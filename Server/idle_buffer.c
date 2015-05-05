@@ -28,6 +28,8 @@
 #include "log_in.h"
 #include "character_creation.h"
 
+struct buffer_list_type idle_buffer;
+
 void push_idle_buffer(char *sql, int connection, int process_type, unsigned char *packet){
 
     /** public function - see header **/
@@ -132,7 +134,7 @@ void process_idle_buffer(){
             idle_buffer.buffer[i].connection=idle_buffer.buffer[i+1].connection;
             idle_buffer.buffer[i].process_type=idle_buffer.buffer[i+1].process_type;
 
-            if(idle_buffer.buffer[i+1].packet!=NULL){
+            if(idle_buffer.buffer[i+1].packet!=NULL) {
 
                 //memcpy is unreliable hence copy data bytes across individually
                 int j=0;

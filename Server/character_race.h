@@ -28,7 +28,7 @@ struct race_type{
     char race_description[160];
     int char_count;
 };
-struct race_type race[MAX_RACES];
+extern struct race_type race[MAX_RACES];
 
 
 /** RESULT  : gets the character race

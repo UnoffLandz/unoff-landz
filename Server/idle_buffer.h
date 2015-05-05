@@ -38,7 +38,7 @@ struct buffer_list_type {
     int buffer_count;
     struct buffer_node_type buffer[IDLE_BUFFER_MAX];
 };
-struct buffer_list_type idle_buffer;
+extern struct buffer_list_type idle_buffer;
 
 enum{//database buffer processing types
     IDLE_BUFFER_PROCESS_SQL,

@@ -170,6 +170,6 @@ struct client_list_type {
     int client_count;
     struct client_node_type client[MAX_CLIENTS];
 };
-struct client_list_type clients;
+extern struct client_list_type clients;
 
 #endif // CLIENTS_H_INCLUDED

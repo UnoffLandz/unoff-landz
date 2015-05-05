@@ -16,12 +16,13 @@
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
-
 #include "clients.h"
 #include "character_race.h"
 #include "items.h"
 #include "character_type.h"
 #include "attributes.h"
+
+struct client_inventory_type client_inventory;
 
 int get_max_inventory_emu(int connection){
 
