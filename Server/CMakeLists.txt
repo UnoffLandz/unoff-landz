@@ -30,34 +30,36 @@ set(DB_SRC
     db/database_functions.c
     db/database_functions.h
 )
-set(SRC broadcast_actor_functions.c
-character_creation.c
-character_inventory.c
-character_movement.c
-character_race.c
-characters.c
-chat.c
-client_protocol_handler.c
-date_time_functions.c
-file_functions.c
-gender.c
-hash_commands.c
-idle_buffer.c
-initialise_server.c
-logging.c
-log_in.c
-main.c
-maps.c
-map_objects.c
-movement.c
-numeric_functions.c
-pathfinding.c
-packet.c
-season.c
-server_messaging.c
-server_protocol_functions.c
-server_start_stop.c
-string_functions.c
+set(SRC
+    broadcast_actor_functions.c
+    character_creation.c
+    character_inventory.c
+    character_movement.c
+    character_race.c
+    characters.c
+    chat.c
+    client_protocol_handler.c
+    date_time_functions.c
+    file_functions.c
+    gender.c
+    harvesting.c
+    hash_commands.c
+    idle_buffer.c
+    initialise_server.c
+    logging.c
+    log_in.c
+    main.c
+    maps.c
+    map_objects.c
+    movement.c
+    numeric_functions.c
+    pathfinding.c
+    packet.c
+    #season.c
+    server_messaging.c
+    server_protocol_functions.c
+    server_start_stop.c
+    string_functions.c
 )
 set(INCLUDES
     attributes.h

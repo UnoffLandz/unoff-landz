@@ -79,14 +79,14 @@ static int upgrade_v0_to_v1(const char *dbname) {
     }
     rc = sqlite3_exec(db,"ALTER TABLE GAME_DATA_TABLE ADD COLUMN db_version INTEGER",callback,0,&err_msg);
     if( rc != SQLITE_OK ){
-        fprintf("UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
+        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
         sqlite3_free(err_msg);
         sqlite3_close(db);
         return -1;
     }
     set_db_version(db,1);
     sqlite3_close(db);
-    fprintf("UPGRADE [v%d]: Success\n",1);
+    fprintf(stderr,"UPGRADE [v%d]: Success\n",1);
     return 0;
 }
 
