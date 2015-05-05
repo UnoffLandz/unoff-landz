@@ -210,33 +210,29 @@ void start_server(char *db_filename){
     strcpy(map_object[14].object_name, "sticks");
     map_object[14].object_id=140;
 
-    strcpy(map_object[14].e3d_file_name, "flowerorange1.e3d");
-    strcpy(map_object[14].object_name, "tiger lily");
+    strcpy(map_object[15].e3d_file_name, "flowerorange1.e3d");
+    strcpy(map_object[15].object_name, "tiger lily");
     map_object[15].object_id=29;
 
-    strcpy(map_object[14].e3d_file_name, "flowerorange2.e3d");
-    strcpy(map_object[14].object_name, "tiger lily");
+    strcpy(map_object[16].e3d_file_name, "flowerorange2.e3d");
+    strcpy(map_object[16].object_name, "tiger lily");
     map_object[16].object_id=29;
 
-    strcpy(map_object[14].e3d_file_name, "flowerorange3.e3d");
-    strcpy(map_object[14].object_name, "tiger lily");
+    strcpy(map_object[17].e3d_file_name, "flowerorange3.e3d");
+    strcpy(map_object[17].object_name, "tiger lily");
     map_object[17].object_id=29;
 
-    strcpy(map_object[14].e3d_file_name, "flowerwhite1.e3d");
-    strcpy(map_object[14].object_name, "tiger lily");
-    map_object[15].object_id=29;
+    strcpy(map_object[18].e3d_file_name, "flowerwhite1.e3d");
+    strcpy(map_object[18].object_name, "Impatiens");
+    map_object[18].object_id=29;
 
-    strcpy(map_object[14].e3d_file_name, "flowewhite2.e3d");
-    strcpy(map_object[14].object_name, "tiger lily");
-    map_object[16].object_id=29;
+    strcpy(map_object[19].e3d_file_name, "flowewhite2.e3d");
+    strcpy(map_object[19].object_name, "Impatiens");
+    map_object[19].object_id=29;
 
-    strcpy(map_object[14].e3d_file_name, "flowerwhite3.e3d");
-    strcpy(map_object[14].object_name, "tiger lily");
-    map_object[17].object_id=29;
-
-
-
-
+    strcpy(map_object[20].e3d_file_name, "flowerwhite3.e3d");
+    strcpy(map_object[20].object_name, "Impatiens");
+    map_object[20].object_id=29;
 
     //load maps from database
     loaded=load_db_maps();
