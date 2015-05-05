@@ -45,8 +45,11 @@
 #include "idle_buffer.h"
 #include "season.h"
 #include "map_objects.h"
+#include "harvesting.h"
+#include "date_time_functions.h"
+#include "client_protocol_handler.h"
 
-#define DEBUG_PACKET 1//set debug mode
+#define DEBUG_CLIENT_PROTOCOL_HANDLER 0//set debug mode
 
 void process_packet(int connection, unsigned char *packet){
 
@@ -54,25 +57,18 @@ void process_packet(int connection, unsigned char *packet){
 
     char text_out[1024]="";
     int protocol=packet[0];
-    int data_length=packet[1]+(packet[2]*256)-1;
 
-    //packet logging
-    int i=0;
-    for(i=0; i<data_length+2; i++){
-
-        sprintf(text_out, "%s %i", text_out, packet[i]);
-    }
-
-    log_event(EVENT_PACKET,"Receive from [%i]%s", connection, text_out);
+    log_packet(connection, packet);
 
 /***************************************************************************************************/
 
     if(protocol==RAW_TEXT) {
 
         char text[1024]="";
+        int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(text, packet+3, data_length);
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("RAW_TEXT [%s]\n", text);
         #endif
 
@@ -100,7 +96,7 @@ void process_packet(int connection, unsigned char *packet){
             //channel slots run from zero. Hence, we need to subtract 1 from the active_chan slot value
             int chan=clients.client[connection].chan[active_chan_slot-1];
 
-            #if DEBUG_PACKET==1
+            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
             printf("active chan slot %i  chan %i\n", active_chan_slot-1, chan);
             #endif
 
@@ -113,7 +109,7 @@ void process_packet(int connection, unsigned char *packet){
 
             log_event(EVENT_CHAT, "broadcast channel [%s @% i]: %s", clients.client[connection].char_name, chan, text);
 
-            #if DEBUG_PACKET==1
+            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
             printf("channel chat by [%s] on chan [%i] %s\n", clients.client[connection].char_name, chan, text);
             #endif
         }
@@ -121,7 +117,7 @@ void process_packet(int connection, unsigned char *packet){
         //hash commands
         else if(text[0]=='#'){
 
-            #if DEBUG_PACKET==1
+            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
             printf("#command by [%s] %s\n", clients.client[connection].char_name, text);
             #endif
 
@@ -148,7 +144,7 @@ void process_packet(int connection, unsigned char *packet){
 
             log_event(EVENT_CHAT, "broadcast local [%s] %s: %s", map_name, clients.client[connection].char_name, text);
 
-            #if DEBUG_PACKET==1
+            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
             printf("local chat on map [%s] %s: %s\n", map_name, clients.client[connection].char_name, text);
             #endif
         }
@@ -157,22 +153,16 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==MOVE_TO) {
 
-        unsigned char data[1024]={0};
-        memcpy(data, packet+3, data_length);
-
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("MOVE_TO %i %s\n", connection, clients.client[connection].char_name);
         #endif
 
-        //returns 2x 2byte integers indicating the x/y axis of the destination
-        int x_dest=Uint16_to_dec(data[0], data[1]);
-        int y_dest=Uint16_to_dec(data[2], data[3]);
-        int tile_dest=x_dest+(y_dest*maps.map[clients.client[connection].map_id].map_axis);
+        //get destination tile
+        int x_dest=Uint16_to_dec(packet[3], packet[4]);
+        int y_dest=Uint16_to_dec(packet[5], packet[6]);
+        int tile_dest=get_tile(x_dest, y_dest, clients.client[connection].map_id);
 
-        #if DEBUG_PACKET==1
-        printf("position x[%i] y[%i] tile[%i]\n", x_dest, y_dest, tile_dest);
-        #endif
-
+        //move the char
         start_char_move(connection, tile_dest);
 
         log_event(EVENT_SESSION, "Protocol MOVE_TO by [%s]...", clients.client[connection].char_name);
@@ -183,9 +173,10 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==SEND_PM) {
 
         char text[1024]="";
+        int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(text, packet+3, data_length);
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("SEND_PM %i %i %s\n", packet[1], packet[2], text);
         #endif
 
@@ -206,75 +197,52 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==SIT_DOWN){
 
-        unsigned char data[1024]={0};
-        memcpy(data, packet+3, data_length);
-
-        char sql[MAX_SQL_LEN]="";
-
-        #if DEBUG_PACKET==1
-        printf("SIT_DOWN %i\n", data[0]);
-        #endif
-
         // the protocol recognises two sets of sit stand command. The first is implemented via the actor command set
         //which is used in the ADD_ACTOR packet; the second is implemented via the frame set which is used in the
         //ADD_ENHANCED_ACTOR packet. When using the ADD_ACTOR packet, command 13=sit down and command 14=stand up. When
         //using the ADD_ENHANCED_ACTOR packet, command 12=sit, command 13=stand and command 14=stand idle.
 
-        switch(data[0]){
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
+        printf("Protocol SIT_DOWN connection [%i] command[%i]\n", connection, packet[3]);
+        #endif
 
-            case 0://stand
+        if(packet[3]==SIT){//make the char stand
 
-                #if DEBUG_PACKET==1
-                printf("Stand\n");
-                #endif
+            clients.client[connection].frame=frame_stand;
+            broadcast_actor_packet(connection, actor_cmd_stand_up, clients.client[connection].map_tile);
 
-                clients.client[connection].frame=frame_stand;
-
-                broadcast_actor_packet(connection, actor_cmd_stand_up, clients.client[connection].map_tile);
-
-                //update database here else, if we do it after the switch structure, an unknown frame value
-                //could end up being updated to the database
-                snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i;",clients.client[connection].frame, clients.client[connection].character_id);
-                push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
-
-                log_event(EVENT_SESSION, "Protocol SIT_DOWN by [%s] (stand)", clients.client[connection].char_name);
-                break;
-
-            case 1://sit
-
-                #if DEBUG_PACKET==1
-                printf("Sit\n");
-                #endif
-
-                clients.client[connection].frame=frame_sit;
-
-                broadcast_actor_packet(connection, actor_cmd_sit_down, clients.client[connection].map_tile);
-
-                //update database here else, if we do it after the switch structure, an unknown frame value
-                //could end up being updated to the database
-                sprintf(sql, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i;",clients.client[connection].frame, clients.client[connection].character_id);
-                push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
-
-                log_event(EVENT_SESSION, "Protocol SIT_DOWN by [%s] (sit)", clients.client[connection].char_name);
-                break;
-
-            default:
-
-                log_event(EVENT_ERROR, "Protocol SIT_DOWN by [%s] unknown frame [%i])", clients.client[connection].char_name, clients.client[connection].frame);
-                stop_server();
-                break;
+            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
+            printf("Stand\n");
+            #endif
         }
-     }
+        else {// make the char sit
+
+            clients.client[connection].frame=frame_sit;
+            broadcast_actor_packet(connection, actor_cmd_sit_down, clients.client[connection].map_tile);
+
+            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
+            printf("Sit\n");
+            #endif
+        }
+
+        //update database
+        char sql[MAX_SQL_LEN]="";
+        sprintf(sql, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i",clients.client[connection].frame, clients.client[connection].character_id);
+        push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+
+        log_event(EVENT_SESSION, "Protocol SIT_DOWN by [%s] frame[%i]", clients.client[connection].char_name,  clients.client[connection].frame);
+    }
 /***************************************************************************************************/
 
     else if(protocol==GET_PLAYER_INFO){
 
         unsigned char data[1024]={0};
+        int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(data, packet+3, data_length);
 
         int other_connection=Uint32_to_dec(data[0], data[1], data[2], data[3]);
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("GET_PLAYER_INFO [%i] [%s]\n", other_connection, clients.client[other_connection].char_name);
         #endif
 
@@ -287,7 +255,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==SEND_ME_MY_ACTORS){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("SEND_ME_MY_ACTORS %i %i\n", packet[1], packet[2]);
         #endif
 
@@ -297,7 +265,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==SEND_OPENING_SCREEN){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("SEND OPENING SCREEN %i %i \n", packet[1], packet[2]);
         #endif
 
@@ -308,9 +276,10 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==SEND_VERSION){
 
         unsigned char data[1024]={0};
+        int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(data, packet+3, data_length);
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("SEND_VERSION %i %i\n", packet[1], packet[2]);
         #endif
 
@@ -335,7 +304,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==HEARTBEAT){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("HEARTBEAT %i %i \n", packet[1], packet[2]);
         #endif
 
@@ -345,7 +314,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==USE_OBJECT){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("USE_OBJECT %i %i \n", packet[1], packet[2]);
         #endif
 
@@ -355,7 +324,7 @@ void process_packet(int connection, unsigned char *packet){
         map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
         use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("USE_OBJECT - map object [%i] position [%i]\n", map_object_id, use_with_position);
         #endif
 
@@ -380,7 +349,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==LOOK_AT_INVENTORY_ITEM){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("LOOK_AT_INVENTORY_ITEM %i %i \n", packet[1], packet[2]);
         #endif
 
@@ -390,7 +359,7 @@ void process_packet(int connection, unsigned char *packet){
         inventory_slot=(int)data[0];
         image_id=clients.client[connection].client_inventory[inventory_slot].image_id;
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", inventory_slot);
         #endif
 
@@ -404,7 +373,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==MOVE_INVENTORY_ITEM){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("MOVE_INVENTORY_ITEM %i %i \n", packet[1], packet[2]);
         #endif
 
@@ -415,7 +384,7 @@ void process_packet(int connection, unsigned char *packet){
         move_from_slot=(int)data[0];
         move_to_slot=(int)data[1];
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("MOVE_INVENTORY_ITEM - slot [%i] to slot [%i]\n", move_from_slot, move_to_slot);
         #endif
 
@@ -445,22 +414,32 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==HARVEST){
 
-        //returns a integer corresponding to the id of an object in the map 3d object list
-        int map_object_id=Uint16_to_dec(packet[3], packet[4]);
+        //returns a integer corresponding to the order of an object in the map 3d object list
+        int map_object_number=Uint16_to_dec(packet[3], packet[4]);
 
-        #if DEBUG_PACKET==1
-        printf("HARVEST object_id %i\n", map_object_id);
+        //check if char is already harvesting
+        if(clients.client[connection].harvest_flag==HARVESTING_OFF){
+
+            //if char isn't harvesting then start
+            start_harvesting(connection, map_object_number);
+        }
+        else {
+
+            //if char is harvesting then stop
+            stop_harvesting(connection);
+       }
+
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
+        printf("HARVEST connection [%i]\n", connection);
         #endif
 
-        //start_harvesting2(connection, map_object_id, loop);
-
-        log_event(EVENT_SESSION, "Protocol HARVEST map object [%i] by character [%s]", map_object_id, clients.client[connection].char_name);
+        log_event(EVENT_SESSION, "Protocol HARVEST connection [%i] character [%s]", connection, clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==DROP_ITEM){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("DROP_ITEM %i %i \n", packet[1], packet[2]);
         #endif
 
@@ -471,7 +450,7 @@ void process_packet(int connection, unsigned char *packet){
         amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
         image_id=clients.client[connection].client_inventory[inventory_slot].image_id;
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("DROP_ITEM image_id [%i] drop amount [%i]\n", image_id, amount);
         #endif
 
@@ -484,17 +463,16 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==PICK_UP_ITEM){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("PICK_UP_ITEM %i %i \n", packet[1], packet[2]);
         #endif
-
 /*
         //returns a 4byte integer indicating quantity followed by 1 byte indicating bag slot position
 
         bag_slot=data[0];
         amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("PICK_UP_ITEM lsb [%i] msb [%i] amount [%i] slot [%i]\n", lsb, msb, amount, bag_slot);
         #endif
 
@@ -507,7 +485,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==INSPECT_BAG){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("INSPECT_BAG %i %i \n", packet[1], packet[2]);
         #endif
 
@@ -516,7 +494,7 @@ void process_packet(int connection, unsigned char *packet){
 
         bag_id=data[0];
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("INSPECT_BAG - lsb [%i] msb [%i] bag id [%i]\n", lsb, msb, bag_id);
         #endif
 
@@ -540,15 +518,30 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==LOOK_AT_MAP_OBJECT){
 
-        //returns a Uint32 indicating the object_id of the item looked at
+        //returns a Uint32 indicating the position of the object in the map 3d object list
         int map_object_number=Uint32_to_dec(packet[3], packet[4], packet[5], packet[6]);
+
+        //get the item_id for the object
         int map_id=clients.client[connection].map_id;
         int item_id=maps.map[map_id].threed_object_lookup[map_object_number].item_id;
 
-        //tell the client what the map object is
+        //tell the client what the item is
         if (item_id>0){
 
-            sprintf(text_out, "%cyou see a %s", c_green3+127, map_object[item_id].object_name);
+            sprintf(text_out, "%cyou see a %s. ", c_green3+127, map_object[item_id].object_name);
+
+            if(map_object[item_id].harvestable==HARVESTABLE){
+
+                sprintf(text_out, "%sIt's harvestable ", text_out);
+            }
+
+            if(map_object[item_id].edible==EDIBLE){
+
+                sprintf(text_out, "%sand it's edible", text_out);
+            }
+
+            //add a period to the end of the sentence
+            sprintf(text_out, "%s.", text_out);
         }
         else {
 
@@ -557,17 +550,17 @@ void process_packet(int connection, unsigned char *packet){
 
         send_raw_text(connection, CHAT_SERVER, text_out);
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("LOOK_AT_MAP_OBJECT - map object [%i] item id [%i] object [%s]\n", map_object_number, item_id, map_object[item_id].object_name);
         #endif
 
-        log_event(EVENT_SESSION, "Protocol LOOK_AT_MAP_OBJECT by [%s]...", clients.client[connection].char_name);
+        log_event(EVENT_SESSION, "Protocol LOOK_AT_MAP_OBJECT [%s] by [%s]", map_object[item_id].object_name, clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==PING_RESPONSE){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("PING_RESPONSE %i %i \n", packet[1], packet[2]);
         #endif
 
@@ -578,9 +571,10 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==SET_ACTIVE_CHANNEL){
 
         unsigned char data[1024]={0};
+        int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(data, packet+3, data_length);
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("SET_ACTIVE_CHANNEL [%s] [%i]\n", clients.client[connection].char_name, data[0]);
         #endif
 
@@ -598,7 +592,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==LOG_IN){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("LOG_IN connection [%i] lsb [%i] msb [%i]\n", connection, packet[1], packet[2]);
         #endif
 
@@ -613,7 +607,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==CREATE_CHAR){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("CREATE_CHAR connection [%i] lsb [%i] msb [%i]\n", connection, packet[1], packet[2]);
         #endif
 
@@ -626,11 +620,14 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==GET_DATE){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("GET DATE %i %i \n", packet[1], packet[2]);
         #endif
 
-        send_verbose_date(connection, game_data.game_days % game_data.year_length);
+        //calculate day of year
+        int day_of_year=game_data.game_days % game_data.year_length;
+
+        send_verbose_date(connection, day_of_year);
 
         log_event(EVENT_SESSION, "Protocol GET_DATE by [%s]...", clients.client[connection].char_name);
     }
@@ -638,12 +635,11 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==GET_TIME){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("GET TIME %i %i\n", packet[1], packet[2]);
         #endif
 
-        sprintf(text_out, "Time %02i:%02i",  game_data.game_minutes / 60, game_data.game_minutes % 60);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_verbose_time(connection, game_data.game_minutes);
 
         log_event(EVENT_SESSION, "Protocol GET_TIME by [%s]...", clients.client[connection].char_name);
     }
@@ -651,7 +647,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==SERVER_STATS){
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("SERVER_STATS %i %i \n", packet[1], packet[2]);
         #endif
 
@@ -663,7 +659,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else {
 
-        #if DEBUG_PACKET==1
+        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("UNKNOWN PROTOCOL %i %i \n", packet[1], packet[2]);
         #endif
 

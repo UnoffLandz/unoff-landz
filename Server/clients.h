@@ -30,16 +30,17 @@
 
 struct client_node_type{
 
-    enum{   LOGGED_OUT=0,
-            LOGGED_IN=1,
-            CONNECTED=2,
-            LAGGED=3,
+    enum{
+        LOGGED_OUT=0,
+        LOGGED_IN=1,
+        CONNECTED=2,
     }client_status;
 
     int packet_buffer[1024];
     int packet_buffer_length;
 
     int character_id; //database id for char
+    int char_age;//aggregate in-game time (measured in game minutes) for this character
 
     time_t time_of_last_heartbeat;
     time_t time_of_last_minute;
@@ -48,7 +49,7 @@ struct client_node_type{
     int path_count;
     time_t time_of_last_move;
 
-    int harvest_flag;
+    enum{HARVESTING_OFF, HARVESTING_ON} harvest_flag;
     int harvest_amount; //amount harvested each cycle
     int inventory_image_id;
     int inventory_slot;
@@ -57,8 +58,8 @@ struct client_node_type{
 
     char ip_address[16];
 
-    char char_name[1024];
-    char password[1024];
+    char char_name[80];
+    char password[80];
     int char_status;
 
     int active_chan;

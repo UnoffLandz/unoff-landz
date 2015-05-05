@@ -33,3 +33,20 @@ int Uint16_to_dec( unsigned char byte1, unsigned char byte2){
 }
 
 
+float Uint32_to_float(unsigned char *bytes){
+
+    /** public function - see header */
+
+    union i
+	{
+        unsigned char buf[4];
+        float number;
+	}i;
+
+	i.buf[0] = bytes[0];
+	i.buf[1] = bytes[1];
+	i.buf[2] = bytes[2];
+	i.buf[3] = bytes[3];
+
+	return i.number;
+}

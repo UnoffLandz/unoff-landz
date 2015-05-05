@@ -28,6 +28,7 @@
 #include "../global.h"
 #include "../string_functions.h"
 #include "../map_objects.h"
+#include "../numeric_functions.h"
 
 int load_db_maps(){
 
@@ -305,14 +306,19 @@ int load_db_maps(){
         }
 
         //load 3d object map
+/*
         k=0;
         for(j=elm_file.elm_header.threed_object_offset; j<elm_file.elm_header.twod_object_offset; j++){
 
             maps.map[map_id].threed_object_map[k]=elm_file.byte[j];
             k++;
         }
-
+*/
         //fill the struct that links the item_id to the map_object number
+        log_text(EVENT_MAP_LOAD, "3d object table...");
+        log_text(EVENT_MAP_LOAD, "order             e3d name  image id      x-pos      y-pos      z-pos");
+        log_text(EVENT_MAP_LOAD, "----------------- --------- --------      -----      -----      -----");
+
         char e3d_path_and_file_name[80]="";
         int m=0;
 
@@ -321,7 +327,7 @@ int load_db_maps(){
             //extract the path and filename from the elm file
             memcpy(e3d_path_and_file_name, &elm_file.byte[j], 80);
 
-            //remove the path and place filename in struct
+            //remove the path and copy filename to struct
             extract_file_name(e3d_path_and_file_name, maps.map[map_id].threed_object_lookup[m].e3d_file_name);
 
             //find the image id for this e3d file
@@ -334,6 +340,16 @@ int load_db_maps(){
                     break;
                 }
             }
+
+            maps.map[map_id].threed_object_lookup[m].x=Uint32_to_float(elm_file.byte+j+80) * 2.00f;
+            maps.map[map_id].threed_object_lookup[m].y=Uint32_to_float(elm_file.byte+j+84) * 2.00f;
+            maps.map[map_id].threed_object_lookup[m].z=Uint32_to_float(elm_file.byte+j+88) * 2.00f;
+
+            log_text(EVENT_MAP_LOAD, "%5i %20s %9i %10f %10f %10f", m, maps.map[map_id].threed_object_lookup[m].e3d_file_name, maps.map[map_id].threed_object_lookup[m].item_id,  maps.map[map_id].threed_object_lookup[m].x, maps.map[map_id].threed_object_lookup[m].y, maps.map[map_id].threed_object_lookup[m].z);
+
+            //calculate tile pos as it will save us having to do this multiple times in the future
+            //map_object.tile_pos=(int)map_object.x + ((int)map_object.y * maps.map[map_id]->map_axis);
+
             m++;
         }
 

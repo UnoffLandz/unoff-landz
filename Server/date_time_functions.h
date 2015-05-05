@@ -69,4 +69,26 @@ void get_verbose_date_str(time_t raw_time, char *buffer);
 */
 void get_time_up_str(time_t raw_time, char *buffer);
 
+
+/** RESULT  : sends the verbose date to the client
+
+    RETURNS : void
+
+    PURPOSE : used by GET_DATE protocol
+
+    NOTES   :
+**/
+void send_verbose_date(int connection, int game_days);
+
+
+/** RESULT  : sends the verbose time to the client
+
+    RETURNS : void
+
+    PURPOSE : used by GET_TIME protocol
+
+    NOTES   :
+**/
+void send_verbose_time(int connection, int game_minutes);
+
 #endif // DATE_TIME_FUNCTIONS_H_INCLUDED

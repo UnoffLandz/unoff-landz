@@ -17,11 +17,17 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
+#include <stdio.h> //support for sprintf
 #include <time.h> //support for time_t datatype
 #include <string.h> //support for strcpy
 
 #include "game_data.h"
-
+#include "season.h"
+#include "logging.h"
+#include "colour.h"
+#include "server_messaging.h"
+#include "server_start_stop.h"
+#include "server_protocol_functions.h"
 
 void get_time_stamp_str(time_t raw_time, char *buffer){
 
@@ -71,4 +77,55 @@ void get_time_up_str(time_t raw_time, char *buffer){
     strftime (buffer, 15, "%H hrs %M mins", cooked_date);
 }
 
+void get_game_season(int game_days, char *season_name, char *season_description){
 
+    /** RESULT  : gets the season name and description based on the number of game days
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   : used by send_verbose_date
+    **/
+
+    int season_days=game_days % game_data.year_length;
+
+    int i=0;
+    for(i=0; i<MAX_SEASONS; i++){
+
+        if(season_days>=season[i].start_day && season_days<season[i].end_day){
+
+            strcpy(season_name, season[i].season_name);
+            strcpy(season_description, season[i].season_description);
+            return;
+        }
+    }
+
+    log_event(EVENT_ERROR, "invalid season in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    stop_server();
+}
+
+void send_verbose_date(int connection, int game_days){
+
+    /** public function - see header */
+
+    char text_out[160]="";
+
+    int game_year=game_data.game_days / 360;
+    int year_days=game_data.game_days % 360;
+
+    char season_name[80]="";
+    char season_description[160]="";
+    get_game_season(year_days, season_name, season_description);
+
+    sprintf(text_out, "%cThe day is %02i in the season of %s, year %i", 127+c_purple1, game_days, season_name, game_year);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+}
+
+void send_verbose_time(int connection, int game_minutes){
+
+    char text_out[80]="";
+
+    sprintf(text_out, "%cThe time is %02i:%02i",  127+c_purple1, game_minutes / 60, game_minutes % 60);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+}

@@ -20,7 +20,7 @@
 #ifndef MAP_OBJECTS_H_INCLUDED
 #define MAP_OBJECTS_H_INCLUDED
 
-#define MAX_MAP_OBJECTS 20
+#define MAX_MAP_OBJECTS 30
 
 struct map_object_type{
 
@@ -28,7 +28,7 @@ struct map_object_type{
     char e3d_file_name[80];
     char object_name[80];
     enum {NON_HARVESTABLE, HARVESTABLE}harvestable;
-    enum {EDIBLE, NON_EDIBLE}edible;
+    enum {EDIBLE, INEDIBLE}edible;
 };
 struct map_object_type map_object[MAX_MAP_OBJECTS];
 

@@ -32,14 +32,7 @@
 
 int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
 
-    /** RESULT  : calculates the distance between two entities on a map
-
-    RETURNS : the distance
-
-    PURPOSE : required by broadcast_add_new_enhanced_actor_packet
-
-    NOTES   :
-    */
+    /** public function - see header */
 
     int x_diff=abs((tile_pos_1 % map_axis) - (tile_pos_2 % map_axis));
     int y_diff=abs((tile_pos_1 / map_axis) - (tile_pos_2 / map_axis));
@@ -47,6 +40,12 @@ int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
     if(x_diff>y_diff) return x_diff; else return y_diff;
 }
 
+int get_tile(int x_pos, int y_pos, int map_id){
+
+     /** public function - see header */
+
+    return x_pos + (y_pos * maps.map[map_id].map_axis);
+}
 
 
 

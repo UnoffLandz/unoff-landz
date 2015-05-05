@@ -21,6 +21,12 @@
 #define CLIENT_PROTOCOL_HANDLER_H_INCLUDED
 
 
+
+enum{ //values for the SIT_DOWN protocol
+    SIT=0,
+    STAND=1,
+};
+
 /** RESULT  : processes a data packet received from the client
 
     RETURNS : void

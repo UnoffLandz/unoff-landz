@@ -74,7 +74,7 @@ struct map_node_type{
     unsigned char height_map[HEIGHT_MAP_MAX];
     int height_map_size;
 
-    unsigned char threed_object_map[THREED_OBJECT_MAP_MAX];
+    //unsigned char threed_object_map[THREED_OBJECT_MAP_MAX];
     int threed_object_map_size;
     int threed_object_structure_len;
     int threed_object_count;
@@ -83,6 +83,9 @@ struct map_node_type{
     struct{
         char e3d_file_name[80];
         int item_id;
+        float x;
+        float y;
+        float z;
     }threed_object_lookup[2000];
 
     unsigned char twod_object_map[TWOD_OBJECT_MAP_MAX];
@@ -114,5 +117,14 @@ struct map_list_type maps;
 int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis);
 
 
+/** RESULT  : calculates the tile based on the x,y coordinates
+
+    RETURNS : the tile number
+
+    PURPOSE :
+
+    NOTES   :
+*/
+int get_tile(int x_pos, int y_pos, int map_axis);
 
 #endif // MAPS_H_INCLUDED

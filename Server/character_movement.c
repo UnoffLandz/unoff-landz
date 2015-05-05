@@ -39,6 +39,7 @@
 #include "db/database_functions.h"
 #include "game_data.h"
 #include "idle_buffer.h"
+#include "harvesting.h"
 
 #define DEBUG_MOVEMENT 0
 
@@ -264,14 +265,8 @@ void start_char_move(int connection, int destination){
     int map_id=clients.client[connection].map_id;
     int current_tile=clients.client[connection].map_tile;
 
-/*
     //if char is harvesting then stop
-    if(clients.client[connection].harvest_flag==TRUE){
-
-        stop_harvesting2(connection, loop);
-        return;
-    }
-*/
+    if(clients.client[connection].harvest_flag==HARVESTING_ON) stop_harvesting(connection);
 
     //if char is sitting then stand before moving
     if(clients.client[connection].frame==frame_sit){
