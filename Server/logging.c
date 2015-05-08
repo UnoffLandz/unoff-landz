@@ -25,6 +25,7 @@
 #include "date_time_functions.h"
 #include "game_data.h"
 #include "server_start_stop.h"
+#include "db/database_functions.h"
 
 void write_to_file(char *file_name, char *text) {
 
@@ -287,21 +288,7 @@ void log_sqlite_error(char *error_type, const char *function_name, const char *m
 
         log_event(EVENT_ERROR, "%s at line [%i] in function %s: module %s", error_type, line_number, function_name, module_name);
         log_text(EVENT_ERROR, "sql statement [%s]", sql_stmt);
-
-        switch(return_code) {
-
-            case 1:
-            log_text(EVENT_ERROR, "sqlite return code 1: SQLITE_ERROR: sql error or missing database");
-            break;
-
-            case 19:
-            log_text(EVENT_ERROR, "sqlite return code 19: SQLITE_CONSTRAINT: attempt to overwrite an existing record");
-            break;
-
-            default:
-            log_text(EVENT_ERROR, "sqlite return code [%i]", return_code);
-            break;
-        }
+        log_text(EVENT_ERROR, "return code [%i]: error type [%s]", return_code, sqlite3_errmsg(db));
 
         stop_server();
 }
