@@ -1,6 +1,7 @@
 #include "database_functions.h"
 
 #include "../file_functions.h"
+#include "db_object_tbl.h"
 
 #include <sqlite3.h>
 #include <stdint.h>
@@ -91,6 +92,39 @@ static int upgrade_v0_to_v1(const char *dbname) {
 }
 
 
+static int upgrade_v1_to_v2() {
+
+    create_database_table(OBJECT_TABLE_SQL);
+
+    add_db_object(1, "cabbage.e3d", "cabbage", 405, 1, 1);
+    add_db_object(2, "tomatoeplant1.e3d", "tomato", 407, 1, 1);
+    add_db_object(3, "tomatoeplant2.e3d", "tomato", 407, 1, 1);
+    add_db_object(4, "foodtomatoe.e3d", "tomato", 407, 1, 1);
+    add_db_object(5, "food_carrot.e3d", "carrot", 408, 1, 1);
+    add_db_object(6, "log1.e3d", "log", 408, 1, 0);
+    add_db_object(7, "log2.e3d", "log", 408, 1, 0);
+    add_db_object(8, "flowerpink1.e3d", "Chrysanthemum", 28, 1, 0);
+    add_db_object(9, "branch1.e3d", "stick", 140, 1, 0);
+    add_db_object(10, "branch2.e3d", "stick", 140, 1, 0);
+    add_db_object(11, "branch3.e3d", "stick", 140, 1, 0);
+    add_db_object(12, "branch4.e3d", "stick", 140, 1, 0);
+    add_db_object(13, "branch5.e3d", "stick", 140, 1, 0);
+    add_db_object(14, "branch6.e3d", "stick", 140, 1, 0);
+    add_db_object(15, "flowerorange1.e3d", "Tiger Lily", 29, 1, 0);
+    add_db_object(16, "flowerorange2.e3d", "Tiger Lily", 29, 1, 0);
+    add_db_object(17, "flowerorange3.e3d", "Tiger Lily", 29, 1, 0);
+    add_db_object(18, "flowerwhite1.e3d", "Impatiens", 29, 1, 0);
+    add_db_object(19, "flowerwhite2.e3d", "Impatiens", 29, 1, 0);
+    add_db_object(20, "flowerwhite3.e3d", "Impatiens", 29, 1, 0);
+
+    set_db_version(2);
+
+    sqlite3_close(db);
+    fprintf(stderr,"UPGRADE [v%d]: Success\n", 2);
+
+    return 0;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Array of upgrade procedures with their associated db versions
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +137,7 @@ struct upgrade_array_entry {
 };
 
 struct upgrade_array_entry entries[] = {
+{ 1, 2, upgrade_v1_to_v2},
 { 0, 1, upgrade_v0_to_v1},
 { 0, 0, NULL}
 };

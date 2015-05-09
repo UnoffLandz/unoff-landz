@@ -17,19 +17,38 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef MAP_OBJECTS_H_INCLUDED
-#define MAP_OBJECTS_H_INCLUDED
 
-#define MAX_MAP_OBJECTS 30
+#ifndef DB_OBJECT_TBL_H_INCLUDED
+#define DB_OBJECT_TBL_H_INCLUDED
 
-struct map_object_type{
+#define OBJECT_TABLE_SQL "CREATE TABLE OBJECT_TABLE( \
+        OBJECT_ID    INTEGER PRIMARY KEY     NOT NULL, \
+        E3D_FILE_NAME   TEXT, \
+        OBJECT_NAME     TEXT, \
+        IMAGE_ID        INT, \
+        HARVESTABLE     INT, \
+        EDIBLE          INT)"
 
-    int image_id;
-    char e3d_file_name[80];
-    char object_name[80];
-    enum {NON_HARVESTABLE, HARVESTABLE}harvestable;
-    enum {EDIBLE, INEDIBLE}edible;
-};
-extern struct map_object_type map_object[MAX_MAP_OBJECTS];
+/** RESULT  : loads data from the object table into the object array
 
-#endif // MAP_OBJECTS_H_INCLUDED
+    RETURNS : number of rows read from the object table
+
+    PURPOSE : Loads object data from the database to memory.
+
+    NOTES   :
+**/
+int load_db_objects();
+
+
+/** RESULT  : adds an object to the object table
+
+    RETURNS : void
+
+    PURPOSE : a test function to load objects to the object table
+
+    NOTES   : to eventually be outsourced to a separate utility
+**/
+void add_db_object(int object_id, char *e3d_file_name, char *object_name, int image_id, int harvestable, int edible);
+
+
+#endif // DB_OBJECT_TBL_H_INCLUDED
