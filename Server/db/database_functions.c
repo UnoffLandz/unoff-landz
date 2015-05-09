@@ -21,7 +21,7 @@
 #include <string.h> //supports strlen
 
 #include "database_functions.h"
-#include "../logging.h"
+
 #include "db_character_tbl.h"
 #include "db_map_tbl.h"
 #include "db_character_type_tbl.h"
@@ -32,15 +32,19 @@
 #include "db_attribute_tbl.h"
 #include "db_game_data_tbl.h"
 #include "db_season_tbl.h"
+#include "db_object_tbl.h"
+#include "../global.h"
 #include "../server_start_stop.h"
 #include "../attributes.h"
 #include "../chat.h"
+#include "../logging.h"
+#include "../file_functions.h"
 
 sqlite3 *db;
 
-int current_database_version(const char * dbaname);
+int current_database_version();
 
-static int prepare_query(sqlite3 *db,const char *sql,sqlite3_stmt **stmt,const char *_func,int line){
+static int prepare_query(const char *sql, sqlite3_stmt **stmt, const char *_func, int line){
 
     int rc=sqlite3_prepare_v2(db, sql, -1, stmt, NULL);
 
@@ -52,19 +56,26 @@ static int prepare_query(sqlite3 *db,const char *sql,sqlite3_stmt **stmt,const c
     return 0;
 }
 
-void open_database(char *database_name){
+void open_database(const char *db_filename){
 
    /** public function - see header **/
 
-    int rc = sqlite3_open(database_name, &db);
+    if(file_exists(db_filename)==FALSE){
 
+        printf("database file [%s] not found\n", db_filename);
+        log_event(EVENT_ERROR, "database file [%s] not found", db_filename);
+        stop_server();
+        return;
+    }
+
+    int rc = sqlite3_open(db_filename, &db);
     if( rc !=SQLITE_OK ){
 
         log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
     }
 }
 
-static int column_exists(sqlite3 *db,const char *table,const char *column) {
+static int column_exists(const char *table,const char *column) {
 
     sqlite3_stmt *stmt;
     char sql[256];
@@ -73,7 +84,7 @@ static int column_exists(sqlite3 *db,const char *table,const char *column) {
 
     snprintf(sql,256,"PRAGMA table_info(%s)",table);
 
-    if(-1==prepare_query(db,sql,&stmt,__func__,__LINE__))
+    if(-1==prepare_query(sql, &stmt, __func__, __LINE__))
         return 0;
 
     for (int i=0; i<sqlite3_column_count(stmt); i++) {
@@ -111,7 +122,7 @@ int database_table_count(){
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN, "SELECT count(*) FROM sqlite_master WHERE type='table';");
 
-    if(-1==prepare_query(db,sql,&stmt,__func__,__LINE__))
+    if(-1==prepare_query(sql, &stmt, __func__, __LINE__))
         return 0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -141,11 +152,10 @@ void create_database_table(char *sql){
     int rc;
     sqlite3_stmt *stmt;
 
-    if(-1==prepare_query(db,sql,&stmt,__func__,__LINE__))
+    if(-1==prepare_query(sql, &stmt, __func__, __LINE__))
         return;
 
     rc = sqlite3_step(stmt);
-
     if (rc != SQLITE_DONE) {
 
         log_sqlite_error("sqlite_step failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -185,7 +195,7 @@ void process_sql(char *sql_str){
     int rc=0;
     sqlite3_stmt *stmt;
 
-    if(-1==prepare_query(db,sql_str,&stmt,__func__,__LINE__))
+    if(-1==prepare_query(sql_str, &stmt, __func__, __LINE__))
         return;
 
     rc = sqlite3_step(stmt);
@@ -200,24 +210,18 @@ void process_sql(char *sql_str){
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql_str);
     }
 }
-int current_database_version(const char *dbaname) {
 
-    sqlite3 *db_tmp;
+int current_database_version() {
+
+    int rc;
+
     sqlite3_stmt *selectStmt;
     const char *sql_str = "SELECT db_version FROM GAME_DATA_TABLE";
-    int rc = sqlite3_open(dbaname, &db_tmp);
 
-    if( rc !=SQLITE_OK ){
-
-        log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
-        return -1;
-    }
-
-
-    if(0==column_exists(db_tmp,"GAME_DATA_TABLE","db_version"))
+    if(0==column_exists("GAME_DATA_TABLE","db_version"))
         return 0;
 
-    if(-1==prepare_query(db_tmp,sql_str,&selectStmt,__func__,__LINE__))
+    if(-1==prepare_query(sql_str,&selectStmt,__func__,__LINE__))
         return -1;
 
     rc = sqlite3_step(selectStmt);
@@ -233,9 +237,7 @@ int current_database_version(const char *dbaname) {
     }
     rc = sqlite3_finalize(selectStmt);
 
-    sqlite3_close(db_tmp);
     return 0;
-
 }
 
 void create_default_database(){
@@ -250,7 +252,7 @@ void create_default_database(){
     create_database_table(INVENTORY_TABLE_SQL);
     create_database_table(GENDER_TABLE_SQL);
     //create_database_table(ITEM_TABLE_SQL);
-    //create_database_table(THREED_OBJECT_TABLE_SQL);
+    create_database_table(OBJECT_TABLE_SQL);
     create_database_table(MAP_TABLE_SQL);
     create_database_table(CHANNEL_TABLE_SQL);
     create_database_table(RACE_TABLE_SQL);
@@ -343,4 +345,89 @@ void create_default_database(){
             l++;
         }
     }
+
+    add_db_object(1, "cabbage.e3d", "cabbage", 405, 1, 1);
+
+    /*//temporary load map object data
+    strcpy(map_object[1].e3d_file_name, "cabbage.e3d");
+    strcpy(map_object[1].object_name, "cabbage");
+    map_object[1].image_id=405;
+
+    strcpy(map_object[2].e3d_file_name, "tomatoeplant1.e3d");
+    strcpy(map_object[2].object_name, "tomato");
+    map_object[2].image_id=407;
+
+    strcpy(map_object[3].e3d_file_name, "tomatoeplant2.e3d");
+    strcpy(map_object[3].object_name, "tomato");
+    map_object[3].image_id=407;
+
+    strcpy(map_object[4].e3d_file_name, "foodtomatoe.e3d");
+    strcpy(map_object[4].object_name, "tomato");
+    map_object[4].image_id=407;
+
+    strcpy(map_object[5].e3d_file_name, "food_carrot.e3d");
+    strcpy(map_object[5].object_name, "carrot");
+    map_object[5].image_id=408;
+
+    strcpy(map_object[6].e3d_file_name, "log1.e3d");
+    strcpy(map_object[6].object_name, "log");
+    map_object[6].image_id=408;
+
+    strcpy(map_object[7].e3d_file_name, "log2.e3d");
+    strcpy(map_object[7].object_name, "log");
+    map_object[7].image_id=408;
+
+    strcpy(map_object[8].e3d_file_name, "flowerpink1.e3d");
+    strcpy(map_object[8].object_name, "Chrysanthemum");
+    map_object[8].image_id=28;
+
+    strcpy(map_object[9].e3d_file_name, "branch1.e3d");
+    strcpy(map_object[9].object_name, "sticks");
+    map_object[9].image_id=140;
+
+    strcpy(map_object[10].e3d_file_name, "branch2.e3d");
+    strcpy(map_object[10].object_name, "sticks");
+    map_object[10].image_id=140;
+
+    strcpy(map_object[11].e3d_file_name, "branch3.e3d");
+    strcpy(map_object[11].object_name, "sticks");
+    map_object[11].image_id=140;
+
+    strcpy(map_object[12].e3d_file_name, "branch4.e3d");
+    strcpy(map_object[12].object_name, "sticks");
+    map_object[12].image_id=140;
+
+    strcpy(map_object[13].e3d_file_name, "branch5.e3d");
+    strcpy(map_object[13].object_name, "sticks");
+    map_object[13].image_id=140;
+
+    strcpy(map_object[14].e3d_file_name, "branch6.e3d");
+    strcpy(map_object[14].object_name, "sticks");
+    map_object[14].image_id=140;
+
+    strcpy(map_object[15].e3d_file_name, "flowerorange1.e3d");
+    strcpy(map_object[15].object_name, "tiger lily");
+    map_object[15].image_id=29;
+
+    strcpy(map_object[16].e3d_file_name, "flowerorange2.e3d");
+    strcpy(map_object[16].object_name, "tiger lily");
+    map_object[16].image_id=29;
+
+    strcpy(map_object[17].e3d_file_name, "flowerorange3.e3d");
+    strcpy(map_object[17].object_name, "tiger lily");
+    map_object[17].image_id=29;
+
+    strcpy(map_object[18].e3d_file_name, "flowerwhite1.e3d");
+    strcpy(map_object[18].object_name, "Impatiens");
+    map_object[18].image_id=29;
+
+    strcpy(map_object[19].e3d_file_name, "flowewhite2.e3d");
+    strcpy(map_object[19].object_name, "Impatiens");
+    map_object[19].image_id=29;
+
+    strcpy(map_object[20].e3d_file_name, "flowerwhite3.e3d");
+    strcpy(map_object[20].object_name, "Impatiens");
+    map_object[20].image_id=29;
+*/
+
 }
