@@ -60,6 +60,7 @@ To compile server, link with the following libraries :
 #include "db/db_gender_tbl.h"
 #include "db/db_map_tbl.h"
 #include "db/db_season_tbl.h"
+#include "db/db_object_tbl.h"
 #include "db/db_upgrade.h"
 #include "date_time_functions.h"
 #include "broadcast_actor_functions.h"
@@ -125,21 +126,16 @@ void start_server(char *db_filename){
     initialise_logs();
 
     //open database
-    if(file_exists(db_filename)==FALSE){
+    open_database(db_filename);
 
-        printf("database file [%s] not found\n", db_filename);
-        log_event(EVENT_ERROR, "database file [%s] not found", db_filename);
-        stop_server();
-        return;
-    }
-
+    //get database version
     int old_version = current_database_version(db_filename);
+
+    //check database version
     if(old_version != CURRENT_DB_VERSION) {
         printf("Wrong database version - use -U option to upgrade your database\n");
         return;
     }
-
-    open_database(db_filename);
 
     //check the database table count
     int tbl_count=database_table_count();
@@ -152,87 +148,6 @@ void start_server(char *db_filename){
     }
 
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    //temporary load map object data
-    strcpy(map_object[1].e3d_file_name, "cabbage.e3d");
-    strcpy(map_object[1].object_name, "cabbage");
-    map_object[1].object_id=405;
-
-    strcpy(map_object[2].e3d_file_name, "tomatoeplant1.e3d");
-    strcpy(map_object[2].object_name, "tomato");
-    map_object[2].object_id=407;
-
-    strcpy(map_object[3].e3d_file_name, "tomatoeplant2.e3d");
-    strcpy(map_object[3].object_name, "tomato");
-    map_object[3].object_id=407;
-
-    strcpy(map_object[4].e3d_file_name, "foodtomatoe.e3d");
-    strcpy(map_object[4].object_name, "tomato");
-    map_object[4].object_id=407;
-
-    strcpy(map_object[5].e3d_file_name, "food_carrot.e3d");
-    strcpy(map_object[5].object_name, "carrot");
-    map_object[5].object_id=408;
-
-    strcpy(map_object[6].e3d_file_name, "log1.e3d");
-    strcpy(map_object[6].object_name, "log");
-    map_object[6].object_id=408;
-
-    strcpy(map_object[7].e3d_file_name, "log2.e3d");
-    strcpy(map_object[7].object_name, "log");
-    map_object[7].object_id=408;
-
-    strcpy(map_object[8].e3d_file_name, "flowerpink1.e3d");
-    strcpy(map_object[8].object_name, "Chrysanthemum");
-    map_object[8].object_id=28;
-
-    strcpy(map_object[9].e3d_file_name, "branch1.e3d");
-    strcpy(map_object[9].object_name, "sticks");
-    map_object[9].object_id=140;
-
-    strcpy(map_object[10].e3d_file_name, "branch2.e3d");
-    strcpy(map_object[10].object_name, "sticks");
-    map_object[10].object_id=140;
-
-    strcpy(map_object[11].e3d_file_name, "branch3.e3d");
-    strcpy(map_object[11].object_name, "sticks");
-    map_object[11].object_id=140;
-
-    strcpy(map_object[12].e3d_file_name, "branch4.e3d");
-    strcpy(map_object[12].object_name, "sticks");
-    map_object[12].object_id=140;
-
-    strcpy(map_object[13].e3d_file_name, "branch5.e3d");
-    strcpy(map_object[13].object_name, "sticks");
-    map_object[13].object_id=140;
-
-    strcpy(map_object[14].e3d_file_name, "branch6.e3d");
-    strcpy(map_object[14].object_name, "sticks");
-    map_object[14].object_id=140;
-
-    strcpy(map_object[15].e3d_file_name, "flowerorange1.e3d");
-    strcpy(map_object[15].object_name, "tiger lily");
-    map_object[15].object_id=29;
-
-    strcpy(map_object[16].e3d_file_name, "flowerorange2.e3d");
-    strcpy(map_object[16].object_name, "tiger lily");
-    map_object[16].object_id=29;
-
-    strcpy(map_object[17].e3d_file_name, "flowerorange3.e3d");
-    strcpy(map_object[17].object_name, "tiger lily");
-    map_object[17].object_id=29;
-
-    strcpy(map_object[18].e3d_file_name, "flowerwhite1.e3d");
-    strcpy(map_object[18].object_name, "Impatiens");
-    map_object[18].object_id=29;
-
-    strcpy(map_object[19].e3d_file_name, "flowewhite2.e3d");
-    strcpy(map_object[19].object_name, "Impatiens");
-    map_object[19].object_id=29;
-
-    strcpy(map_object[20].e3d_file_name, "flowerwhite3.e3d");
-    strcpy(map_object[20].object_name, "Impatiens");
-    map_object[20].object_id=29;
 
     //load maps from database
     loaded=load_db_maps();
@@ -298,6 +213,16 @@ void start_server(char *db_filename){
         log_event(EVENT_ERROR, "no seasons found in database", loaded);
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    //load objects from database
+/*
+    loaded=load_db_objects();
+    if(loaded==0){
+
+        log_event(EVENT_ERROR, "no objects found in database", loaded);
+        stop_server();
+    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+*/
 
     //gather initial stats
     get_db_last_char_created(); //loads details of the last char created from the database into the game_data struct
@@ -760,48 +685,56 @@ int main(int argc, char *argv[]){
     if (argv[1][0] == '-') {
 
         switch(argv[1][1]) {
-        case 'S': {//start server
 
-            if(argc>2){
+            case 'S': {//start server
 
-                start_server(argv[2]);
-            }else start_server(DATABASE_FILE_NAME);
-            break;
-        }
-        case 'L': {//add or update map
+                if(argc>2){
 
-            //use uintptr_t to prevent int truncation issues when compiled as 64bit
-            if(get_db_map_exists((uintptr_t)argv[2])==TRUE){
+                    start_server(argv[2]);
+                }else start_server(DATABASE_FILE_NAME);
+                break;
+            }
+
+            case 'L': {//add or update map
 
                 //use uintptr_t to prevent int truncation issues when compiled as 64bit
-                add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
+                if(get_db_map_exists((uintptr_t)argv[2])==TRUE){
+
+                    //use uintptr_t to prevent int truncation issues when compiled as 64bit
+                    add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
+                }
+                else {
+
+                    //use uintptr_t to prevent int truncation issues when compiled as 64bit
+                    add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
+                }
+                break;
             }
-            else {
 
-                //use uintptr_t to prevent int truncation issues when compiled as 64bit
-                add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
+            case 'C': { // create database
+
+                if(argc>2){
+
+                    open_database(argv[2]);
+                }else open_database(DATABASE_FILE_NAME);
+
+                create_default_database();
+                break;
             }
-            break;
-        }
-        case 'C': { // create database
 
-            if(argc>2){
+            case 'U': { // upgrade database
 
-                open_database(argv[2]);
-            }else open_database(DATABASE_FILE_NAME);
+                //get the database name
+                const char *db_filename = (argc>2) ? argv[2] : DATABASE_FILE_NAME;
 
-            create_default_database();
-            break;
-        }
-        case 'U': { // upgrade database
-            const char *db_filename = (argc>2) ? argv[2] : DATABASE_FILE_NAME;
-            // perform upgrade
-            return upgrade_database(db_filename);
-        }
-        default: { //unknown command line option
+                // perform upgrade
+                return upgrade_database(db_filename);
+            }
 
-            printf("unknown command line option [%s]\n", (char*)argv[1]);
-        }
+            default: { //unknown command line option
+
+                printf("unknown command line option [%s]\n", (char*)argv[1]);
+            }
         }
     }
 
