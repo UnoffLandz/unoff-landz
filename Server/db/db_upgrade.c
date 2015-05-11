@@ -49,7 +49,7 @@ static int callback(void *unused, int argc, char **argv, char **azColName){
     printf("\n");
     return 0;
 }
-static int set_db_version(sqlite3 *db,int new_version) {
+static int set_db_version(int new_version) {
     char *err_msg = NULL;
     char buf[512];
     snprintf(buf,512,"UPDATE GAME_DATA_TABLE SET db_version = %d",new_version);
@@ -85,7 +85,7 @@ static int upgrade_v0_to_v1(const char *dbname) {
         sqlite3_close(db);
         return -1;
     }
-    set_db_version(db,1);
+    set_db_version(1);
     sqlite3_close(db);
     fprintf(stderr,"UPGRADE [v%d]: Success\n",1);
     return 0;
