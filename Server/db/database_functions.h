@@ -50,7 +50,7 @@ extern sqlite3 *db; // database handle which is set when function open_database 
 
     NOTES   :
 **/
-void open_database(char *database_name);
+void open_database(const char *database_name);
 
 
 /** RESULT  : Determines the number of tables in the database
