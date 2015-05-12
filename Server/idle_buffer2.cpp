@@ -38,7 +38,7 @@
 
 struct data_{
 
-    char sql[MAX_SQL_LEN];
+    std::string sql;
     unsigned char packet[MAX_PROTOCOL_PACKET_SIZE2];
     int packet_len;
     int connection;
@@ -57,7 +57,7 @@ void push_idle_buffer2(const char *sql, int connection, int process_type, unsign
 
     if(idle_buffer2.size() < IDLE_BUFFER2_MAX){
 
-        strcpy(data.sql, sql);
+        data.sql = sql;
         data.connection=connection;
         data.process_type=process_type;
         data.packet_len=packet_len;
@@ -147,7 +147,7 @@ void process_idle_buffer2(){
         printf("IDLE_BUFFER2_PROCESS_SQL\n");
 #endif
 
-        process_sql(command.sql);
+        process_sql(command.sql.c_str());
     }
     /**********************************************************************************************/
 
