@@ -1,3 +1,9 @@
 *.user
 *.cbp
 *.layout
+*.depend
+*.log
+*.db
+*.bin
+*.o
+unoff-landz
