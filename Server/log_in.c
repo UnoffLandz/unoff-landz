@@ -208,5 +208,5 @@ void process_log_in(int connection, unsigned char *packet){
     send_get_active_channels(connection);
     send_here_your_stats(connection);
     send_here_your_inventory(connection);
-    send_new_minute(connection, game_data.game_minutes);
+    //send_new_minute(connection, game_data.game_minutes);
 }

@@ -30,7 +30,7 @@
 
 struct buffer_list_type idle_buffer;
 
-void push_idle_buffer(char *sql, int connection, int process_type, unsigned char *packet){
+void Xpush_idle_buffer(char *sql, int connection, int process_type, unsigned char *packet){
 
     /** public function - see header **/
 
@@ -69,7 +69,7 @@ void push_idle_buffer(char *sql, int connection, int process_type, unsigned char
 
 }
 
-void process_idle_buffer(){
+void Xprocess_idle_buffer(){
 
     /** public function - see header **/
 

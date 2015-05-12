@@ -27,7 +27,7 @@
 #include "server_protocol_functions.h"
 #include "logging.h"
 #include "server_messaging.h"
-#include "idle_buffer.h"
+#include "idle_buffer2.h"
 #include "db/db_character_tbl.h"
 #include "characters.h"
 #include "game_data.h"
@@ -99,7 +99,8 @@ void check_new_character(int connection, unsigned char *packet){
     else {
 
         //if char name does not exist, tell idle buffer to create a new character with that name
-        push_idle_buffer("", connection, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet);
+        int packet_len=element[1].data.numeric+2;
+        push_idle_buffer2("", connection, IDLE_BUFFER2_PROCESS_ADD_NEWCHAR, packet, packet_len);
 
         log_event(EVENT_NEW_CHAR, "new character name [%s] accepted. Proceed to add to db", element[2].data.string);
     }

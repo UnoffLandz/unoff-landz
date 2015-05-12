@@ -159,7 +159,7 @@ void log_text(int event_type, char *fmt, ...){
     write_to_log(event_type, text_out);
 }
 
-void log_event(int event_type, char *fmt, ...){
+void log_event(int event_type, const char *fmt, ...){
 
     /** public function - see header */
 

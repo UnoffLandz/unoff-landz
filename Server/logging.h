@@ -40,6 +40,10 @@ enum { //log events
     EVENT_PACKET,
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** RESULT  : logs formatted text entries to log files
 
     RETURNS : void
@@ -48,8 +52,11 @@ enum { //log events
 
     NOTES   : usage - log_event(EVENT_TYPE, "text %s %i", a_str, a_int);
 */
-void log_event(int event_type, char *fmt, ...);
+void log_event(int event_type, const char *fmt, ...);
 
+#ifdef __cplusplus
+}
+#endif
 
 /** RESULT  : logs unformatted text to log files
 

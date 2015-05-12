@@ -45,7 +45,6 @@ via the 'packet_element_type' struct.
 
 #define DEBUG_SERVER_PROTOCOL_FUNCTIONS 0
 
-
 void send_packet(int connection, unsigned char *packet, int packet_length){
 
     /** public function - see header */

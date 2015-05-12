@@ -25,6 +25,10 @@ enum { //return values for validate_password function
     PASSWORD_INCORRECT=-1
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** RESULT  : processes a log in request from the client
 
     RETURNS : void
@@ -32,6 +36,11 @@ enum { //return values for validate_password function
     PURPOSE : reduce need for code in client_protocol_handler.c
 */
 void process_log_in(int connection, unsigned char *data);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 
 #endif // LOG_IN_H_INCLUDED

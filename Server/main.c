@@ -69,7 +69,7 @@ To compile server, link with the following libraries :
 #include "attributes.h"
 #include "chat.h"
 #include "characters.h"
-#include "idle_buffer.h"
+#include "idle_buffer2.h"
 #include "file_functions.h"
 #include "map_objects.h"
 
@@ -78,7 +78,7 @@ To compile server, link with the following libraries :
 
 struct ev_io *libevlist[MAX_CLIENTS] = {NULL};
 
-extern int current_database_version(const char *dbaname);
+extern int current_database_version();
 
 //declare prototypes
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
@@ -129,7 +129,7 @@ void start_server(char *db_filename){
     open_database(db_filename);
 
     //get database version
-    int old_version = current_database_version(db_filename);
+    int old_version = current_database_version();
 
     //check database version
     if(old_version != CURRENT_DB_VERSION) {
@@ -215,14 +215,12 @@ void start_server(char *db_filename){
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //load objects from database
-/*
     loaded=load_db_objects();
     if(loaded==0){
 
         log_event(EVENT_ERROR, "no objects found in database", loaded);
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-*/
 
     //gather initial stats
     get_db_last_char_created(); //loads details of the last char created from the database into the game_data struct
@@ -230,7 +228,6 @@ void start_server(char *db_filename){
 
     //fill movement vector array so we can directly translate x/y coordinates into actor cmd codes
     initialise_movement_vectors();
-
 
     //create server socket & bind it to socket address
     if((sd = socket(AF_INET, SOCK_STREAM, 0))==-1){
@@ -515,7 +512,7 @@ void close_connection_slot(int connection){
 
         char sql[MAX_SQL_LEN]="";
         snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[connection].time_of_last_minute, clients.client[connection].character_id);
-        push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+        push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
     }
 
     close(connection);
@@ -552,11 +549,11 @@ void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
         game_data.game_days++;
 
         snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_DAYS=%i WHERE GAME_DATA_ID=1", game_data.game_days);
-        push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+        push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
     }
 
     snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_MINUTES=%i WHERE GAME_DATA_ID=1", game_data.game_minutes);
-    push_idle_buffer(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL);
+    push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
  }
 
 
@@ -621,7 +618,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                     //update database with time char was last in game
                     char sql[MAX_SQL_LEN]="";
                     snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[i].time_of_last_minute, clients.client[i].character_id);
-                    push_idle_buffer(sql, i, IDLE_BUFFER_PROCESS_SQL, NULL);
+                    push_idle_buffer2(sql, i, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
                 }
 
                 //process any char movements
@@ -652,7 +649,7 @@ void idle_cb (struct ev_loop *loop, struct ev_idle *watcher, int revents){
         stop_server();
     }
 
-    process_idle_buffer();
+    process_idle_buffer2();
 }
 
 

@@ -33,13 +33,31 @@
 #ifndef DATABASE_FUNCTIONS_H_INCLUDED
 #define DATABASE_FUNCTIONS_H_INCLUDED
 
-#define CURRENT_DB_VERSION 1
+#define CURRENT_DB_VERSION 2
 #define DATABASE_FILE_NAME "unoff.db"
 #define MAX_SQL_LEN 1024
 
 #include <sqlite3.h>
 
 extern sqlite3 *db; // database handle which is set when function open_database is called
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** RESULT  : processes a sql string
+
+    RETURNS  : void
+
+    PURPOSE  : used by function idle_buffer to execute sql to update or add to database.
+
+    NOTES    :
+**/
+void process_sql(char *sql_str);
+
+#ifdef __cplusplus
+}
+#endif
 
 /** RESULT  : Opens sqlite database file and creates the handle [db] which can then be called by other
               database functions.
@@ -75,16 +93,6 @@ int database_table_count();
 **/
 void create_database_table(char *sql);
 
-
-/** RESULT  : processes a sql string
-
-    RETURNS  : void
-
-    PURPOSE  : used by function idle_buffer to execute sql to update or add to database.
-
-    NOTES    :
-**/
-void process_sql(char *sql_str);
 
 
 /** RESULT   : creates the default database

@@ -49,6 +49,7 @@ static int prepare_query(const char *sql, sqlite3_stmt **stmt, const char *_func
     int rc=sqlite3_prepare_v2(db, sql, -1, stmt, NULL);
 
     if(rc!=SQLITE_OK) {
+
         log_sqlite_error("sqlite3_prepare_v2 failed", _func, __FILE__, line, rc, sql);
         return -1;
     }
@@ -75,21 +76,24 @@ void open_database(const char *db_filename){
     }
 }
 
-static int column_exists(const char *table,const char *column) {
+static int column_exists(const char *table, const char *column) {
 
     sqlite3_stmt *stmt;
-    char sql[256];
+    char sql[MAX_SQL_LEN]="";
     int rc;
     int name_column_idx=-1;
 
-    snprintf(sql,256,"PRAGMA table_info(%s)",table);
+    snprintf(sql, MAX_SQL_LEN, "PRAGMA table_info('%s')", table);
 
-    if(-1==prepare_query(sql, &stmt, __func__, __LINE__))
-        return 0;
+    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
 
     for (int i=0; i<sqlite3_column_count(stmt); i++) {
 
-        if(strcmp("name",sqlite3_column_name(stmt,i))==0) {
+        if(strcmp("name", sqlite3_column_name(stmt,i))==0) {
             name_column_idx = i;
             break;
         }

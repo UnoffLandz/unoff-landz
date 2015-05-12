@@ -20,6 +20,10 @@
 #ifndef CHARACTER_CREATION_H_INCLUDED
 #define CHARACTER_CREATION_H_INCLUDED
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** RESULT  :   Checks whether a character name exists in the character_table of the database. If the
                 name exists, character creation is aborted and a message sent to the client. If the
                 name does not exist, the character creation packet is placed in the idle buffer with
@@ -45,6 +49,10 @@ void check_new_character(int connection, unsigned char *packet);
                 delayed by processing of database operations
 **/
 void add_new_character(int connection, unsigned char *packet);
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif // CHARACTER_CREATION_H_INCLUDED

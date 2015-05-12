@@ -20,6 +20,15 @@
 #ifndef SERVER_START_STOP_H_INCLUDED
 #define SERVER_START_STOP_H_INCLUDED
 
-void stop_server();
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern void stop_server();
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // SERVER_START_STOP_H_INCLUDED
