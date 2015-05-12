@@ -100,7 +100,7 @@ void check_new_character(int connection, const unsigned char *packet){
 
         //if char name does not exist, tell idle buffer to create a new character with that name
         int packet_len=element[1].data.numeric+2;
-        push_idle_buffer2("", connection, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet, packet_len);
+        push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet, packet_len);
 
         log_event(EVENT_NEW_CHAR, "new character name [%s] accepted. Proceed to add to db", element[2].data.string);
     }

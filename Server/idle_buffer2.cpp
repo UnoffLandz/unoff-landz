@@ -34,7 +34,16 @@
 #define IDLE_BUFFER2_MAX 100
 #define MAX_PROTOCOL_PACKET_SIZE2 160
 
-#define DEBUG_IDLE_BUFFER2 0//set debug mode
+//set debug mode
+#define DEBUG_IDLE_BUFFER2 0
+// add a helper macro that is performing printf when DEBUG_IDLE_BUFFER2 != 0
+// and does nothing otherwise
+// this is meant to soimplify all "#if DEBUG_IDLE_BUFFER2  printf()  #endif " parts of code
+#if DEBUG_IDLE_BUFFER2
+#define D_PRINT(...) printf(__VA_ARGS__)
+#else
+#define D_PRINT(...)
+#endif
 
 struct data_{
 
@@ -45,49 +54,60 @@ struct data_{
     int process_type;
 };
 // command storage typedef
-typedef std::queue<data_> buffer_list_type;
+typedef std::deque<data_> buffer_list_type;
 
 buffer_list_type idle_buffer2;
 
-void push_idle_buffer2(const char *sql, int connection, int process_type, unsigned char *packet, int packet_len){
+void push_idle_buffer2(int connection, int process_type, unsigned char *packet, int packet_len){
 
     /** public function - see header **/
 
-    data_ data;
-
-    if(idle_buffer2.size() < IDLE_BUFFER2_MAX){
-
-        data.sql = sql;
-        data.connection=connection;
-        data.process_type=process_type;
-        data.packet_len=packet_len;
-
-        //if packet length > 0 then copy packet data to buffer
-        if(packet_len > 0){
-
-            if(packet_len > MAX_PROTOCOL_PACKET_SIZE2-1){
-
-                log_event(EVENT_ERROR, "maximum protocol packet size exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-                stop_server();
-            }
-
-            memcpy(data.packet, packet, packet_len);
-            /*
-            for(int i=0; i<packet_len; i++){
-
-                data.packet[i]=packet[i];
-            }
-*/
-        }
-
-        idle_buffer2.push(data);
-    }
-    else {
+    if(idle_buffer2.size()>=IDLE_BUFFER2_MAX)
+    {
 
         //buffer overflow
         log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
+        return;
     }
+    data_ entry;
+
+    entry.sql.clear();
+    entry.connection=connection;
+    entry.process_type=process_type;
+    entry.packet_len=packet_len;
+
+    //if packet length > 0 then copy packet data to buffer
+    if(packet_len > 0){
+
+        if(packet_len > MAX_PROTOCOL_PACKET_SIZE2-1){
+
+            log_event(EVENT_ERROR, "maximum protocol packet size exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            stop_server();
+        }
+
+        memcpy(entry.packet, packet, packet_len);
+    }
+
+    idle_buffer2.push_back(entry);
+}
+void push_sql_command(const char *sql){
+    /** public function - see header **/
+
+    if(idle_buffer2.size()>=IDLE_BUFFER2_MAX)
+    {
+
+        //buffer overflow
+        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
+        return;
+    }
+    data_ entry;
+
+    entry.sql = sql;
+    entry.process_type=IDLE_BUFFER_PROCESS_SQL;
+
+    idle_buffer2.push_back(entry);
 }
 
 void process_idle_buffer2(){
@@ -113,40 +133,27 @@ void process_idle_buffer2(){
         //an instruction for IDLE_BUFFER_PROCESS_ADD_NEWCHAR so as the new character is added to
         //the database at the next idle event
 
-#if DEBUG_IDLE_BUFFER2 == 1
-        printf("IDLE_BUFFER2_PROCESS_CHECK_NEWCHAR\n");
-#endif
-
+        D_PRINT("IDLE_BUFFER2_PROCESS_CHECK_NEWCHAR\n");
         check_new_character(connection, command.packet);
     }
     /**********************************************************************************************/
 
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_ADD_NEWCHAR){
 
-#if DEBUG_IDLE_BUFFER2 == 1
-        printf("IDLE_BUFFER2_PROCESS_ADD_NEWCHAR\n");
-#endif
-
+        D_PRINT("IDLE_BUFFER2_PROCESS_ADD_NEWCHAR\n");
         add_new_character(connection, command.packet);
     }
     /**********************************************************************************************/
 
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_LOGIN){
-
-#if DEBUG_IDLE_BUFFER2 == 1
-        printf("IDLE_BUFFER2_PROCESS_LOGIN\n");
-#endif
-
+        D_PRINT("IDLE_BUFFER2_PROCESS_LOGIN\n");
         process_log_in(connection, command.packet);
     }
     /**********************************************************************************************/
 
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_SQL){
 
-#if DEBUG_IDLE_BUFFER2 == 1
-        printf("IDLE_BUFFER2_PROCESS_SQL\n");
-#endif
-
+        D_PRINT("IDLE_BUFFER2_PROCESS_SQL\n");
         process_sql(command.sql.c_str());
     }
     /**********************************************************************************************/
@@ -157,5 +164,7 @@ void process_idle_buffer2(){
         stop_server();
     }
 
-    idle_buffer2.pop();
+    idle_buffer2.pop_front();
 }
+// remove file-wide macro to prevent clashes when doing 'unity' builds
+#undef D_PRINT
