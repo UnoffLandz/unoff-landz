@@ -1,20 +1,20 @@
 /******************************************************************************************************************
-	Copyright 2014 UnoffLandz
+    Copyright 2014 UnoffLandz
 
-	This file is part of unoff_server_4.
+    This file is part of unoff_server_4.
 
-	unoff_server_4 is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    unoff_server_4 is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	unoff_server_4 is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    unoff_server_4 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
 #include "character_creation.h"
@@ -40,7 +40,7 @@
 
 #define DEBUG_CHARACTER_CREATION 0
 
-void check_new_character(int connection, unsigned char *packet){
+void check_new_character(int connection, const unsigned char *packet){
 
     /** public function - see header */
 
@@ -100,14 +100,14 @@ void check_new_character(int connection, unsigned char *packet){
 
         //if char name does not exist, tell idle buffer to create a new character with that name
         int packet_len=element[1].data.numeric+2;
-        push_idle_buffer2("", connection, IDLE_BUFFER2_PROCESS_ADD_NEWCHAR, packet, packet_len);
+        push_idle_buffer2("", connection, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet, packet_len);
 
         log_event(EVENT_NEW_CHAR, "new character name [%s] accepted. Proceed to add to db", element[2].data.string);
     }
 }
 
 
-void add_new_character(int connection, unsigned char *packet){
+void add_new_character(int connection, const unsigned char *packet){
 
     /** public function - see header */
 

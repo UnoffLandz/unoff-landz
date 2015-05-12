@@ -1,20 +1,20 @@
 /******************************************************************************************************************
-	Copyright 2014 UnoffLandz
+    Copyright 2014 UnoffLandz
 
-	This file is part of unoff_server_4.
+    This file is part of unoff_server_4.
 
-	unoff_server_4 is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    unoff_server_4 is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	unoff_server_4 is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    unoff_server_4 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
 #include "stdio.h" //supports sprintf
@@ -145,13 +145,13 @@ int join_channel(int connection, int chan){
 
             char sql[MAX_SQL_LEN]="";
             snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", i, chan, clients.client[connection].character_id);
-            push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+            push_idle_buffer2(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL, 0);
 
             clients.client[connection].active_chan=i+31;
             send_get_active_channels(connection);
 
             snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
-            push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+            push_idle_buffer2(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL, 0);
 
             //echo back to player which channel was just joined and its description etc
             sprintf(text_out, "%cYou joined channel %s", c_green3+127, channel[chan].channel_name);
@@ -206,7 +206,7 @@ int leave_channel(int connection, int chan){
     clients.client[connection].chan[slot]=0;
 
     snprintf(sql, MAX_SQL_LEN,"UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", slot, chan, clients.client[connection].character_id);
-    push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+    push_idle_buffer2(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL, 0);
 
     // need to echo back to player which channel was just joined and its description etc
     sprintf(text_out, "%cyou left channel %s", c_green3+127, channel[chan].channel_name);
@@ -232,7 +232,7 @@ int leave_channel(int connection, int chan){
     send_get_active_channels(connection);
 
     sprintf(sql, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
-    push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+    push_idle_buffer2(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL, 0);
 
     if(clients.client[connection].active_chan==0){
 

@@ -228,7 +228,7 @@ void process_packet(int connection, unsigned char *packet){
         //update database
         char sql[MAX_SQL_LEN]="";
         sprintf(sql, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i",clients.client[connection].frame, clients.client[connection].character_id);
-        push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+        push_idle_buffer2(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL, 0);
 
         log_event(EVENT_SESSION, "Protocol SIT_DOWN by [%s] frame[%i]", clients.client[connection].char_name,  clients.client[connection].frame);
     }
@@ -584,7 +584,7 @@ void process_packet(int connection, unsigned char *packet){
         //update the database
         char sql[MAX_SQL_LEN]="";
         snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", data[0], clients.client[connection].character_id);
-        push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+        push_idle_buffer2(sql, 0, IDLE_BUFFER_PROCESS_SQL, NULL, 0);
 
         log_event(EVENT_SESSION, "Protocol SET_ACTIVE_CHANNEL by [%s]...", clients.client[connection].char_name);
     }
@@ -601,7 +601,7 @@ void process_packet(int connection, unsigned char *packet){
         log_event(EVENT_SESSION, "Protocol LOG_IN by [%i]...", connection);
 
         int data_len=packet[1] + (packet[2] * 256) + 2;
-        push_idle_buffer2("", connection, IDLE_BUFFER2_PROCESS_LOGIN, packet, data_len);
+        push_idle_buffer2("", connection, IDLE_BUFFER_PROCESS_LOGIN, packet, data_len);
     }
 /***************************************************************************************************/
 
@@ -615,7 +615,7 @@ void process_packet(int connection, unsigned char *packet){
         log_event(EVENT_SESSION, "Protocol CREATE_CHAR by [%i]...", connection);
 
         int packet_len=packet[1] + (packet[2] * 256) + 2;
-        push_idle_buffer2("", connection, IDLE_BUFFER2_PROCESS_CHECK_NEWCHAR, packet, packet_len);
+        push_idle_buffer2("", connection, IDLE_BUFFER_PROCESS_CHECK_NEWCHAR, packet, packet_len);
     }
 /***************************************************************************************************/
 
