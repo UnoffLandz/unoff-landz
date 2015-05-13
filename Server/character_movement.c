@@ -1,20 +1,20 @@
 /******************************************************************************************************************
-	Copyright 2014 UnoffLandz
+    Copyright 2014 UnoffLandz
 
-	This file is part of unoff_server_4.
+    This file is part of unoff_server_4.
 
-	unoff_server_4 is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    unoff_server_4 is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	unoff_server_4 is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    unoff_server_4 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
 #include <stdlib.h>     //supports exit function
@@ -128,7 +128,7 @@ void process_char_move(int connection, time_t current_utime){
                 //update_db_char_position(connection);
                 char sql[MAX_SQL_LEN]="";
                 snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i",next_tile, map_id, clients.client[connection].character_id);
-                push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+                push_sql_command(sql);
 
             }
         }
@@ -252,7 +252,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
     //save char map id and position
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", new_map_tile, new_map_id, clients.client[connection].character_id);
-    push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+    push_sql_command(sql);
 }
 
 
@@ -276,7 +276,7 @@ void start_char_move(int connection, int destination){
 
         char sql[MAX_SQL_LEN]="";
         snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i", clients.client[connection].frame, clients.client[connection].character_id);
-        push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+        push_sql_command(sql);
     }
 
     //check if the destination is walkable

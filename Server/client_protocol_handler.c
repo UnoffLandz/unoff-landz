@@ -1,20 +1,20 @@
 /******************************************************************************************************************
-	Copyright 2014 UnoffLandz
+    Copyright 2014 UnoffLandz
 
-	This file is part of unoff_server_4.
+    This file is part of unoff_server_4.
 
-	unoff_server_4 is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    unoff_server_4 is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	unoff_server_4 is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    unoff_server_4 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
 #include <stdio.h>  //support for sprintf
@@ -228,7 +228,7 @@ void process_packet(int connection, unsigned char *packet){
         //update database
         char sql[MAX_SQL_LEN]="";
         sprintf(sql, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i",clients.client[connection].frame, clients.client[connection].character_id);
-        push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+        push_sql_command(sql);
 
         log_event(EVENT_SESSION, "Protocol SIT_DOWN by [%s] frame[%i]", clients.client[connection].char_name,  clients.client[connection].frame);
     }
@@ -584,7 +584,7 @@ void process_packet(int connection, unsigned char *packet){
         //update the database
         char sql[MAX_SQL_LEN]="";
         snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", data[0], clients.client[connection].character_id);
-        push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+        push_sql_command(sql);
 
         log_event(EVENT_SESSION, "Protocol SET_ACTIVE_CHANNEL by [%s]...", clients.client[connection].char_name);
     }
@@ -601,7 +601,7 @@ void process_packet(int connection, unsigned char *packet){
         log_event(EVENT_SESSION, "Protocol LOG_IN by [%i]...", connection);
 
         int data_len=packet[1] + (packet[2] * 256) + 2;
-        push_idle_buffer2("", connection, IDLE_BUFFER2_PROCESS_LOGIN, packet, data_len);
+        push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_LOGIN, packet, data_len);
     }
 /***************************************************************************************************/
 
@@ -615,7 +615,7 @@ void process_packet(int connection, unsigned char *packet){
         log_event(EVENT_SESSION, "Protocol CREATE_CHAR by [%i]...", connection);
 
         int packet_len=packet[1] + (packet[2] * 256) + 2;
-        push_idle_buffer2("", connection, IDLE_BUFFER2_PROCESS_CHECK_NEWCHAR, packet, packet_len);
+        push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_CHECK_NEWCHAR, packet, packet_len);
     }
 /***************************************************************************************************/
 

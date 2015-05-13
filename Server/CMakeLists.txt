@@ -22,6 +22,8 @@ set(DB_SRC
     db/db_game_data_tbl.h
     db/db_gender_tbl.h
     db/db_map_tbl.h
+    db/db_object_tbl.h
+    db/db_object_tbl.c
     db/db_season_tbl.h
 
     db/db_upgrade.h
@@ -49,7 +51,7 @@ set(SRC
     guilds.c
     harvesting.c
     hash_commands.c
-    idle_buffer.c
+    idle_buffer2.cpp
     items.c
     initialise_server.c
     logging.c

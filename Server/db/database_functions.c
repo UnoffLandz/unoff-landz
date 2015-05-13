@@ -192,7 +192,7 @@ void create_database_table(char *sql){
     log_event(EVENT_INITIALISATION, "Created table [%s]", table_name);
 }
 
-void process_sql(char *sql_str){
+void process_sql(const char *sql_str){
 
     /** public function - see header **/
 

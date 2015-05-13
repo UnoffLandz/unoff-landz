@@ -512,7 +512,7 @@ void close_connection_slot(int connection){
 
         char sql[MAX_SQL_LEN]="";
         snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[connection].time_of_last_minute, clients.client[connection].character_id);
-        push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+        push_sql_command(sql);
     }
 
     close(connection);
@@ -549,11 +549,11 @@ void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
         game_data.game_days++;
 
         snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_DAYS=%i WHERE GAME_DATA_ID=1", game_data.game_days);
-        push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+        push_sql_command(sql);
     }
 
     snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_MINUTES=%i WHERE GAME_DATA_ID=1", game_data.game_minutes);
-    push_idle_buffer2(sql, 0, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+    push_sql_command(sql);
  }
 
 
@@ -618,7 +618,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                     //update database with time char was last in game
                     char sql[MAX_SQL_LEN]="";
                     snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[i].time_of_last_minute, clients.client[i].character_id);
-                    push_idle_buffer2(sql, i, IDLE_BUFFER2_PROCESS_SQL, NULL, 0);
+                    push_sql_command(sql);
                 }
 
                 //process any char movements
