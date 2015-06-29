@@ -1,17 +1,17 @@
+#ifndef HALF_H_INCLUDED
+#define HALF_H_INCLUDED
+
 /****************************************************************************
- *            normal.h
+ *            half.h
  *
- * Author: 2008  Daniel Jungmann <dsj@gmx.net>
+ * Author: 2009  Daniel Jungmann <dsj@gmx.net>
  * Copyright: See COPYING file that comes with this distribution
  ****************************************************************************/
 
-#ifndef	_NORMAL_H_
-#define	_NORMAL_H_
-
 #include <SDL/SDL_types.h>
 
-Uint16 compress_normal(const float *normal);
-void uncompress_normal(const Uint16 value, float *normal);
+float half_to_float(const Uint16 value);
 
-#endif	/* _NORMAL_H_ */
+Uint16 float_to_half(const float value);
 
+#endif // HALF_H_INCLUDED
