@@ -1,42 +1,41 @@
+/******************************************************************************************************************
+    Copyright 2014 UnoffLandz
+
+    This file is part of unoff_server_4.
+
+    unoff_server_4 is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    unoff_server_4 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
+*******************************************************************************************************************
+                                    COMPILER SETTINGS
+
+To compile, set the following compiler flags :
+
+    -std=c99                - target c99 compliance
+
+                                    LINKING INFORMATION
+
+To compile, link with the following libraries :
+
+    libcrypto.a             - md5 hashing library
+
+*******************************************************************************************************************/
+
 #include <stdio.h>
 
 #include "e3d.h"
 #include "obj.h"
 #include "processing_options.h"
 #include "common.h"
-
-/** OPENING BRIEF FOR PROJECT
-
-    A single application with functionality for:
-
-    -converting e3d to obj format -
-    -converting obj to e3d format -
-    -e3d/obj diagnostics          - Done
-    -refining e3d data            -
-
-    CURRENT TASK - testing
-
-    TESTING:
-    command line with no options or filename    - prints usage
-    command line with e3d filename              - prints usage
-    command line with obj filename              - prints usage
-    command line with -X                        - prints unknown command line option
-    command line with -X and e3d filename       - prints unknown command line option
-    command line with -X and obj filename       - prints unknown command line option
-    command line with -h                        - prints usage
-    command line with -H                        - prints usage
-    command line with -D but no filename        - prints missing filename
-    command line with -D sewer_wall1.e3d        - prints diagnostics (e3d full stats)
-    command line with -D sewer_wall1.obj        - prints diagnostics (obj stats)
-    command line with -C house2.e3d             - works
-    command line with -C house2.obj             - works
-
-
-    TO DO:
-    add licensing to modules
-    dds viewer
-
-**/
 
 void print_usage(){
 
