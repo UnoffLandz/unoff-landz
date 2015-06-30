@@ -26,7 +26,7 @@ To compile, set the following compiler flags :
 
 To compile, link with the following libraries :
 
-    libcrypto.a             - md5 hashing library
+    libcrypto.a             - openssl library
 
 *******************************************************************************************************************/
 
