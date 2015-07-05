@@ -11,6 +11,7 @@ struct p_options_type{
     bool convert;
     bool diagnostics_only;
     bool help;
+    //bool dds;
 };
 
 struct p_options_type p_options;

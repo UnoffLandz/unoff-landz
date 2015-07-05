@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014 UnoffLandz
+    Copyright 2014, 2015 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-void push_idle_buffer2(int connection, int process_type, unsigned char *packet, int packet_len);
+void push_idle_buffer2(int connection, int process_type, const unsigned char *packet, int packet_len);
 void push_sql_command(const char *sql);
 void process_idle_buffer2();
 

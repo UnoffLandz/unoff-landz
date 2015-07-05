@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014 UnoffLandz
+	Copyright 2014, 2015 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -18,6 +18,7 @@
 *******************************************************************************************************************/
 #include <stdio.h> //support snprintf
 #include <string.h> //support strcpy
+#include <stdlib.h> //testing only
 
 #include "database_functions.h"
 #include "../logging.h"
@@ -50,7 +51,7 @@ int load_db_objects(){
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        //get the gender id and check that the value does not exceed the maximum permitted
+        //get the object id and check that the value does not exceed the maximum permitted
         int object_id=sqlite3_column_int(stmt,0);
 
         if(object_id>MAX_MAP_OBJECTS){

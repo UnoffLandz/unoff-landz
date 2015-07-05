@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014 UnoffLandz
+    Copyright 2014, 2015 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -133,6 +133,7 @@ void start_server(char *db_filename){
 
     //check database version
     if(old_version != CURRENT_DB_VERSION) {
+
         printf("Wrong database version - use -U option to upgrade your database\n");
         return;
     }
@@ -148,6 +149,14 @@ void start_server(char *db_filename){
     }
 
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    //load objects from database (must go before maps are loaded)
+    loaded=load_db_objects();
+    if(loaded==0){
+
+        log_event(EVENT_ERROR, "no objects found in database", loaded);
+        stop_server();
+    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //load maps from database
     loaded=load_db_maps();
@@ -211,14 +220,6 @@ void start_server(char *db_filename){
     if(loaded==0){
 
         log_event(EVENT_ERROR, "no seasons found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    //load objects from database
-    loaded=load_db_objects();
-    if(loaded==0){
-
-        log_event(EVENT_ERROR, "no objects found in database", loaded);
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 

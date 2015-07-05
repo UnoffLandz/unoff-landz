@@ -223,7 +223,6 @@ void create_e3d_file(char *filename){
     fclose(file);
 }
 
-
 void report_e3d_header(){
 
     /*** output the e3d header data to the console ***/
@@ -299,6 +298,10 @@ void report_e3d_vertex_data(){
                 vz
                 );
     }
+
+    //Doesn't work
+    //int duplicate_vertex_count=check_e3d_duplicate_vertices();
+    //printf("/nduplicate vertices [%i]\n", duplicate_vertex_count);
 }
 
 void report_e3d_index_data(){
@@ -481,6 +484,8 @@ void extract_e3d_from_obj_data(){
             e3d_idx++;
         }
     }
+
+    //remove_duplicate_e3d_vertices();
 }
 
 void report_e3d_data(){
@@ -511,5 +516,89 @@ void convert_obj_to_e3d_file(){
     create_e3d_file(e3d_filename);
 
     report_e3d_data();
+
+    printf("\ncreated file [%s]\n", e3d_filename);
 }
 
+/*
+int check_e3d_duplicate_vertices(){
+
+    int k=0;
+
+    for(int i=0; i<e3d_header.vertex_count; i++){
+
+        //check the preceding vertices to see if they duplicate the current one
+        for(int j=0; j<i; j++){
+
+            if(
+                (e3d_vertex_hash[j].vz==e3d_vertex_hash[i].vz) &&
+                (e3d_vertex_hash[j].vy==e3d_vertex_hash[i].vy) &&
+                (e3d_vertex_hash[j].vx==e3d_vertex_hash[i].vx) &&
+                (e3d_vertex_hash[j].uvx==e3d_vertex_hash[i].uvx) &&
+                (e3d_vertex_hash[j].uvy==e3d_vertex_hash[i].uvy) &&
+                (e3d_vertex_hash[j].t==e3d_vertex_hash[i].t) &&
+                (e3d_vertex_hash[j].n==e3d_vertex_hash[i].n)
+               ){
+
+                k++;
+            }
+        }
+    }
+
+    return k;
+}
+
+void remove_duplicate_e3d_vertices(){
+
+    int k=0;
+
+    for(int i=0; i<e3d_header.vertex_count; i++){
+
+        //check the preceding vertices to see if they duplicate the current one
+        bool dup=false;
+
+        for(int j=0; j<i; j++){
+
+            if(
+                (e3d_vertex_hash[j].vz==e3d_vertex_hash[i].vz) &&
+                (e3d_vertex_hash[j].vy==e3d_vertex_hash[i].vy) &&
+                (e3d_vertex_hash[j].vx==e3d_vertex_hash[i].vx) &&
+                (e3d_vertex_hash[j].uvx==e3d_vertex_hash[i].uvx) &&
+                (e3d_vertex_hash[j].uvy==e3d_vertex_hash[i].uvy) &&
+                (e3d_vertex_hash[j].t==e3d_vertex_hash[i].t) &&
+                (e3d_vertex_hash[j].n==e3d_vertex_hash[i].n)
+               ){
+
+                k++;
+
+                for(int l=0; l<e3d_header.index_count; l++){
+
+                    if(e3d_vertex_index[l].idx==i) e3d_vertex_index[l].idx=j;
+                }
+
+                dup=true;
+                break;
+            }
+        }
+
+        if(dup==false){
+
+            e3d_vertex_hash[i-k].vz=e3d_vertex_hash[i].vz;
+            e3d_vertex_hash[i-k].vy=e3d_vertex_hash[i].vy;
+            e3d_vertex_hash[i-k].vx=e3d_vertex_hash[i].vx;
+
+            e3d_vertex_hash[i-k].uvx=e3d_vertex_hash[i].uvx;
+            e3d_vertex_hash[i-k].uvy=e3d_vertex_hash[i].uvy;
+
+            e3d_vertex_hash[i-k].n=e3d_vertex_hash[i].n;
+
+            e3d_vertex_hash[i-k].t=e3d_vertex_hash[i].t;
+
+            for(int l=0; l<e3d_header.index_count; l++){
+
+                if(e3d_vertex_index[l].idx==i) e3d_vertex_index[l].idx=i-k;
+            }
+        }
+    }
+}
+*/

@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014 UnoffLandz
+	Copyright 2014, 2015 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -15,7 +15,35 @@
 
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************************************************************/
+*******************************************************************************************************************
+
+                              HOW MAP DATA IS LOADED AND USED
+
+On server-start, the function load_db_maps parses each map in the database MAP TABLE and extracts
+relevant data from the map blob which is then used to populate the map struct. The map blob contains
+a list of 3d objects used in the map, comprising of the e3d file name and position, which is
+extracted to an array in the map struct.
+
+This array is used to handle the client protocol LOOK_AT_MAP_OBJECT, which returns the position of
+the object in the map's 3d object list. In order that the server can determine what the object is,
+at start up, the server loads a list of e3d file names and corresponding information about that
+object from the OBJECT TABLE into the map_object struct.
+
+In order to remove the need for the server to repeatedly lookup entries in the OBJECT TABLE, when
+a map is loaded at startup, the lookup is performed for each entry in the 3d object array of the
+map struct, and the id of corresponding entry in the map_object struct is inserted alongside, ie :
+
+                             Data from MAP TABLE                    Data from OBJECT TABLE
+                                 loaded to                               loaded to
+                                     |                                       |
+                                     |                                       |
+                        ----------MAP STRUCT------------            ---MAP OBJECT STRUCT--
+Value returned          |id     | the entry number for |            |id     | the objects|
+by LOOK_AT_MAP   -----> |number | the object in the    |----------> |number | name       |
+OBJECT                  |       | map_object struct    |            |       | and details|
+                        --------------------------------            ----------------------
+
+*****************************************************************************************************/
 
 #ifndef DB_MAP_TBL_H_INCLUDED
 #define DB_MAP_TBL_H_INCLUDED

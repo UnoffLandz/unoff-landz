@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014 UnoffLandz
+    Copyright 2014, 2015 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -19,6 +19,7 @@
 
 #include <stdio.h>  //support for sprintf
 #include <string.h> //support for memcpy strlen strcpy
+#include <stdlib.h> // testing only
 
 #include "client_protocol.h"
 #include "clients.h"
@@ -521,8 +522,10 @@ void process_packet(int connection, unsigned char *packet){
         //returns a Uint32 indicating the position of the object in the map 3d object list
         int map_object_number=Uint32_to_dec(packet[3], packet[4], packet[5], packet[6]);
 
-        //get the item_id for the object
+        //get the characters map
         int map_id=clients.client[connection].map_id;
+
+        //get the object item id
         int item_id=maps.map[map_id].threed_object_lookup[map_object_number].item_id;
 
         //tell the client what the item is
@@ -537,7 +540,7 @@ void process_packet(int connection, unsigned char *packet){
 
             if(map_object[item_id].edible==EDIBLE){
 
-                sprintf(text_out, "%sand it's edible", text_out);
+                sprintf(text_out, "%s and it's edible", text_out);
             }
 
             //add a period to the end of the sentence

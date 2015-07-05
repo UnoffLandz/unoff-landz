@@ -11,6 +11,7 @@ void parse_command_line(int argc, char *argv[]){
     p_options.convert=false;
     p_options.diagnostics_only=false;
     p_options.help=false;
+    //p_options.dds=false;
 
 	for (int i=1; i<argc; i++){
 
@@ -24,6 +25,7 @@ void parse_command_line(int argc, char *argv[]){
                     case 'c':   p_options.convert=true; break;
                     case 'd':   p_options.diagnostics_only=true; break;
                     case 'h':   p_options.help=true; break;
+                    //case 't':   p_options.dds=true; break;
 
                     default:
                     printf("\nunknown command line option [%c]\n\n", argv[i][j]);

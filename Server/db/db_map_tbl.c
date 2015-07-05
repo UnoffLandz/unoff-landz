@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014 UnoffLandz
+	Copyright 2014, 2015 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -19,6 +19,7 @@
 
 #include <stdio.h>  //support for NULL
 #include <string.h> //support for strcpy and memcpy
+#include <stdlib.h> //testing only
 
 #include "database_functions.h"
 #include "../logging.h"
@@ -330,7 +331,7 @@ int load_db_maps(){
             //remove the path and copy filename to struct
             extract_file_name(e3d_path_and_file_name, maps.map[map_id].threed_object_lookup[m].e3d_file_name);
 
-            //find the image id for this e3d file
+            //find the id for this item in the item array
             int l=0;
             for(l=0; l<MAX_MAP_OBJECTS; l++){
 

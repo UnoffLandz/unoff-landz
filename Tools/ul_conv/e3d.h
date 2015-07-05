@@ -93,5 +93,7 @@ void extract_e3d_from_obj_data();
 void create_e3d_file(char *filename);
 void report_e3d_data();
 void convert_obj_to_e3d_file();
+//int check_e3d_duplicate_vertices();
+//void remove_duplicate_e3d_vertices();
 
 #endif // E3D_H_INCLUDED

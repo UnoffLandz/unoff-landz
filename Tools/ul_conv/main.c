@@ -31,11 +31,14 @@ To compile, link with the following libraries :
 *******************************************************************************************************************/
 
 #include <stdio.h>
+//#include <GL/glew.h>
+//#include <GL/freeglut_std.h>
 
 #include "e3d.h"
 #include "obj.h"
 #include "processing_options.h"
 #include "common.h"
+//#include "dds.h"
 
 void print_usage(){
 
@@ -44,10 +47,12 @@ void print_usage(){
 	printf("\n[options]  -c = convert [filename]\n");
 	printf("           -d = diagnostics only\n");
 	printf("           -h = help\n");
+	//printf("           -t = display texture\n");
 
 	printf("\nsupported file types:\n");
 	printf("          .e3d - Eternal Lands\n");
 	printf("          .obj - Wavefront\n");
+	//printf("          .dds - textures\n");
 }
 
 int main(int argc, char *argv[]){
@@ -61,7 +66,7 @@ int main(int argc, char *argv[]){
     get_filename_suffix(p_options.filename, suffix);
 
     //process command line options
-    if(p_options.help==true || (p_options.convert==false && p_options.diagnostics_only==false)){
+    if(p_options.help==true){
 
         print_usage();
     }
@@ -104,7 +109,6 @@ int main(int argc, char *argv[]){
 
             //perform diagnostics on an obj file
             read_obj_data(p_options.filename);
-
             report_obj_stats();
         }
         else if(strcmp(suffix, "")==0){
@@ -118,12 +122,29 @@ int main(int argc, char *argv[]){
             exit(EXIT_FAILURE);
         }
     }
+
+/*
+    else if(p_options.dds==true){
+
+        if(strcmp(suffix, ".dds")==0){
+
+            display_texture();
+
+        }
+
+        else {
+
+            printf("display of file type [%s] is not supported\n", p_options.filename);
+            exit(EXIT_FAILURE);
+        }
+    }
+*/
     else {
 
-        printf("unknown command line option\n");
-        print_usage();
-        exit(EXIT_FAILURE);
+            printf("unknown command line option\n");
+            print_usage();
+            exit(EXIT_FAILURE);
     }
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

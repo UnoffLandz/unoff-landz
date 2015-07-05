@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014 UnoffLandz
+    Copyright 2014, 2015 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -58,7 +58,7 @@ typedef std::deque<data_> buffer_list_type;
 
 buffer_list_type idle_buffer2;
 
-void push_idle_buffer2(int connection, int process_type, unsigned char *packet, int packet_len){
+void push_idle_buffer2(int connection, int process_type, const unsigned char *packet, int packet_len){
 
     /** public function - see header **/
 

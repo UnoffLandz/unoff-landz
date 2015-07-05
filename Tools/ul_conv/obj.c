@@ -9,38 +9,6 @@
 #include "processing_options.h"
 #include "common.h"
 
-/**
-
-e3d vertex hash 1  uvx1 uvy1 nx1 ny1 nz1 vz1 vx1 vy1
-                2  uvx2 uvy2 nx2 ny2 nz2 vz2 vx2 vy2
-                3  uvx3 uvy3 nx3 ny3 nz3 vz3 vz3 vy3
-                4  uvx4 uvy4 nx4 ny4 nz4 vz4 vx4 vy4
-                5  uvx5 uvy5 nx5 ny5 nz5 vz5 vx5 vy5
-                6  uvx6 uvy6 nx6 ny6 nz6 vz6 vz6 vy6
-
-
-e3d index       1
-                3
-                2
-                4
-                6
-                5
-
-e3d materials   start 1 count 2 mtl 1 min_idx 1 max_idx 3
-                start 4 count 3 mtl 2 min_idx 4 max_idx 6
-
-obj vertex      1 vx1 vy1 vz1
-                2 vx2 vy2 vz2
-                3 vx3 vy3 vz3
-                4 vx4 vy4 vz4
-                5 vx5 vy5 vz5
-                6 vx6 vy6 vz6
-
-obj face        1 1/3/2
-                2 4/6/5
-
-**/
-
 void read_obj_data(char *filename){
 
     /*** Reads data from an obj file ***/
@@ -372,6 +340,7 @@ void convert_e3d_to_obj_file(){
     create_mtl_file(mtl_filename);
 
     report_e3d_data();
+    printf("\ncreated files [%s] and [%s]\n", obj_filename, mtl_filename);
 }
 
 void create_mtl_file(char *mtl_filename){
