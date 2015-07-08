@@ -21,6 +21,7 @@
 #define CLIENTS_H_INCLUDED
 
 #include <time.h>                   //support for time_t data type
+#include <stdbool.h>                //support for boolean data type
 
 #include "chat.h"                   //contains definition of MAX_CHAN_SLOTS
 #include "character_inventory.h"    //contains definition of MAX_INVENTORY_SLOTS
@@ -49,9 +50,9 @@ struct client_node_type{
     int path_count;
     time_t time_of_last_move;
 
-    enum{HARVESTING_OFF, HARVESTING_ON} harvest_flag;
-    int harvest_amount; //amount harvested each cycle
-    int inventory_image_id;
+    bool harvest_flag;
+    int harvest_amount;    //amount harvested each cycle
+    int harvest_object_id; //object being harvested
     int inventory_slot;
     int bag_open;
     time_t time_of_last_harvest;

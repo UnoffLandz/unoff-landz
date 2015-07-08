@@ -61,6 +61,7 @@ To compile server, link with the following libraries :
 #include "db/db_map_tbl.h"
 #include "db/db_season_tbl.h"
 #include "db/db_object_tbl.h"
+#include "db/db_e3d_tbl.h"
 #include "db/db_upgrade.h"
 #include "date_time_functions.h"
 #include "broadcast_actor_functions.h"
@@ -71,7 +72,7 @@ To compile server, link with the following libraries :
 #include "characters.h"
 #include "idle_buffer2.h"
 #include "file_functions.h"
-#include "map_objects.h"
+#include "objects.h"
 
 #define DEBUG_MAIN 1
 #define VERSION "4"
@@ -150,11 +151,19 @@ void start_server(char *db_filename){
 
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    loaded=load_db_e3ds();
+    if(loaded==0){
+
+        log_event(EVENT_ERROR, "no objects found in database", loaded);
+        stop_server();
+    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+
     //load objects from database (must go before maps are loaded)
     loaded=load_db_objects();
     if(loaded==0){
 
-        log_event(EVENT_ERROR, "no objects found in database", loaded);
+        log_event(EVENT_ERROR, "no e3ds found in database", loaded);
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 

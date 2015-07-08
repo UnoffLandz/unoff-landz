@@ -81,8 +81,8 @@ struct map_node_type{
 
     //translation table from map object number to image_id
     struct{
-        char e3d_file_name[80];
-        int item_id;
+        char e3d_filename[80];
+        int e3d_id;
         float x;
         float y;
         float z;
@@ -126,5 +126,27 @@ int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis);
     NOTES   :
 */
 int get_tile(int x_pos, int y_pos, int map_axis);
+
+
+/** RESULT  : finds the object id based on the position of an entry in a map threed object list
+
+    RETURNS : the object id
+
+    PURPOSE : used to process the result from LOOK_AT_MAP_OBJECT and HARVEST protocols
+
+    NOTES   :
+*/
+int get_object_id(int map_id, int threed_object_list_pos);
+
+
+/** RESULT  : calculates the object tile based on the position of an entry in a map threed object list
+
+    RETURNS : the tile number of the object position
+
+    PURPOSE : used to process the result from LOOK_AT_MAP_OBJECT and HARVEST protocols
+
+    NOTES   :
+*/
+int get_object_tile(int map_id, int threed_object_list_pos);
 
 #endif // MAPS_H_INCLUDED

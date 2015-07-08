@@ -25,18 +25,23 @@
 #include "logging.h"
 #include "maps.h"
 #include "harvesting.h"
-#include "map_objects.h"
+#include "objects.h"
 #include "server_protocol_functions.h"
+#include "e3d.h"
 
 #define DEBUG_HARVESTING 0
 
 void stop_harvesting(int connection){
 
+    /** public function - see header */
+
     char text_out[80]="";
 
-    clients.client[connection].harvest_flag=HARVESTING_OFF;
+    clients.client[connection].harvest_flag=false;
 
-    sprintf(text_out, "%cyou stopped harvesting", c_green3+127);
+    int object_id=clients.client[connection].harvest_object_id;
+
+    sprintf(text_out, "%cyou stopped harvesting %s", c_green3+127, object[object_id].object_name);
     send_raw_text(connection, CHAT_SERVER, text_out);
 
     #if DEBUG_HARVESTING==1
@@ -46,19 +51,20 @@ void stop_harvesting(int connection){
     log_event(EVENT_SESSION, "harvesting stopped, character [%s]", clients.client[connection].char_name);
 }
 
-void start_harvesting(int connection, int map_object_number){
+void start_harvesting(int connection, int threed_object_list_pos){
+
+    /** public function - see header */
 
     char text_out[80]="";
 
-    //get the item_id for the object
+    //get the map id
     int map_id=clients.client[connection].map_id;
-    int item_id=maps.map[map_id].threed_object_lookup[map_object_number].item_id;
+
+    //get the id for the object being harvested
+    int object_id=get_object_id(map_id, threed_object_list_pos);
 
     //get the position of the object
-    int object_tile=get_tile(
-        maps.map[map_id].threed_object_lookup[map_object_number].x,
-        maps.map[map_id].threed_object_lookup[map_object_number].y,
-        clients.client[connection].map_id);
+    int object_tile=get_object_tile(map_id, threed_object_list_pos);
 
     //get the distance between the object and the char
     int object_proximity=get_proximity(clients.client[connection].map_tile, object_tile, maps.map[map_id].map_axis);
@@ -67,30 +73,34 @@ void start_harvesting(int connection, int map_object_number){
     if(object_proximity<=MIN_HARVEST_PROXIMITY){
 
         //check if we know what this item is
-        if (item_id>0){
+        if (object_id>0){
 
             //check if item is harvestable
-            if(map_object[item_id].harvestable==HARVESTABLE){
+            if(object[object_id].harvestable==true){
 
-                sprintf(text_out, "%cyou started to harvest %s. ", c_green3+127, map_object[item_id].object_name);
+                sprintf(text_out, "%cyou started to harvest %s. ", c_green3+127, object[object_id].object_name);
 
-                clients.client[connection].harvest_flag=HARVESTING_ON;
+                //set the chars harvest flag to show that it is now harvesting and set the item
+                clients.client[connection].harvest_flag=true;
+
+                //record what item the char is harvesting
+                clients.client[connection].harvest_object_id=object_id;
 
                 #if DEBUG_HARVESTING==1
                 printf("harvesting started, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
                 #endif
 
-                log_event(EVENT_SESSION, "harvesting started, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection].char_name, map_object_number, item_id, map_object[item_id].object_name);
+                log_text(EVENT_SESSION, "started harvesting");
             }
             else {
 
-                sprintf(text_out, "%cSorry! %s isn't harvestable.", c_red3+122, map_object[item_id].object_name);
+                sprintf(text_out, "%csorry! %s isn't harvestable.", c_red3+122, object[object_id].object_name);
 
                 #if DEBUG_HARVESTING==1
                 printf("item not harvestable, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
                 #endif
 
-                log_event(EVENT_SESSION, "protocol HARVEST - item not harvestable, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection].char_name, map_object_number, item_id, map_object[item_id].object_name);
+                log_text(EVENT_SESSION, "attempt to harvest unharvestable object");
             }
         }
         else {
@@ -101,7 +111,7 @@ void start_harvesting(int connection, int map_object_number){
             printf("harvest item unknown, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
             #endif
 
-            log_event(EVENT_ERROR, "harvest item unknown, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection].char_name, map_object_number, item_id, map_object[item_id].object_name);
+            log_event(EVENT_ERROR, "attempt to harvest unknown object");
         }
     }
     else {
@@ -112,7 +122,7 @@ void start_harvesting(int connection, int map_object_number){
         printf("harvest item too far away, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
         #endif
 
-        log_event(EVENT_ERROR, "harvest item too far away, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection].char_name, map_object_number, item_id, map_object[item_id].object_name);
+        log_event(EVENT_ERROR, "object to far away to harvest");
     }
 
     send_raw_text(connection, CHAT_SERVER, text_out);

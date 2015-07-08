@@ -45,7 +45,8 @@
 #include "db/database_functions.h"
 #include "idle_buffer2.h"
 #include "season.h"
-#include "map_objects.h"
+#include "e3d.h"
+#include "objects.h"
 #include "harvesting.h"
 #include "date_time_functions.h"
 #include "client_protocol_handler.h"
@@ -415,26 +416,24 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==HARVEST){
 
-        //returns a integer corresponding to the order of an object in the map 3d object list
-        int map_object_number=Uint16_to_dec(packet[3], packet[4]);
-
-        //check if char is already harvesting
-        if(clients.client[connection].harvest_flag==HARVESTING_OFF){
-
-            //if char isn't harvesting then start
-            start_harvesting(connection, map_object_number);
-        }
-        else {
-
-            //if char is harvesting then stop
-            stop_harvesting(connection);
-       }
-
         #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("HARVEST connection [%i]\n", connection);
         #endif
 
-        log_event(EVENT_SESSION, "Protocol HARVEST connection [%i] character [%s]", connection, clients.client[connection].char_name);
+        //returns a integer corresponding to the order of the object in the map 3d object list
+        int threed_object_list_pos=Uint16_to_dec(packet[3], packet[4]);
+
+        log_event(EVENT_SESSION, "protocol HARVEST - started, char [%s], threed object list position [%i], map [%i]", clients.client[connection].char_name, threed_object_list_pos, clients.client[connection].map_id);
+
+        //if char is already harvesting then stop, else start harvesting
+        if(clients.client[connection].harvest_flag==true){
+
+            stop_harvesting(connection);
+        }
+        else {
+
+            start_harvesting(connection, threed_object_list_pos);
+        }
     }
 /***************************************************************************************************/
 
@@ -520,25 +519,22 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==LOOK_AT_MAP_OBJECT){
 
         //returns a Uint32 indicating the position of the object in the map 3d object list
-        int map_object_number=Uint32_to_dec(packet[3], packet[4], packet[5], packet[6]);
-
-        //get the characters map
-        int map_id=clients.client[connection].map_id;
+        int threed_object_list_pos=Uint32_to_dec(packet[3], packet[4], packet[5], packet[6]);
 
         //get the object item id
-        int item_id=maps.map[map_id].threed_object_lookup[map_object_number].item_id;
+        int object_id=get_object_id(clients.client[connection].map_id, threed_object_list_pos);
 
         //tell the client what the item is
-        if (item_id>0){
+        if (object_id>0){
 
-            sprintf(text_out, "%cyou see a %s. ", c_green3+127, map_object[item_id].object_name);
+            sprintf(text_out, "%cyou see a %s. ", c_green3+127, object[object_id].object_name);
 
-            if(map_object[item_id].harvestable==HARVESTABLE){
+            if(object[object_id].harvestable==true){
 
-                sprintf(text_out, "%sIt's harvestable ", text_out);
+                sprintf(text_out, "%sIt's harvestable", text_out);
             }
 
-            if(map_object[item_id].edible==EDIBLE){
+            if(object[object_id].edible==true){
 
                 sprintf(text_out, "%s and it's edible", text_out);
             }
@@ -557,7 +553,7 @@ void process_packet(int connection, unsigned char *packet){
         printf("LOOK_AT_MAP_OBJECT - map object [%i] item id [%i] object [%s]\n", map_object_number, item_id, map_object[item_id].object_name);
         #endif
 
-        log_event(EVENT_SESSION, "Protocol LOOK_AT_MAP_OBJECT [%s] by [%s]", map_object[item_id].object_name, clients.client[connection].char_name);
+        log_event(EVENT_SESSION, "Protocol LOOK_AT_MAP_OBJECT [%s] by [%s]", object[object_id].object_name, clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 

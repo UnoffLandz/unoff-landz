@@ -266,7 +266,9 @@ void start_char_move(int connection, int destination){
     int current_tile=clients.client[connection].map_tile;
 
     //if char is harvesting then stop
-    if(clients.client[connection].harvest_flag==HARVESTING_ON) stop_harvesting(connection);
+    if(clients.client[connection].harvest_flag==true){
+        stop_harvesting(connection);
+    }
 
     //if char is sitting then stand before moving
     if(clients.client[connection].frame==frame_sit){

@@ -33,6 +33,7 @@
 #include "db_game_data_tbl.h"
 #include "db_season_tbl.h"
 #include "db_object_tbl.h"
+#include "db_e3d_tbl.h"
 #include "../global.h"
 #include "../server_start_stop.h"
 #include "../attributes.h"
@@ -192,6 +193,7 @@ void create_database_table(char *sql){
     log_event(EVENT_INITIALISATION, "Created table [%s]", table_name);
 }
 
+
 void process_sql(const char *sql_str){
 
     /** public function - see header **/
@@ -255,7 +257,7 @@ void create_default_database(){
     create_database_table(CHARACTER_TABLE_SQL);
     create_database_table(INVENTORY_TABLE_SQL);
     create_database_table(GENDER_TABLE_SQL);
-    //create_database_table(ITEM_TABLE_SQL);
+    create_database_table(E3D_TABLE_SQL);
     create_database_table(OBJECT_TABLE_SQL);
     create_database_table(MAP_TABLE_SQL);
     create_database_table(CHANNEL_TABLE_SQL);
@@ -350,6 +352,31 @@ void create_default_database(){
         }
     }
 
+    add_db_e3d(1, "cabbage.e3d", 1);
+    add_db_e3d(2, "tomatoeplant1.e3d", 2);
+    add_db_e3d(3, "tomatoeplant2.e3d", 2);
+    add_db_e3d(4, "foodtomatoe.e3d", 2);
+    add_db_e3d(5, "food_carrot.e3d", 3);
+    add_db_e3d(6, "log1.e3d", 4);
+    add_db_e3d(7, "log2.e3d", 4);
+    add_db_e3d(8, "branch1.e3d", 5);
+    add_db_e3d(9, "branch2.e3d", 5);
+    add_db_e3d(10, "branch3.e3d", 5);
+    add_db_e3d(11, "branch4.e3d", 5);
+    add_db_e3d(12, "branch5.e3d", 5);
+    add_db_e3d(13, "branch6.e3d", 5);
+    add_db_e3d(15, "flowerorange1.e3d", 6);
+    add_db_e3d(16, "flowerorange2.e3d", 6);
+    add_db_e3d(17, "flowerorange3.e3d", 6);
+
+    add_db_object(1, "cabbage", 405, 1, 1);
+    add_db_object(2, "tomato", 407, 1, 1);
+    add_db_object(3, "carrot", 408, 1, 1);
+    add_db_object(4, "log", 408, 1, 0);
+    add_db_object(5, "stick", 140, 1, 0);
+    add_db_object(6, "tiger lily", 29, 1, 0);
+
+/*
     add_db_object(1, "cabbage.e3d", "cabbage", 405, 1, 1);
     add_db_object(2, "tomatoeplant1.e3d", "tomato", 407, 1, 1);
     add_db_object(3, "tomatoeplant2.e3d", "tomato", 407, 1, 1);
@@ -370,4 +397,5 @@ void create_default_database(){
     add_db_object(18, "flowerwhite1.e3d", "Impatiens", 29, 1, 0);
     add_db_object(19, "flowerwhite2.e3d", "Impatiens", 29, 1, 0);
     add_db_object(20, "flowerwhite3.e3d", "Impatiens", 29, 1, 0);
+*/
 }

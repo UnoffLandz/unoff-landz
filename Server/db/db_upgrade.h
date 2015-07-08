@@ -16,6 +16,11 @@
     You should have received a copy of the GNU General Public License
     along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
+/*****************************************************************************************************
+
+                    ~~~~ Special credit goes to Nermerle for this module ~~~~
+
+*****************************************************************************************************/
 
 #ifndef DB_UPGRADE_H_INCLUDED
 #define DB_UPGRADE_H_INCLUDED

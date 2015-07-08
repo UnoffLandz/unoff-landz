@@ -17,30 +17,20 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef HARVESTING_H_INCLUDED
-#define HARVESTING_H_INCLUDED
+#ifndef E3D_H_INCLUDED
+#define E3D_H_INCLUDED
 
-#define MIN_HARVEST_PROXIMITY 2
+#define MAX_E3D 100
 
-/** RESULT  : stops a char harvesting
+struct e3d_type{
 
-    RETURNS : void
+    char e3d_filename[80];
+    float x;
+    float y;
+    float z;
+    int object_id;
+};
+extern struct e3d_type e3d[MAX_E3D];
 
-    PURPOSE : code modularity
 
-    NOTES   :
-*/
-void stop_harvesting(int connection);
-
-
-/** RESULT  : starts a char harvesting
-
-    RETURNS : void
-
-    PURPOSE : code modularity
-
-    NOTES   :
-*/
-void start_harvesting(int connection, int threed_object_list_pos);
-
-#endif // HARVESTING_H_INCLUDED
+#endif // E3D_H_INCLUDED

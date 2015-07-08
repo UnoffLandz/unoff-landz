@@ -1,6 +1,30 @@
+/****************************************************************************************************
+    Copyright 2014, 2015 UnoffLandz
+
+    This file is part of unoff_server_4.
+
+    unoff_server_4 is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    unoff_server_4 is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
+******************************************************************************************************/
+/*****************************************************************************************************
+
+                    ~~~~ Special credit goes to Nermerle for this module ~~~~
+
+*****************************************************************************************************/
 #include "database_functions.h"
 #include "../file_functions.h"
 #include "db_object_tbl.h"
+#include "db_e3d_tbl.h"
 
 #include <sqlite3.h>
 #include <stdint.h>
@@ -10,7 +34,7 @@
 #include <stdbool.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// DB Upgrade helper functions
+/// DB Upgrade helper functions (by Nemerle)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static char *create_backup_name(const char *dbname,int ver) {
@@ -83,7 +107,6 @@ static int set_db_version(int new_version) {
 /// Upgrade functions go here
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 static int upgrade_v0_to_v1(const char *dbname) {
 
     sqlite3 *db;
@@ -114,7 +137,9 @@ static int upgrade_v0_to_v1(const char *dbname) {
 
 static int upgrade_v1_to_v2() {
 
-    create_database_table(OBJECT_TABLE_SQL);
+/** MAP_OBJECT_TABLE was removed in update 3, hence upgrade 2 is commented out **/
+/*
+    create_database_table(MAP_OBJECT_TABLE_SQL);
 
     add_db_object(1, "cabbage.e3d", "cabbage", 405, 1, 1);
     add_db_object(2, "tomatoeplant1.e3d", "tomato", 407, 1, 1);
@@ -136,8 +161,70 @@ static int upgrade_v1_to_v2() {
     add_db_object(18, "flowerwhite1.e3d", "Impatiens", 29, 1, 0);
     add_db_object(19, "flowerwhite2.e3d", "Impatiens", 29, 1, 0);
     add_db_object(20, "flowerwhite3.e3d", "Impatiens", 29, 1, 0);
+*/
 
     set_db_version(2);
+
+    sqlite3_close(db);
+    fprintf(stderr,"UPGRADE [v%d]: Success\n", 2);
+
+    return 0;
+}
+
+static int upgrade_v2_to_v3(const char *dbname) {
+
+    create_database_table(E3D_TABLE_SQL);
+
+    add_db_e3d(1, "cabbage.e3d", 1);
+    add_db_e3d(2, "tomatoeplant1.e3d", 2);
+    add_db_e3d(3, "tomatoeplant2.e3d", 2);
+    add_db_e3d(4, "foodtomatoe.e3d", 2);
+    add_db_e3d(5, "food_carrot.e3d", 3);
+    add_db_e3d(6, "log1.e3d", 4);
+    add_db_e3d(7, "log2.e3d", 4);
+    add_db_e3d(8, "branch1.e3d", 5);
+    add_db_e3d(9, "branch2.e3d", 5);
+    add_db_e3d(10, "branch3.e3d", 5);
+    add_db_e3d(11, "branch4.e3d", 5);
+    add_db_e3d(12, "branch5.e3d", 5);
+    add_db_e3d(13, "branch6.e3d", 5);
+    add_db_e3d(15, "flowerorange1.e3d", 6);
+    add_db_e3d(16, "flowerorange2.e3d", 6);
+    add_db_e3d(17, "flowerorange3.e3d", 6);
+
+    create_database_table(OBJECT_TABLE_SQL);
+
+    add_db_object(1, "cabbage", 405, 1, 1);
+    add_db_object(2, "tomato", 407, 1, 1);
+    add_db_object(3, "carrot", 408, 1, 1);
+    add_db_object(4, "log", 408, 1, 0);
+    add_db_object(5, "stick", 140, 1, 0);
+    add_db_object(6, "Tiger Lily", 29, 1, 0);
+
+    //remove MAP_OBJECT_TABLE
+    sqlite3 *db;
+    char *err_msg = NULL;
+
+    int rc = sqlite3_open(dbname, &db);
+
+    if( rc !=SQLITE_OK ) {
+
+        return -1;
+    }
+
+    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS MAP_OBJECT_TABLE", callback, 0, &err_msg);
+
+    if( rc != SQLITE_OK ){
+
+        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
+
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+
+        return -1;
+    }
+
+    set_db_version(3);
 
     sqlite3_close(db);
     fprintf(stderr,"UPGRADE [v%d]: Success\n", 2);
@@ -159,6 +246,7 @@ struct upgrade_array_entry {
 
 struct upgrade_array_entry entries[] = {
 
+    { 2, 3, upgrade_v2_to_v3},
     { 1, 2, upgrade_v1_to_v2},
     { 0, 1, upgrade_v0_to_v1},
     { 0, 0, NULL}
@@ -169,8 +257,10 @@ static const struct upgrade_array_entry *find_upgrade_entry(uint32_t old_version
     int idx=0;
 
     while(entries[idx].fn!=NULL) {
+
         if(entries[idx].from_version==old_version)
             return &entries[idx];
+
         ++idx;
     }
 
@@ -210,10 +300,8 @@ int upgrade_database(const char *dbname) {
         fprintf(stdout,"DB version update %d to %d:",entry->from_version,entry->to_version);
 
         // backup is created before calling each upgrade function
-        if(-1==create_backup(dbname,old_version)) {
-
+        if(-1==create_backup(dbname,old_version))
             return -1;
-        }
 
         if(0==entry->fn(dbname)) {
 

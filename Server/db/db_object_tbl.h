@@ -48,7 +48,7 @@ int load_db_objects();
 
     NOTES   : to eventually be outsourced to a separate utility
 **/
-void add_db_object(int object_id, char *e3d_file_name, char *object_name, int image_id, int harvestable, int edible);
+void add_db_object(int object_id, char *object_name, int image_id, int harvestable, int edible);
 
 
 #endif // DB_OBJECT_TBL_H_INCLUDED

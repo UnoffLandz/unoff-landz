@@ -24,24 +24,24 @@ relevant data from the map blob which is then used to populate the map struct. T
 a list of 3d objects used in the map, comprising of the e3d file name and position, which is
 extracted to an array in the map struct.
 
-This array is used to handle the client protocol LOOK_AT_MAP_OBJECT, which returns the position of
-the object in the map's 3d object list. In order that the server can determine what the object is,
-at start up, the server loads a list of e3d file names and corresponding information about that
-object from the OBJECT TABLE into the map_object struct.
+MAP TABLE                    MAP STRUCT
 
-In order to remove the need for the server to repeatedly lookup entries in the OBJECT TABLE, when
-a map is loaded at startup, the lookup is performed for each entry in the 3d object array of the
-map struct, and the id of corresponding entry in the map_object struct is inserted alongside, ie :
-
-                             Data from MAP TABLE                    Data from OBJECT TABLE
-                                 loaded to                               loaded to
-                                     |                                       |
-                                     |                                       |
-                        ----------MAP STRUCT------------            ---MAP OBJECT STRUCT--
-Value returned          |id     | the entry number for |            |id     | the objects|
-by LOOK_AT_MAP   -----> |number | the object in the    |----------> |number | name       |
-OBJECT                  |       | map_object struct    |            |       | and details|
-                        --------------------------------            ----------------------
+map blob with                1) position of each object in the 3d object list
+3d object list               2) the e3d filename of the object-------------------------
+                        ---> 3) the image id for the object in the OBJECT STRUCT      |
+                        |                                                             |
+OBJECT E3D TABLE        |    OBJECT E3D STRUCT                                        |
+                        |                                                             |
+1) entry id             |    1) entry id                                              |
+2) e3d_filename         |    2) e3d_filename  <----------------------------------------
+                        |    3) the image id for the object in the OBJECT STRUCT-------
+                        |                                                             |
+OBJECT TABLE            |    OBJECT STRUCT                                            |
+                        |                                                             |
+image id                ---- 1) image id <---------------------------------------------
+name                         2) name
+harvestable                  3) harvestable
+edible                       4) edible
 
 *****************************************************************************************************/
 

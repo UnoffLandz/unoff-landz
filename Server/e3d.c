@@ -16,20 +16,9 @@
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
+#include "e3d.h"
 
-#ifndef MAP_OBJECTS_H_INCLUDED
-#define MAP_OBJECTS_H_INCLUDED
+#include <stdio.h> //support for printf (testing)
+#include <string.h> //support for memcpy
 
-#define MAX_MAP_OBJECTS 30
-
-struct map_object_type{
-
-    int image_id;
-    char e3d_file_name[80];
-    char object_name[80];
-    enum {NON_HARVESTABLE, HARVESTABLE}harvestable;
-    enum {EDIBLE, INEDIBLE}edible;
-};
-extern struct map_object_type map_object[MAX_MAP_OBJECTS];
-
-#endif // MAP_OBJECTS_H_INCLUDED
+struct e3d_type e3d[MAX_E3D];

@@ -22,11 +22,10 @@
 
 #include "database_functions.h"
 #include "../logging.h"
-#include "../gender.h"
 #include "../server_start_stop.h"
-#include "../objects.h"
+#include "../e3d.h"
 
-int load_db_objects(){
+int load_db_e3ds(){
 
     /** public function - see header */
 
@@ -35,7 +34,7 @@ int load_db_objects(){
 
     //prepare the sql statement
     char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM OBJECT_TABLE");
+    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM E3D_TABLE");
 
     rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 
@@ -44,9 +43,9 @@ int load_db_objects(){
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading object...");
+    log_event(EVENT_INITIALISATION, "loading e3d...");
 
-    //read the sql query result into the map array
+    //read the sql query result into the e3d array
     int i=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -54,18 +53,16 @@ int load_db_objects(){
         //get the object id and check that the value does not exceed the maximum permitted
         int id=sqlite3_column_int(stmt,0);
 
-        if(id>MAX_OBJECTS){
+        if(id>MAX_E3D){
 
-            log_event(EVENT_ERROR, "object id [%i] exceeds range [%i] in function %s: module %s: line %i", id, MAX_OBJECTS, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "id [%i] exceeds range [%i] in function %s: module %s: line %i", id, MAX_E3D, __func__, __FILE__, __LINE__);
             stop_server();
         }
 
-        strcpy(object[id].object_name, (char*)sqlite3_column_text(stmt, 1));
-        object[id].image_id=sqlite3_column_int(stmt, 2);
-        if(sqlite3_column_int(stmt, 3)==1) object[id].harvestable=true; else object[id].harvestable=false;
-        if(sqlite3_column_int(stmt, 4)==1) object[id].edible=true; else object[id].edible=false;
+        strcpy(e3d[id].e3d_filename, (char*)sqlite3_column_text(stmt, 1));
+        e3d[id].object_id=sqlite3_column_int(stmt, 2);
 
-        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", id, object[id].object_name);
+        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", id, e3d[id].e3d_filename);
 
         i++;
     }
@@ -88,28 +85,21 @@ int load_db_objects(){
     return i;
 }
 
-void add_db_object(int id, char *object_name, int image_id, bool harvestable, bool edible ){
+void add_db_e3d(int id, char *e3d_filename, int object_id){
 
     /** public function - see header */
 
     char sql[MAX_SQL_LEN]="";
 
-    int _harvest=0, _edible=0;
-
-    if(harvestable==true)_harvest=1; else _harvest=0;
-    if(edible==true)_edible=1; else _edible=0;
-
-    snprintf(sql, MAX_SQL_LEN, "INSERT INTO OBJECT_TABLE("  \
-        "OBJECT_ID," \
-        "OBJECT_NAME," \
-        "IMAGE_ID," \
-        "HARVESTABLE," \
-        "EDIBLE" \
-        ") VALUES(%i, '%s', %i, %i, %i)", id, object_name, image_id, _harvest, _edible);
+    snprintf(sql, MAX_SQL_LEN, "INSERT INTO E3D_TABLE("  \
+        "E3D_ID," \
+        "E3D_FILE_NAME,"  \
+        "OBJECT_ID" \
+        ") VALUES(%i, '%s', %i)", id, e3d_filename, object_id);
 
     process_sql(sql);
 
-    printf("Object [%s] added successfully\n", object_name);
+    printf("e3d [%s] added successfully\n", e3d_filename);
 
-    log_event(EVENT_SESSION, "Added object [%s] to OBJECT_TABLE", object_name);
+    log_event(EVENT_SESSION, "Added e3d [%s] to E3D_TABLE", e3d_filename);
 }
