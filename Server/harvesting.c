@@ -41,7 +41,10 @@ void stop_harvesting(int connection){
 
     int object_id=clients.client[connection].harvest_object_id;
 
-    sprintf(text_out, "%cyou stopped harvesting %s", c_green3+127, object[object_id].object_name);
+    sprintf(text_out, "%cYou stopped harvesting.", c_green3+127);
+    //We ought to be able to use the following message, but the the OL/EL client relies on the above
+    //phrase to stop the harvesting effect
+    //sprintf(text_out, "%cyou stopped harvesting %s", c_green3+127, object[object_id].object_name);
     send_raw_text(connection, CHAT_SERVER, text_out);
 
     #if DEBUG_HARVESTING==1
