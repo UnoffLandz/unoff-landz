@@ -62,7 +62,7 @@ void open_database(const char *db_filename){
 
    /** public function - see header **/
 
-    if(file_exists(db_filename)==FALSE){
+    if(file_exists(db_filename)==false){
 
         printf("database file [%s] not found\n", db_filename);
         log_event(EVENT_ERROR, "database file [%s] not found", db_filename);

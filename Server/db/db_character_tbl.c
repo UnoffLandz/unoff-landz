@@ -274,8 +274,8 @@ int add_db_char_data(struct client_node_type character){
     sqlite3_bind_int(stmt, 5, character.chan[0]);
     sqlite3_bind_int(stmt, 6, character.chan[1]);
     sqlite3_bind_int(stmt, 7, character.chan[2]);
-    sqlite3_bind_int(stmt, 8, FALSE); // gm permission
-    sqlite3_bind_int(stmt, 9, FALSE); // ig permission
+    sqlite3_bind_int(stmt, 8, 0); // gm permission
+    sqlite3_bind_int(stmt, 9, 0); // ig permission
     sqlite3_bind_int(stmt, 10, character.map_id);
     sqlite3_bind_int(stmt, 11, character.map_tile);
     sqlite3_bind_int(stmt, 12, character.char_type);

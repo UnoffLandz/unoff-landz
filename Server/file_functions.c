@@ -19,6 +19,7 @@
 
 #include <stdio.h> //supports fopen
 #include <sys/stat.h> //supports fstat
+#include <stdbool.h>
 
 #include "global.h"
 
@@ -43,15 +44,15 @@ int get_file_size(char *file_name){
 }
 
 
-int file_exists(const char *filename) {
+bool file_exists(const char *filename) {
 
     /** public function - see header **/
 
     struct stat st;
 
-    if(stat(filename, &st)!=0) return FALSE;
+    if(stat(filename, &st)!=0) return false;
 
-    return TRUE;
+    return true;
 }
 
 

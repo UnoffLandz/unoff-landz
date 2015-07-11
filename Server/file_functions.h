@@ -20,6 +20,8 @@
 #ifndef FILE_FUNCTIONS_H_INCLUDED
 #define FILE_FUNCTIONS_H_INCLUDED
 
+#include <stdbool.h>
+
 /** RESULT  : gets the size of a file
 
     RETURNS : file size
@@ -39,7 +41,7 @@ int get_file_size(char *file_name);
 
     NOTES   :
 **/
-int file_exists(const char *filename);
+bool file_exists(const char *filename);
 
 ///
 /// \brief Copy a file named name to newname

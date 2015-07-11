@@ -426,9 +426,9 @@ int get_db_map_exists(int map_id){
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    if(map_id_count==1) return TRUE;
+    if(map_id_count==1) return true;
 
-    return FALSE;
+    return false;
 }
 
 

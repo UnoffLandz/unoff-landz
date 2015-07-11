@@ -27,18 +27,18 @@ extracted to an array in the map struct.
 MAP TABLE                    MAP STRUCT
 
 map blob with                1) position of each object in the 3d object list
-3d object list               2) the e3d filename of the object-------------------------
+3d object list               2) the e3d filename of the object >-----------------------
                         ---> 3) the image id for the object in the OBJECT STRUCT      |
                         |                                                             |
 OBJECT E3D TABLE        |    OBJECT E3D STRUCT                                        |
                         |                                                             |
 1) entry id             |    1) entry id                                              |
 2) e3d_filename         |    2) e3d_filename  <----------------------------------------
-                        |    3) the image id for the object in the OBJECT STRUCT-------
+                        |    3) the image id for the object in the OBJECT STRUCT >-----
                         |                                                             |
 OBJECT TABLE            |    OBJECT STRUCT                                            |
                         |                                                             |
-image id                ---- 1) image id <---------------------------------------------
+image id                ---< 1) image id <---------------------------------------------
 name                         2) name
 harvestable                  3) harvestable
 edible                       4) edible

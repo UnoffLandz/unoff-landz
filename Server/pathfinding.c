@@ -132,10 +132,10 @@ int is_tile_in_lateral_bounds(int tile, int next_tile, int map_id){
     int next_tile_x=next_tile % map_axis;
     int vector_x=next_tile_x-tile_x;
 
-    if(tile_x==0 && vector_x==1) return FALSE;
-    if(tile_x==1 && vector_x==-1) return FALSE;
+    if(tile_x==0 && vector_x==1) return false;
+    if(tile_x==1 && vector_x==-1) return false;
 
-    return TRUE;
+    return true;
 }
 
 int is_tile_adjacent(int tile, int test_tile, int map_id){
@@ -158,10 +158,10 @@ int is_tile_adjacent(int tile, int test_tile, int map_id){
         //adj_tile=tile+vector_x[i]+(map_axis*vector_y[i]);
         adj_tile=tile+vector[i].x+(map_axis*vector[i].y);
 
-        if(adj_tile==test_tile && is_tile_in_lateral_bounds(tile, adj_tile, map_id)==TRUE) return TRUE;
+        if(adj_tile==test_tile && is_tile_in_lateral_bounds(tile, adj_tile, map_id)==true) return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_id, int *explore_stack_count, int explore_stack[][3]){
@@ -186,7 +186,7 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
         adj_tile=target_tile+vector[i].x+(map_axis*vector[i].y);
 
         //ensure adjacent tile is within lateral bounds
-        if(is_tile_in_lateral_bounds(target_tile, adj_tile, map_id)==TRUE){
+        if(is_tile_in_lateral_bounds(target_tile, adj_tile, map_id)==true){
 
             //ensure adjacent tile is traversable
             if(maps.map[map_id].height_map[adj_tile]>=MIN_TRAVERSABLE_VALUE) {
@@ -225,7 +225,7 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
     int explore_stack_count=0;
     int node=0;
     int heuristic_value=0;
-    int found=FALSE;
+    int found=false;
     char text_out[1024]="";
     int start_tile=clients.client[connection].map_tile;
     int map_id=clients.client[connection].map_id;
@@ -256,19 +256,19 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
         }
 
         //get next unexplored tile
-        found=FALSE;
+        found=false;
 
         for(i=0; i<explore_stack_count; i++){
 
             if(explore_stack[i][STATUS]==UNEXPLORED){
                 explore_stack[i][STATUS]=EXPLORED;
                 node=i;
-                found=TRUE;
+                found=true;
                 break;
             }
         }
 
-        if(found==FALSE) {
+        if(found==false) {
 
             sprintf(text_out, "%cthat destination is unreachable", c_red1+127);
             send_raw_text(connection, CHAT_PERSONAL, text_out);
@@ -312,7 +312,7 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
     int next_tile=0;
     int map_id=clients.client[connection].map_id;
     char text_out[1024]="";
-    int found=FALSE;
+    int found=false;
 
     if(explore_path(connection, destination_tile, &path_stack_count, path_stack)==NOT_FOUND) return NOT_FOUND;
 
@@ -327,27 +327,27 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
     //loop through explored tiles finding the best adjacent moves from destination to start
     do{
         lowest_value=9999;//works for paths up to 9999 tiles long which ought to be sufficient
-        found=FALSE;
+        found=false;
 
         for(i=0; i<path_stack_count; i++){
 
-            if(is_tile_adjacent(next_tile, path_stack[i][TILE], map_id)==TRUE){
+            if(is_tile_adjacent(next_tile, path_stack[i][TILE], map_id)==true){
 
                 if(path_stack[i][VALUE]<lowest_value && path_stack[i][STATUS]==UNEXPLORED){
 
                     //ensure path doesn't cross lateral bounds
-                    if(is_tile_in_lateral_bounds(next_tile, path_stack[i][TILE], map_id)==TRUE){
+                    if(is_tile_in_lateral_bounds(next_tile, path_stack[i][TILE], map_id)==true){
 
                         lowest_value=path_stack[i][VALUE];
                         j=i;
-                        found=TRUE;
+                        found=true;
                     }
                 }
             }
         }
 
         //if no adjacent tiles then start is unreachable from destination so abort function
-        if(found==FALSE) {
+        if(found==false) {
 
             sprintf(text_out, "%cthat destination is unreachable", c_red1+127);
             send_raw_text(connection, CHAT_PERSONAL, text_out);

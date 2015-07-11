@@ -21,10 +21,12 @@
 #define GLOBAL_H_INCLUDED
 
 /** General Boolean Values **/
+/*
 enum{
     FALSE=0,
     TRUE
 };
+*/
 
 enum{
     FOUND=-1,

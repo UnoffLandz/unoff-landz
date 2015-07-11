@@ -705,7 +705,7 @@ int main(int argc, char *argv[]){
             case 'L': {//add or update map
 
                 //use uintptr_t to prevent int truncation issues when compiled as 64bit
-                if(get_db_map_exists((uintptr_t)argv[2])==TRUE){
+                if(get_db_map_exists((uintptr_t)argv[2])==true){
 
                     //use uintptr_t to prevent int truncation issues when compiled as 64bit
                     add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
