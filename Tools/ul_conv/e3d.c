@@ -484,8 +484,6 @@ void extract_e3d_from_obj_data(){
             e3d_idx++;
         }
     }
-
-    //remove_duplicate_e3d_vertices();
 }
 
 void report_e3d_data(){

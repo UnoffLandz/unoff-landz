@@ -4,7 +4,7 @@
 #define MAX_FILENAME_LENGTH 80
 #define FILENAME_SUFFIX_LENGTH 5 // format = dot plus three chars plus null terminator
 
-#define MD5_MAX_DATA 10000
+#define MD5_MAX_DATA 12000
 #define MD5_HASH_LENGTH 16
 #define MD5_TEMP_FILENAME "md5.tmp"
 

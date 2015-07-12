@@ -26,7 +26,7 @@ void read_obj_data(char *filename){
     int v=0, vt=0, vn=0, lib=0, mtl=0;
     int face_mtl=0;
     int idx=0;
-    char mtl_filename[80];
+    bool mtl_file=false;
 
     // read the file
     while(fgets(line, OBJ_FILE_LINE_LENGTH, file)){
@@ -90,7 +90,13 @@ void read_obj_data(char *filename){
         //identify materials lib entries
         if(strncmp(line, "mtllib ", 7)==0){
 
-            if(sscanf(line+7, "%s", obj_material[lib].mtl_name)!=1){
+            if(mtl_file==true){
+
+                printf("more than one mtllib tag in obj file\n");
+                exit(EXIT_FAILURE);
+            }
+
+            if(sscanf(line+7, "%s", mtl_filename)!=1){
 
                 printf("sscanf failed to read 'mtllib' entry in function read_obj_data\n");
                 exit(EXIT_FAILURE);
@@ -99,29 +105,28 @@ void read_obj_data(char *filename){
             //remove the newline char from the end of the string
             strncpy(mtl_filename, line+7, strlen(line)-8);
 
-            if(lib==MAX_OBJ_MTLLIB_COUNT){
-
-                printf("mtllib count [%i] exceeds maximum [%i] in function read_obj_data\n", lib, MAX_OBJ_MTLLIB_COUNT);
-                exit(EXIT_FAILURE);
-            }
-
-            lib++;
+            mtl_file=true;
         }
 
         //identify usemtl entries
         if(strncmp(line, "usemtl ", 7)==0) {
 
-            if(lib==0) {
+            //check that we have an mtl file
+            if(mtl_file==false) {
 
                 printf("obj file usemtl tag has no matching mtllib\n");
                 exit(EXIT_FAILURE);
             }
 
-            if(sscanf(line+7, "%s", obj_material[mtl].mtl_name)!=1){
+            char newmtl[80]="";
 
-                printf("sscanf failed to read 'usemtl' entry in function read_obj_data\n");
+            if(sscanf(line+7, "%s", newmtl)!=1){
+
+                printf("sscanf failed to read 'mtllib' entry in function read_obj_data\n");
                 exit(EXIT_FAILURE);
             }
+
+            get_newmtl(mtl_filename, obj_material[mtl].mtl_name, newmtl);
 
             face_mtl=mtl;
 
@@ -374,6 +379,65 @@ void create_mtl_file(char *mtl_filename){
     }
 
     fclose(file);
+}
+
+void get_newmtl(char *mtl_filename, char *texture_filename, char *newmtl){
+
+    /*** gets the texture filename from an mtl file ***/
+
+    //open the file
+    FILE *file;
+
+    if((file=fopen(mtl_filename, "r"))==NULL) {
+
+        printf("unable to open file [%s] in function get_newmtl\n", mtl_filename);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[MTL_FILE_LINE_LENGTH];
+    bool found_mtl=false;
+    bool found_texture=false;
+
+    // read the file
+    while(fgets(line, MTL_FILE_LINE_LENGTH, file)){
+
+        //identify mtl data entries
+        if(strncmp(line, "newmtl ", 7)==0){
+
+            char mtl_tag[80]="";
+
+            if(sscanf(line+7, "%s", mtl_tag)!=1){
+
+                printf("sscanf failed to read 'newmtl' entry in function get_newmtl\n");
+                exit(EXIT_FAILURE);
+            }
+
+            if(strncmp(mtl_tag, newmtl, strlen(newmtl))==0) {
+
+                found_mtl=true;
+            }
+        }
+
+        if(strncmp(line, "map_Kd ", 7)==0 && found_mtl==true){
+
+            if(sscanf(line+7, "%s", texture_filename)!=1){
+
+                printf("sscanf failed to read 'map_Kd' entry in function get_newmtl\n");
+                exit(EXIT_FAILURE);
+            }
+
+            found_texture=true;
+            break;
+        }
+    }
+
+    fclose(file);
+
+    if(found_texture==false){
+
+        printf("failed to find texture filename for mtl[%s] in function get_newmtl\n", newmtl);
+        exit(EXIT_FAILURE);
+    }
 }
 
 void report_obj_stats(){
