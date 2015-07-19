@@ -9,6 +9,84 @@
 #include "processing_options.h"
 #include "common.h"
 
+void check_obj_bounds(char *filename){
+
+    //open the file
+    FILE *file;
+
+    if((file=fopen(filename, "r"))==NULL) {
+
+        printf("unable to open file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[OBJ_FILE_LINE_LENGTH];
+    int v=0, vt=0, vn=0, mtllib=0, mtl=0, f=0;
+
+    // read the file
+    while(fgets(line, OBJ_FILE_LINE_LENGTH, file)){
+
+        //count vertex data entries
+        if(strncmp(line, "v ", 2)==0) v++;
+
+        //count texture data entries
+        if(strncmp(line, "vt ", 3)==0) vt++;
+
+        //count normals data entries
+        if(strncmp(line, "vn ", 3)==0) vn++;
+
+        //count materials lib entries
+        if(strncmp(line, "mtllib ", 7)==0) mtllib++;
+
+
+        //count materials entries
+        if(strncmp(line, "usemtl ", 7)==0) mtl++;
+
+        //count face entries
+        if(strncmp(line, "f ", 2)==0) f++;
+    }
+
+    fclose(file);
+
+    //bounds check the number of vertices
+    if(v>MAX_OBJ_VERTEX_COUNT){
+
+        printf("vertex count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", v, MAX_OBJ_VERTEX_COUNT, __func__, __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+
+    if(vt>MAX_OBJ_TEXTURE_COUNT){
+
+        printf("texture count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", vt, MAX_OBJ_TEXTURE_COUNT, __func__, __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+
+    if(vn>MAX_OBJ_NORMAL_COUNT){
+
+        printf("normal count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", vn, MAX_OBJ_NORMAL_COUNT, __func__, __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+
+    if(mtllib!=1){
+
+        printf("mtllib count [%i] is not equal to 1 in function %s: module %s: line %i\n", mtllib, __func__, __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+
+    if(mtl>MAX_OBJ_MATERIAL_COUNT){
+
+        printf("material count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", mtl, MAX_OBJ_MATERIAL_COUNT, __func__, __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+
+    if(f>MAX_OBJ_FACE_COUNT){
+
+        printf("face count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", f, MAX_OBJ_FACE_COUNT, __func__, __FILE__, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+}
+
+
 void read_obj_data(char *filename){
 
     /*** Reads data from an obj file ***/
@@ -18,12 +96,12 @@ void read_obj_data(char *filename){
 
     if((file=fopen(filename, "r"))==NULL) {
 
-        printf("unable to open file [%s] in function read_obj_data\n", filename);
+        printf("unable to open file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
     char line[OBJ_FILE_LINE_LENGTH];
-    int v=0, vt=0, vn=0, lib=0, mtl=0;
+    int v=0, vt=0, vn=0, mtl=0;
     int face_mtl=0;
     int idx=0;
     bool mtl_file=false;
@@ -36,14 +114,7 @@ void read_obj_data(char *filename){
 
             if(sscanf(line+2, "%f %f %f", &obj_vertex[v].x, &obj_vertex[v].y, &obj_vertex[v].z)!=3){
 
-                printf("sscanf failed to read 'v' entry in function read_obj_data\n");
-                exit(EXIT_FAILURE);
-            }
-
-            //bounds check the number of vertices
-            if(v==MAX_OBJ_VERTEX_COUNT){
-
-                printf("obj vertex count [%i] exceeds maximum [%i] in function read_obj_data\n", v, MAX_OBJ_VERTEX_COUNT);
+                printf("unable to read 'v' entry in file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
@@ -55,13 +126,7 @@ void read_obj_data(char *filename){
 
             if(sscanf(line+3, "%f %f", &obj_texture[vt].x, &obj_texture[vt].y)!=2){
 
-                printf("sscanf failed to read 'vt' entry in function read_obj_data\n");
-                exit(EXIT_FAILURE);
-            }
-
-            if(vt==MAX_OBJ_TEXTURE_COUNT){
-
-                printf("texture count [%i] exceeds maximum [%i] in function read_obj_data\n", vt, MAX_OBJ_TEXTURE_COUNT);
+                printf("unable to read 'vt' entry in file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
@@ -74,13 +139,7 @@ void read_obj_data(char *filename){
 
             if(sscanf(line+3, "%f %f %f", &obj_normal[vn].x, &obj_normal[vn].y, &obj_normal[vn].z)!=3){
 
-                printf("sscanf failed to read 'vn' entry in function read_obj_data\n");
-                exit(EXIT_FAILURE);
-            }
-
-            if(vn==MAX_OBJ_NORMAL_COUNT){
-
-                printf("normal count [%i] exceeds maximum [%i] in function read_obj_data\n", vn, MAX_OBJ_NORMAL_COUNT);
+                printf("unable to read 'vn' entry in file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
@@ -92,13 +151,13 @@ void read_obj_data(char *filename){
 
             if(mtl_file==true){
 
-                printf("more than one mtllib tag in obj file\n");
+                printf("more than one mtllib tag in file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
             if(sscanf(line+7, "%s", mtl_filename)!=1){
 
-                printf("sscanf failed to read 'mtllib' entry in function read_obj_data\n");
+                printf("unable to read 'mtllib' entry in file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
@@ -114,7 +173,7 @@ void read_obj_data(char *filename){
             //check that we have an mtl file
             if(mtl_file==false) {
 
-                printf("obj file usemtl tag has no matching mtllib\n");
+                printf("file [%s] has usemtl tag has no matching mtllib in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
@@ -122,19 +181,13 @@ void read_obj_data(char *filename){
 
             if(sscanf(line+7, "%s", newmtl)!=1){
 
-                printf("sscanf failed to read 'mtllib' entry in function read_obj_data\n");
+                printf("unable to read 'mtllib' entry in file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
             get_newmtl(mtl_filename, obj_material[mtl].mtl_name, newmtl);
 
             face_mtl=mtl;
-
-            if(lib==MAX_OBJ_MATERIAL_COUNT){
-
-                printf("material count [%i] exceeds maximum [%i] in function read_obj_data\n", lib, MAX_OBJ_MATERIAL_COUNT);
-                exit(EXIT_FAILURE);
-            }
 
             mtl++;
         }
@@ -156,17 +209,11 @@ void read_obj_data(char *filename){
                     &obj_face[idx].n[2]
                     )!=9){
 
-                printf("sscanf failed to read 'f' entry in function read_obj_face_data\n");
+                printf("unable to read 'f' entry in file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
             obj_face[idx].mtl=face_mtl;
-
-            if(idx==MAX_OBJ_FACE_COUNT){
-
-                printf("face count [%i] exceeds maximum [%i] in function read_obj_data\n", lib, MAX_OBJ_FACE_COUNT);
-                exit(EXIT_FAILURE);
-            }
 
             idx++;
         }
@@ -258,7 +305,7 @@ void create_obj_file(char *obj_filename, char *mtl_filename){
     //create the obj file
     if((file=fopen(obj_filename, "w"))==NULL) {
 
-        printf("unable to create file [%s] in function create_obj_file\n", obj_filename);
+        printf("unable to create file [%s] in function %s: module %s: line %i\n", obj_filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -357,7 +404,7 @@ void create_mtl_file(char *mtl_filename){
     //create the file
     if((file=fopen(mtl_filename, "w"))==NULL) {
 
-        printf("unable to create file [%s] in function create_mtl_file\n", mtl_filename);
+        printf("unable to create file [%s] in function %s: module %s: line %i\n", mtl_filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -390,7 +437,7 @@ void get_newmtl(char *mtl_filename, char *texture_filename, char *newmtl){
 
     if((file=fopen(mtl_filename, "r"))==NULL) {
 
-        printf("unable to open file [%s] in function get_newmtl\n", mtl_filename);
+        printf("unable to open file [%s] in function %s: module %s: line %i\n", mtl_filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -408,7 +455,7 @@ void get_newmtl(char *mtl_filename, char *texture_filename, char *newmtl){
 
             if(sscanf(line+7, "%s", mtl_tag)!=1){
 
-                printf("sscanf failed to read 'newmtl' entry in function get_newmtl\n");
+                printf("unable to read 'newmtl' entry in file [%s] in function %s: module %s line %i\n", mtl_filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
@@ -422,7 +469,7 @@ void get_newmtl(char *mtl_filename, char *texture_filename, char *newmtl){
 
             if(sscanf(line+7, "%s", texture_filename)!=1){
 
-                printf("sscanf failed to read 'map_Kd' entry in function get_newmtl\n");
+                printf("unable to read 'map_Kd' entry in file [%s] in function %s: module %s line %i\n", mtl_filename, __func__, __FILE__, __LINE__);
                 exit(EXIT_FAILURE);
             }
 
@@ -435,7 +482,7 @@ void get_newmtl(char *mtl_filename, char *texture_filename, char *newmtl){
 
     if(found_texture==false){
 
-        printf("failed to find texture filename for mtl[%s] in function get_newmtl\n", newmtl);
+        printf("failed to find texture filename for mtl enytry [%s] in function %s: module %s: line %i\n", newmtl, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 }

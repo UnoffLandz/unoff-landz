@@ -15,14 +15,14 @@ void read_e3d_header(char *filename){
 
     if((file=fopen(filename, "rb"))==NULL) {
 
-        printf("unable to open file [%s] in function read_e3d_header\n", filename);
+        printf("unable to open file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
     //read the file into the e3d header struct
     if(fread(&e3d_header, sizeof(e3d_header), 1, file)!=1){
 
-        printf("unable to read e3d_header in function read_e3d_header\n");
+        printf("unable to read file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -36,7 +36,7 @@ void read_e3d_vertex_hash(char *filename, int vertex_hash_offset, int vertex_cou
     //bounds check the number of vertices
     if(vertex_count>MAX_E3D_VERTEX_COUNT){
 
-        printf("e3d vertex count [%i] exceeds maximum [%i]\n", vertex_count, MAX_E3D_VERTEX_COUNT);
+        printf("e3d vertex count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", vertex_count, MAX_E3D_VERTEX_COUNT, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -45,7 +45,7 @@ void read_e3d_vertex_hash(char *filename, int vertex_hash_offset, int vertex_cou
 
     if((file=fopen(filename, "rb"))==NULL) {
 
-        printf("unable to open file [%s] in function read_e3d_vertex_hash\n", filename);
+        printf("unable to open file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -54,7 +54,7 @@ void read_e3d_vertex_hash(char *filename, int vertex_hash_offset, int vertex_cou
 
     if(fread(&byte, sizeof(byte), 1, file)!=1){
 
-        printf("unable to read offset for vertex hash in function read_e3d_vertex_hash\n");
+        printf("unable to read offset from file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -65,7 +65,7 @@ void read_e3d_vertex_hash(char *filename, int vertex_hash_offset, int vertex_cou
 
         if(fread(&vh, sizeof(vh), 1, file)!=1){
 
-            printf("unable to read vertex hash [%i] in function read_e3d_vertex_hash\n", i);
+            printf("unable to read vertex hash [%i] in function %s: module %s: line %i\n", i, __func__, __FILE__, __LINE__);
             exit(EXIT_FAILURE);
         }
 
@@ -91,7 +91,7 @@ void read_e3d_index_hash(char *filename, int index_hash_offset, int index_count)
     //bounds check the number of indexes
     if(index_count>MAX_E3D_INDEX_COUNT){
 
-        printf("e3d index count [%i] exceeds maximum [%i]\n", index_count, MAX_E3D_INDEX_COUNT);
+        printf("e3d index count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", index_count, MAX_E3D_INDEX_COUNT, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -100,7 +100,7 @@ void read_e3d_index_hash(char *filename, int index_hash_offset, int index_count)
 
     if((file=fopen(filename, "rb"))==NULL) {
 
-        printf("unable to open file [%s] in function read_e3d_index_hash\n", filename);
+        printf("unable to open file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -109,7 +109,7 @@ void read_e3d_index_hash(char *filename, int index_hash_offset, int index_count)
 
     if(fread(&byte, sizeof(byte), 1, file)!=1){
 
-        printf("unable to read offset for index hash in function read_e3d_index_hash\n");
+        printf("unable to read offset in function %s: module %s: line %i\n", __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -120,7 +120,7 @@ void read_e3d_index_hash(char *filename, int index_hash_offset, int index_count)
 
         if(fread(&vi, sizeof(vi), 1, file)!=1){
 
-            printf("unable to read index hash [%i] in function read_e3d_index_hash\n", i);
+            printf("unable to read index hash [%i] in function %s: module %s: line %i\n", i, __func__, __FILE__, __LINE__);
             exit(EXIT_FAILURE);
         }
 
@@ -137,7 +137,7 @@ void read_e3d_materials_hash(char *filename, int materials_offset, int materials
     //bounds check the number of indexes
     if(materials_count>MAX_E3D_MATERIALS_COUNT){
 
-        printf("e3d materials count exceeds maximum [%i]\n", MAX_E3D_MATERIALS_COUNT);
+        printf("e3d materials count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", materials_count, MAX_E3D_MATERIALS_COUNT, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -146,7 +146,7 @@ void read_e3d_materials_hash(char *filename, int materials_offset, int materials
 
     if((file=fopen(filename, "rb"))==NULL) {
 
-        printf("unable to open file [%s] in function read_e3d_materials_hash\n", filename);
+        printf("unable to open file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -155,7 +155,7 @@ void read_e3d_materials_hash(char *filename, int materials_offset, int materials
 
     if(fread(&byte, sizeof(byte), 1, file)!=1){
 
-        printf("unable to read offset for materials hash in function read_e3d_materials_hash\n");
+        printf("unable to read offset in function %s: module %s: line %i\n", __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -165,7 +165,7 @@ void read_e3d_materials_hash(char *filename, int materials_offset, int materials
 
         if(fread(&ml, sizeof(ml), 1, file)!=1){
 
-            printf("unable to read materials hash [%i] in function read_e3d_materials_hash\n", i);
+            printf("unable to read materials hash [%i] in function %s: module %s: line %i\n", i, __func__, __FILE__, __LINE__);
             exit(EXIT_FAILURE);
         }
 
@@ -195,7 +195,7 @@ void create_e3d_file(char *filename){
 
     if((file=fopen(filename, "wb"))==NULL) {
 
-        printf("unable to open file [%s] in function create_e3d_file\n", filename);
+        printf("unable to create file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -369,7 +369,7 @@ void extract_e3d_from_obj_data(){
 
     if(e3d_header.vertex_count>MAX_E3D_VERTEX_COUNT){
 
-        printf("e3d vertex count [%i] exceeds maximum [%i]\n", e3d_header.vertex_count, MAX_E3D_VERTEX_COUNT);
+        printf("e3d vertex count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", e3d_header.vertex_count, MAX_E3D_VERTEX_COUNT, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -381,7 +381,7 @@ void extract_e3d_from_obj_data(){
 
     if(e3d_header.index_count>MAX_E3D_INDEX_COUNT){
 
-        printf("e3d index count [%i] exceeds maximum [%i]\n", e3d_header.index_count, MAX_E3D_INDEX_COUNT);
+        printf("e3d index count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", e3d_header.index_count, MAX_E3D_INDEX_COUNT, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -393,7 +393,7 @@ void extract_e3d_from_obj_data(){
 
     if(e3d_header.material_count>MAX_E3D_MATERIALS_COUNT){
 
-        printf("e3d index count [%i] exceeds maximum [%i]\n", e3d_header.material_count, MAX_E3D_MATERIALS_COUNT);
+        printf("e3d materials count [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", e3d_header.material_count, MAX_E3D_MATERIALS_COUNT, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -496,6 +496,8 @@ void report_e3d_data(){
 
 void convert_obj_to_e3d_file(){
 
+    check_obj_bounds(p_options.filename);
+
     read_obj_data(p_options.filename);
 
     extract_e3d_from_obj_data();
@@ -504,11 +506,11 @@ void convert_obj_to_e3d_file(){
     get_md5(MD5_TEMP_FILENAME, E3D_HEADER_OFFSET, e3d_header.md5_hash);
 
     //extract the prefix from the conversion filename
-    char prefix[80]; /** TODO replace hardcoded amount **/
+    char prefix[MAX_FILENAME_LENGTH];
     get_filename_prefix(p_options.filename, prefix);
 
     //create the e3d filename
-    char e3d_filename[80]; /** TODO replace hardcoded amount **/
+    char e3d_filename[MAX_FILENAME_LENGTH];
     sprintf(e3d_filename, "%s.e3d", prefix);
 
     create_e3d_file(e3d_filename);

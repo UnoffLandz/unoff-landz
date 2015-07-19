@@ -4,7 +4,7 @@
 #define MAX_OBJ_VERTEX_COUNT 1000
 #define MAX_OBJ_TEXTURE_COUNT 2000
 #define MAX_OBJ_NORMAL_COUNT 1000
-#define MAX_OBJ_FACE_COUNT 500
+#define MAX_OBJ_FACE_COUNT 1100
 #define MAX_OBJ_MATERIAL_COUNT 10
 #define OBJ_MATERIALS_NAME_LENGTH 80
 
@@ -69,5 +69,6 @@ void create_mtl_file(char *mtl_filename);
 void convert_e3d_to_obj_file();
 void report_obj_stats();
 void get_newmtl(char *mtl_filename, char *texture_filename, char *newmtl);
+void check_obj_bounds(char *filename);
 
 #endif // OBJ_H_INCLUDED

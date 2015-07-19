@@ -42,7 +42,7 @@ int get_file_size(char *filename){
 
     if((file=fopen(filename, "rb"))==NULL) {
 
-        printf("unable to open file\n");
+        printf("unable to open file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -69,7 +69,7 @@ void get_md5(char *filename, int offset, unsigned char *md5_hash){
 
     if (file_len-offset>MD5_MAX_DATA){
 
-        printf("data size [%i] in file [%s] exceeds array maximum of [%i]\n", file_len-offset, filename, MD5_MAX_DATA);
+        printf("data size [%i] exceeds maximum [%i] in function %s: module %s: line %i\n", file_len-offset, MD5_MAX_DATA, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -78,7 +78,7 @@ void get_md5(char *filename, int offset, unsigned char *md5_hash){
 
     if((file=fopen(filename, "rb"))==NULL) {
 
-        printf("unable to open file [%s] in function check_md5: module files.c", filename);
+        printf("unable to open file [%s] in function %s: module %s: line %i\n", filename, __func__, __FILE__, __LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -87,14 +87,14 @@ void get_md5(char *filename, int offset, unsigned char *md5_hash){
 
     if(fread(&byte, offset, 1, file)!=1){
 
-        printf("unable to read file [%s] in function check_md5: module files.c", filename);
+        printf("unable to read offset in function %s: module %s: line %i\n", __func__, __FILE__, __LINE__);
         exit (EXIT_FAILURE);
     }
 
     //read the file data into an array
     if(fread(&byte, file_len-offset, 1, file)!=1){
 
-        printf("unable to read file [%s] in function check_md5: module files.c", filename);
+        printf("unable to read file in function %s: module %s: line %i\n", __func__, __FILE__, __LINE__);
         exit (EXIT_FAILURE);
     }
 

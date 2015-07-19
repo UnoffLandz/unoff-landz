@@ -31,8 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <GL/glew.h>
-#include <GL/freeglut_std.h>
+//#include <GL/glew.h>
+//#include <GL/freeglut_std.h>
 
 #include "processing_options.h"
 /*

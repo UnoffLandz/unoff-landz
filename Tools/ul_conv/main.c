@@ -30,6 +30,14 @@ To compile, link with the following libraries :
 
 *******************************************************************************************************************/
 
+/** TODO
+
+   check that obj file faces are triangles and not quads
+    uv still not right on water wheel, try not reversing uv axis
+
+**/
+
+
 #include <stdio.h>
 //#include <GL/glew.h>
 //#include <GL/freeglut_std.h>
@@ -88,7 +96,7 @@ int main(int argc, char *argv[]){
         }
         else {
 
-            printf("conversion for file type [%s] is not supported\n", p_options.filename);
+            printf("conversion of file type [%s] not supported in function %s: module %s: line %i\n", p_options.filename, __func__, __FILE__, __LINE__);
             exit(EXIT_FAILURE);
         }
     }
@@ -108,17 +116,18 @@ int main(int argc, char *argv[]){
         else if(strcmp(suffix, ".obj")==0){
 
             //perform diagnostics on an obj file
+            check_obj_bounds(p_options.filename);
             read_obj_data(p_options.filename);
             report_obj_stats();
         }
         else if(strcmp(suffix, "")==0){
 
-            printf("missing filename\n");
+            printf("missing filename in function %s: module %s: line %i\n", __func__, __FILE__, __LINE__);
             exit(EXIT_FAILURE);
         }
         else {
 
-            printf("diagnostics for file type [%s] is not supported\n", suffix);
+            printf("diagnostics for file type [%s] not supported in function %s: module %s: line %i\n", suffix, __func__, __FILE__, __LINE__);
             exit(EXIT_FAILURE);
         }
     }

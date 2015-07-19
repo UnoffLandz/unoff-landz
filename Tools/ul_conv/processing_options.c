@@ -28,7 +28,7 @@ void parse_command_line(int argc, char *argv[]){
                     //case 't':   p_options.dds=true; break;
 
                     default:
-                    printf("\nunknown command line option [%c]\n\n", argv[i][j]);
+                    printf("\nunknown command line option [%c] in function %s: module %s: line %i\n\n", argv[i][j], __func__, __FILE__, __LINE__);
                     exit(EXIT_FAILURE);
                 }
             }
