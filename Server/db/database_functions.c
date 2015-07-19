@@ -34,6 +34,7 @@
 #include "db_season_tbl.h"
 #include "db_object_tbl.h"
 #include "db_e3d_tbl.h"
+#include "db_map_object_tbl.h"
 #include "../global.h"
 #include "../server_start_stop.h"
 #include "../attributes.h"
@@ -262,12 +263,12 @@ void create_default_database(){
     create_database_table(MAP_TABLE_SQL);
     create_database_table(CHANNEL_TABLE_SQL);
     create_database_table(RACE_TABLE_SQL);
-    //create_database_table(GUILD_TABLE_SQL);
     create_database_table(CHARACTER_TYPE_TABLE_SQL);
     create_database_table(ATTRIBUTE_TABLE_SQL);
     create_database_table(ATTRIBUTE_VALUE_TABLE_SQL);
     create_database_table(GAME_DATA_TABLE_SQL);
     create_database_table(SEASON_TABLE_SQL);
+    create_database_table(MAP_OBJECT_TABLE_SQL);
 
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");
@@ -352,29 +353,26 @@ void create_default_database(){
         }
     }
 
-    add_db_e3d(1, "cabbage.e3d", 1);
-    add_db_e3d(2, "tomatoeplant1.e3d", 2);
-    add_db_e3d(3, "tomatoeplant2.e3d", 2);
-    add_db_e3d(4, "foodtomatoe.e3d", 2);
-    add_db_e3d(5, "food_carrot.e3d", 3);
-    add_db_e3d(6, "log1.e3d", 4);
-    add_db_e3d(7, "log2.e3d", 4);
-    add_db_e3d(8, "branch1.e3d", 5);
-    add_db_e3d(9, "branch2.e3d", 5);
-    add_db_e3d(10, "branch3.e3d", 5);
-    add_db_e3d(11, "branch4.e3d", 5);
-    add_db_e3d(12, "branch5.e3d", 5);
-    add_db_e3d(13, "branch6.e3d", 5);
-    add_db_e3d(15, "flowerorange1.e3d", 6);
-    add_db_e3d(16, "flowerorange2.e3d", 6);
-    add_db_e3d(17, "flowerorange3.e3d", 6);
+    add_db_e3d(1, "cabbage.e3d", 405);
+    add_db_e3d(2, "tomatoeplant1.e3d", 407);
+    add_db_e3d(3, "tomatoeplant2.e3d", 407);
+    add_db_e3d(4, "foodtomatoe.e3d", 407);
+    add_db_e3d(5, "food_carrot.e3d", 408);
+    add_db_e3d(8, "branch1.e3d", 140);
+    add_db_e3d(9, "branch2.e3d", 140);
+    add_db_e3d(10, "branch3.e3d", 140);
+    add_db_e3d(11, "branch4.e3d", 140);
+    add_db_e3d(12, "branch5.e3d", 140);
+    add_db_e3d(13, "branch6.e3d", 140);
+    add_db_e3d(15, "flowerorange1.e3d", 29);
+    add_db_e3d(16, "flowerorange2.e3d", 29);
+    add_db_e3d(17, "flowerorange3.e3d", 29);
 
-    add_db_object(1, "cabbage", 405, 1, 1);
-    add_db_object(2, "tomato", 407, 1, 1);
-    add_db_object(3, "carrot", 408, 1, 1);
-    add_db_object(4, "log", 408, 1, 0);
-    add_db_object(5, "stick", 140, 1, 0);
-    add_db_object(6, "tiger lily", 29, 1, 0);
+    add_db_object(405, "cabbage", 1, 1, 2);
+    add_db_object(407, "tomato", 1, 1, 2);
+    add_db_object(408, "carrot", 1, 1, 2);
+    add_db_object(140, "stick", 1, 0, 2);
+    add_db_object(29, "tiger lily", 1, 0, 1);
 
 /*
     add_db_object(1, "cabbage.e3d", "cabbage", 405, 1, 1);
@@ -398,4 +396,7 @@ void create_default_database(){
     add_db_object(19, "flowerwhite2.e3d", "Impatiens", 29, 1, 0);
     add_db_object(20, "flowerwhite3.e3d", "Impatiens", 29, 1, 0);
 */
+
+    add_db_map(1, "Isla Prima", "startmap.elm");
+    add_db_map_objects("startmap.elm", 1);
 }

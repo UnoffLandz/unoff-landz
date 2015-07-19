@@ -46,26 +46,26 @@ int load_db_objects(){
 
     log_event(EVENT_INITIALISATION, "loading object...");
 
-    //read the sql query result into the map array
+    //read the sql query result into the object array
     int i=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         //get the object id and check that the value does not exceed the maximum permitted
-        int id=sqlite3_column_int(stmt,0);
+        int object_id=sqlite3_column_int(stmt, 0);
 
-        if(id>MAX_OBJECTS){
+        if(object_id>MAX_OBJECT_ID){
 
-            log_event(EVENT_ERROR, "object id [%i] exceeds range [%i] in function %s: module %s: line %i", id, MAX_OBJECTS, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "object id [%i] exceeds range [%i] in function %s: module %s: line %i", object_id, MAX_OBJECT_ID, __func__, __FILE__, __LINE__);
             stop_server();
         }
 
-        strcpy(object[id].object_name, (char*)sqlite3_column_text(stmt, 1));
-        object[id].image_id=sqlite3_column_int(stmt, 2);
-        if(sqlite3_column_int(stmt, 3)==1) object[id].harvestable=true; else object[id].harvestable=false;
-        if(sqlite3_column_int(stmt, 4)==1) object[id].edible=true; else object[id].edible=false;
+        strcpy(object[object_id].object_name, (char*)sqlite3_column_text(stmt, 1));
+        if(sqlite3_column_int(stmt, 3)==1) object[object_id].harvestable=true; else object[object_id].harvestable=false;
+        if(sqlite3_column_int(stmt, 4)==1) object[object_id].edible=true; else object[object_id].edible=false;
+        object[object_id].harvest_interval=sqlite3_column_int(stmt, 5);
 
-        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", id, object[id].object_name);
+        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", i, object[object_id].object_name);
 
         i++;
     }
@@ -88,7 +88,7 @@ int load_db_objects(){
     return i;
 }
 
-void add_db_object(int id, char *object_name, int image_id, bool harvestable, bool edible ){
+void add_db_object(int object_id, char *object_name, bool harvestable, bool edible, int interval){
 
     /** public function - see header */
 
@@ -102,10 +102,10 @@ void add_db_object(int id, char *object_name, int image_id, bool harvestable, bo
     snprintf(sql, MAX_SQL_LEN, "INSERT INTO OBJECT_TABLE("  \
         "OBJECT_ID," \
         "OBJECT_NAME," \
-        "IMAGE_ID," \
         "HARVESTABLE," \
-        "EDIBLE" \
-        ") VALUES(%i, '%s', %i, %i, %i)", id, object_name, image_id, _harvest, _edible);
+        "EDIBLE," \
+        "HARVEST_INTERVAL"
+        ") VALUES(%i, '%s', %i, %i, %i)", object_id, object_name, _harvest, _edible, interval);
 
     process_sql(sql);
 

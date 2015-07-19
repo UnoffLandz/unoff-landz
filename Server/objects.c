@@ -25,4 +25,4 @@
 #include "objects.h"
 #include "global.h"
 
-struct object_type object[MAX_OBJECTS];
+struct object_type object[MAX_OBJECT_ID];

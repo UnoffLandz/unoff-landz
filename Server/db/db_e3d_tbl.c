@@ -93,7 +93,7 @@ void add_db_e3d(int id, char *e3d_filename, int object_id){
 
     snprintf(sql, MAX_SQL_LEN, "INSERT INTO E3D_TABLE("  \
         "E3D_ID," \
-        "E3D_FILE_NAME,"  \
+        "E3D_FILENAME,"  \
         "OBJECT_ID" \
         ") VALUES(%i, '%s', %i)", id, e3d_filename, object_id);
 

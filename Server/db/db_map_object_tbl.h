@@ -17,30 +17,38 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef E3D_H_INCLUDED
-#define E3D_H_INCLUDED
+#ifndef MAP_OBJECT_H_INCLUDED
+#define MAP_OBJECT_H_INCLUDED
 
-#define MAX_E3D 100
+#define MAP_OBJECT_TABLE_SQL "CREATE TABLE MAP_OBJECT_TABLE( \
+        ID    INTEGER PRIMARY KEY     NOT NULL, \
+        THREEDOL_ID   INT, \
+        MAP_ID        INT, \
+        TILE          INT, \
+        E3D_ID        INT, \
+        HARVESTABLE   INT, \
+        RESERVE       INT)"
 
-struct e3d_type{
+/** RESULT  : loads data from the map object table into the map object array
 
-    char e3d_filename[80];
-    float x;
-    float y;
-    float z;
-    int object_id;
-};
-extern struct e3d_type e3d[MAX_E3D];
+    RETURNS : number of rows read from the map object table
 
-
-/** RESULT  : finds the object id for an e3d file
-
-    RETURNS : void
-
-    PURPOSE : to find the object corresponding to an entry in an elm 3d object list
+    PURPOSE : Loads map object data from the database to memory.
 
     NOTES   :
 **/
-int get_e3d_id(char *e3d_filename);
+int load_db_map_objects();
 
-#endif // E3D_H_INCLUDED
+
+/** RESULT  : adds an map object to the map object table
+
+    RETURNS : void
+
+    PURPOSE : a test function to add map objects to the map object table
+
+    NOTES   : to eventually be outsourced to a separate utility
+**/
+
+void add_db_map_objects(char *elm_filename, int map_id);
+
+#endif // MAP_OBJECT_H_INCLUDED

@@ -227,4 +227,17 @@ void send_new_minute(int connection, int minute);
 */
 void send_get_active_channels(int connection);
 
+
+/** RESULT  : sends the get_new_inventory_item packet
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void send_get_new_inventory_item( int connection, int image_id, int amount, int slot);
+
+
+
 #endif // SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED

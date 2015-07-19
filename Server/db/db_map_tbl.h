@@ -85,7 +85,7 @@ void add_db_map(int map_id, char *map_name, char *elm_file_name);
 
     NOTES   : used in command line option
 **/
-void update_db_map(int map_id, char *map_name, char *elm_file_name);
+//void update_db_map(int map_id, char *map_name, char *elm_file_name);
 
 
 /** RESULT  : determines if map id exists on database

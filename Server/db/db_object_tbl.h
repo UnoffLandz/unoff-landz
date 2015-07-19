@@ -23,11 +23,10 @@
 
 #define OBJECT_TABLE_SQL "CREATE TABLE OBJECT_TABLE( \
         OBJECT_ID    INTEGER PRIMARY KEY     NOT NULL, \
-        E3D_FILE_NAME   TEXT, \
         OBJECT_NAME     TEXT, \
-        IMAGE_ID        INT, \
         HARVESTABLE     INT, \
-        EDIBLE          INT)"
+        EDIBLE          INT, \
+        HARVEST_INTERVAL INT)"
 
 /** RESULT  : loads data from the object table into the object array
 
@@ -48,7 +47,7 @@ int load_db_objects();
 
     NOTES   : to eventually be outsourced to a separate utility
 **/
-void add_db_object(int object_id, char *object_name, int image_id, int harvestable, int edible);
+void add_db_object(int object_id, char *object_name, int harvestable, int edible, int interval);
 
 
 #endif // DB_OBJECT_TBL_H_INCLUDED

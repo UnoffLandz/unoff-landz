@@ -53,6 +53,7 @@ struct client_node_type{
     bool harvest_flag;
     int harvest_amount;    //amount harvested each cycle
     int harvest_object_id; //object being harvested
+    int harvest_interval; //interval between each harvest
     int inventory_slot;
     int bag_open;
     time_t time_of_last_harvest;

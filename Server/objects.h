@@ -22,16 +22,16 @@
 
 #include <stdbool.h>
 
-#define MAX_OBJECTS 30
+#define MAX_OBJECT_ID 2000
 
 struct object_type{
 
-    int image_id;
     char e3d_file_name[80];
     char object_name[80];
     bool harvestable;
     bool edible;
+    int harvest_interval;
 };
-extern struct object_type object[MAX_OBJECTS];
+extern struct object_type object[MAX_OBJECT_ID];
 
 #endif // MAP_OBJECTS_H_INCLUDED

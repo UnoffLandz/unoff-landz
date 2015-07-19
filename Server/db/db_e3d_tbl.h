@@ -36,7 +36,7 @@
 int load_db_e3ds();
 
 
-/** RESULT  : adds an e3d to the e3dtable
+/** RESULT  : adds an e3d to the e3d table
 
     RETURNS : void
 

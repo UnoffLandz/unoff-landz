@@ -343,8 +343,7 @@ void send_here_your_inventory(int connection){
     element[2].data.numeric=MAX_INVENTORY_SLOTS;
 
     //inventory slots
-    int i=0;
-    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
+    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
         //item
         element[(i*4)+3].data_type=UINT16;
@@ -844,4 +843,75 @@ void send_add_actor_packet(int connection, unsigned char *packet, int packet_len
     log_event(EVENT_SESSION, "SEND_ADD_ACTOR_PACKET connection [%i]", connection);
 
     send_packet(connection, packet, packet_length);
+}
+
+
+void send_get_new_inventory_item(int connection, int image_id, int amount, int slot){
+
+    /** public function - see header */
+
+    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
+    printf("SEND_GET_NEW_INVENTORY_ITEM [%i]\n", connection);
+    #endif
+
+    printf("image id %i\n", image_id);
+
+
+    typedef struct {
+
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        unsigned char image_id_lsb;
+        unsigned char image_id_msb;
+        unsigned char amount_lsb1;
+        unsigned char amount_msb1;
+        unsigned char amount_lsb2;
+        unsigned char amount_msb2;
+        unsigned char slot;
+        unsigned char flags;
+    }packet_data;
+
+    union {
+
+        unsigned char out[12];
+        packet_data in;
+    }p;
+
+    p.in.protocol=GET_NEW_INVENTORY_ITEM;
+    p.in.lsb=9;
+    p.in.msb=0;
+    p.in.image_id_lsb=image_id % 256;
+    p.in.image_id_msb=image_id / 256;
+    p.in.amount_lsb1=amount % 256;
+    p.in.amount_msb1=amount / 256 % 256;
+    p.in.amount_lsb2=amount / 256 / 256 % 256;
+    p.in.amount_msb2=amount / 256 / 256 / 256 % 256;
+    p.in.slot=slot;
+    p.in.flags=0;
+
+    log_event(EVENT_SESSION, "SEND_GET_NEW_INVENTORY_ITEM connection [%i]", connection);
+
+    send_packet(connection, p.out, 11);
+
+/*
+    packet[0]=GET_NEW_INVENTORY_ITEM;
+
+    packet[1]=9;
+    packet[2]=0;
+
+    packet[3]=item_image_id % 256;
+    packet[4]=item_image_id / 256;
+
+    packet[5]=amount % 256;
+    packet[6]=amount / 256 % 256;
+    packet[7]=amount / 256 / 256 % 256;
+    packet[8]=amount / 256 / 256 / 256 % 256;
+
+    packet[9]=slot;
+
+    packet[10]=0;//flags
+
+    send(connection, packet, 11, 0);
+*/
 }

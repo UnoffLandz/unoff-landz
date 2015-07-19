@@ -54,5 +54,27 @@ int get_max_inventory_emu(int connection);
 int get_inventory_emu(int connection);
 
 
+/** RESULT  : adds objects to the char inventory
+
+    RETURNS : void
+
+    PURPOSE : common function to harvesting and picking up bags
+
+    NOTES   :
+*/
+void add_item_to_inventory(int connection, int object_id, int amount);
+
+
+/** RESULT  : moves objects between slots in the char inventory
+
+    RETURNS : void
+
+    PURPOSE : supports the MOVE_INVENTORY_ITEM protocol
+
+    NOTES   :
+*/
+void move_inventory_item(int connection, int from_slot, int to_slot);
+
+
 #endif // CHARACTER_INVENTORY_H_INCLUDED
 

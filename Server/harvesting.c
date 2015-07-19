@@ -23,13 +23,39 @@
 #include "colour.h"
 #include "server_messaging.h"
 #include "logging.h"
-#include "maps.h"
+#include "map_object.h"
 #include "harvesting.h"
 #include "objects.h"
 #include "server_protocol_functions.h"
 #include "e3d.h"
 
 #define DEBUG_HARVESTING 0
+
+void process_char_harvest(int connection, time_t current_time){
+
+    /** public function - see header **/
+
+    if(clients.client[connection].harvest_flag==true){
+
+        int object_id=clients.client[connection].harvest_object_id;
+
+        int harvest_interval=object[object_id].harvest_interval;
+
+        if(clients.client[connection].time_of_last_harvest + harvest_interval < current_time){
+
+            #if DEBUG_HARVESTING==1
+            printf("harvest char [%s]\n", clients.client[connection].char_name);
+            #endif
+
+            add_item_to_inventory(connection, clients.client[connection].harvest_object_id, clients.client[connection].harvest_amount);
+
+            //update time of last harvest
+            clients.client[connection].time_of_last_harvest=current_time;
+
+            /** TODO update db exp **/
+        }
+    }
+}
 
 void stop_harvesting(int connection){
 
@@ -39,12 +65,13 @@ void stop_harvesting(int connection){
 
     clients.client[connection].harvest_flag=false;
 
-    int object_id=clients.client[connection].harvest_object_id;
-
     sprintf(text_out, "%cYou stopped harvesting.", c_green3+127);
-    //We ought to be able to use the following message, but the the OL/EL client relies on the above
+
+    //We ought to be able to use the following, but the the OL/EL client relies on the above
     //phrase to stop the harvesting effect
+    //int object_id=clients.client[connection].harvest_object_id;
     //sprintf(text_out, "%cyou stopped harvesting %s", c_green3+127, object[object_id].object_name);
+
     send_raw_text(connection, CHAT_SERVER, text_out);
 
     #if DEBUG_HARVESTING==1
@@ -89,6 +116,11 @@ void start_harvesting(int connection, int threed_object_list_pos){
                 //record what item the char is harvesting
                 clients.client[connection].harvest_object_id=object_id;
 
+                //set the amount to be harvested each cycle
+                clients.client[connection].harvest_amount=1; //default amount
+
+                clients.client[connection].harvest_interval=2;
+
                 #if DEBUG_HARVESTING==1
                 printf("harvesting started, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
                 #endif
@@ -130,3 +162,4 @@ void start_harvesting(int connection, int threed_object_list_pos){
 
     send_raw_text(connection, CHAT_SERVER, text_out);
 }
+

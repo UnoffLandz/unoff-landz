@@ -137,8 +137,8 @@ static int upgrade_v0_to_v1(const char *dbname) {
 
 static int upgrade_v1_to_v2() {
 
-/** MAP_OBJECT_TABLE was removed in update 3, hence upgrade 2 is commented out **/
-/*
+/* MAP_OBJECT_TABLE was removed in update 3, hence upgrade 2 is commented out
+
     create_database_table(MAP_OBJECT_TABLE_SQL);
 
     add_db_object(1, "cabbage.e3d", "cabbage", 405, 1, 1);
@@ -194,13 +194,14 @@ static int upgrade_v2_to_v3(const char *dbname) {
 
     create_database_table(OBJECT_TABLE_SQL);
 
+/* object table upgraded in version 4, hence old version of add_db_object commented out
     add_db_object(1, "cabbage", 405, 1, 1);
     add_db_object(2, "tomato", 407, 1, 1);
     add_db_object(3, "carrot", 408, 1, 1);
     add_db_object(4, "log", 408, 1, 0);
     add_db_object(5, "stick", 140, 1, 0);
     add_db_object(6, "Tiger Lily", 29, 1, 0);
-
+*/
     //remove MAP_OBJECT_TABLE
     sqlite3 *db;
     char *err_msg = NULL;
@@ -232,6 +233,46 @@ static int upgrade_v2_to_v3(const char *dbname) {
     return 0;
 }
 
+static int upgrade_v3_to_v4(const char *dbname) {
+
+    sqlite3 *db;
+    char *err_msg = NULL;
+
+    int rc = sqlite3_open(dbname, &db);
+
+    if( rc !=SQLITE_OK ) {
+
+        return -1;
+    }
+
+    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS MAP_OBJECT_TABLE", callback, 0, &err_msg);
+
+    if( rc != SQLITE_OK ){
+
+        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
+
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+
+        return -1;
+    }
+
+    create_database_table(OBJECT_TABLE_SQL);
+    //add_db_object(1, "cabbage", 405, 1, 1, 2);
+    //add_db_object(2, "tomato", 407, 1, 1, 2);
+    //add_db_object(3, "carrot", 408, 1, 1, 2);
+    //add_db_object(4, "log", 408, 1, 0, 4);
+    //add_db_object(5, "stick", 140, 1, 0, 2);
+    //add_db_object(6, "Tiger Lily", 29, 1, 0, 1);
+
+    set_db_version(4);
+
+    sqlite3_close(db);
+    fprintf(stderr,"UPGRADE [v%d]: Success\n", 2);
+
+    return 0;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Array of upgrade procedures with their associated db versions
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -246,6 +287,7 @@ struct upgrade_array_entry {
 
 struct upgrade_array_entry entries[] = {
 
+    { 3, 4, upgrade_v3_to_v4},
     { 2, 3, upgrade_v2_to_v3},
     { 1, 2, upgrade_v1_to_v2},
     { 0, 1, upgrade_v0_to_v1},

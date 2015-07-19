@@ -172,8 +172,8 @@ void add_new_character(int connection, const unsigned char *packet){
     character.char_created=time(NULL);
 
     //set starting channels
-    int i=0, j=0;
-    for(i=0; i<MAX_CHANNELS; i++){
+    int j=0;
+    for(int i=0; i<MAX_CHANNELS; i++){
 
         if(channel[i].new_chars==1){
 
@@ -192,11 +192,10 @@ void add_new_character(int connection, const unsigned char *packet){
     //add character data to the database and retrieve the database entry for the character
     character.character_id=add_db_char_data(character);
 
-
     //TEST CODE -- add initial items to inventory
-    character.client_inventory[0].slot=1; //slots run from 1
-    character.client_inventory[0].image_id=612;
-    character.client_inventory[0].amount=10;
+    //character.client_inventory[0].slot=1; //slots run from 1
+    //character.client_inventory[0].image_id=612;
+    //character.client_inventory[0].amount=10;
 
     add_db_char_inventory(character);
 

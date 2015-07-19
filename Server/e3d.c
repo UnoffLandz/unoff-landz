@@ -18,7 +18,28 @@
 *******************************************************************************************************************/
 #include "e3d.h"
 
-#include <stdio.h> //support for printf (testing)
-#include <string.h> //support for memcpy
+#include <string.h> //support for strcmp
+#include <stdlib.h> // support for exit
+
+#include "logging.h"
 
 struct e3d_type e3d[MAX_E3D];
+
+int get_e3d_id(char *e3d_filename){
+
+    /** public function - see header */
+
+    for(int i=0; i<MAX_E3D; i++){
+
+        if(strcmp(e3d[i].e3d_filename, e3d_filename)==0){
+
+            return i;
+        }
+    }
+
+    //log_event(EVENT_ERROR, "unable to find object id for e3e file [%s] in function %s: module %s: line %i", e3d_filename, __func__, __FILE__, __LINE__);
+    //exit(EXIT_FAILURE);
+
+    return 0;
+}
+

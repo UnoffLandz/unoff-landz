@@ -32,6 +32,16 @@ To compile server, link with the following libraries :
     libsqlite3.so           - sqlite database library
 
 *******************************************************************************************************************/
+/***************************************************************************************************
+
+                                TO - DO
+
+upgrade e3d table, map object table and object tabe
+make initial field in all tables ID
+document new database/struct realtionships
+map object reserve respawn
+
+***************************************************************************************************/
 #define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
 #include <stdio.h>      //supports printf function
 #include <stdlib.h>     //supports free function
@@ -62,6 +72,7 @@ To compile server, link with the following libraries :
 #include "db/db_season_tbl.h"
 #include "db/db_object_tbl.h"
 #include "db/db_e3d_tbl.h"
+#include "db/db_map_object_tbl.h"
 #include "db/db_upgrade.h"
 #include "date_time_functions.h"
 #include "broadcast_actor_functions.h"
@@ -73,6 +84,7 @@ To compile server, link with the following libraries :
 #include "idle_buffer2.h"
 #include "file_functions.h"
 #include "objects.h"
+#include "harvesting.h"
 
 #define DEBUG_MAIN 1
 #define VERSION "4"
@@ -158,7 +170,6 @@ void start_server(char *db_filename){
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-
     //load objects from database (must go before maps are loaded)
     loaded=load_db_objects();
     if(loaded==0){
@@ -172,6 +183,14 @@ void start_server(char *db_filename){
     if(loaded==0){
 
         log_event(EVENT_ERROR, "no maps found in database", loaded);
+        stop_server();
+    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    //load map objects from database
+    loaded=load_db_map_objects();
+    if(loaded==0){
+
+        log_event(EVENT_ERROR, "no map objects found in database", loaded);
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
@@ -632,7 +651,10 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                 }
 
                 //process any char movements
-                process_char_move(i, time_check.tv_usec);
+                process_char_move(i, time_check.tv_usec); //use milliseconds
+
+                //process any harvesting
+                process_char_harvest(i, time_check.tv_sec); //use seconds
             }
         }
     }

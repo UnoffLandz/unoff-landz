@@ -21,7 +21,7 @@
 #define GLOBAL_H_INCLUDED
 
 /** General Boolean Values **/
-/*
+/* replaced by stdbool
 enum{
     FALSE=0,
     TRUE

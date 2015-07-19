@@ -38,7 +38,7 @@ int load_db_maps(){
 
     int rc;
     sqlite3_stmt *stmt;
-    int i=0, j=0, k=0;
+    int i=0, k=0;
 
     //the union converts an array containing the elm file contents into separate elements
     union {
@@ -124,7 +124,7 @@ int load_db_maps(){
         log_text(EVENT_MAP_LOAD, "elm file name [%s]", maps.map[map_id].elm_filename);
 
         //check that we have elm file data
-        int elm_file_size= sqlite3_column_bytes(stmt, 3);
+        int elm_file_size=sqlite3_column_bytes(stmt, 3);
 
         if(elm_file_size==0){
 
@@ -181,6 +181,7 @@ int load_db_maps(){
 
         //log 3d object offset
         log_text(EVENT_MAP_LOAD, "3d object offset [%i]", elm_file.elm_header.threed_object_offset);
+        maps.map[map_id].threed_object_offset=elm_file.elm_header.threed_object_offset;
 
         //get 2d object hash length
         log_text(EVENT_MAP_LOAD, "2d object hash length [%i]", elm_file.elm_header.twod_object_hash_len);
@@ -192,6 +193,7 @@ int load_db_maps(){
 
         //log 2d object offset
         log_text(EVENT_MAP_LOAD, "2d object offset [%i]", elm_file.elm_header.twod_object_offset);
+        maps.map[map_id].twod_object_offset=elm_file.elm_header.twod_object_offset;
 
         //get lights object hash length
         log_text(EVENT_MAP_LOAD, "lights object hash length [%i]", elm_file.elm_header.lights_object_hash_len);
@@ -293,7 +295,7 @@ int load_db_maps(){
 
         //load tile map data
         k=0;
-        for(j=elm_file.elm_header.tile_map_offset; j<elm_file.elm_header.height_map_offset; j++){
+        for(int j=elm_file.elm_header.tile_map_offset; j<elm_file.elm_header.height_map_offset; j++){
 
             maps.map[map_id].tile_map[k]=elm_file.byte[j];
             k++;
@@ -301,7 +303,7 @@ int load_db_maps(){
 
         //load height map
         k=0;
-        for(j=elm_file.elm_header.height_map_offset; j<elm_file.elm_header.threed_object_offset; j++){
+        for(int j=elm_file.elm_header.height_map_offset; j<elm_file.elm_header.threed_object_offset; j++){
 
             maps.map[map_id].height_map[k]=elm_file.byte[j];
             k++;
@@ -309,14 +311,7 @@ int load_db_maps(){
 
         //load 3d object map
 /*
-        k=0;
-        for(j=elm_file.elm_header.threed_object_offset; j<elm_file.elm_header.twod_object_offset; j++){
-
-            maps.map[map_id].threed_object_map[k]=elm_file.byte[j];
-            k++;
-        }
-*/
-        //fill the struct that links the item_id to the map_object number
+        //fill the struct that links the item_id to the object id
         log_text(EVENT_MAP_LOAD, "3d object table...");
         log_text(EVENT_MAP_LOAD, "order             e3d name  object id      x-pos      y-pos      z-pos");
         log_text(EVENT_MAP_LOAD, "----------------- --------- ---------      -----      -----      -----");
@@ -324,7 +319,7 @@ int load_db_maps(){
         char e3d_path_and_file_name[80]="";
         int m=0;
 
-        for(j=elm_file.elm_header.threed_object_offset; j<elm_file.elm_header.twod_object_offset; j+=maps.map[map_id].threed_object_structure_len){
+        for(int j=elm_file.elm_header.threed_object_offset; j<elm_file.elm_header.twod_object_offset; j+=maps.map[map_id].threed_object_structure_len){
 
             //extract the path and filename from the elm file
             memcpy(e3d_path_and_file_name, &elm_file.byte[j], 80);
@@ -332,13 +327,13 @@ int load_db_maps(){
             //remove the path and copy filename to struct
             extract_file_name(e3d_path_and_file_name, maps.map[map_id].threed_object_lookup[m].e3d_filename);
 
-            //find the id for this item in the item array
-            int l=0;
-            for(l=0; l<MAX_E3D; l++){
+            //find the id for this item in the object array
+            for(int l=0; l<MAX_E3D; l++){
 
                 if(strcmp(maps.map[map_id].threed_object_lookup[m].e3d_filename, e3d[l].e3d_filename)==0) {
 
                     maps.map[map_id].threed_object_lookup[m].e3d_id=l;
+
                     break;
                 }
             }
@@ -357,15 +352,16 @@ int load_db_maps(){
 
         //load 2d object map
         k=0;
-        for(j=elm_file.elm_header.twod_object_offset; j<elm_file.elm_header.lights_object_offset; j++){
+        for(int j=elm_file.elm_header.twod_object_offset; j<elm_file.elm_header.lights_object_offset; j++){
 
             maps.map[map_id].twod_object_map[k]=elm_file.byte[j];
             k++;
         }
-
+*/
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", map_id, maps.map[map_id].map_name);
 
         i++;
+
     }
 
     //test that we were able to read all the rows in the query result
@@ -400,6 +396,7 @@ int get_db_map_exists(int map_id){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
+
     rc = sqlite3_bind_int(stmt, 1, map_id);
     if(rc!=SQLITE_OK){
         log_sqlite_error("sqlite3_bind_int failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -436,11 +433,9 @@ void add_db_map(int map_id, char *map_name, char *elm_file_name){
 
     /** public function - see header */
 
-    //doesn't use process_sql because map blob must be added
-
     int rc;
     sqlite3_stmt *stmt;
-    FILE *file;
+    //FILE *file;
     char sql[MAX_SQL_LEN]="";
 
     snprintf(sql, MAX_SQL_LEN,
@@ -448,8 +443,7 @@ void add_db_map(int map_id, char *map_name, char *elm_file_name){
     "MAP_ID," \
     "MAP_NAME,"  \
     "ELM_FILE_NAME," \
-    "ELM_FILE" \
-    ") VALUES( ?, ?, ?, ?)");
+    ") VALUES( ?, ?, ?)");
 
     rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
@@ -462,6 +456,7 @@ void add_db_map(int map_id, char *map_name, char *elm_file_name){
     sqlite3_bind_text(stmt, 2, map_name, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, elm_file_name, -1, SQLITE_STATIC);
 
+/*
     //find the size of the elm file
     int file_size=get_file_size(elm_file_name);
 
@@ -476,7 +471,6 @@ void add_db_map(int map_id, char *map_name, char *elm_file_name){
 
         log_event(EVENT_ERROR, "file [%s] exceeds max elm file size in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
         stop_server();
-
     }
 
     //read the elm file into a string
@@ -490,11 +484,12 @@ void add_db_map(int map_id, char *map_name, char *elm_file_name){
 
     if(fread(byte, file_size, 1, file)!=1){
 
-        log_event(EVENT_ERROR, "unable to read identification bytes for file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
     sqlite3_bind_blob(stmt, 4, byte, file_size, NULL);
+*/
 
     rc = sqlite3_step(stmt);
 
@@ -514,9 +509,8 @@ void add_db_map(int map_id, char *map_name, char *elm_file_name){
     log_event(EVENT_SESSION, "Added map [%s] to MAP_TABLE", map_name);
 }
 
+/*
 void update_db_map(int map_id, char *map_name, char *elm_file_name){
-
-    /** public function - see header */
 
     //doesn't use process_sql because map blob must be added
 
@@ -571,7 +565,7 @@ void update_db_map(int map_id, char *map_name, char *elm_file_name){
 
     if(fread(byte, file_size, 1, file)!=1){
 
-        log_event(EVENT_ERROR, "unable to read identification bytes for file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
@@ -593,4 +587,4 @@ void update_db_map(int map_id, char *map_name, char *elm_file_name){
 
     log_event(EVENT_SESSION, "Updated map [%s] to MAP_TABLE", map_name);
 }
-
+*/

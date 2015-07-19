@@ -50,21 +50,3 @@ int get_tile(int x_pos, int y_pos, int map_id){
     return x_pos + (y_pos * maps.map[map_id].map_axis);
 }
 
-int get_object_id(int map_id, int threed_object_list_pos){
-
-    /** public function - see header */
-
-    int e3d_id=maps.map[map_id].threed_object_lookup[threed_object_list_pos].e3d_id;
-
-    return e3d[e3d_id].object_id;
-}
-
-int get_object_tile(int map_id, int threed_object_list_pos){
-
-    /** public function - see header */
-
-    return get_tile(
-        maps.map[map_id].threed_object_lookup[threed_object_list_pos].x,
-        maps.map[map_id].threed_object_lookup[threed_object_list_pos].y,
-        map_id);
-}

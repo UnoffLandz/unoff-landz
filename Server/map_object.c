@@ -17,30 +17,27 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef E3D_H_INCLUDED
-#define E3D_H_INCLUDED
+#include <stdio.h> //testing only
 
-#define MAX_E3D 100
+#include "map_object.h"
+#include "e3d.h"
 
-struct e3d_type{
+struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
 
-    char e3d_filename[80];
-    float x;
-    float y;
-    float z;
-    int object_id;
-};
-extern struct e3d_type e3d[MAX_E3D];
+int get_object_id(int map_id, int threed_object_list_pos){
+
+    /** public function - see header */
+
+    int e3d_id=map_object[threed_object_list_pos][map_id].e3d_id;
+
+    return e3d[e3d_id].object_id;
+}
+
+int get_object_tile(int map_id, int threed_object_list_pos){
+
+    /** public function - see header */
+
+    return map_object[threed_object_list_pos][map_id].tile;
+}
 
 
-/** RESULT  : finds the object id for an e3d file
-
-    RETURNS : void
-
-    PURPOSE : to find the object corresponding to an entry in an elm 3d object list
-
-    NOTES   :
-**/
-int get_e3d_id(char *e3d_filename);
-
-#endif // E3D_H_INCLUDED

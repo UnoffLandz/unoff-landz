@@ -17,42 +17,44 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef HARVESTING_H_INCLUDED
-#define HARVESTING_H_INCLUDED
+#ifndef MAP_OBJECT_H_INCLUDED
+#define MAP_OBJECT_H_INCLUDED
 
-#define MIN_HARVEST_PROXIMITY 2
+#include <stdbool.h> // support for bool data type
 
-/** RESULT  : stops a char harvesting
+#include "maps.h" // required for MAX_MAPS
 
-    RETURNS : void
+#define MAX_MAP_OBJECTS 10000
 
-    PURPOSE : code modularity
+struct map_object_type{
 
-    NOTES   :
-*/
-void stop_harvesting(int connection);
+    int threedol_id;
+    int tile;
+    int e3d_id;
+    bool harvestable;
+    int reserve;
+};
+extern struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
 
+/** RESULT  : finds the object id based on the position of an entry in a map threed object list
 
-/** RESULT  : starts a char harvesting
+    RETURNS : the object id
 
-    RETURNS : void
-
-    PURPOSE : code modularity
-
-    NOTES   :
-*/
-void start_harvesting(int connection, int threed_object_list_pos);
-
-
-/** RESULT  : continues char harvesting
-
-    RETURNS : void
-
-    PURPOSE : code modularity
+    PURPOSE : used to process the result from LOOK_AT_MAP_OBJECT and HARVEST protocols
 
     NOTES   :
 */
-void process_char_harvest(int connection, time_t current_time);
+int get_object_id(int map_id, int threed_object_list_pos);
 
 
-#endif // HARVESTING_H_INCLUDED
+/** RESULT  : calculates the object tile based on the position of an entry in a map threed object list
+
+    RETURNS : the tile number of the object position
+
+    PURPOSE : used to process the result from LOOK_AT_MAP_OBJECT and HARVEST protocols
+
+    NOTES   :
+*/
+int get_object_tile(int map_id, int threed_object_list_pos);
+
+#endif // MAP_OBJECT_H_INCLUDED

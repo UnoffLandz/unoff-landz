@@ -66,9 +66,8 @@ void load_char_data_into_connection(int connection){
     clients.client[connection].char_created=character.char_created;
     clients.client[connection].joined_guild=character.joined_guild;
 
-    int i=0;
+    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
         clients.client[connection].client_inventory[i].image_id=character.client_inventory[i].image_id;
         clients.client[connection].client_inventory[i].amount=character.client_inventory[i].amount;
     }
@@ -89,8 +88,8 @@ void process_log_in(int connection, const unsigned char *packet){
 
     int packet_length=packet[1]+(packet[2]*256)-1+3;
 
-    int i=0;
-    for(i=3; i<packet_length; i++){
+    for(int i=3; i<packet_length; i++){
+
         text[i-3]=packet[i];
         if(packet[i]==ASCII_NULL) break;
     }
@@ -108,8 +107,8 @@ void process_log_in(int connection, const unsigned char *packet){
     }
 
     //Extract the char name and password from the login packet
-    char char_name[1024]="";
-    char password[1024]="";
+    char char_name[80]="";
+    char password[80]="";
 
     get_str_island(text, char_name, 1);
     get_str_island(text, password, 2);
@@ -164,7 +163,7 @@ void process_log_in(int connection, const unsigned char *packet){
     }
 
     //prevent concurrent login on same char
-    for(i=1; i<MAX_CLIENTS; i++){
+    for(int i=1; i<MAX_CLIENTS; i++){
 
         if(clients.client[connection].character_id==clients.client[i].character_id \
            && clients.client[connection].client_status==LOGGED_IN \

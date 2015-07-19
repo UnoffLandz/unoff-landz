@@ -17,30 +17,15 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef E3D_H_INCLUDED
-#define E3D_H_INCLUDED
+#ifndef MAP_NODE_TBL_H_INCLUDED
+#define MAP_NODE_TBL_H_INCLUDED
 
-#define MAX_E3D 100
+#define MAP_NODE_TABLE_SQL "CREATE TABLE MAP_NODE_TABLE( \
+        MAP_NODE_ID       INTEGER PRIMARY KEY NOT NULL, \
+        MAP_ID            INT, \
+        OBJECT_ID         INT, \
+        TILE              INT, \
+        AMOUNT            INT, \
+        )"
 
-struct e3d_type{
-
-    char e3d_filename[80];
-    float x;
-    float y;
-    float z;
-    int object_id;
-};
-extern struct e3d_type e3d[MAX_E3D];
-
-
-/** RESULT  : finds the object id for an e3d file
-
-    RETURNS : void
-
-    PURPOSE : to find the object corresponding to an entry in an elm 3d object list
-
-    NOTES   :
-**/
-int get_e3d_id(char *e3d_filename);
-
-#endif // E3D_H_INCLUDED
+#endif // MAP_NODE_TBL_H_INCLUDED

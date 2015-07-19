@@ -35,7 +35,7 @@
 #include "db/db_character_tbl.h"
 #include "game_data.h"
 #include "log_in.h"
-#include "maps.h"
+#include "map_object.h"
 #include "character_movement.h"
 #include "character_type.h"
 #include "broadcast_actor_functions.h"
@@ -351,66 +351,67 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==LOOK_AT_INVENTORY_ITEM){
 
+        unsigned char data[1]={0};
+        int data_length=packet[1]+(packet[2]*256)-1;
+        memcpy(data, packet+3, data_length);
+
         #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("LOOK_AT_INVENTORY_ITEM %i %i \n", packet[1], packet[2]);
         #endif
 
-/*
         //returns a Uint8 giving the slot number looked at
 
-        inventory_slot=(int)data[0];
-        image_id=clients.client[connection].client_inventory[inventory_slot].image_id;
+        int slot=(int)data[0];
+        int i=0;
+        bool found=false;
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("LOOK_AT_INVENTORY_ITEM - slot [%i]\n", inventory_slot);
-        #endif
+        for(i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        sprintf(text_out, "%c%s", c_green3+127, item[image_id].item_name);
-        send_server_text(connection, CHAT_SERVER, text_out);
+            if(i==clients.client[connection].client_inventory[slot].image_id){
 
-        log_event(EVENT_SESSION, "Protocol LOOK_AT_INVENTORY_ITEM by [%s]...", clients.client[connection].char_name);
-*/
+                found=true;
+                break;
+            }
+        }
+
+        if(found==false){
+
+            sprintf(text_out, "%cyou see an unknown item", c_green3+127);
+        }
+
+        //tell the client what the item is
+        sprintf(text_out, "%cyou see a %s. ", c_green3+127, object[i].object_name);
+
+        if(object[i].edible==true){
+
+            sprintf(text_out, "%s It's edible.", text_out);
+        }
+
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        log_event(EVENT_SESSION, "Protocol LOOK_AT_MAP_OBJECT [%s] by [%s]", object[i].object_name, clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==MOVE_INVENTORY_ITEM){
 
+        unsigned char data[6]={0};
+        int data_length=packet[1]+(packet[2]*256)-1;
+        memcpy(data, packet+3, data_length);
+
         #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
         printf("MOVE_INVENTORY_ITEM %i %i \n", packet[1], packet[2]);
         #endif
 
-/*
         //returns 2 Uint8 indicating the slots to be moved from and to
         //if an attempt is made to move to an occupied slot or, to move from an empty slot, the client will automatically block
 
-        move_from_slot=(int)data[0];
-        move_to_slot=(int)data[1];
+        int from_slot=(int)data[0];
+        int to_slot=(int)data[1];
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("MOVE_INVENTORY_ITEM - slot [%i] to slot [%i]\n", move_from_slot, move_to_slot);
-        #endif
-
-        image_id=clients.client[connection].client_inventory[move_from_slot].image_id;
-        amount=clients.client[connection].client_inventory[move_from_slot].amount;
-
-        //zero the 'from slot'
-        clients.client[connection].client_inventory[move_from_slot].image_id=0;
-        clients.client[connection].client_inventory[move_from_slot].amount=0;
-        send_get_new_inventory_item(connection, 0, 0, move_from_slot);
-
-        //save to database
-        update_db_char_slot(connection, move_from_slot);
-
-        //place item in the 'to slot'
-        clients.client[connection].client_inventory[move_to_slot].image_id=image_id;
-        clients.client[connection].client_inventory[move_to_slot].amount=amount;
-        send_get_new_inventory_item(connection, image_id, amount, move_to_slot);
-
-        //save to the database
-        update_db_char_slot(connection, move_to_slot);
+        move_inventory_item(connection, from_slot, to_slot);
 
         log_event(EVENT_SESSION, "Protocol MOVE_INVENTORY_ITEM by [%s]...", clients.client[connection].char_name);
-*/
     }
 /***************************************************************************************************/
 
