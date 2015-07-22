@@ -117,7 +117,7 @@ int get_db_char_data(char *char_name){
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int slot=sqlite3_column_int(stmt, 0);
-        character.client_inventory[slot].image_id=sqlite3_column_int(stmt, 1);
+        character.client_inventory[slot].object_id=sqlite3_column_int(stmt, 1);
         character.client_inventory[slot].amount=sqlite3_column_int(stmt, 2);
     }
 

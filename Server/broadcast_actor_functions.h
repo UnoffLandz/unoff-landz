@@ -85,4 +85,15 @@ void broadcast_channel_chat(int chan, int connection, char *text_in);
 */
 void broadcast_local_chat(int connection, char *text_in);
 
+
+/** RESULT  : broadcasts bag drop to all characters in the vicinity
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_get_new_bag_packet(int connection, int bag_list_number);
+
 #endif // BROADCAST_ACTOR_FUNCTIONS_H_INCLUDED

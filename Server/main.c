@@ -36,9 +36,12 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-upgrade e3d table, map object table and object tabe
+implement open bag
+test whether add to bag following drop is working
+implement send_s_close_bag if char moves off open bag
+implement bag poof
 make initial field in all tables ID
-document new database/struct realtionships
+document new database/struct relationships
 map object reserve respawn
 
 ***************************************************************************************************/
@@ -51,6 +54,7 @@ map object reserve respawn
 #include <arpa/inet.h>  //supports recv and accept function
 #include <ev.h>         //supports ev event library
 #include <fcntl.h>      //supports fcntl
+//#include <sys/time.h>
 
 #include "server_parameters.h"
 #include "global.h"
@@ -501,6 +505,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 
                 //copy packet from buffer
                 for(j=0; j<packet_length; j++){
+
                     packet[j]=clients.client[watcher->fd].packet_buffer[j];
                 }
 

@@ -59,6 +59,7 @@ static int prepare_query(const char *sql, sqlite3_stmt **stmt, const char *_func
     return 0;
 }
 
+
 void open_database(const char *db_filename){
 
    /** public function - see header **/
@@ -77,6 +78,7 @@ void open_database(const char *db_filename){
         log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
     }
 }
+
 
 static int column_exists(const char *table, const char *column) {
 
@@ -117,6 +119,7 @@ static int column_exists(const char *table, const char *column) {
     return 0;
 }
 
+
 int database_table_count(){
 
     /** public function - see header **/
@@ -145,6 +148,7 @@ int database_table_count(){
 
     return table_count;
 }
+
 
 void create_database_table(char *sql){
 
@@ -218,6 +222,7 @@ void process_sql(const char *sql_str){
     }
 }
 
+
 int current_database_version() {
 
     int rc;
@@ -246,6 +251,7 @@ int current_database_version() {
 
     return 0;
 }
+
 
 void create_default_database(){
 

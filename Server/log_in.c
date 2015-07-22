@@ -68,7 +68,7 @@ void load_char_data_into_connection(int connection){
 
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        clients.client[connection].client_inventory[i].image_id=character.client_inventory[i].image_id;
+        clients.client[connection].client_inventory[i].object_id=character.client_inventory[i].object_id;
         clients.client[connection].client_inventory[i].amount=character.client_inventory[i].amount;
     }
 

@@ -28,6 +28,7 @@
 #include "character_movement.h"     //contains definition of PATH_MAX
 
 #define MAX_CLIENTS 100
+#define BAG_LIST_MAX 10
 
 struct client_node_type{
 
@@ -53,9 +54,8 @@ struct client_node_type{
     bool harvest_flag;
     int harvest_amount;    //amount harvested each cycle
     int harvest_object_id; //object being harvested
-    int harvest_interval; //interval between each harvest
+    int harvest_interval;  //interval between each harvest
     int inventory_slot;
-    int bag_open;
     time_t time_of_last_harvest;
 
     char ip_address[16];
@@ -165,6 +165,10 @@ struct client_node_type{
     int elapsed_book_time;
 
     struct client_inventory_type client_inventory[MAX_INVENTORY_SLOTS];
+
+    int bag_list[BAG_LIST_MAX];
+    bool bag_open;
+    int open_bag_id;
 };
 
 struct client_list_type {

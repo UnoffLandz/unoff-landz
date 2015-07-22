@@ -34,7 +34,8 @@ enum { // server to client protocol
 */
 
     ADD_ACTOR=2,
-/*      byte word                purpose
+/*
+        byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
         2-3  Uint16              data-length (=packet length-2)
@@ -42,7 +43,6 @@ enum { // server to client protocol
         5    Uint8               move command
 */
     YOU_ARE=3,
-
 /*
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
@@ -84,6 +84,7 @@ enum { // server to client protocol
     HERE_YOUR_STATS=18,
     HERE_YOUR_INVENTORY=19,
     GET_NEW_INVENTORY_ITEM=21,
+
     HERE_YOUR_GROUND_ITEMS=23,
     GET_NEW_GROUND_ITEM=24,
     S_CLOSE_BAG=26,
@@ -132,8 +133,6 @@ enum { // server to client protocol
         4    Unit8               active channel slot
         5-   Uint8 array         channel slot
 */
-
-
 
     YOU_DONT_EXIST=249,
 /*

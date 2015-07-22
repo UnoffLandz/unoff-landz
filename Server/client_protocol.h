@@ -31,13 +31,59 @@ enum { // client to server protocol
     SEND_VERSION=10,
     HEARTBEAT=14,
     USE_OBJECT=16,
+
     LOOK_AT_INVENTORY_ITEM=19,
+ /*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16              data-length (=packet length-2)
+        4    Uint8               slot number
+*/
+
     MOVE_INVENTORY_ITEM=20,
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16              data-length (=packet length-2)
+        4    Uint8               from slot number
+        5    Uint8               to slot number
+
+        n.b - slots 0-35 are used to hold stored items, and slots 36 to 43 hold wearable items
+*/
+
     HARVEST=21,
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16              data-length (=packet length-2)
+        4-8  Uint32              position of resource in map 3d object list
+*/
+
     DROP_ITEM=22,
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16              data-length (=packet length-2)
+        3-   Uint8               inventory slot
+        4-8  Uint32              amount
+*/
+
     PICK_UP_ITEM=23,
     INSPECT_BAG=25,
+
     LOOK_AT_MAP_OBJECT=27,
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16              data-length (=packet length-2)
+        4-8  Uint32              position of object in the map 3d object list
+*/
+
     SEND_PARTIAL_STATS=49,
     PING_RESPONSE=60,
     SET_ACTIVE_CHANNEL=61,

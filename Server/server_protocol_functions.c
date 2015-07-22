@@ -52,8 +52,7 @@ void send_packet(int connection, unsigned char *packet, int packet_length){
     char text[1024]="";
 
     //capture packet details for logging
-    int i=0;
-    for(i=0; i<packet_length; i++){
+    for(int i=0; i<packet_length; i++){
 
         //use the safe version of snprintf to capture any over-runs
         ssnprintf(text, 1024, "%s %i", text, packet[i]);
@@ -347,7 +346,7 @@ void send_here_your_inventory(int connection){
 
         //item
         element[(i*4)+3].data_type=UINT16;
-        element[(i*4)+3].data.numeric=clients.client[connection].client_inventory[i].image_id;
+        element[(i*4)+3].data.numeric=clients.client[connection].client_inventory[i].object_id;
 
         //amount
         element[(i*4)+4].data_type=UINT32;
@@ -845,7 +844,6 @@ void send_add_actor_packet(int connection, unsigned char *packet, int packet_len
     send_packet(connection, packet, packet_length);
 }
 
-
 void send_get_new_inventory_item(int connection, int image_id, int amount, int slot){
 
     /** public function - see header */
@@ -893,25 +891,48 @@ void send_get_new_inventory_item(int connection, int image_id, int amount, int s
     log_event(EVENT_SESSION, "SEND_GET_NEW_INVENTORY_ITEM connection [%i]", connection);
 
     send_packet(connection, p.out, 11);
-
-/*
-    packet[0]=GET_NEW_INVENTORY_ITEM;
-
-    packet[1]=9;
-    packet[2]=0;
-
-    packet[3]=item_image_id % 256;
-    packet[4]=item_image_id / 256;
-
-    packet[5]=amount % 256;
-    packet[6]=amount / 256 % 256;
-    packet[7]=amount / 256 / 256 % 256;
-    packet[8]=amount / 256 / 256 / 256 % 256;
-
-    packet[9]=slot;
-
-    packet[10]=0;//flags
-
-    send(connection, packet, 11, 0);
-*/
 }
+
+void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, int *packet_length){
+
+    /** public function - see header */
+
+    typedef struct {
+
+        unsigned char protocol;
+        unsigned char lsb;
+        unsigned char msb;
+        unsigned char x_pos_lsb;
+        unsigned char x_pos_msb;
+        unsigned char y_pos_lsb;
+        unsigned char y_pos_msb;
+        unsigned char bag_list_number;
+    }packet_data;
+
+    union {
+
+        unsigned char out[8];
+        packet_data in;
+    }p;
+
+    p.in.protocol=GET_NEW_BAG;
+    p.in.lsb=6;
+    p.in.msb=0;
+
+    int x_pos=0, y_pos=0;
+    get_xy_position(clients.client[connection].map_tile, &x_pos, &y_pos, clients.client[connection].map_id);
+
+    p.in.x_pos_lsb=x_pos % 256;
+    p.in.x_pos_msb=x_pos / 256;
+
+    p.in.y_pos_lsb=y_pos % 256;
+    p.in.y_pos_msb=y_pos / 256;
+
+    p.in.bag_list_number=bag_list_number;
+
+    *packet_length=8;
+
+    memcpy(packet, p.out, *packet_length);
+}
+
+

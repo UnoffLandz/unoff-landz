@@ -31,6 +31,7 @@ struct object_type{
     bool harvestable;
     bool edible;
     int harvest_interval;
+    int emu;
 };
 extern struct object_type object[MAX_OBJECT_ID];
 

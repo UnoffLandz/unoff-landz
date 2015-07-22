@@ -21,17 +21,18 @@
                     ~~~~ Special credit goes to Nermerle for this module ~~~~
 
 *****************************************************************************************************/
-#include "database_functions.h"
-#include "../file_functions.h"
-#include "db_object_tbl.h"
-#include "db_e3d_tbl.h"
-
 #include <sqlite3.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+
+#include "database_functions.h"
+#include "../file_functions.h"
+#include "db_object_tbl.h"
+#include "db_e3d_tbl.h"
+#include "db_map_object_tbl.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// DB Upgrade helper functions (by Nemerle)
@@ -137,35 +138,8 @@ static int upgrade_v0_to_v1(const char *dbname) {
 
 static int upgrade_v1_to_v2() {
 
-/* MAP_OBJECT_TABLE was removed in update 3, hence upgrade 2 is commented out
-
-    create_database_table(MAP_OBJECT_TABLE_SQL);
-
-    add_db_object(1, "cabbage.e3d", "cabbage", 405, 1, 1);
-    add_db_object(2, "tomatoeplant1.e3d", "tomato", 407, 1, 1);
-    add_db_object(3, "tomatoeplant2.e3d", "tomato", 407, 1, 1);
-    add_db_object(4, "foodtomatoe.e3d", "tomato", 407, 1, 1);
-    add_db_object(5, "food_carrot.e3d", "carrot", 408, 1, 1);
-    add_db_object(6, "log1.e3d", "log", 408, 1, 0);
-    add_db_object(7, "log2.e3d", "log", 408, 1, 0);
-    add_db_object(8, "flowerpink1.e3d", "Chrysanthemum", 28, 1, 0);
-    add_db_object(9, "branch1.e3d", "stick", 140, 1, 0);
-    add_db_object(10, "branch2.e3d", "stick", 140, 1, 0);
-    add_db_object(11, "branch3.e3d", "stick", 140, 1, 0);
-    add_db_object(12, "branch4.e3d", "stick", 140, 1, 0);
-    add_db_object(13, "branch5.e3d", "stick", 140, 1, 0);
-    add_db_object(14, "branch6.e3d", "stick", 140, 1, 0);
-    add_db_object(15, "flowerorange1.e3d", "Tiger Lily", 29, 1, 0);
-    add_db_object(16, "flowerorange2.e3d", "Tiger Lily", 29, 1, 0);
-    add_db_object(17, "flowerorange3.e3d", "Tiger Lily", 29, 1, 0);
-    add_db_object(18, "flowerwhite1.e3d", "Impatiens", 29, 1, 0);
-    add_db_object(19, "flowerwhite2.e3d", "Impatiens", 29, 1, 0);
-    add_db_object(20, "flowerwhite3.e3d", "Impatiens", 29, 1, 0);
-*/
-
     set_db_version(2);
 
-    sqlite3_close(db);
     fprintf(stderr,"UPGRADE [v%d]: Success\n", 2);
 
     return 0;
@@ -175,34 +149,8 @@ static int upgrade_v2_to_v3(const char *dbname) {
 
     create_database_table(E3D_TABLE_SQL);
 
-    add_db_e3d(1, "cabbage.e3d", 1);
-    add_db_e3d(2, "tomatoeplant1.e3d", 2);
-    add_db_e3d(3, "tomatoeplant2.e3d", 2);
-    add_db_e3d(4, "foodtomatoe.e3d", 2);
-    add_db_e3d(5, "food_carrot.e3d", 3);
-    add_db_e3d(6, "log1.e3d", 4);
-    add_db_e3d(7, "log2.e3d", 4);
-    add_db_e3d(8, "branch1.e3d", 5);
-    add_db_e3d(9, "branch2.e3d", 5);
-    add_db_e3d(10, "branch3.e3d", 5);
-    add_db_e3d(11, "branch4.e3d", 5);
-    add_db_e3d(12, "branch5.e3d", 5);
-    add_db_e3d(13, "branch6.e3d", 5);
-    add_db_e3d(15, "flowerorange1.e3d", 6);
-    add_db_e3d(16, "flowerorange2.e3d", 6);
-    add_db_e3d(17, "flowerorange3.e3d", 6);
-
     create_database_table(OBJECT_TABLE_SQL);
 
-/* object table upgraded in version 4, hence old version of add_db_object commented out
-    add_db_object(1, "cabbage", 405, 1, 1);
-    add_db_object(2, "tomato", 407, 1, 1);
-    add_db_object(3, "carrot", 408, 1, 1);
-    add_db_object(4, "log", 408, 1, 0);
-    add_db_object(5, "stick", 140, 1, 0);
-    add_db_object(6, "Tiger Lily", 29, 1, 0);
-*/
-    //remove MAP_OBJECT_TABLE
     sqlite3 *db;
     char *err_msg = NULL;
 
@@ -228,7 +176,7 @@ static int upgrade_v2_to_v3(const char *dbname) {
     set_db_version(3);
 
     sqlite3_close(db);
-    fprintf(stderr,"UPGRADE [v%d]: Success\n", 2);
+    fprintf(stderr,"UPGRADE [v%d]: Success\n", 3);
 
     return 0;
 }
@@ -258,20 +206,112 @@ static int upgrade_v3_to_v4(const char *dbname) {
     }
 
     create_database_table(OBJECT_TABLE_SQL);
-    //add_db_object(1, "cabbage", 405, 1, 1, 2);
-    //add_db_object(2, "tomato", 407, 1, 1, 2);
-    //add_db_object(3, "carrot", 408, 1, 1, 2);
-    //add_db_object(4, "log", 408, 1, 0, 4);
-    //add_db_object(5, "stick", 140, 1, 0, 2);
-    //add_db_object(6, "Tiger Lily", 29, 1, 0, 1);
 
     set_db_version(4);
 
     sqlite3_close(db);
-    fprintf(stderr,"UPGRADE [v%d]: Success\n", 2);
+    fprintf(stderr,"UPGRADE [v%d]: Success\n", 4);
 
     return 0;
 }
+
+static int upgrade_v4_to_v5(const char *dbname) {
+
+    sqlite3 *db;
+    char *err_msg = NULL;
+
+    int rc = sqlite3_open(dbname, &db);
+
+    if( rc !=SQLITE_OK ) {
+
+        return -1;
+    }
+
+    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS E3D_TABLE", callback, 0, &err_msg);
+
+    if( rc != SQLITE_OK ){
+
+        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
+
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+
+        return -1;
+    }
+
+    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS MAP_OBJECT_TABLE", callback, 0, &err_msg);
+
+    if( rc != SQLITE_OK ){
+
+        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
+
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+
+        return -1;
+    }
+
+    create_database_table(E3D_TABLE_SQL);
+
+    add_db_e3d(1, "cabbage.e3d", 405);
+    add_db_e3d(2, "tomatoeplant1.e3d", 407);
+    add_db_e3d(3, "tomatoeplant2.e3d", 407);
+    add_db_e3d(4, "foodtomatoe.e3d", 407);
+    add_db_e3d(5, "food_carrot.e3d", 408);
+    add_db_e3d(8, "branch1.e3d", 140);
+    add_db_e3d(9, "branch2.e3d", 140);
+    add_db_e3d(10, "branch3.e3d", 140);
+    add_db_e3d(11, "branch4.e3d", 140);
+    add_db_e3d(12, "branch5.e3d", 140);
+    add_db_e3d(13, "branch6.e3d", 140);
+    add_db_e3d(15, "flowerorange1.e3d", 29);
+    add_db_e3d(16, "flowerorange2.e3d", 29);
+    add_db_e3d(17, "flowerorange3.e3d", 29);
+
+    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS OBJECT_TABLE", callback, 0, &err_msg);
+
+    if( rc != SQLITE_OK ){
+
+        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
+
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+
+        return -1;
+    }
+
+    create_database_table(OBJECT_TABLE_SQL);
+
+    add_db_object(405, "cabbage", 1, 1, 2);
+    add_db_object(407, "tomato", 1, 1, 2);
+    add_db_object(408, "carrot", 1, 1, 2);
+    add_db_object(140, "stick", 1, 0, 2);
+    add_db_object(29, "tiger lily", 1, 0, 1);
+
+    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS MAP_OBJECT_TABLE", callback, 0, &err_msg);
+
+    if( rc != SQLITE_OK ){
+
+        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
+
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+
+        return -1;
+    }
+
+    create_database_table(MAP_OBJECT_TABLE_SQL);
+
+    add_db_map_objects("startup.elm", 1);
+
+    set_db_version(5);
+
+    sqlite3_close(db);
+    fprintf(stderr,"UPGRADE [v%d]: Success\n", 5);
+
+    return 0;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Array of upgrade procedures with their associated db versions
@@ -287,6 +327,7 @@ struct upgrade_array_entry {
 
 struct upgrade_array_entry entries[] = {
 
+    { 4, 5, upgrade_v4_to_v5},
     { 3, 4, upgrade_v3_to_v4},
     { 2, 3, upgrade_v2_to_v3},
     { 1, 2, upgrade_v1_to_v2},

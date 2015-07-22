@@ -128,4 +128,16 @@ int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis);
 */
 int get_tile(int x_pos, int y_pos, int map_axis);
 
+
+/** RESULT  : calculates the x,y coordinates based on the tile
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void get_xy_position(int tile, int *x_pos, int *y_pos, int map_id);
+
+
 #endif // MAPS_H_INCLUDED

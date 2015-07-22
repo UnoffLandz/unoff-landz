@@ -24,9 +24,8 @@
 #define MAX_INVENTORY_SLOTS 36
 
 struct client_inventory_type {
-        int image_id;
+        int object_id;
         int amount;
-        int slot;
         int flags;
 };
 extern struct client_inventory_type client_inventory;
@@ -47,9 +46,12 @@ int get_max_inventory_emu(int connection);
 
     RETURNS : the total emu of items in an inventory
 
-    PURPOSE : to support variable carry capacity based on race and attributes
+    PURPOSE : determine if inventory is overloaded
 
-    NOTES   :
+    NOTES   :the server keeps a record of the total inventory emu in the client struct in order to
+             avoid having to continually recalculate this value from scratch. The value is initially
+             set when the char logs-in using the get_inventory_emu function
+
 */
 int get_inventory_emu(int connection);
 
@@ -75,6 +77,16 @@ void add_item_to_inventory(int connection, int object_id, int amount);
 */
 void move_inventory_item(int connection, int from_slot, int to_slot);
 
+
+/** RESULT  : broadcasts a new bag to connected clients
+
+    RETURNS : void
+
+    PURPOSE : supports the DROP_ITEM protocol
+
+    NOTES   :
+*/
+void broadcast_drop_item_packet(int connection);
 
 #endif // CHARACTER_INVENTORY_H_INCLUDED
 

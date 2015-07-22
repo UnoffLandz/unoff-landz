@@ -239,5 +239,15 @@ void send_get_active_channels(int connection);
 void send_get_new_inventory_item( int connection, int image_id, int amount, int slot);
 
 
+/** RESULT  : creates the get_new_bag_packet
+
+    RETURNS : void
+
+    PURPOSE : enables a packet to be created once which can then be sent multiple times
+
+    NOTES   :
+*/
+void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, int *packet_length);
+
 
 #endif // SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED

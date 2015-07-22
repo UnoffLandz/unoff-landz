@@ -351,3 +351,48 @@ void broadcast_channel_event(int chan, int connection, char *text_in){
         }
     }
 }
+
+void broadcast_get_new_bag_packet(int connection, int bag_list_number) {
+
+    /** public function - see header */
+
+    int map_id=clients.client[connection].map_id;
+    int char_tile=clients.client[connection].map_tile;
+    int map_axis=maps.map[map_id].map_axis;
+
+    //pre-create the packet so we don't have to repeat this on each occasion when it needs to
+    //sent to other actors
+    unsigned char packet[1024]={0};
+    int packet_length=0;
+
+    get_new_bag_packet(connection, bag_list_number, packet, &packet_length);
+
+    //cycle through all the clients
+    for(int i=0; i<MAX_CLIENTS; i++){
+
+        //restrict to clients that are logged in
+        if(clients.client[i].client_status==LOGGED_IN){
+
+            //restrict to chars on the same map as broadcasting char
+            if(map_id==clients.client[i].map_id){
+
+                int receiver_char_visual_range=get_char_visual_range(i);
+                int receiver_char_tile=clients.client[i].map_tile;
+
+                #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
+                printf("send_new_bag packet connection %i proximity %i visual range %i\n", i, receiver_char_visual_range, get_proximity(char_tile, receiver_char_tile, map_axis));
+                #endif
+
+                //restrict to those chars that can see the broadcasting char
+                if(get_proximity(char_tile, receiver_char_tile, map_axis) < receiver_char_visual_range){
+
+                    #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
+                    printf("connection %i send new bag packet sent\n", i);
+                    #endif
+
+                    send_packet(i, packet, packet_length);
+                }
+            }
+        }
+    }
+}

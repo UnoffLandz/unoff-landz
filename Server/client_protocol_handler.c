@@ -50,6 +50,7 @@
 #include "harvesting.h"
 #include "date_time_functions.h"
 #include "client_protocol_handler.h"
+#include "bags.h"
 
 #define DEBUG_CLIENT_PROTOCOL_HANDLER 0//set debug mode
 
@@ -367,7 +368,7 @@ void process_packet(int connection, unsigned char *packet){
 
         for(i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-            if(i==clients.client[connection].client_inventory[slot].image_id){
+            if(i==clients.client[connection].client_inventory[slot].object_id){
 
                 found=true;
                 break;
@@ -440,25 +441,100 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==DROP_ITEM){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("DROP_ITEM %i %i \n", packet[1], packet[2]);
-        #endif
-
-/*
         //returns a byte indicating the slot number followed by a 32bit integer indicating the amount to be dropped
-
-        inventory_slot=data[0];
-        amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
-        image_id=clients.client[connection].client_inventory[inventory_slot].image_id;
+        int slot=packet[3];
+        int amount=Uint32_to_dec(packet[4], packet[5], packet[6], packet[7]);
+        int object_id=clients.client[connection].client_inventory[slot].object_id;
+        int bag_id=0;
+        int bag_slot=0;
 
         #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("DROP_ITEM image_id [%i] drop amount [%i]\n", image_id, amount);
+        printf("DROP_ITEM object id [%i] drop amount [%i]\n", object_id, drop_amount);
         #endif
 
-        drop_from_inventory(connection, inventory_slot, amount, loop);
+        //create new bag if none exists
+        if(clients.client[connection].bag_open==false){
+
+            bag_id=create_bag(connection, clients.client[connection].map_id, clients.client[connection].map_tile);
+
+            //test to see if maximum bags has been permitted
+            if(bag_id==-1){
+
+                char text_out[80]="";
+
+                sprintf(text_out, "%cserver has reached the maximum number of bags. Wait for one to poof. ", c_red3+127);
+                send_raw_text(connection, CHAT_SERVER, text_out);
+
+                return;
+            }
+
+            clients.client[connection].bag_open=true;
+            clients.client[connection].open_bag_id=bag_id;
+        }
+        //use existing bag if one is open
+        else {
+
+            bag_id=clients.client[connection].open_bag_id;
+
+            //check if we have this object in the bag
+            bool item_exists=false;
+
+            for(int i=0; i<MAX_BAG_SLOTS; i++){
+
+                if(bag[bag_id].inventory[slot].object_id==object_id){
+
+                    item_exists=true;
+                    bag_slot=i;
+                    break;
+                }
+            }
+
+            //if we don't have the object in the bag, find an empty slot
+            if(item_exists==false){
+
+                bool slot_found=false;
+                int bag_slot=0;
+
+                for(int i=0; i<MAX_BAG_SLOTS; i++){
+
+                    if(bag[bag_id].inventory[bag_slot].amount==0){
+
+                        slot_found=true;
+                        bag_slot=i;
+                        break;
+                    }
+                }
+
+                //if there are no empty slots in bag then abort
+                if(slot_found==false){
+
+                    char text_out[80]="";
+
+                    sprintf(text_out, "%cthere are no slots left in this bag", c_red3+127);
+                    send_raw_text(connection, CHAT_SERVER, text_out);
+
+                    return;
+                }
+            }
+        }
+
+        //remove item from inventory
+        clients.client[connection].client_inventory[slot].amount-=amount;
+
+        if(clients.client[connection].client_inventory[slot].amount==0){
+
+            clients.client[connection].client_inventory[slot].object_id=0;
+            clients.client[connection].client_inventory[slot].flags=0;
+        }
+
+        //add item to bag
+        bag[bag_id].inventory[bag_slot].amount+=amount;
+        bag[bag_id].inventory[bag_slot].object_id=object_id;
+
+        //send revised inventory to client
+        send_here_your_inventory(connection);
 
         log_event(EVENT_SESSION, "Protocol DROP_ITEM by [%s]...", clients.client[connection].char_name);
-*/
     }
 /***************************************************************************************************/
 

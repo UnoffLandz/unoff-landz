@@ -306,14 +306,12 @@ void start_char_move(int connection, int destination){
         log_event(EVENT_ERROR, "path not found in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
     }
 
-/*
     //if standing on a bag, close the bag grid
-    if(clients.client[connection].bag_open==TRUE){
+    if(clients.client[connection].bag_open==true){
 
-        clients.client[connection].bag_open=FALSE;
-        send_s_close_bag(connection);
+        clients.client[connection].bag_open=false;
+        //send_s_close_bag(connection);
     }
-*/
 
     #if DEBUG_MOVEMENT==1
     printf("character [%s] got a new path...\n", clients.client[connection].char_name);

@@ -42,22 +42,22 @@ int get_max_inventory_emu(int connection){
     return attribute[race_id].carry_capacity[pick_points];
 }
 
+
 int get_inventory_emu(int connection){
 
-    /** public function - see header */
+    /** public function - see header **/
 
-    int i=0;
     int total_emu=0;
-    int image_id=0;
 
-    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
+    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        image_id=clients.client[connection].client_inventory[i].image_id;
-        total_emu +=(clients.client[connection].client_inventory[i].amount * item[image_id].emu);
+        int object_id=clients.client[connection].client_inventory[i].object_id;
+        total_emu +=(clients.client[connection].client_inventory[i].amount * item[object_id].emu);
      }
 
     return total_emu;
 }
+
 
 void add_item_to_inventory(int connection, int object_id, int amount){
 
@@ -71,7 +71,7 @@ void add_item_to_inventory(int connection, int object_id, int amount){
     // check if we already have item in inventory
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        if(clients.client[connection].client_inventory[i].image_id==object_id){
+        if(clients.client[connection].client_inventory[i].object_id==object_id){
 
             existing_item=true;
             slot=i;
@@ -84,7 +84,7 @@ void add_item_to_inventory(int connection, int object_id, int amount){
 
         for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-            if(clients.client[connection].client_inventory[i].image_id==0){
+            if(clients.client[connection].client_inventory[i].object_id==0){
 
                 new_slot=true;
                 slot=i;
@@ -104,7 +104,7 @@ void add_item_to_inventory(int connection, int object_id, int amount){
 
     //add the item to the inventory
     clients.client[connection].client_inventory[slot].amount+=amount;
-    clients.client[connection].client_inventory[slot].image_id=object_id;
+    clients.client[connection].client_inventory[slot].object_id=object_id;
 
     //update the client inventory
     send_get_new_inventory_item( connection, object_id, clients.client[connection].client_inventory[slot].amount, slot);
@@ -120,11 +120,11 @@ void move_inventory_item(int connection, int from_slot, int to_slot){
 
     /** public function - see header */
 
-    int image_id=clients.client[connection].client_inventory[from_slot].image_id;
+    int object_id=clients.client[connection].client_inventory[from_slot].object_id;
     int amount=clients.client[connection].client_inventory[from_slot].amount;
 
     //zero the 'from slot'
-    clients.client[connection].client_inventory[from_slot].image_id=0;
+    clients.client[connection].client_inventory[from_slot].object_id=0;
     clients.client[connection].client_inventory[from_slot].amount=0;
     send_get_new_inventory_item(connection, 0, 0, from_slot);
 
@@ -140,17 +140,20 @@ void move_inventory_item(int connection, int from_slot, int to_slot){
     */
 
     //place item in the 'to slot'
-    clients.client[connection].client_inventory[to_slot].image_id=image_id;
+    clients.client[connection].client_inventory[to_slot].object_id=object_id;
     clients.client[connection].client_inventory[to_slot].amount=amount;
-    send_get_new_inventory_item(connection, image_id, amount, to_slot);
+    send_get_new_inventory_item(connection, object_id, amount, to_slot);
 
     //update_database
     char sql[MAX_SQL_LEN]="";
 
-    snprintf(sql, MAX_SQL_LEN, "UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", image_id, clients.client[connection].client_inventory[from_slot].amount, clients.client[connection].character_id, from_slot);
+    snprintf(sql, MAX_SQL_LEN, "UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].client_inventory[from_slot].amount, clients.client[connection].character_id, from_slot);
     push_sql_command(sql);
 
-    snprintf(sql, MAX_SQL_LEN, "UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", image_id, clients.client[connection].client_inventory[to_slot].amount, clients.client[connection].character_id, to_slot);
+    snprintf(sql, MAX_SQL_LEN, "UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].client_inventory[to_slot].amount, clients.client[connection].character_id, to_slot);
     push_sql_command(sql);
 }
 
+void remove_item_from_inventory(){
+
+}

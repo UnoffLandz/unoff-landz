@@ -40,7 +40,7 @@ void get_db_char_inventory(int character_id){
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int slot=sqlite3_column_int(stmt, 0);
-        character.client_inventory[slot].image_id=sqlite3_column_int(stmt, 1);
+        character.client_inventory[slot].object_id=sqlite3_column_int(stmt, 1);
         character.client_inventory[slot].amount=sqlite3_column_int(stmt, 2);
     }
 
@@ -87,7 +87,7 @@ void add_db_char_inventory(struct client_node_type character){
         //usually, we'd start by binding an inventory_id to column 0. However, sqlite creates this automatically
         sqlite3_bind_int(stmt, 1, character.character_id);
         sqlite3_bind_int(stmt, 2, i);
-        sqlite3_bind_int(stmt, 3, character.client_inventory[i].image_id);
+        sqlite3_bind_int(stmt, 3, character.client_inventory[i].object_id);
         sqlite3_bind_int(stmt, 4, character.client_inventory[i].amount);
 
         rc = sqlite3_step(stmt);
