@@ -52,7 +52,7 @@
 #include "client_protocol_handler.h"
 #include "bags.h"
 
-#define DEBUG_CLIENT_PROTOCOL_HANDLER 0//set debug mode
+#define DEBUG_CLIENT_PROTOCOL_HANDLER 1//set debug mode
 
 void process_packet(int connection, unsigned char *packet){
 
@@ -442,22 +442,59 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==DROP_ITEM){
 
         //returns a byte indicating the slot number followed by a 32bit integer indicating the amount to be dropped
-        int slot=packet[3];
+        int inventory_slot=packet[3];
         int amount=Uint32_to_dec(packet[4], packet[5], packet[6], packet[7]);
-        int object_id=clients.client[connection].client_inventory[slot].object_id;
+        int object_id=clients.client[connection].client_inventory[inventory_slot].object_id;
         int bag_id=0;
-        int bag_slot=0;
+        int slot=0;
 
         #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("DROP_ITEM object id [%i] drop amount [%i]\n", object_id, drop_amount);
+        printf("DROP_ITEM object id [%i] drop amount [%i]\n", object_id, amount);
         #endif
 
-        //create new bag if none exists
+        //use existing bag if one exists
+        if(clients.client[connection].bag_open==true){
+
+            bag_id=clients.client[connection].open_bag_id;
+
+            //search the bag to find an existing of free slot in which to place the drop
+            bool existing_slot_found=false;
+            bool new_slot_found=false;
+
+            for(int i=0; i<MAX_BAG_SLOTS; i++){
+
+                if(bag[bag_id].inventory[i].object_id==object_id){
+
+                    existing_slot_found=true;
+                    slot=i;
+                    break;
+                }
+
+                if(bag[bag_id].inventory[i].amount==0 && new_slot_found==false){
+
+                    new_slot_found=true;
+                    slot=i;
+                }
+            }
+
+            //if no existing or free slots then abort drop
+            if(existing_slot_found==false && new_slot_found==false){
+
+                char text_out[80]="";
+
+                sprintf(text_out, "%cthere are no slots left in this bag", c_red3+127);
+                send_raw_text(connection, CHAT_SERVER, text_out);
+
+                return;
+            }
+        }
+
+        //create new bag if none exist
         if(clients.client[connection].bag_open==false){
 
             bag_id=create_bag(connection, clients.client[connection].map_id, clients.client[connection].map_tile);
 
-            //test to see if maximum bags has been permitted
+            //test to see if maximum bags has been exceeded
             if(bag_id==-1){
 
                 char text_out[80]="";
@@ -471,68 +508,24 @@ void process_packet(int connection, unsigned char *packet){
             clients.client[connection].bag_open=true;
             clients.client[connection].open_bag_id=bag_id;
         }
-        //use existing bag if one is open
-        else {
-
-            bag_id=clients.client[connection].open_bag_id;
-
-            //check if we have this object in the bag
-            bool item_exists=false;
-
-            for(int i=0; i<MAX_BAG_SLOTS; i++){
-
-                if(bag[bag_id].inventory[slot].object_id==object_id){
-
-                    item_exists=true;
-                    bag_slot=i;
-                    break;
-                }
-            }
-
-            //if we don't have the object in the bag, find an empty slot
-            if(item_exists==false){
-
-                bool slot_found=false;
-                int bag_slot=0;
-
-                for(int i=0; i<MAX_BAG_SLOTS; i++){
-
-                    if(bag[bag_id].inventory[bag_slot].amount==0){
-
-                        slot_found=true;
-                        bag_slot=i;
-                        break;
-                    }
-                }
-
-                //if there are no empty slots in bag then abort
-                if(slot_found==false){
-
-                    char text_out[80]="";
-
-                    sprintf(text_out, "%cthere are no slots left in this bag", c_red3+127);
-                    send_raw_text(connection, CHAT_SERVER, text_out);
-
-                    return;
-                }
-            }
-        }
 
         //remove item from inventory
-        clients.client[connection].client_inventory[slot].amount-=amount;
+        clients.client[connection].client_inventory[inventory_slot].amount-=amount;
 
-        if(clients.client[connection].client_inventory[slot].amount==0){
+        //if amount is zero, remove item entry from inventory
+        if(clients.client[connection].client_inventory[inventory_slot].amount==0){
 
-            clients.client[connection].client_inventory[slot].object_id=0;
-            clients.client[connection].client_inventory[slot].flags=0;
+            clients.client[connection].client_inventory[inventory_slot].object_id=0;
+            clients.client[connection].client_inventory[inventory_slot].flags=0;
         }
 
         //add item to bag
-        bag[bag_id].inventory[bag_slot].amount+=amount;
-        bag[bag_id].inventory[bag_slot].object_id=object_id;
+        bag[bag_id].inventory[slot].amount+=amount;
+        bag[bag_id].inventory[slot].object_id=object_id;
 
-        //send revised inventory to client
+        //send revised char and bag inventory to client
         send_here_your_inventory(connection);
+        send_here_your_ground_items(connection, bag_id);
 
         log_event(EVENT_SESSION, "Protocol DROP_ITEM by [%s]...", clients.client[connection].char_name);
     }
@@ -563,33 +556,43 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==INSPECT_BAG){
 
         #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("INSPECT_BAG %i %i \n", packet[1], packet[2]);
+        printf("INSPECT_BAG connection %i  bag %i \n", packet[0], packet[3]);
         #endif
 
-/*
         //returns a Unit8 indicating the bag_id
+        int bag_id=packet[3];
 
-        bag_id=data[0];
+        //find bag at the chars current position
+        bool bag_found=false;
+        int i=0;
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("INSPECT_BAG - lsb [%i] msb [%i] bag id [%i]\n", lsb, msb, bag_id);
-        #endif
+        for(i=0; i<MAX_BAGS; i++){
 
-        //check we are standing on the bag
-        if(bag_list[bag_id].tile_pos==current_tile) {
+           if(bag[i].tile==clients.client[connection].map_tile){
 
-            //if we are standing on the bag then attempt to open it
-           //send_here_your_ground_items(connection, bag_id);
-            clients.client[connection].bag_open=TRUE;
+                bag_found=true;
+                break;
+           }
         }
-        else {
 
-            //not standing on bag so move towards it
-            start_char_move(connection, bag_list[bag_id].tile_pos, loop);
+        //if there is no bag then abort
+        if(bag_found==false){
+
+            char text_out[80]="";
+
+            sprintf(text_out, "%cthere is no bag at this location", c_red3+127);
+            send_raw_text(connection, CHAT_SERVER, text_out);
+
+            return;
         }
+
+        //if there is a bag then open it
+        send_here_your_ground_items(connection, bag_id);
+
+        clients.client[connection].bag_open=true;
+        clients.client[connection].open_bag_id=i;
 
         log_event(EVENT_SESSION, "Protocol INSPECT_BAG by [%s]...", clients.client[connection].char_name);
-*/
     }
 /***************************************************************************************************/
 
@@ -627,7 +630,7 @@ void process_packet(int connection, unsigned char *packet){
         send_raw_text(connection, CHAT_SERVER, text_out);
 
         #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("LOOK_AT_MAP_OBJECT - map object [%i] item id [%i] object [%s]\n", map_object_number, item_id, map_object[item_id].object_name);
+        printf("LOOK_AT_MAP_OBJECT - map object [%i] item id [%i] object [%s]\n", threed_object_list_pos, object_id, object[object_id].object_name);
         #endif
 
         log_event(EVENT_SESSION, "Protocol LOOK_AT_MAP_OBJECT [%s] by [%s]", object[object_id].object_name, clients.client[connection].char_name);

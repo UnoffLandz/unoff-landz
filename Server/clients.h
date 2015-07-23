@@ -33,6 +33,7 @@
 struct client_node_type{
 
     enum{
+
         LOGGED_OUT=0,
         LOGGED_IN=1,
         CONNECTED=2,
@@ -166,7 +167,6 @@ struct client_node_type{
 
     struct client_inventory_type client_inventory[MAX_INVENTORY_SLOTS];
 
-    int bag_list[BAG_LIST_MAX];
     bool bag_open;
     int open_bag_id;
 };

@@ -82,14 +82,61 @@ enum { // server to client protocol
 */
 
     HERE_YOUR_STATS=18,
+
     HERE_YOUR_INVENTORY=19,
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16              data-length (=packet length-2)
+        4    Uint8               slot count
+
+        REPEAT FOR EACH SLOT...
+        5-6 { Uint16              object id
+        7-11{ Uint32              amount
+        12  { Uint8               slot
+        13  { Uint8               flags
+*/
+
     GET_NEW_INVENTORY_ITEM=21,
 
-    HERE_YOUR_GROUND_ITEMS=23,
+    HERE_YOUR_GROUND_ITEMS=23, //opens bag
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16              data-length (=packet length-2)
+        4    Uint8               slot count
+
+        REPEAT FOR EACH SLOT...
+        5-6 { Uint16              object id
+        7-11{ Uint32              amount
+        12  { Uint8               slot
+*/
+
     GET_NEW_GROUND_ITEM=24,
-    S_CLOSE_BAG=26,
-    GET_NEW_BAG=27,
+
+    CLOSE_BAG=26, //closes bag inventory grid
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16              data-length (=packet length-2)
+*/
+
+    GET_NEW_BAG=27, //creates empty bag
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16              data-length (=packet length-2)
+        4-5  Uint16              x-pos on map
+        6-7  Uint16              y-pos on map
+        8    Uint8               bag list number
+*/
+
     DESTROY_BAG=29,
+
     ADD_NEW_ENHANCED_ACTOR=51,
 /*
         byte word                purpose
@@ -131,7 +178,9 @@ enum { // server to client protocol
         1    Uint8               protocol
         2-3  Uint16              data-length (=packet length-2)
         4    Unit8               active channel slot
-        5-   Uint8 array         channel slot
+
+        REPEAT FOR EACH SLOT...
+        5-8  Uint32              channel slot
 */
 
     YOU_DONT_EXIST=249,

@@ -310,7 +310,7 @@ void start_char_move(int connection, int destination){
     if(clients.client[connection].bag_open==true){
 
         clients.client[connection].bag_open=false;
-        //send_s_close_bag(connection);
+        send_close_bag(connection);
     }
 
     #if DEBUG_MOVEMENT==1

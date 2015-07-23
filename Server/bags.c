@@ -25,9 +25,10 @@ int create_bag(int connection, int map_id, int tile){
     int i=0;
     for(i=0; i<MAX_BAGS; i++){
 
-        if(bag[i].bag_emu==0) {
+        if(bag[i].bag_in_use==false) {
 
             found_empty_bag=true;
+            bag[i].bag_in_use=true;
             break;
         }
     }
@@ -41,6 +42,7 @@ int create_bag(int connection, int map_id, int tile){
     bag[i].bag_type_id=0; /** 0=ordinary bag **/
     bag[i].map_id=map_id;
     bag[i].tile=tile;
+    bag[i].bag_in_use=true;
 
     //calculate and store the bag creation time so we know when to poof
     gettimeofday(&time_check, NULL);

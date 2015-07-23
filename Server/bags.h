@@ -3,7 +3,7 @@
 
 #define MAX_BAGS 50
 #define MAX_PLAYER_BAGS 10
-#define MAX_BAG_SLOTS 20
+#define MAX_BAG_SLOTS 50
 
 #include <time.h>
 
@@ -18,10 +18,9 @@ struct bag_type {
     int character_id;
     time_t bag_created;
     int bag_type_id;
-    int bag_emu;
     int tile;
     int map_id;
-    int bag_list_number;
+    bool bag_in_use;
 
     struct bag_inventory_type inventory[MAX_BAG_SLOTS];
 };

@@ -107,6 +107,17 @@ void send_raw_text(int connection, int chan_type, char *text);
 void send_here_your_inventory(int connection);
 
 
+/** RESULT  : sends the here_your_ground_items packet to client
+
+    RETURNS : void
+
+    PURPOSE : sends the bag inventory to client
+
+    NOTES   :
+*/
+void send_here_your_ground_items(int connection, int bag_id);
+
+
 /** RESULT  : sends the get_active_channels packet to client
 
     RETURNS : void
@@ -249,5 +260,6 @@ void send_get_new_inventory_item( int connection, int image_id, int amount, int 
 */
 void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, int *packet_length);
 
+void send_close_bag(int connection);
 
 #endif // SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED

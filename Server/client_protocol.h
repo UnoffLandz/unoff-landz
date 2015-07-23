@@ -73,6 +73,7 @@ enum { // client to server protocol
 */
 
     PICK_UP_ITEM=23,
+
     INSPECT_BAG=25,
 
     LOOK_AT_MAP_OBJECT=27,

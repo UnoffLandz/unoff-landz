@@ -36,13 +36,12 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-implement open bag
-test whether add to bag following drop is working
-implement send_s_close_bag if char moves off open bag
+walk to towards bag when clicked on if char is not standing on bag
 implement bag poof
 make initial field in all tables ID
 document new database/struct relationships
 map object reserve respawn
+convert server function format to same as here_your_ground_items
 
 ***************************************************************************************************/
 #define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
@@ -54,7 +53,6 @@ map object reserve respawn
 #include <arpa/inet.h>  //supports recv and accept function
 #include <ev.h>         //supports ev event library
 #include <fcntl.h>      //supports fcntl
-//#include <sys/time.h>
 
 #include "server_parameters.h"
 #include "global.h"

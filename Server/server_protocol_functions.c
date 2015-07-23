@@ -32,6 +32,8 @@ via the 'packet_element_type' struct.
 #include <string.h>     //support for memmove strlen
 #include <sys/socket.h> //support for send function
 #include <stdio.h>      //support for sprintf
+#include <SDL/SDL_types.h> //support for Uint16 data type
+
 
 #include "server_protocol.h"
 #include "character_inventory.h"
@@ -42,6 +44,7 @@ via the 'packet_element_type' struct.
 #include "colour.h"
 #include "string_functions.h"
 #include "guilds.h"
+#include "bags.h"
 
 #define DEBUG_SERVER_PROTOCOL_FUNCTIONS 0
 
@@ -373,6 +376,82 @@ void send_here_your_inventory(int connection){
     send_packet(connection, packet, packet_length);
 }
 
+void send_here_your_ground_items(int connection, int bag_id){
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        Uint16 data_length;
+        unsigned char slot_count;
+
+        struct __attribute__((__packed__)){
+
+            Uint16 object_id;
+            int amount;
+            unsigned char slot;
+        }inventory[MAX_BAG_SLOTS];
+
+    }packet_in;
+
+    int packet_length=sizeof(packet_in);
+
+    //clear the struct
+    memset(&packet_in, '0', packet_length);
+
+    //add data
+    packet_in.protocol=HERE_YOUR_GROUND_ITEMS;
+    packet_in.data_length=packet_length-2;
+    packet_in.slot_count=MAX_BAG_SLOTS;
+
+    for(int i=0; i<MAX_BAG_SLOTS; i++){
+
+        packet_in.inventory[i].object_id=bag[bag_id].inventory[i].object_id;
+        packet_in.inventory[i].amount=bag[bag_id].inventory[i].amount;
+        packet_in.inventory[i].slot=i;
+    }
+
+    //create the packet from the data
+    unsigned char packet_out[(MAX_BAG_SLOTS * 7) + 4]={0};// must manually specify array size for c99 compliance
+    memcpy(packet_out, &packet_in, packet_length);
+
+    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
+    printf("HERE_YOUR_GROUND_ITEMS [%i]\n", connection);
+    #endif
+
+    log_event(EVENT_SESSION, "HERE_YOUR_GROUND_ITEMS [%i]", connection);
+
+    send(connection, packet_out, packet_length, 0);
+}
+
+void send_close_bag(int connection){
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        Uint16 data_length;
+    }packet_in;
+
+    int packet_length=sizeof(packet_in);
+
+    //clear the struct
+    memset(&packet_in, '0', packet_length);
+
+    //add data
+    packet_in.protocol=CLOSE_BAG;
+    packet_in.data_length=packet_length-2;
+
+    //create the packet from the data
+    unsigned char packet_out[3]={0};// must manually specify array size for c99 compliance
+    memcpy(packet_out, &packet_in, packet_length);
+
+    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
+    printf("CLOSE_BAG [%i]\n", connection);
+    #endif
+
+    log_event(EVENT_SESSION, "CLOSE_BAG [%i]", connection);
+
+    send(connection, packet_out, packet_length, 0);
+}
 
 void send_get_active_channels(int connection){
 
@@ -851,9 +930,6 @@ void send_get_new_inventory_item(int connection, int image_id, int amount, int s
     #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
     printf("SEND_GET_NEW_INVENTORY_ITEM [%i]\n", connection);
     #endif
-
-    printf("image id %i\n", image_id);
-
 
     typedef struct {
 
