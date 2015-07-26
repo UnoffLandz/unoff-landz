@@ -29,6 +29,7 @@
 #define MAP_LOAD_LOG_FILE_NAME       "map_load.log"
 #define PACKET_LOG_FILE_NAME         "packet.log"
 
+
 enum { //log events
     EVENT_NEW_CHAR,
     EVENT_ERROR,
@@ -39,6 +40,19 @@ enum { //log events
     EVENT_MAP_LOAD,
     EVENT_PACKET,
 };
+
+
+enum {//packet logging
+    SEND,
+    RECEIVE
+};
+
+
+struct protocol_type{
+
+    char type[80];
+};
+extern struct protocol_type send_protocol[256], receive_protocol[256];
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,6 +114,17 @@ void log_sqlite_error(char *error_type, const char *function_name, const char *m
 
     NOTES   :
 */
-void log_packet(int connection, unsigned char *packet);
+void log_packet(int connection, unsigned char *packet, int direction);
+
+
+/** RESULT  : loads send_protocol and receive_protocol arrays
+
+    RETURNS : void
+
+    PURPOSE : enables protocol report to be determined from packet byte
+
+    NOTES   :
+*/
+void initialise_protocol_reporting();
 
 #endif // LOGGING_H_INCLUDED

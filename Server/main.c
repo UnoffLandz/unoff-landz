@@ -31,17 +31,20 @@ To compile server, link with the following libraries :
     libev.a                 - libev event library
     libsqlite3.so           - sqlite database library
 
-*******************************************************************************************************************/
+****************************************************************************************************/
 /***************************************************************************************************
 
                                 TO - DO
-
+test multiple char movement view
+convert here_your_stats packet to new format, then remove packet.c module
+change map load so data is taken from db tables rather than elm file blob
 walk to towards bag when clicked on if char is not standing on bag
+implement pick up bag
 implement bag poof
+map object reserve respawn
 make initial field in all tables ID
 document new database/struct relationships
-map object reserve respawn
-convert server function format to same as here_your_ground_items
+load movement vectors in same way as db_upgrade struct entries
 
 ***************************************************************************************************/
 #define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
@@ -143,10 +146,9 @@ void start_server(char *db_filename){
     //open database
     open_database(db_filename);
 
-    //get database version
+    //check database version
     int old_version = current_database_version();
 
-    //check database version
     if(old_version != CURRENT_DB_VERSION) {
 
         printf("Wrong database version - use -U option to upgrade your database\n");
@@ -168,15 +170,15 @@ void start_server(char *db_filename){
     loaded=load_db_e3ds();
     if(loaded==0){
 
-        log_event(EVENT_ERROR, "no objects found in database", loaded);
+        log_event(EVENT_ERROR, "no e3ds found in database", loaded);
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    //load objects from database (must go before maps are loaded)
+    //load objects from database
     loaded=load_db_objects();
     if(loaded==0){
 
-        log_event(EVENT_ERROR, "no e3ds found in database", loaded);
+        log_event(EVENT_ERROR, "no objects found in database", loaded);
         stop_server();
     }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
@@ -259,6 +261,9 @@ void start_server(char *db_filename){
 
     //fill movement vector array so we can directly translate x/y coordinates into actor cmd codes
     initialise_movement_vectors();
+
+    //fill send protocol array so we can automatically translate numeric protocol to text equiv
+    initialise_protocol_reporting();
 
     //create server socket & bind it to socket address
     if((sd = socket(AF_INET, SOCK_STREAM, 0))==-1){

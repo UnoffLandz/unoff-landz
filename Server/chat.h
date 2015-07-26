@@ -20,6 +20,8 @@
 #ifndef CHAT_H_INCLUDED
 #define CHAT_H_INCLUDED
 
+#include <stdbool.h> //support for bool data type
+
 #define MAX_CHANNELS 10
 #define MAX_CHAN_SLOTS 4
 #define LOCAL_CHAT_RANGE 10
@@ -52,20 +54,16 @@ enum { //return values for leave channel
     CHANNEL_NOT_LEFT
 };
 
-enum { // return values for process_chat function
-    CHAR_NOT_IN_CHAN=-1,
-    CHAN_CHAT_SENT=0
-};
 
 /** RESULT  : determines if a player has a chan open
 
-    RETURNS : NOT_FOUND(-1) if not in chan or chan slot number
+    RETURNS : -1 if not in chan or chan slot number
 
     PURPOSE : used by list_clients_in_chan, leave_channel, broadcast_channel_chat
 
     NOTES   :
 **/
-int is_player_in_chan(int connection, int chan);
+int player_in_chan(int connection, int chan);
 
 
 /** RESULT  : joins a chat_channel
@@ -100,16 +98,5 @@ int leave_channel(int connection, int chan);
 **/
 void send_pm(int connection, char *receiver_name, char *message);
 
-
-/** RESULT  : lists participants in a chat channel
-
-    RETURNS : void
-
-    PURPOSE : sends a list of channels to channel participants when player joins a channel or
-              sends the #CP command
-
-    NOTES   :
-**/
-void list_characters_in_chan(int connection, int chan);
 
 #endif // CHAT_H_INCLUDED

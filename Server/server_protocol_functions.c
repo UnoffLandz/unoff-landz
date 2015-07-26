@@ -17,23 +17,10 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-/*                     Creation of server protocol functions
-                       -------------------------------------
-
-Targeting of C99 compliance requires that two different approaches are used in coding server
-protocol functions, The easiest way is to place the individual elements of the packet in a
-struct and then extract the binary representation using a union. However, where a packet has a
-variable length which must is reflected within a struct as a calculated field, this generates a
-compiler warning. To avoid this warning, a build_packet function is provided which enables
-variable length packets to be created based on a template and values supplied to that function
-via the 'packet_element_type' struct.
-*/
-
-#include <string.h>     //support for memmove strlen
+#include <string.h>     //support for memcpy and strlen
 #include <sys/socket.h> //support for send function
 #include <stdio.h>      //support for sprintf
 #include <SDL/SDL_types.h> //support for Uint16 data type
-
 
 #include "server_protocol.h"
 #include "character_inventory.h"
@@ -52,18 +39,8 @@ void send_packet(int connection, unsigned char *packet, int packet_length){
 
     /** public function - see header */
 
-    char text[1024]="";
+    log_packet(connection, packet, SEND);
 
-    //capture packet details for logging
-    for(int i=0; i<packet_length; i++){
-
-        //use the safe version of snprintf to capture any over-runs
-        ssnprintf(text, 1024, "%s %i", text, packet[i]);
-    }
-
-    log_event(EVENT_PACKET, "send to [%i]%s", connection, text);
-
-    //send the packet
     send(connection, packet, packet_length, 0);
 }
 
@@ -72,35 +49,24 @@ void send_new_minute(int connection, int minute){
 
     /** public function - see header */
 
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-        unsigned char minute_lsb;
-        unsigned char minute_msb;
-    }packet_data;
-
-    union {
-
-        unsigned char out[5];
-        packet_data in;
+        Uint16 data_length;
+        Uint16 minute;
     }packet;
 
-    packet.in.protocol=NEW_MINUTE;
+    int packet_length=sizeof(packet);
 
-    packet.in.lsb=3;
-    packet.in.msb=0;
-    packet.in.minute_lsb=minute % 256;
-    packet.in.minute_msb=minute / 256;
+    //clear the struct
+    memset(&packet, '0', packet_length);
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("NEW_MINUTE connection [%i] minute [%i]\n", connection, minute);
-    #endif
+    //add data
+    packet.protocol=NEW_MINUTE;
+    packet.data_length=packet_length-2;
+    packet.minute=minute;
 
-    log_event(EVENT_SESSION, "NEW_MINUTE connection [%i] minute [%i]", connection, minute);
-
-    send_packet(connection, packet.out, 5);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -108,30 +74,22 @@ void send_login_ok(int connection){
 
     /** public function - see header */
 
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-    }packet_data;
-
-    union {
-
-        unsigned char out[3];
-        packet_data in;
+        Uint16 data_length;
     }packet;
 
-    packet.in.protocol=LOG_IN_OK;
-    packet.in.lsb=1;
-    packet.in.msb=0;
+    int packet_length=sizeof(packet);
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("LOG_IN_OK connection [%i]\n", connection);
-    #endif
+    //clear the struct
+    memset(&packet, '0', packet_length);
 
-    log_event(EVENT_SESSION, "LOG_IN_OK connection [%i]", connection);
+    //add data
+    packet.protocol=LOG_IN_OK;
+    packet.data_length=packet_length-2;
 
-    send_packet(connection, packet.out, 3);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -139,31 +97,22 @@ void send_login_not_ok(int connection){
 
     /** public function - see header */
 
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-    }packet_data;
-
-
-    union {
-
-        unsigned char out[3];
-        packet_data in;
+        Uint16 data_length;
     }packet;
 
-    packet.in.protocol=LOG_IN_NOT_OK;
-    packet.in.lsb=1;
-    packet.in.msb=0;
+    int packet_length=sizeof(packet);
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("LOG_IN_NOT_OK connection [%i]\n", connection);
-    #endif
+    //clear the struct
+    memset(&packet, '0', packet_length);
 
-    log_event(EVENT_SESSION, "LOG_IN_NOT_OK connection [%i]", connection);
+    //add data
+    packet.protocol=LOG_IN_NOT_OK;
+    packet.data_length=packet_length-2;
 
-    send_packet(connection, packet.out, 3);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -171,30 +120,22 @@ void send_you_dont_exist(int connection){
 
     /** public function - see header */
 
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-    }packet_data;
-
-    union {
-
-        unsigned char out[3];
-        packet_data in;
+        Uint16 data_length;
     }packet;
 
-    packet.in.protocol=YOU_DONT_EXIST;
-    packet.in.lsb=1;
-    packet.in.msb=0;
+    int packet_length=sizeof(packet);
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("YOU_DONT_EXIST connection [%i]\n", connection);
-    #endif
+    //clear the struct
+    memset(&packet, '0', packet_length);
 
-    log_event(EVENT_SESSION, "YOU_DONT_EXIST connection [%i]", connection);
+    //add data
+    packet.protocol=YOU_DONT_EXIST;
+    packet.data_length=packet_length-2;
 
-    send_packet(connection, packet.out, 3);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -202,34 +143,24 @@ void send_you_are(int connection){
 
     /** public function - see header */
 
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-        unsigned char lsb_connection;
-        unsigned char msb_connection;
-    }packet_data;
-
-    union {
-
-        unsigned char out[5];
-        packet_data in;
+        Uint16 data_length;
+        Uint16 connection;
     }packet;
 
-    packet.in.protocol=YOU_ARE;
-    packet.in.lsb=3;
-    packet.in.msb=0;
-    packet.in.lsb_connection=connection % 256;
-    packet.in.msb_connection=connection / 256;
+    int packet_length=sizeof(packet);
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("YOU_ARE connection [%i]\n", connection);
-    #endif
+    //clear the struct
+    memset(&packet, '0', packet_length);
 
-    log_event(EVENT_SESSION, "YOU_ARE connection [%i]", connection);
+    //add data
+    packet.protocol=YOU_ARE;
+    packet.data_length=packet_length-2;
+    packet.connection=connection;
 
-    send_packet(connection, packet.out, 5);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -237,30 +168,22 @@ void send_create_char_ok(int connection){
 
     /** public function - see header */
 
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-    }packet_data;
-
-    union {
-
-        unsigned char out[3];
-        packet_data in;
+        Uint16 data_length;
     }packet;
 
-    packet.in.protocol=CREATE_CHAR_OK;
-    packet.in.lsb=1;
-    packet.in.msb=0;
+    int packet_length=sizeof(packet);
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("CREATE_CHAR_OK connection [%i]\n", connection);
-    #endif
+    //clear the struct
+    memset(&packet, '0', packet_length);
 
-    log_event(EVENT_SESSION, "CREATE_CHAR_OK connection [%i]", connection);
+    //add data
+    packet.protocol=CREATE_CHAR_OK;
+    packet.data_length=packet_length-2;
 
-    send_packet(connection, packet.out, 3);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -268,30 +191,22 @@ void send_create_char_not_ok(int connection){
 
     /** public function - see header */
 
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-    }packet_data;
-
-    union {
-
-        unsigned char out[3];
-        packet_data in;
+        Uint16 data_length;
     }packet;
 
-    packet.in.protocol=CREATE_CHAR_NOT_OK;
-    packet.in.lsb=1;
-    packet.in.msb=0;
+    int packet_length=sizeof(packet);
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("CREATE_CHAR_OK connection [%i]\n", connection);
-    #endif
+    //clear the struct
+    memset(&packet, '0', packet_length);
 
-    log_event(EVENT_SESSION, "CREATE_CHAR_NOT_OK connection [%i]", connection);
+    //add data
+    packet.protocol=CREATE_CHAR_NOT_OK;
+    packet.data_length=packet_length-2;
 
-    send_packet(connection, packet.out, 3);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -299,32 +214,33 @@ void send_raw_text(int connection, int channel, char *text){
 
     /** public function - see header */
 
-    struct packet_element_type element[4];
-    unsigned char packet[1024]={0};
+    /* the send_raw_text packet contains a variable length element carrying the text message. As C99
+    compliance prevents us having a calculated field within a struct declaration, we deal with this by
+    using a struct to hold the fixed length data elements, and then combine this to an unsigned char
+    array carrying the variable length element.*/
 
-    element[0].data_type=PROTOCOL;
-    element[0].data.numeric=RAW_TEXT;
+    struct __attribute__((__packed__)){
 
-    element[1].data_type=DATA_LENGTH;
+        unsigned char protocol;
+        Uint16 data_length;
+        unsigned char channel;
+    }packet;
 
-    //channel
-    element[2].data_type=BYTE;
-    element[2].data.numeric=channel;
+    //clear the struct
+    memset(&packet, '0', sizeof(packet));
 
-    //text
-    element[3].data_type=STRING_NULL;
-    strcpy(element[3].data.string, text);
+    int packet_length=sizeof(packet) + strlen(text)+1;
 
-    //add one to the total elements as packet length runs from zero
-    int packet_length=build_packet(element, 4, packet);
+    //add data
+    packet.protocol=RAW_TEXT;
+    packet.data_length=packet_length-2;
+    packet.channel=channel;
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("RAW_TEXT connection [%i] channel [%i] text [%s]\n", connection, channel, text);
-    #endif
+    unsigned char p[1024]={0};
+    memcpy(p, &packet, sizeof(packet));
+    memcpy(p+sizeof(packet), text, strlen(text));
 
-    log_event(EVENT_SESSION, "RAW_TEXT connection [%i] channel [%i] text [%s]", connection, channel, text);
-
-    send_packet(connection, packet, packet_length);
+    send(connection, &p, packet_length, 0);
 }
 
 
@@ -332,51 +248,47 @@ void send_here_your_inventory(int connection){
 
     /** public function - see header */
 
-    struct packet_element_type element[3+(MAX_INVENTORY_SLOTS*4)];
-    unsigned char packet[1024]={0};
+    struct __attribute__((__packed__)){
 
-    element[0].data_type=PROTOCOL;
-    element[0].data.numeric=HERE_YOUR_INVENTORY;
+        unsigned char protocol;
+        Uint16 data_length;
+        unsigned char slot_count;
 
-    element[1].data_type=DATA_LENGTH;
+        struct __attribute__((__packed__)){
 
-    //slot count
-    element[2].data_type=BYTE;
-    element[2].data.numeric=MAX_INVENTORY_SLOTS;
+            Uint16 object_id;
+            int amount;
+            unsigned char slot;
+            unsigned char flags;
+        }inventory[MAX_BAG_SLOTS];
 
-    //inventory slots
+    }packet;
+
+    int packet_length=sizeof(packet);
+
+    //clear the struct
+    memset(&packet, '0', packet_length);
+
+    //add data
+    packet.protocol=HERE_YOUR_INVENTORY;
+    packet.data_length=packet_length-2;
+    packet.slot_count=MAX_INVENTORY_SLOTS;
+
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        //item
-        element[(i*4)+3].data_type=UINT16;
-        element[(i*4)+3].data.numeric=clients.client[connection].client_inventory[i].object_id;
-
-        //amount
-        element[(i*4)+4].data_type=UINT32;
-        element[(i*4)+4].data.numeric=clients.client[connection].client_inventory[i].amount;
-
-        //slot number
-        element[(i*4)+5].data_type=BYTE;
-        element[(i*4)+5].data.numeric=i;
-
-        //flag
-        element[(i*4)+6].data_type=BYTE;
-        element[(i*4)+6].data.numeric=0;
+        packet.inventory[i].object_id=clients.client[connection].client_inventory[i].object_id;
+        packet.inventory[i].amount=clients.client[connection].client_inventory[i].amount;
+        packet.inventory[i].slot=i;
+        packet.inventory[i].flags=0;
     }
 
-    //add one to the total elements as packet length runs from zero
-    int packet_length=build_packet(element, 3+(MAX_INVENTORY_SLOTS*4), packet);
-
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("HERE_YOUR_INVENTORY connection [%i]\n", connection);
-    #endif
-
-    log_event(EVENT_SESSION, "HERE_YOUR_INVENTORY connection [%i]", connection);
-
-    send_packet(connection, packet, packet_length);
+    send(connection, &packet, packet_length, 0);
 }
 
+
 void send_here_your_ground_items(int connection, int bag_id){
+
+    /** public function - see header */
 
     struct __attribute__((__packed__)){
 
@@ -391,102 +303,81 @@ void send_here_your_ground_items(int connection, int bag_id){
             unsigned char slot;
         }inventory[MAX_BAG_SLOTS];
 
-    }packet_in;
+    }packet;
 
-    int packet_length=sizeof(packet_in);
+    int packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet_in, '0', packet_length);
+    memset(&packet, '0', packet_length);
 
     //add data
-    packet_in.protocol=HERE_YOUR_GROUND_ITEMS;
-    packet_in.data_length=packet_length-2;
-    packet_in.slot_count=MAX_BAG_SLOTS;
+    packet.protocol=HERE_YOUR_GROUND_ITEMS;
+    packet.data_length=packet_length-2;
+    packet.slot_count=MAX_BAG_SLOTS;
 
     for(int i=0; i<MAX_BAG_SLOTS; i++){
 
-        packet_in.inventory[i].object_id=bag[bag_id].inventory[i].object_id;
-        packet_in.inventory[i].amount=bag[bag_id].inventory[i].amount;
-        packet_in.inventory[i].slot=i;
+        packet.inventory[i].object_id=bag[bag_id].inventory[i].object_id;
+        packet.inventory[i].amount=bag[bag_id].inventory[i].amount;
+        packet.inventory[i].slot=i;
     }
 
-    //create the packet from the data
-    unsigned char packet_out[(MAX_BAG_SLOTS * 7) + 4]={0};// must manually specify array size for c99 compliance
-    memcpy(packet_out, &packet_in, packet_length);
-
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("HERE_YOUR_GROUND_ITEMS [%i]\n", connection);
-    #endif
-
-    log_event(EVENT_SESSION, "HERE_YOUR_GROUND_ITEMS [%i]", connection);
-
-    send(connection, packet_out, packet_length, 0);
+    send(connection, &packet, packet_length, 0);
 }
 
+
 void send_close_bag(int connection){
+
+    /** public function - see header */
 
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
         Uint16 data_length;
-    }packet_in;
+    }packet;
 
-    int packet_length=sizeof(packet_in);
+    int packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet_in, '0', packet_length);
+    memset(&packet, '0', packet_length);
 
     //add data
-    packet_in.protocol=CLOSE_BAG;
-    packet_in.data_length=packet_length-2;
+    packet.protocol=CLOSE_BAG;
+    packet.data_length=packet_length-2;
 
-    //create the packet from the data
-    unsigned char packet_out[3]={0};// must manually specify array size for c99 compliance
-    memcpy(packet_out, &packet_in, packet_length);
-
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("CLOSE_BAG [%i]\n", connection);
-    #endif
-
-    log_event(EVENT_SESSION, "CLOSE_BAG [%i]", connection);
-
-    send(connection, packet_out, packet_length, 0);
+    send(connection, &packet, packet_length, 0);
 }
+
 
 void send_get_active_channels(int connection){
 
     /** public function - see header */
 
-    struct packet_element_type element[3+MAX_CHAN_SLOTS];
-    unsigned char packet[1024]={0};
+    struct __attribute__((__packed__)){
 
-    element[0].data_type=PROTOCOL;
-    element[0].data.numeric=GET_ACTIVE_CHANNELS;
+        unsigned char protocol;
+        Uint16 data_length;
+        unsigned char active_channel;
+        int chan_slot[MAX_CHAN_SLOTS];
 
-    element[1].data_type=DATA_LENGTH;
+    }packet;
 
-    //active channel
-    element[2].data_type=BYTE;
-    element[2].data.numeric=(int)channel;
+    int packet_length=sizeof(packet);
 
-    //channel numbers
-    int i=0;
-    for(i=0; i<MAX_CHAN_SLOTS; i++){
+    //clear the struct
+    memset(&packet, '0', packet_length);
 
-        element[i+3].data_type=UINT32;
-        element[i+3].data.numeric=clients.client[connection].chan[i];
+    //add data
+    packet.protocol=GET_ACTIVE_CHANNELS;
+    packet.data_length=packet_length-2;
+    packet.active_channel=clients.client[connection].active_chan;
+
+    for(int i=0; i<MAX_CHAN_SLOTS; i++){
+
+        packet.chan_slot[i]=clients.client[connection].chan[i];
     }
 
-    //add one to the total elements as packet length runs from zero
-    int packet_length=build_packet(element, 3+MAX_CHAN_SLOTS, packet);
-
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("GET_ACTIVE_CHANNELS connection [%i]\n", connection);
-    #endif
-
-    log_event(EVENT_SESSION, "GET_ACTIVE_CHANNELS connection [%i]", connection);
-
-    send_packet(connection, packet, packet_length);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -646,14 +537,8 @@ void send_here_your_stats(int connection){
 
     //packet[169]=10; summoning lvl
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("HERE_YOUR_STATS connection [%i]\n", connection);
-    #endif
-
     //add one to the total elements as packet length runs from zero
     int packet_length=build_packet(element, 55, packet);
-
-    log_event(EVENT_SESSION, "HERE_YOUR_STATS connection [%i]", connection);
 
     send_packet(connection, packet, packet_length);
 }
@@ -663,28 +548,31 @@ void send_change_map(int connection, char *elm_filename){
 
     /** public function - see header */
 
-    struct packet_element_type element[3];
-    unsigned char packet[1024]={0};
+    /* the send_change_map packet contains a variable length element carrying the map file name. As C99
+    compliance prevents us having a calculated field within a struct declaration, we deal with this by
+    using a struct to hold the fixed length data elements, and then combine this to an unsigned char
+    array carrying the variable length element.*/
 
-    element[0].data_type=PROTOCOL;
-    element[0].data.numeric=CHANGE_MAP;
+    struct __attribute__((__packed__)){
 
-    element[1].data_type=DATA_LENGTH;
+        unsigned char protocol;
+        Uint16 data_length;
+    }packet;
 
-    //map file name
-    element[2].data_type=STRING_NULL;
-    strcpy(element[2].data.string, elm_filename);
+    //clear the struct
+    memset(&packet, '0', sizeof(packet));
 
-    //add one to the total elements as packet length runs from zero
-    int packet_length=build_packet(element, 3, packet);
+    int packet_length=sizeof(packet) + strlen(elm_filename)+1;
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("CHANGE MAP connection [%i] map [%s]\n", connection, elm_filename);
-    #endif
+    //add data
+    packet.protocol=CHANGE_MAP;
+    packet.data_length=packet_length-2;
 
-    log_event(EVENT_SESSION, "CHANGE_MAP connection [%i] map [%s]", connection, elm_filename);
+    unsigned char p[1024]={0};
+    memcpy(p, &packet, sizeof(packet));
+    memcpy(p+sizeof(packet), elm_filename, strlen(elm_filename));
 
-    send_packet(connection, packet, packet_length);
+    send(connection, &p, packet_length, 0);
 }
 
 
@@ -692,135 +580,121 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
 
     /** public function - see header */
 
-    struct packet_element_type element[28];
+    /* the add_new_enhanced_actor packet contains a variable length element carrying the character's
+    name and guild (referred to as the 'banner'). As C99 compliance prevents us having a calculated
+    field within a struct declaration, we deal with this by creating two structs (_packet1 and _packet2)
+    to hold the fixed length data elements, and that we then proceed to join either side of an
+    unsigned char array carrying the variable length element for the banner.*/
 
-    element[0].data_type=PROTOCOL;
-    element[0].data.numeric=ADD_NEW_ENHANCED_ACTOR;
+    //packet structure before the banner
+    struct __attribute__((__packed__)){
 
-    element[1].data_type=DATA_LENGTH;
+        unsigned char protocol;
+        Uint16 data_length;
+        Uint16 connection;
 
-    //char id (same as socket number)
-    element[2].data_type=UINT16;
-    element[2].data.numeric=connection;
+        Uint16 x_pos;
+        Uint16 y_pos;
+        Uint16 z_pos;
+        Uint16 rot;
 
-    int map_id=clients.client[connection].map_id;
-    int map_axis=maps.map[map_id].map_axis;
+        unsigned char char_type;
+        unsigned char unused;
+        unsigned char skin_type;
+        unsigned char hair_type;
+        unsigned char shirt_type;
+        unsigned char pants_type;
+        unsigned char boots_type;
+        unsigned char head_type;
+        unsigned char shield_type;
+        unsigned char weapon_type;
+        unsigned char cape_type;
+        unsigned char helmet_type;
 
-    //position x axis
-    element[3].data_type=UINT16;
-    element[3].data.numeric=clients.client[connection].map_tile % map_axis;
+        unsigned char frame_type;
 
-    //position y axis
-    element[4].data_type=UINT16;
-    element[4].data.numeric=clients.client[connection].map_tile / map_axis;
+        Uint16 max_health;
+        Uint16 current_health;
 
-    //position z axis (set to 0 pending further development)
-    element[5].data_type=UINT16;
-    element[5].data.numeric=0;
+        unsigned char player_type;
 
-    //rotation angle (set to 45 pending further development)
-    element[6].data_type=UINT16;
-    element[6].data.numeric=45;
+    }_packet1;
 
-    //char type
-    element[7].data_type=BYTE;
-    element[7].data.numeric=clients.client[connection].char_type;
+    //packet structure following the banner
+    struct __attribute__((__packed__)){
 
-    //unused (set to 0)
-    element[8].data_type=BYTE;
-    element[8].data.numeric=0;
+        unsigned char unknown;
+        unsigned char char_size;
+        unsigned char riding;
+        unsigned char neck_attachment;
+    }_packet2;
 
-    //skin type
-    element[9].data_type=BYTE;
-    element[9].data.numeric=clients.client[connection].skin_type;
-
-    //hair type
-    element[10].data_type=BYTE;
-    element[10].data.numeric=clients.client[connection].hair_type;
-
-    //shirt type
-    element[11].data_type=BYTE;
-    element[11].data.numeric=clients.client[connection].shirt_type;
-
-    //pants type
-    element[12].data_type=BYTE;
-    element[12].data.numeric=clients.client[connection].pants_type;
-
-    //boots type
-    element[13].data_type=BYTE;
-    element[13].data.numeric=clients.client[connection].boots_type;
-
-    //head type
-    element[14].data_type=BYTE;
-    element[14].data.numeric=clients.client[connection].head_type;
-
-    //shield type
-    element[15].data_type=BYTE;
-    element[15].data.numeric=clients.client[connection].shield_type;
-
-    //weapon type
-    element[16].data_type=BYTE;
-    element[16].data.numeric=clients.client[connection].weapon_type;
-
-    //cape type
-    element[17].data_type=BYTE;
-    element[17].data.numeric=clients.client[connection].cape_type;
-
-    //helmet type
-    element[18].data_type=BYTE;
-    element[18].data.numeric=clients.client[connection].helmet_type;
-
-    //frame type
-    element[19].data_type=BYTE;
-    element[19].data.numeric=clients.client[connection].frame;
-
-    //max health
-    element[20].data_type=UINT16;
-    element[20].data.numeric=clients.client[connection].max_health;
-
-    //current health
-    element[21].data_type=UINT16;
-    element[21].data.numeric=clients.client[connection].current_health;
-
-    //special (PLAYER=1 NPC=??)
-    element[22].data_type=BYTE;
-    element[22].data.numeric=1;
-
-    //banner (char name and guild name separated by a space and 127+colour character)
+    //create a char array carrying the banner (char name and guild name separated by a space and
+    //127+colour character)
     char banner[80]="";
+
     int guild_tag_colour=guilds.guild[clients.client[connection].guild_id].guild_tag_colour;
+
     sprintf(banner, "%s %c%s",
         clients.client[connection].char_name,
         127+guild_tag_colour,
         guilds.guild[clients.client[connection].guild_id].guild_tag);
 
-    element[23].data_type=STRING_NULL;
-    strcpy(element[23].data.string, banner);
+    //calculate the total packet length
+    *packet_length=sizeof(_packet1) + strlen(banner)+1 + sizeof(_packet2);
 
-    //unknown (set to 0 until we know what it is)
-    element[24].data_type=BYTE;
-    element[24].data.numeric=0;
+    //clear the structs
+    memset(&_packet1, '0', sizeof(_packet1));
+    memset(&_packet2, '0', sizeof(_packet2));
 
-    //char size (min=2 max=127)
-    element[25].data_type=BYTE;
-    element[25].data.numeric=64;
+    //add data to packet 1
+    _packet1.protocol=ADD_NEW_ENHANCED_ACTOR;
+    _packet1.data_length=*packet_length-2;
+    _packet1.connection=connection;
 
-    //riding (nothing=255  brown horse=200)
-    element[26].data_type=BYTE;
-    element[26].data.numeric=255;
+    int map_id=clients.client[connection].map_id;
+    int map_axis=maps.map[map_id].map_axis;
 
-    //neck attachment (none=64)
-    element[27].data_type=BYTE;
-    element[27].data.numeric=64;
+    _packet1.x_pos=clients.client[connection].map_tile % map_axis;
+    _packet1.y_pos=clients.client[connection].map_tile / map_axis;
+    _packet1.z_pos=0; //z position (set to 0 pending further development)
+    _packet1.rot=45; //rotation angle (set to 45 pending further development)
 
-    //add one to the total elements as packet length runs from zero
-    *packet_length=build_packet(element, 28, packet);
+    _packet1.char_type=clients.client[connection].char_type;
+    _packet1.unused=0; //unused (set to 0)
+
+    _packet1.skin_type=clients.client[connection].skin_type;
+    _packet1.hair_type=clients.client[connection].hair_type;
+    _packet1.shirt_type=clients.client[connection].shirt_type;
+    _packet1.pants_type=clients.client[connection].pants_type;
+    _packet1.boots_type=clients.client[connection].boots_type;
+    _packet1.head_type=clients.client[connection].head_type;
+    _packet1.shield_type=clients.client[connection].shield_type;
+    _packet1.weapon_type=clients.client[connection].weapon_type;
+    _packet1.cape_type=clients.client[connection].cape_type;
+    _packet1.helmet_type=clients.client[connection].helmet_type;
+
+    _packet1.frame_type=clients.client[connection].frame;
+
+    _packet1.max_health=clients.client[connection].max_health;
+    _packet1.current_health=clients.client[connection].current_health;
+
+    _packet1.player_type=1; //special (PLAYER=1 NPC=??)
+
+    //add data to packet 2
+    _packet2.unknown=0;
+    _packet2.char_size=64; //char size (min=2 normal=64 max=127)
+    _packet2.riding=255; //riding (nothing=255  brown horse=200)
+    _packet2.neck_attachment=64; //neck attachment (none=64)
+
+    //create the complete packet
+    memcpy(packet, &_packet1, sizeof(_packet1));
+    memcpy(packet + sizeof(_packet1), banner, strlen(banner)+1);
+    memcpy(packet + sizeof(_packet1)+ strlen(banner)+1, &_packet2, sizeof(_packet2));
 }
 
-
+/*
 void send_add_new_enhanced_actor_packet(int connection, unsigned char *packet, int packet_length){
-
-    /** public function - see header */
 
     #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
     printf("SEND_NEW_ENHANCED_ACTOR_PACKET connection [%i]\n", connection);
@@ -830,12 +704,33 @@ void send_add_new_enhanced_actor_packet(int connection, unsigned char *packet, i
 
     send_packet(connection, packet, packet_length);
 }
-
+*/
 
 void remove_actor_packet(int connection, unsigned char *packet, int *packet_length){
 
     /** public function - see header */
 
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        Uint16 data_length;
+        Uint16 connection;
+    }_packet;
+
+    //calculate the packet length
+    *packet_length=sizeof(_packet);
+
+    //clear the structs
+    memset(&_packet, '0', sizeof(_packet));
+
+    //add data to packet 1
+    _packet.protocol=REMOVE_ACTOR;
+    _packet.data_length=*packet_length-2;
+    _packet.connection=connection;
+
+    memcpy(packet, &_packet, sizeof(_packet));
+
+/*
     typedef struct {
 
         unsigned char protocol;
@@ -860,12 +755,11 @@ void remove_actor_packet(int connection, unsigned char *packet, int *packet_leng
     *packet_length=5;
 
     memcpy(packet, p.out, *packet_length);
+*/
 }
 
-
+/*
 void send_remove_actor_packet(int connection, unsigned char *packet, int packet_length){
-
-    /** public function - see header */
 
     #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
     printf("SEND_REMOVE_ACTOR_PACKET connection [%i]\n", connection);
@@ -875,44 +769,37 @@ void send_remove_actor_packet(int connection, unsigned char *packet, int packet_
 
     send_packet(connection, packet, packet_length);
 }
-
+*/
 
 void add_actor_packet(int connection, unsigned char move, unsigned char *packet, int *packet_length){
 
     /** public function - see header */
 
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-        unsigned char connection_lsb;
-        unsigned char connection_msb;
+        Uint16 data_length;
+        Uint16 connection;
         unsigned char move;
-    }packet_data;
+    }_packet;
 
-    union {
+    //calculate the packet length
+    *packet_length=sizeof(_packet);
 
-        unsigned char out[6];
-        packet_data in;
-    }p;
+    //clear the structs
+    memset(&_packet, '0', sizeof(_packet));
 
-    p.in.protocol=ADD_ACTOR;
-    p.in.lsb=4;
-    p.in.msb=0;
-    p.in.connection_lsb=connection % 256;
-    p.in.connection_msb=connection / 256;
-    p.in.move=move;
+    //add data to packet 1
+    _packet.protocol=ADD_ACTOR;
+    _packet.data_length=*packet_length-2;
+    _packet.connection=connection;
+    _packet.move=move;
 
-    *packet_length=6;
-
-    memcpy(packet, p.out, *packet_length);
+    memcpy(packet, &_packet, sizeof(_packet));
 }
 
-
+/*
 void send_add_actor_packet(int connection, unsigned char *packet, int packet_length){
-
-    /** public function - see header */
 
     #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
     printf("SEND_ADD_ACTOR_PACKET connection [%i]\n", connection);
@@ -922,93 +809,67 @@ void send_add_actor_packet(int connection, unsigned char *packet, int packet_len
 
     send_packet(connection, packet, packet_length);
 }
+*/
 
-void send_get_new_inventory_item(int connection, int image_id, int amount, int slot){
+void send_get_new_inventory_item(int connection, int object_id, int amount, int slot){
 
     /** public function - see header */
 
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("SEND_GET_NEW_INVENTORY_ITEM [%i]\n", connection);
-    #endif
-
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-        unsigned char image_id_lsb;
-        unsigned char image_id_msb;
-        unsigned char amount_lsb1;
-        unsigned char amount_msb1;
-        unsigned char amount_lsb2;
-        unsigned char amount_msb2;
+        Uint16 data_length;
+        Uint16 object_id;
+        int amount;
         unsigned char slot;
         unsigned char flags;
-    }packet_data;
+    }packet;
 
-    union {
+    //calculate the packet length
+    int packet_length=sizeof(packet);
 
-        unsigned char out[12];
-        packet_data in;
-    }p;
+    //clear the structs
+    memset(&packet, '0', sizeof(packet));
 
-    p.in.protocol=GET_NEW_INVENTORY_ITEM;
-    p.in.lsb=9;
-    p.in.msb=0;
-    p.in.image_id_lsb=image_id % 256;
-    p.in.image_id_msb=image_id / 256;
-    p.in.amount_lsb1=amount % 256;
-    p.in.amount_msb1=amount / 256 % 256;
-    p.in.amount_lsb2=amount / 256 / 256 % 256;
-    p.in.amount_msb2=amount / 256 / 256 / 256 % 256;
-    p.in.slot=slot;
-    p.in.flags=0;
+    //add data to packet
+    packet.protocol=GET_NEW_INVENTORY_ITEM;
+    packet.data_length=packet_length-2;
+    packet.object_id=object_id;
+    packet.amount=amount;
+    packet.slot=slot;
+    packet.flags=0;
 
-    log_event(EVENT_SESSION, "SEND_GET_NEW_INVENTORY_ITEM connection [%i]", connection);
-
-    send_packet(connection, p.out, 11);
+    send(connection, &packet, packet_length, 0);
 }
+
 
 void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, int *packet_length){
 
     /** public function - see header */
 
-    typedef struct {
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-        unsigned char x_pos_lsb;
-        unsigned char x_pos_msb;
-        unsigned char y_pos_lsb;
-        unsigned char y_pos_msb;
+        Uint16 data_length;
+        Uint16 x_pos;
+        Uint16 y_pos;
         unsigned char bag_list_number;
-    }packet_data;
+    }_packet;
 
-    union {
+    //calculate the packet length
+    *packet_length=sizeof(_packet);
 
-        unsigned char out[8];
-        packet_data in;
-    }p;
+    //clear the structs
+    memset(&_packet, '0', sizeof(_packet));
 
-    p.in.protocol=GET_NEW_BAG;
-    p.in.lsb=6;
-    p.in.msb=0;
+    //add data to packet
+    _packet.protocol=GET_NEW_BAG;
+    _packet.data_length=*packet_length-2;
+    _packet.x_pos=get_x_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
+    _packet.y_pos=get_y_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
+    _packet.bag_list_number=bag_list_number;
 
-    int x_pos=0, y_pos=0;
-    get_xy_position(clients.client[connection].map_tile, &x_pos, &y_pos, clients.client[connection].map_id);
-
-    p.in.x_pos_lsb=x_pos % 256;
-    p.in.x_pos_msb=x_pos / 256;
-
-    p.in.y_pos_lsb=y_pos % 256;
-    p.in.y_pos_msb=y_pos / 256;
-
-    p.in.bag_list_number=bag_list_number;
-
-    *packet_length=8;
-
-    memcpy(packet, p.out, *packet_length);
+    memcpy(packet, &_packet, sizeof(_packet));
 }
 
 

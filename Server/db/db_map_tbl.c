@@ -123,6 +123,7 @@ int load_db_maps(){
         sprintf(maps.map[map_id].elm_filename, "%s%s", CLIENT_MAP_PATH, (char*)sqlite3_column_text(stmt, 2));
         log_text(EVENT_MAP_LOAD, "elm file name [%s]", maps.map[map_id].elm_filename);
 
+
         //check that we have elm file data
         int elm_file_size=sqlite3_column_bytes(stmt, 3);
 
@@ -274,22 +275,17 @@ int load_db_maps(){
         //get 3d object map size
         maps.map[map_id].threed_object_map_size=elm_file.elm_header.twod_object_offset-elm_file.elm_header.threed_object_offset;
 
+/*
         if(maps.map[map_id].height_map_size>THREED_OBJECT_MAP_MAX){
 
             log_event(EVENT_ERROR, "3d object map exceeds maximum for map [%i] [%s] in function %s: module %s: line %i", map_id, maps.map[map_id].elm_filename, __func__, __FILE__, __LINE__);
             stop_server();
         }
-
+*/
         log_text(EVENT_MAP_LOAD, "3d map size [%i]", maps.map[map_id].threed_object_map_size);
 
         //get 2d object map size
         maps.map[map_id].twod_object_map_size=elm_file.elm_header.lights_object_offset-elm_file.elm_header.twod_object_offset;
-
-        if(maps.map[map_id].height_map_size>TWOD_OBJECT_MAP_MAX){
-
-            log_event(EVENT_ERROR, "2d object map exceeds maximum for map [%i] [%s] in function %s: module %s: line %i", map_id, maps.map[map_id].elm_filename, __func__, __FILE__, __LINE__);
-            stop_server();
-        }
 
         log_text(EVENT_MAP_LOAD, "2d map size [%i]", maps.map[map_id].twod_object_map_size);
 
@@ -309,55 +305,6 @@ int load_db_maps(){
             k++;
         }
 
-        //load 3d object map
-/*
-        //fill the struct that links the item_id to the object id
-        log_text(EVENT_MAP_LOAD, "3d object table...");
-        log_text(EVENT_MAP_LOAD, "order             e3d name  object id      x-pos      y-pos      z-pos");
-        log_text(EVENT_MAP_LOAD, "----------------- --------- ---------      -----      -----      -----");
-
-        char e3d_path_and_file_name[80]="";
-        int m=0;
-
-        for(int j=elm_file.elm_header.threed_object_offset; j<elm_file.elm_header.twod_object_offset; j+=maps.map[map_id].threed_object_structure_len){
-
-            //extract the path and filename from the elm file
-            memcpy(e3d_path_and_file_name, &elm_file.byte[j], 80);
-
-            //remove the path and copy filename to struct
-            extract_file_name(e3d_path_and_file_name, maps.map[map_id].threed_object_lookup[m].e3d_filename);
-
-            //find the id for this item in the object array
-            for(int l=0; l<MAX_E3D; l++){
-
-                if(strcmp(maps.map[map_id].threed_object_lookup[m].e3d_filename, e3d[l].e3d_filename)==0) {
-
-                    maps.map[map_id].threed_object_lookup[m].e3d_id=l;
-
-                    break;
-                }
-            }
-
-            maps.map[map_id].threed_object_lookup[m].x=Uint32_to_float(elm_file.byte+j+80) * 2.00f;
-            maps.map[map_id].threed_object_lookup[m].y=Uint32_to_float(elm_file.byte+j+84) * 2.00f;
-            maps.map[map_id].threed_object_lookup[m].z=Uint32_to_float(elm_file.byte+j+88) * 2.00f;
-
-            log_text(EVENT_MAP_LOAD, "%5i %20s %9i %10f %10f %10f", m, maps.map[map_id].threed_object_lookup[m].e3d_filename, maps.map[map_id].threed_object_lookup[m].e3d_id,  maps.map[map_id].threed_object_lookup[m].x, maps.map[map_id].threed_object_lookup[m].y, maps.map[map_id].threed_object_lookup[m].z);
-
-            //calculate tile pos as it will save us having to do this multiple times in the future
-            //map_object.tile_pos=(int)map_object.x + ((int)map_object.y * maps.map[map_id]->map_axis);
-
-            m++;
-        }
-
-        //load 2d object map
-        k=0;
-        for(int j=elm_file.elm_header.twod_object_offset; j<elm_file.elm_header.lights_object_offset; j++){
-
-            maps.map[map_id].twod_object_map[k]=elm_file.byte[j];
-            k++;
-        }
-*/
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", map_id, maps.map[map_id].map_name);
 
         i++;

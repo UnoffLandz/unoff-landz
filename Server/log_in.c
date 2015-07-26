@@ -207,5 +207,9 @@ void process_log_in(int connection, const unsigned char *packet){
     send_get_active_channels(connection);
     send_here_your_stats(connection);
     send_here_your_inventory(connection);
+
+    //when reconnecting to the client after a disconnect, this closes any open bag inventory.
+    send_close_bag(connection);
+
     //send_new_minute(connection, game_data.game_minutes);
 }

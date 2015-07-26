@@ -51,10 +51,18 @@ int get_tile(int x_pos, int y_pos, int map_id){
 }
 
 
-void get_xy_position(int tile, int *x_pos, int *y_pos, int map_id){
+int get_x_pos(int tile, int map_id){
 
-     /** public function - see header */
+    /** public function - see header */
 
-     *y_pos=tile / maps.map[map_id].map_axis;
-     *x_pos=tile-(*y_pos * maps.map[map_id].map_axis);
+    return tile % maps.map[map_id].map_axis;
 }
+
+
+int get_y_pos(int tile, int map_id){
+
+    /** public function - see header */
+
+    return tile / maps.map[map_id].map_axis;
+}
+

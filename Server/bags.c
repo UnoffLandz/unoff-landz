@@ -11,7 +11,7 @@
 #include "server_protocol_functions.h"
 #include "broadcast_actor_functions.h"
 
-#define DEBUG_BAGS 1
+#define DEBUG_BAGS 0
 
 struct bag_type bag[MAX_BAGS];
 
@@ -109,19 +109,6 @@ int get_unused_bag(){
     return -1;
 }
 
-void send_close_bag(int connection){
-
-    //tell client to close bag
-
-    unsigned char packet[4];
-
-    packet[0]=CLOSE_BAG;
-
-    packet[1]=1;
-    packet[2]=0;
-
-    send(connection, packet, 3, 0);
-}
 
 int bag_count(int connection){
 
@@ -136,33 +123,6 @@ int bag_count(int connection){
     }
 
     return count;
-}
-
-
-
-void send_get_new_bag(int connection, int bag_id){
-
-    unsigned char packet[11];
-
-    int map_id=clients.client[connection].map_id;
-    int map_axis=maps.map[map_id]->map_axis;
-    int x_pos=clients.client[connection].map_tile % map_axis;
-    int y_pos=clients.client[connection].map_tile / map_axis;
-
-    packet[0]=GET_NEW_BAG;
-
-    packet[1]=6;
-    packet[2]=0;
-
-    packet[3]=x_pos % 256;
-    packet[4]=x_pos / 256;
-
-    packet[5]=y_pos % 256;
-    packet[6]=y_pos / 256;
-
-    packet[7]=bag_id;
-
-    send(connection, packet, 8, 0);
 }
 
 
@@ -193,82 +153,6 @@ int bag_exists(int map_id, int tile_pos){
     return -1;
 }
 
-
-void send_here_your_ground_items(int connection, int bag_id){
-
-    //displays the bag inventory
-
-    unsigned char packet[(MAX_BAG_SLOTS*7)+5];
-
-    int i=0, j=0;
-    int data_length=0;
-    int image_id=0, quantity=0;
-
-    packet[0]=HERE_YOUR_GROUND_ITEMS;
-
-    data_length=(MAX_BAG_SLOTS*7)+2;
-
-    packet[1]=data_length % 256;
-    packet[2]=data_length / 256;
-
-    packet[3]=MAX_BAG_SLOTS;
-
-    for(i=0;i<MAX_BAG_SLOTS; i++){
-
-        j=(i*7);
-
-        image_id=bag_list[bag_id].inventory[i].image_id;
-        quantity=bag_list[bag_id].inventory[i].amount;
-
-
-        packet[4+j]=image_id % 256; //image_id
-        packet[5+j]=image_id / 256;
-
-        packet[6+j]=quantity % 256; //quantity;
-        packet[7+j]=quantity / 256 % 256;
-        packet[8+j]=quantity / 256 / 256 % 256;
-        packet[9+j]=quantity / 256 / 256 / 256 % 256;
-
-        packet[10+j]=i; //slot
-    }
-
-    send(connection, packet, (MAX_BAG_SLOTS*7)+4, 0);
-}
-
-void send_get_new_ground_item(int connection, int item_image_id, int amount, int slot){
-
-    unsigned char packet[11];
-
-    packet[0]=GET_NEW_GROUND_ITEM;
-
-    packet[1]=8;
-    packet[2]=0;
-
-    packet[3]=item_image_id % 256;
-    packet[4]=item_image_id / 256;
-
-    packet[5]=amount % 256;
-    packet[6]=amount / 256 % 256;
-    packet[7]=amount / 256 / 256 % 256;
-    packet[8]=amount / 256 / 256 / 256 % 256;
-
-    packet[9]=slot;
-
-    send(connection, packet, 10, 0);
-}
-
-int get_used_bag_slot(int bag_id, int image_id){
-
-    int i;
-
-    for(i=0; i<MAX_BAG_SLOTS; i++){
-
-        if(bag_list[bag_id].inventory[i].image_id==image_id && bag_list[bag_id].inventory[i].amount>0) return i;
-
-    }
-
-    return -1;
-}
 
 int get_unused_bag_slot(int bag_id){
 

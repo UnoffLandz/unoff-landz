@@ -27,6 +27,62 @@
 #include "server_start_stop.h"
 #include "db/database_functions.h"
 
+struct protocol_type send_protocol[256], receive_protocol[256];
+
+
+void initialise_protocol_reporting(){
+
+    strcpy(send_protocol[0].type, "RAW_TEXT");
+    strcpy(send_protocol[2].type, "ADD_ACTOR");
+    strcpy(send_protocol[3].type, "YOU_ARE");
+    strcpy(send_protocol[4].type, "SYNC_CLOCK");
+    strcpy(send_protocol[5].type, "NEW_MINUTE");
+    strcpy(send_protocol[6].type, "REMOVE_ACTOR");
+    strcpy(send_protocol[7].type, "CHANGE_MAP");
+    strcpy(send_protocol[18].type, "HERE_YOUR_STATS");
+    strcpy(send_protocol[19].type, "HERE_YOUR_INVENTORY");
+    strcpy(send_protocol[21].type, "GET_NEW_INVENTORY_ITEM");
+    strcpy(send_protocol[23].type, "HERE_YOUR_GROUND_ITEMS");
+    strcpy(send_protocol[24].type, "GET_NEW_GROUND_ITEM");
+    strcpy(send_protocol[26].type, "CLOSE_BAG");
+    strcpy(send_protocol[27].type, "GET_NEW_BAG");
+    strcpy(send_protocol[29].type, "DESTROY_BAG");
+    strcpy(send_protocol[51].type, "ADD_NEW_ENHANCED_ACTOR");
+    strcpy(send_protocol[71].type, "GET_ACTIVE_CHANNELS");
+    strcpy(send_protocol[249].type, "YOU_DONT_EXIST");
+    strcpy(send_protocol[250].type, "LOG_IN_OK");
+    strcpy(send_protocol[251].type, "LOG_IN_NOT_OK");
+    strcpy(send_protocol[252].type, "CREATE_CHAR_OK");
+    strcpy(send_protocol[253].type, "CREATE_CHAR_NOT_OK");
+
+    strcpy(receive_protocol[0].type, "RAW_TEXT");
+    strcpy(receive_protocol[1].type, "MOVE_TO");
+    strcpy(receive_protocol[2].type, "SEND_PM");
+    strcpy(receive_protocol[5].type, "GET_PLAYER_INFO");
+    strcpy(receive_protocol[7].type, "SIT_DOWN");
+    strcpy(receive_protocol[8].type, "SEND_ME_MY_ACTORS");
+    strcpy(receive_protocol[9].type, "SEND_OPENING_SCREEN");
+    strcpy(receive_protocol[10].type, "SEND_VERSION");
+    strcpy(receive_protocol[14].type, "HEARTBEAT");
+    strcpy(receive_protocol[16].type, "USE_OBJECT");
+    strcpy(receive_protocol[19].type, "LOOK_AT_INVENTORY_ITEM");
+    strcpy(receive_protocol[20].type, "MOVE_INVENTORY_ITEM");
+    strcpy(receive_protocol[21].type, "HARVEST");
+    strcpy(receive_protocol[22].type, "DROP_ITEM");
+    strcpy(receive_protocol[23].type, "PICK_UP_ITEM");
+    strcpy(receive_protocol[25].type, "INSPECT_BAG");
+    strcpy(receive_protocol[27].type, "LOOK_AT_MAP_OBJECT");
+    strcpy(receive_protocol[49].type, "SEND_PARTIAL_STATS");
+    strcpy(receive_protocol[60].type, "PING_RESPONSE");
+    strcpy(receive_protocol[61].type, "SET_ACTIVE_CHANNEL");
+    strcpy(receive_protocol[140].type, "LOG_IN");
+    strcpy(receive_protocol[141].type, "CREATE_CHAR");
+    strcpy(receive_protocol[230].type, "GET_DATE");
+    strcpy(receive_protocol[231].type, "GET_TIME");
+    strcpy(receive_protocol[232].type, "SERVER_STATS");
+}
+
+
 void write_to_file(char *file_name, char *text) {
 
     /** RESULT  : writes text string to file
@@ -293,19 +349,42 @@ void log_sqlite_error(char *error_type, const char *function_name, const char *m
         stop_server();
 }
 
-void log_packet(int connection, unsigned char *packet){
+void log_packet(int connection, unsigned char *packet, int direction){
 
     /** public function - see header */
 
     char text_out[1024]="";
     int data_length=packet[1]+(packet[2]*256)-1;
 
-    int i=0;
-    for(i=0; i<data_length+2; i++){
+    if(data_length>=1024){
+
+        log_event(EVENT_ERROR, "data length [%i] exceeded max [1024] in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    for(int i=0; i<data_length+2; i++){
 
         sprintf(text_out, "%s %i", text_out, packet[i]);
     }
 
-    log_event(EVENT_PACKET,"Receive from [%i]%s", connection, text_out);
+    if(direction==SEND) {
+
+        log_event(EVENT_PACKET, "Sent to       [%i] %s %s", connection, send_protocol[packet[0]].type, text_out);
+        log_event(EVENT_SESSION, "Sent to       [%i] %s",    connection, send_protocol[packet[0]].type);
+
+        #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
+        printf("sent to connection [%i] %s\n", connection, send_protocol[packet[0]].type);
+        #endif
+    }
+
+    if(direction==RECEIVE) {
+
+        log_event(EVENT_PACKET, "Received from [%i] %s %s", connection, receive_protocol[packet[0]].type, text_out);
+        log_event(EVENT_SESSION, "Received from [%i] %s", connection, receive_protocol[packet[0]].type);
+
+        #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
+        printf("receive from connection [%i] %s\n", connection, receive_protocol[packet[0]].type);
+        #endif
+    }
 }
 

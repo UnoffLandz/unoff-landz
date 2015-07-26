@@ -24,8 +24,8 @@
 
 #define TILE_MAP_MAX 50000
 #define HEIGHT_MAP_MAX 150000
-#define TWOD_OBJECT_MAP_MAX 800000
-#define THREED_OBJECT_MAP_MAX 800000
+//#define TWOD_OBJECT_MAP_MAX 800000
+//#define THREED_OBJECT_MAP_MAX 800000
 
 //#define START_MAP_ID 1       // map_id of the map on which characters are created
 //#define START_MAP_TILE 27225 // tile_pos at which characters are created
@@ -74,27 +74,16 @@ struct map_node_type{
     unsigned char height_map[HEIGHT_MAP_MAX];
     int height_map_size;
 
-    //unsigned char threed_object_map[THREED_OBJECT_MAP_MAX];
     int threed_object_map_size;
     int threed_object_structure_len;
     int threed_object_count;
     int threed_object_offset;
-/*
-   struct{
-        char e3d_filename[80];
-        int e3d_id;
-        float x;
-        float y;
-        float z;
-    }threed_object_lookup[2000];
-*/
-    //unsigned char twod_object_map[TWOD_OBJECT_MAP_MAX];
+
     int twod_object_map_size;
     int twod_object_structure_len;
     int twod_object_count;
     int twod_object_offset;
 
-    //unsigned char lights_object_map[LIGHTS_OBJECT_MAP_MAX];
     int lights_object_map_size;
     int lights_object_structure_len;
     int lights_object_count;
@@ -129,15 +118,26 @@ int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis);
 int get_tile(int x_pos, int y_pos, int map_axis);
 
 
-/** RESULT  : calculates the x,y coordinates based on the tile
+/** RESULT  : calculates the x coordinate of the map tile
 
-    RETURNS : void
+    RETURNS : the x coordinate
 
     PURPOSE :
 
     NOTES   :
 */
-void get_xy_position(int tile, int *x_pos, int *y_pos, int map_id);
+int get_x_pos(int tile, int map_id);
+
+
+/** RESULT  : calculates the y coordinate of the map tile
+
+    RETURNS : the y coordinate
+
+    PURPOSE :
+
+    NOTES   :
+*/
+int get_y_pos(int tile, int map_id);
 
 
 #endif // MAPS_H_INCLUDED

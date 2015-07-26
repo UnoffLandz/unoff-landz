@@ -61,7 +61,7 @@ void process_packet(int connection, unsigned char *packet){
     char text_out[1024]="";
     int protocol=packet[0];
 
-    log_packet(connection, packet);
+    log_packet(connection, packet, RECEIVE);
 
 /***************************************************************************************************/
 
@@ -70,10 +70,6 @@ void process_packet(int connection, unsigned char *packet){
         char text[1024]="";
         int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(text, packet+3, data_length);
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("RAW_TEXT [%s]\n", text);
-        #endif
 
         // trim off excess left hand space
         str_trim_left(text);
@@ -99,34 +95,18 @@ void process_packet(int connection, unsigned char *packet){
             //channel slots run from zero. Hence, we need to subtract 1 from the active_chan slot value
             int chan=clients.client[connection].chan[active_chan_slot-1];
 
-            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-            printf("active chan slot %i  chan %i\n", active_chan_slot-1, chan);
-            #endif
-
             //broadcast to self
             sprintf(text_out, "%c[%s]: %s", c_grey1+127, clients.client[connection].char_name, text);
             send_raw_text(connection, CHAT_CHANNEL0 + active_chan_slot, text_out);
 
             //broadcast to others
             broadcast_channel_chat(chan, connection, text);
-
-            log_event(EVENT_CHAT, "broadcast channel [%s @% i]: %s", clients.client[connection].char_name, chan, text);
-
-            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-            printf("channel chat by [%s] on chan [%i] %s\n", clients.client[connection].char_name, chan, text);
-            #endif
         }
 
         //hash commands
         else if(text[0]=='#'){
 
-            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-            printf("#command by [%s] %s\n", clients.client[connection].char_name, text);
-            #endif
-
             process_hash_commands(connection, text);
-
-            log_event(EVENT_SESSION, "#command %s [%s]", clients.client[connection].char_name, text);
 
             return;
         }
@@ -144,21 +124,11 @@ void process_packet(int connection, unsigned char *packet){
 
             //broadcast to others
             broadcast_local_chat(connection, text_out);
-
-            log_event(EVENT_CHAT, "broadcast local [%s] %s: %s", map_name, clients.client[connection].char_name, text);
-
-            #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-            printf("local chat on map [%s] %s: %s\n", map_name, clients.client[connection].char_name, text);
-            #endif
         }
     }
 /***************************************************************************************************/
 
     else if(protocol==MOVE_TO) {
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("MOVE_TO %i %s\n", connection, clients.client[connection].char_name);
-        #endif
 
         //get destination tile
         int x_dest=Uint16_to_dec(packet[3], packet[4]);
@@ -168,8 +138,7 @@ void process_packet(int connection, unsigned char *packet){
         //move the char
         start_char_move(connection, tile_dest);
 
-        log_event(EVENT_SESSION, "Protocol MOVE_TO by [%s]...", clients.client[connection].char_name);
-        log_text(EVENT_SESSION, "Map [%s] x[%i] y[%i]", maps.map[clients.client[connection].map_id].map_name, x_dest, y_dest);
+        log_event(EVENT_SESSION, "Move [%s] Map [%s] x[%i] y[%i]", clients.client[connection].char_name, maps.map[clients.client[connection].map_id].map_name, x_dest, y_dest);
     }
 /***************************************************************************************************/
 
@@ -179,10 +148,6 @@ void process_packet(int connection, unsigned char *packet){
         int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(text, packet+3, data_length);
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("SEND_PM %i %i %s\n", packet[1], packet[2], text);
-        #endif
-
         //extract target name and message from pm packet
         char char_name[80]="";
         get_str_island(text, char_name, 1);
@@ -190,11 +155,10 @@ void process_packet(int connection, unsigned char *packet){
         char msg[1024]="";
         get_str_island(text, msg, 2);
 
-        //log the event here as the send_pm function adds a log entry if the target char is not found
-        log_event(EVENT_CHAT, "send pm from [%s] to [%s] %s", clients.client[connection].char_name, char_name, msg);
-
         //send the message
         send_pm(connection, char_name, msg);
+
+        log_event(EVENT_CHAT, "send pm from [%s] to [%s] %s", clients.client[connection].char_name, char_name, msg);
     }
 /***************************************************************************************************/
 
@@ -204,10 +168,6 @@ void process_packet(int connection, unsigned char *packet){
         //which is used in the ADD_ACTOR packet; the second is implemented via the frame set which is used in the
         //ADD_ENHANCED_ACTOR packet. When using the ADD_ACTOR packet, command 13=sit down and command 14=stand up. When
         //using the ADD_ENHANCED_ACTOR packet, command 12=sit, command 13=stand and command 14=stand idle.
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("Protocol SIT_DOWN connection [%i] command[%i]\n", connection, packet[3]);
-        #endif
 
         if(packet[3]==SIT){//make the char stand
 
@@ -245,34 +205,18 @@ void process_packet(int connection, unsigned char *packet){
 
         int other_connection=Uint32_to_dec(data[0], data[1], data[2], data[3]);
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("GET_PLAYER_INFO [%i] [%s]\n", other_connection, clients.client[other_connection].char_name);
-        #endif
-
         sprintf(text_out, "You see %s", clients.client[other_connection].char_name);
         send_raw_text(connection, CHAT_SERVER, text_out);
-
-        log_event(EVENT_SESSION, "Protocol GET_PLAYER_INFO by [%s] (%s)", clients.client[connection].char_name, clients.client[other_connection].char_name);
    }
 /***************************************************************************************************/
 
     else if(protocol==SEND_ME_MY_ACTORS){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("SEND_ME_MY_ACTORS %i %i\n", packet[1], packet[2]);
-        #endif
-
-        log_event(EVENT_ERROR, "Protocol SEND_ME_MY_ACTORS by [%s]", clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==SEND_OPENING_SCREEN){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("SEND OPENING SCREEN %i %i \n", packet[1], packet[2]);
-        #endif
-
-        log_event(EVENT_SESSION, "Protocol SEND_OPENING_SCREEN by [%i]", connection);
     }
 /***************************************************************************************************/
 
@@ -281,10 +225,6 @@ void process_packet(int connection, unsigned char *packet){
         unsigned char data[1024]={0};
         int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(data, packet+3, data_length);
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("SEND_VERSION %i %i\n", packet[1], packet[2]);
-        #endif
 
         int first_digit=Uint16_to_dec(data[0], data[1]);
         int second_digit=Uint16_to_dec(data[2], data[3]);
@@ -298,7 +238,6 @@ void process_packet(int connection, unsigned char *packet){
         int host4=(int)data[11];
         int port=((int)data[12] *256)+(int)data[13];
 
-        log_event(EVENT_SESSION, "Protocol SEND_VERSION by [%i]...", connection);
         log_text(EVENT_SESSION, "first digit [%i] second digit [%i]", first_digit, second_digit);
         log_text(EVENT_SESSION, "major [%i] minor [%i] release [%i] patch [%i]", major, minor, release, patch);
         log_text(EVENT_SESSION, "host [%i.%i.%i.%i] port [%i]", host1, host2, host3, host4, port);
@@ -307,19 +246,11 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==HEARTBEAT){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("HEARTBEAT %i %i \n", packet[1], packet[2]);
-        #endif
-
         //no need to do anything on this message as any data receipt updates the heartbeat
     }
 /***************************************************************************************************/
 
     else if(protocol==USE_OBJECT){
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("USE_OBJECT %i %i \n", packet[1], packet[2]);
-        #endif
 
 /*
         //returns a 4byte integer indicating the threed object id, followed by a 4byte integer indicating ????
@@ -344,23 +275,17 @@ void process_packet(int connection, unsigned char *packet){
         if(map_object_id==4986 && clients.client[connection].map_id==2 && clients.client[connection].map_tile==108627){
             move_char_between_maps(connection, 3, 3000);
         }
-
-        log_event(EVENT_SESSION, "Protocol USE_OBJECT by [%s]...", clients.client[connection].char_name);
  */
     }
 /***************************************************************************************************/
 
     else if(protocol==LOOK_AT_INVENTORY_ITEM){
 
+        //returns a Uint8 giving the slot number looked at
+
         unsigned char data[1]={0};
         int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(data, packet+3, data_length);
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("LOOK_AT_INVENTORY_ITEM %i %i \n", packet[1], packet[2]);
-        #endif
-
-        //returns a Uint8 giving the slot number looked at
 
         int slot=(int)data[0];
         int i=0;
@@ -389,40 +314,29 @@ void process_packet(int connection, unsigned char *packet){
         }
 
         send_raw_text(connection, CHAT_SERVER, text_out);
-
-        log_event(EVENT_SESSION, "Protocol LOOK_AT_MAP_OBJECT [%s] by [%s]", object[i].object_name, clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==MOVE_INVENTORY_ITEM){
 
+        //returns 2 Uint8 indicating the slots to be moved from and to
+        //if an attempt is made to move to an occupied slot or, to move from an empty slot, the client will automatically block
+
         unsigned char data[6]={0};
         int data_length=packet[1]+(packet[2]*256)-1;
         memcpy(data, packet+3, data_length);
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("MOVE_INVENTORY_ITEM %i %i \n", packet[1], packet[2]);
-        #endif
-
-        //returns 2 Uint8 indicating the slots to be moved from and to
-        //if an attempt is made to move to an occupied slot or, to move from an empty slot, the client will automatically block
 
         int from_slot=(int)data[0];
         int to_slot=(int)data[1];
 
         move_inventory_item(connection, from_slot, to_slot);
-
-        log_event(EVENT_SESSION, "Protocol MOVE_INVENTORY_ITEM by [%s]...", clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==HARVEST){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("HARVEST connection [%i]\n", connection);
-        #endif
-
         //returns a integer corresponding to the order of the object in the map 3d object list
+
         int threed_object_list_pos=Uint16_to_dec(packet[3], packet[4]);
 
         log_event(EVENT_SESSION, "protocol HARVEST - started, char [%s], threed object list position [%i], map [%i]", clients.client[connection].char_name, threed_object_list_pos, clients.client[connection].map_id);
@@ -447,10 +361,6 @@ void process_packet(int connection, unsigned char *packet){
         int object_id=clients.client[connection].client_inventory[inventory_slot].object_id;
         int bag_id=0;
         int slot=0;
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("DROP_ITEM object id [%i] drop amount [%i]\n", object_id, amount);
-        #endif
 
         //use existing bag if one exists
         if(clients.client[connection].bag_open==true){
@@ -526,16 +436,10 @@ void process_packet(int connection, unsigned char *packet){
         //send revised char and bag inventory to client
         send_here_your_inventory(connection);
         send_here_your_ground_items(connection, bag_id);
-
-        log_event(EVENT_SESSION, "Protocol DROP_ITEM by [%s]...", clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==PICK_UP_ITEM){
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("PICK_UP_ITEM %i %i \n", packet[1], packet[2]);
-        #endif
 /*
         //returns a 4byte integer indicating quantity followed by 1 byte indicating bag slot position
 
@@ -555,11 +459,8 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==INSPECT_BAG){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("INSPECT_BAG connection %i  bag %i \n", packet[0], packet[3]);
-        #endif
-
         //returns a Unit8 indicating the bag_id
+
         int bag_id=packet[3];
 
         //find bag at the chars current position
@@ -591,8 +492,6 @@ void process_packet(int connection, unsigned char *packet){
 
         clients.client[connection].bag_open=true;
         clients.client[connection].open_bag_id=i;
-
-        log_event(EVENT_SESSION, "Protocol INSPECT_BAG by [%s]...", clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
@@ -628,56 +527,28 @@ void process_packet(int connection, unsigned char *packet){
         }
 
         send_raw_text(connection, CHAT_SERVER, text_out);
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("LOOK_AT_MAP_OBJECT - map object [%i] item id [%i] object [%s]\n", threed_object_list_pos, object_id, object[object_id].object_name);
-        #endif
-
-        log_event(EVENT_SESSION, "Protocol LOOK_AT_MAP_OBJECT [%s] by [%s]", object[object_id].object_name, clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==PING_RESPONSE){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("PING_RESPONSE %i %i \n", packet[1], packet[2]);
-        #endif
-
-        log_event(EVENT_SESSION, "Protocol PING_RESPONSE by [%s]...", clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==SET_ACTIVE_CHANNEL){
 
-        unsigned char data[1024]={0};
-        int data_length=packet[1]+(packet[2]*256)-1;
-        memcpy(data, packet+3, data_length);
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("SET_ACTIVE_CHANNEL [%s] [%i]\n", clients.client[connection].char_name, data[0]);
-        #endif
-
         //set the active channel
-        clients.client[connection].active_chan=data[0];
+        clients.client[connection].active_chan=packet[3]-32;
+        printf("active chan %i\n",  clients.client[connection].active_chan);
 
         //update the database
         char sql[MAX_SQL_LEN]="";
-        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", data[0], clients.client[connection].character_id);
+        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", packet[3], clients.client[connection].character_id);
         push_sql_command(sql);
-
-        log_event(EVENT_SESSION, "Protocol SET_ACTIVE_CHANNEL by [%s]...", clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==LOG_IN){
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("LOG_IN connection [%i] lsb [%i] msb [%i]\n", connection, packet[1], packet[2]);
-        #endif
-
-        //place log event before process so the log entries from the process_log_in function follow
-        //in a logical order
-        log_event(EVENT_SESSION, "Protocol LOG_IN by [%i]...", connection);
 
         int data_len=packet[1] + (packet[2] * 256) + 2;
         push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_LOGIN, packet, data_len);
@@ -686,13 +557,6 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==CREATE_CHAR){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("CREATE_CHAR connection [%i] lsb [%i] msb [%i]\n", connection, packet[1], packet[2]);
-        #endif
-
-        //place log event before process so the following are in a logical order
-        log_event(EVENT_SESSION, "Protocol CREATE_CHAR by [%i]...", connection);
-
         int packet_len=packet[1] + (packet[2] * 256) + 2;
         push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_CHECK_NEWCHAR, packet, packet_len);
     }
@@ -700,40 +564,22 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==GET_DATE){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("GET DATE %i %i \n", packet[1], packet[2]);
-        #endif
-
         //calculate day of year
         int day_of_year=game_data.game_days % game_data.year_length;
 
         send_verbose_date(connection, day_of_year);
-
-        log_event(EVENT_SESSION, "Protocol GET_DATE by [%s]...", clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==GET_TIME){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("GET TIME %i %i\n", packet[1], packet[2]);
-        #endif
-
         send_verbose_time(connection, game_data.game_minutes);
-
-        log_event(EVENT_SESSION, "Protocol GET_TIME by [%s]...", clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
     else if(protocol==SERVER_STATS){
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("SERVER_STATS %i %i \n", packet[1], packet[2]);
-        #endif
-
         send_motd_header(connection);
-
-        log_event(EVENT_SESSION, "Protocol SERVER_STATS by [%s]...", clients.client[connection].char_name);
     }
 /***************************************************************************************************/
 
