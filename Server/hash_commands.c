@@ -41,12 +41,388 @@
 #include "game_data.h"
 #include "guilds.h"
 
+static int hash_jc(int connection, char *text) {
+
+    /** RESULT  : handles join channel hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+    //get the chan number
+    char chan_str[80]="";
+    get_str_island(text, chan_str, 2);
+
+    //convert channel number into an integer value
+    int chan_id=atoi(chan_str);
+
+    //join the channel
+    join_channel(connection, chan_id);
+
+    return 0;
+}
+
+
+static int hash_lc(int connection, char *text) {
+
+    /** RESULT  : handles leave channel hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+    //get the chan number
+    char chan_str[80]="";
+    get_str_island(text, chan_str, 2);
+
+    //convert channel number into an integer value
+    int chan_id=atoi(chan_str);
+
+    //leave the channel
+    leave_channel(connection, chan_id);
+
+    return 0;
+}
+
+
+static int hash_motd(int connection, char *text) {
+
+    /** RESULT  : handles motd hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+
+    (void)(text);
+
+    send_motd_file(connection);
+
+    return 0;
+}
+
+
+static int hash_cl(int connection, char *text) {
+
+    /** RESULT  : handles channel list hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+    (void)(text);
+
+    char text_out[80]="";
+
+    sprintf(text_out, "\n%cNo   Channel    Description", c_blue1+127);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+
+    for(int i=0; i<MAX_CHANNELS; i++){
+
+        if(channel[i].chan_type!=CHAN_VACANT) {
+
+            sprintf(text_out, "%c%i %s %-10s %-30s", c_blue1+127, i, "  ", channel[i].channel_name, channel[i].description);
+            send_raw_text(connection, CHAT_SERVER, text_out);
+        }
+    }
+
+    return 0;
+}
+
+
+static int hash_cp(int connection, char *text) {
+
+    /** RESULT  : handles channel participants hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+
+    (void)(text);
+
+    char text_out[80]="";
+
+    int active_chan_slot=clients.client[connection].active_chan;
+
+    if(active_chan_slot==0){
+
+        sprintf(text_out, "%cNo active channel", c_red3+127);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return 0;
+    }
+
+    int chan_id=clients.client[connection].chan[active_chan_slot-31];
+
+    sprintf(text_out, "%cListing for channel [%i]: %s", c_blue1+127, chan_id, channel[chan_id].channel_name);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+
+    sprintf(text_out, "%cDescription: %s", c_blue1+127, channel[chan_id].description);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+
+    sprintf(text_out, "%cCharacters in channel...", c_blue1+127);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+
+    for(int i=0; i<MAX_CLIENTS; i++){
+
+        if(clients.client[i].client_status==LOGGED_IN){
+
+            if(player_in_chan(i, chan_id)!=-1){
+
+                sprintf(text_out, "%c%s ", c_blue1+127, clients.client[i].char_name);
+                send_raw_text(connection, CHAT_SERVER, text_out);
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+static int hash_details(int connection, char *text) {
+
+    /** RESULT  : handles details hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+
+    char text_out[80]="";
+    char char_name[80]="";
+    get_str_island(text, char_name, 2);
+
+    //check that the char is in game
+    int char_connection=char_in_game(char_name);
+
+    if(char_connection==NOT_FOUND){
+
+        sprintf(text_out, "%ccharacter is not in game", c_red3+127);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+        return 0;
+    }
+
+    //send details to client
+    sprintf(text_out, "%cCharacter    :%s", c_green3+127, clients.client[char_connection].char_name);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+
+    int race_id=character_type[clients.client[char_connection].char_type].race_id;
+    sprintf(text_out, "%cRace         :%s", c_green3+127, race[race_id].race_name);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+
+    int gender_id=character_type[clients.client[char_connection].char_type].gender_id;
+    sprintf(text_out, "%cGender       :%s", c_green3+127, gender[gender_id].gender_name);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+
+    char time_stamp_str[9]="";
+    char date_stamp_str[11]="";
+
+    get_time_stamp_str(character.char_created, time_stamp_str);
+    get_date_stamp_str(character.char_created, date_stamp_str);
+    sprintf(text_out, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+    send_raw_text(connection, CHAT_SERVER, text_out);
+
+    sprintf(text_out, "%cCharacter Age:%i", c_green3+127, char_age(char_connection));
+    send_raw_text(connection, CHAT_SERVER, text_out);
+
+    if(character.guild_id==0){
+
+        sprintf(text_out, "%cGuild        :guildless player", c_green3+127);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "%cJoined       :n/a", c_green3+127);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+    }
+    else {
+
+        sprintf(text_out, "%cGuild        :%s", c_green3+127, guilds.guild[character.guild_id].guild_name);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        sprintf(text_out, "%cGuild tag    :%s", c_green3+127, guilds.guild[character.guild_id].guild_tag);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        get_time_stamp_str(character.joined_guild, time_stamp_str);
+        get_date_stamp_str(character.joined_guild, date_stamp_str);
+
+        sprintf(text_out, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+    }
+
+    return 0;
+}
+
+
+static int hash_beam_me(int connection, char *text) {
+
+    /** RESULT  : handles #beam_me hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+    //if hash command is #BEAM, check that second part is ME
+    if(count_str_island(text)==2){
+
+        char part[80]="";
+
+        get_str_island(text, part, 2);
+        str_conv_upper(part);
+
+        if(strcmp(part, "ME")!=0) return 0;
+    }
+
+    //if char is moving when protocol arrives, cancel rest of path
+    clients.client[connection].path_count=0;
+
+    //ensure char doesn't beam on top of another char
+    int new_map_tile=get_nearest_unoccupied_tile(game_data.beam_map_id, game_data.beam_map_tile);
+
+    move_char_between_maps(connection, game_data.beam_map_id, new_map_tile);
+
+    return 0;
+}
+
+
+static int hash_pm(int connection, char *text) {
+
+    /** RESULT  : handles private message hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+    //get character name
+    char char_name[80]="";
+    get_str_island(text, char_name, 2);
+
+    //get message
+    char msg[1024]="";
+    get_str_island(text, msg, 3);
+
+    //send pm
+    send_pm(connection, char_name, msg);
+
+    return 0;
+}
+
+static int hash_test(int connection, char *text) {
+
+    /** RESULT  : test function
+
+        RETURNS : void
+
+        PURPOSE : debugging
+
+        NOTES   :
+    */
+
+    char chan_str[80]="";
+    get_str_island(text, chan_str, 2);
+
+    //convert channel number into an integer value
+    int chan_id=atoi(chan_str);
+
+    clients.client[connection].active_chan=chan_id;
+    printf("set active chan %i\n", chan_id);
+
+    send_get_active_channels(connection);
+
+    return 0;
+}
+
+
+typedef int (*hash_command_function)(int connection, char *text);
+
+struct hash_command_array_entry {
+
+    char command[80];
+    int parts;
+    hash_command_function fn;
+    char warning[80];
+};
+
+
+struct hash_command_array_entry hash_command_entries[] = {
+
+    {"#JC", 2, hash_jc, "you need to use the format #JC [channel number]"},
+    {"#JOIN_CHANNEL", 2, hash_jc, "you need to use the format #JOIN_CHANNEL [channel number]"},
+    {"#LC", 2, hash_lc, "you need to use the format #LC [channel number]"},
+    {"#LEAVE_CHANNEL", 2, hash_lc, "you need to use the format #LEAVE_CHANNEL [channel number]"},
+    {"#MOTD", 1, hash_motd, "you need to use the format #MOTD"},
+    {"#MESSAGE_OF_THE_DAY", 1, hash_motd, "you need to use the format #MESSAGE_OF_THE_DAY"},
+    {"#CL", 1, hash_cl, "you need to use the format #CL"},
+    {"#CHANNEL_LIST", 1, hash_cl, "you need to use the format #CHANNEL_LIST"},
+    {"#CP", 1, hash_cp, "you need to use the format #CP"},
+    {"#CHANNEL_PARTICIPANTS", 1, hash_cp, "you need to use the format #CHANNEL_PARTICIPANTS"},
+    {"#DETAILS", 2, hash_details, "you need to use the format #DETAILS [character name]"},
+    {"#BEAM_ME", 1, hash_beam_me, "you need to use the format #BEAM_ME"},
+    {"#BEAM", 2, hash_beam_me, "you need to use the format #BEAM ME"},
+    {"#PM", 99, hash_pm, "you need to use the format #PM [message]"},
+    {"#PRIVATE_MESSAGE", 99, hash_pm, "you need to use the format #PRIVATE_MESSAGE [message]"},
+    {"#TEST", 2, hash_test, ""},
+    { "", 0, 0, ""}
+};
+
+
+static const struct hash_command_array_entry *find_hash_command_entry(char *command) {
+
+    /** RESULT  : finds hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+
+
+    int i=0;
+
+    while(hash_command_entries[i].fn!=NULL){
+
+        if(strcmp(hash_command_entries[i].command, command)==0){
+
+            return &hash_command_entries[i];
+        }
+
+        ++i;
+    }
+
+    return NULL;
+}
+
+
 void process_hash_commands(int connection, char *text){
 
     /** public function - see header */
 
-
-    char text_out[1024]="";
+    char text_out[80]="";
 
     //grab the first part of the text string as this should contain the command name
     char hash_command[80]="";
@@ -54,295 +430,36 @@ void process_hash_commands(int connection, char *text){
     get_str_island(text, hash_command, 1);
     str_conv_upper(hash_command);
 
-    log_event(EVENT_SESSION, "client [%i] character [%s] command [%s]", connection, clients.client[connection].char_name, hash_command);
-
-/***************************************************************************************************/
-
-    if(strcmp(hash_command, "#MOTD")==0){
-
-        send_motd_file(connection);
-    }
-/***************************************************************************************************/
-
-    else if(strcmp(hash_command, "#PM")==0){
-
-        //get character name
-        char char_name[1024]="";
-        get_str_island(text, char_name, 2);
-
-        //get message
-        char msg[1024]="";
-        get_str_island(text, msg, 3);
-
-        //send pm
-        send_pm(connection, char_name, msg);
-    }
-/***************************************************************************************************/
-
-    else if(strcmp(hash_command, "#BEAM_ME")==0 || strcmp(hash_command, "#BEAM")==0){
-
-        //if hash command is #BEAM, check that second part is ME
-        if(command_parts==2){
-
-            char hash_command_second_part[80]="";
-
-            get_str_island(text, hash_command_second_part, 2);
-            str_conv_upper(hash_command_second_part);
-
-            if(strcmp(hash_command_second_part, "ME")!=0) return;
-        }
-
-        //if char is moving when protocol arrives, cancel rest of path
-        clients.client[connection].path_count=0;
-
-        //ensure char doesn't beam on top of another char
-        int new_map_tile=get_nearest_unoccupied_tile(game_data.beam_map_id, game_data.beam_map_tile);
-
-        move_char_between_maps(connection, game_data.beam_map_id, new_map_tile);
-    }
-
-/***************************************************************************************************/
-/*
-    else if(strcmp(hash_command, "#NAME_CHANGE")==0){
-
-        //check that #NAME_CHANGE command is properly formed (should have 2 parts delimited by an underline).
-        if(command_parts!=2) {
-
-            sprintf(text_out, "%cyou need to use the format #NAME_CHANGE [new name]", c_red3+127);
-            send_server_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        get_str_island(text, hash_command_tail, 2);
-
-        strcpy(old_char_name, clients.client[connection].char_name);
-
-        if(rename_char(connection, hash_command_tail)==CHAR_RENAME_FAILED_DUPLICATE){
-
-            sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
-            send_raw_text_packet(connection, CHAT_SERVER, text_out);
-
-            log_event(EVENT_SESSION, "invalid name change attempt for char[%s] to [%s]", old_char_name, hash_command_tail);
-
-            return;
-        }
-
-        sprintf(text_out, "%cIn the future you'll need to purchase a name change token to do this", c_yellow1+127);
-        send_raw_text_packet(connection, CHAT_SERVER, text_out);
-
-        sprintf(text_out, "%cGratz. You just changed your character name to %s", c_green1+127, clients.client[connection].char_name);
-        send_raw_text_packet(connection, CHAT_SERVER, text_out);
-
-        log_event(EVENT_SESSION, "name change for char[%s] to [%s]", old_char_name, clients.client[connection].char_name);
-    }
-*/
-/***************************************************************************************************/
-
-    else if(strcmp(hash_command, "#DETAILS")==0){
-
-        //check that #DETAILS command is properly formed (should have 2 parts delimited by a space)
-        if(command_parts!=2) {
-
-            sprintf(text_out, "%cyou need to use the format #DETAILS [character name]", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        char char_name[80]="";
-        get_str_island(text, char_name, 2);
-
-        //check that the char is in game
-        int char_connection=char_in_game(char_name);
-
-        if(char_connection==NOT_FOUND){
-
-            sprintf(text_out, "%ccharacter is not in game", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        //send details to client
-        sprintf(text_out, "%cCharacter    :%s", c_green3+127, clients.client[char_connection].char_name);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
-        int race_id=character_type[clients.client[char_connection].char_type].race_id;
-        sprintf(text_out, "%cRace         :%s", c_green3+127, race[race_id].race_name);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
-        int gender_id=character_type[clients.client[char_connection].char_type].gender_id;
-        sprintf(text_out, "%cGender       :%s", c_green3+127, gender[gender_id].gender_name);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
-        char time_stamp_str[9]="";
-        char date_stamp_str[11]="";
-
-        get_time_stamp_str(character.char_created, time_stamp_str);
-        get_date_stamp_str(character.char_created, date_stamp_str);
-        sprintf(text_out, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
-        sprintf(text_out, "%cCharacter Age:%i", c_green3+127, char_age(char_connection));
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
-        if(character.guild_id==0){
-
-            sprintf(text_out, "%cGuild        :guildless player", c_green3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
-            sprintf(text_out, "%cJoined       :n/a", c_green3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-        }
-        else {
-
-            sprintf(text_out, "%cGuild        :%s", c_green3+127, guilds.guild[character.guild_id].guild_name);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
-            sprintf(text_out, "%cGuild tag    :%s", c_green3+127, guilds.guild[character.guild_id].guild_tag);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
-            get_time_stamp_str(character.joined_guild, time_stamp_str);
-            get_date_stamp_str(character.joined_guild, date_stamp_str);
-
-            sprintf(text_out, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-        }
-    }
-
-/***************************************************************************************************/
-/*
-    else if(strcmp(hash_command, "#GM")==0){
-
-        // check that #GM command is properly formed (should have 2 parts delimited by space)
-        if(command_parts<2) {
-
-            sprintf(text_out, "%cyou need to use the format #GM [message]", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        //split the #GM command into separate elements
-        get_str_island(text, hash_command_tail, 2);
-
-        //send the message
-        if(process_guild_chat(connection, message)==NOT_SENT){
-            return;
-        }
-    }
-*/
-/***************************************************************************************************/
-/*
-    else if(strcmp(hash_command, "#IG")==0){
-
-        //check that #IG command is properly formed (should have 3 parts delimited by spaces)
-        if(command_parts<3) {
-
-            sprintf(text_out, "%cyou need to use the format #IG [guild tag] [message]", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-
-        // split the #IG command into separate elements
-        get_str_island(text, guild_tag, 2);
-        get_str_island(text, message, 3);
-
-        //send the message
-        if(process_inter_guild_chat(connection, guild_tag, message)==NOT_SENT){
-            return HASH_CMD_ABORTED;
-        }
-    }
-*/
-/***************************************************************************************************/
-
-    else if(strcmp(hash_command, "#JC")==0 || strcmp(hash_command, "#JOIN_CHANNEL")==0){
-
-        //check that #JC command is properly formed (should have 2 parts delimited by a space)
-        if(command_parts!=2) {
-
-            sprintf(text_out, "%cyou need to use the format #JC [channel number]", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
-            return;
-        }
-
-        //get the chan number
-        char chan_str[1024]="";
-        get_str_island(text, chan_str, 2);
-
-        //convert channel number into an integer value
-        int chan_id=atoi(chan_str);
-
-        //join the channel
-        join_channel(connection, chan_id);
-    }
-/***************************************************************************************************/
-
-    else if(strcmp(hash_command, "#LC")==0 || strcmp(hash_command, "#LEAVE_CHANNEL")==0){
-
-        //check that #LC command is properly formed (should have 2 parts delimited by a space)
-        if(command_parts!=2) {
-
-            sprintf(text_out, "%cyou need to use the format #LC [channel number]", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
-            return;
-        }
-
-        // split the #LC command into channel number element
-        char chan_str[1024]="";
-        get_str_island(text, chan_str, 2);
-
-        //convert channel number into an integer value
-        int chan_id=atoi(chan_str);
-
-        //leave the channel
-        leave_channel(connection, chan_id);
-    }
-/***************************************************************************************************/
-
-    else if (strcmp(hash_command, "#CL")==0 || strcmp(hash_command, "#CHANNEL_LIST")==0){
-
-        sprintf(text_out, "\n%cNo   Channel    Description", c_blue1+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
-        int i=0;
-
-        for(i=0; i<MAX_CHANNELS; i++){
-
-            if(channel[i].chan_type!=CHAN_VACANT) {
-
-                sprintf(text_out, "%c%i %s %-10s %-30s", c_blue1+127, i, "  ", channel[i].channel_name, channel[i].description);
-                send_raw_text(connection, CHAT_SERVER, text_out);
-            }
-        }
-    }
-/***************************************************************************************************/
-
-    else if (strcmp(hash_command, "#CP")==0 || strcmp(hash_command, "#CHANNEL_PARTICIPANTS")==0){
-
-        int active_chan_slot=clients.client[connection].active_chan;
-
-        printf("%i\n", active_chan_slot);
-
-        if(active_chan_slot==0){
-
-            sprintf(text_out, "%cNo active channel", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-            return;
-        }
-        else {
-
-            int chan_id=clients.client[connection].chan[active_chan_slot-31];
-
-            list_characters_in_chan(connection, chan_id);
-        }
-    }
-/***************************************************************************************************/
-
-    else {
+    //lookup and execute the hash command function
+    const struct hash_command_array_entry *hash_command_entry = find_hash_command_entry(hash_command);
+
+    //if hash command doesn't exist then warn player and abort
+    if(!hash_command_entry){
 
         sprintf(text_out, "%cCommand %s isn't supported. You may want to tell the game administrator", c_red3+127, text);
         send_raw_text(connection, CHAT_SERVER, text_out);
 
         log_event(EVENT_SESSION, "unknown #command [%s]", hash_command);
+
+        return;
     }
- }
+
+    //test the hash command format and abort if incorrect
+    //because pm, ig and gm messages may have multiple parts, we use hash command entry 99 which
+    //specifies that actual parts must be greater than 1
+    if(hash_command_entry->parts!=command_parts || (hash_command_entry->parts==99 && command_parts<2)){
+
+        sprintf(text_out, "%c%s", c_red3+127, hash_command_entry->warning);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return;
+    }
+
+    //execute the hash command
+    hash_command_entry->fn(connection, text);
+
+    log_event(EVENT_SESSION, "client [%i] character [%s] command [%s]", connection, clients.client[connection].char_name, hash_command);
+
+    return;
+}
+
