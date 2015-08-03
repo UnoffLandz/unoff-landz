@@ -48,6 +48,11 @@ edible                       4) edible
 #ifndef DB_MAP_TBL_H_INCLUDED
 #define DB_MAP_TBL_H_INCLUDED
 
+//#define TWOD_OBJECT_MAP_BYTE_MAX 800000
+#define THREED_OBJECT_MAP_BYTE_MAX 800000
+#define THREED_OBJECT_MAP_ENTRY_MAX 5000
+#define THREED_OBJECT_HASH_LENGTH 132
+
 #define MAP_TABLE_SQL "CREATE TABLE MAP_TABLE( \
         MAP_ID              INTEGER PRIMARY KEY     NOT NULL, \
         MAP_NAME            TEXT, \
@@ -77,17 +82,6 @@ int load_db_maps();
 void add_db_map(int map_id, char *map_name, char *elm_file_name);
 
 
-/** RESULT  : updates a map to the map table
-
-    RETURNS : void
-
-    PURPOSE : updates a a map to the map table
-
-    NOTES   : used in command line option
-**/
-//void update_db_map(int map_id, char *map_name, char *elm_file_name);
-
-
 /** RESULT  : determines if map id exists on database
 
     RETURNS : TRUE is map_id is already in MAP TABLE, otherwise FALSE
@@ -98,5 +92,9 @@ void add_db_map(int map_id, char *map_name, char *elm_file_name);
     NOTES   :
 **/
 int get_db_map_exists(int map_id);
+
+
+void add_db_map2(int map_id, char *map_name, char *elm_file_name);
+
 
 #endif // DB_MAP_TBL_H_INCLUDED

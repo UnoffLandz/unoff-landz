@@ -33,6 +33,7 @@
 #include "maps.h"
 #include "server_start_stop.h"
 #include "game_data.h"
+#include "packet.h"
 
 void load_char_data_into_connection(int connection){
 
@@ -81,37 +82,33 @@ void process_log_in(int connection, const unsigned char *packet){
 
     /** public function - see header **/
 
-    char text[1024]="";
-    char text_out[1024]="";
+    char text[80]="";
+    char text_out[80]="";
     int map_id=0;
     //int chan_colour=0;
 
-    int packet_length=packet[1]+(packet[2]*256)-1+3;
+    int packet_length=get_packet_length(packet);
 
-    for(int i=3; i<packet_length; i++){
+    char char_name_and_password[80]="";
+    char char_name[80]="";
+    char password[80]="";
 
-        text[i-3]=packet[i];
-        if(packet[i]==ASCII_NULL) break;
-    }
+    //we know that there are always 3 bytes before the char name
+    //and password, so we can extract this adding
+    //3 to the packet start and subtracting 3 from the packet length
+    strncpy(char_name_and_password, (char*)packet+3, packet_length-3);
 
-    //check that the login packet is correct
-    if(count_str_island(text)!=2){
+    //we know that the char name and password are separated by an
+    //ascii space, so we can extract each separately by scanning
+    //for two strings separated by a space
+    if(sscanf(char_name_and_password, "%s %s", char_name, password)!=2){
 
         sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
         send_raw_text(connection, CHAT_SERVER, text_out);
 
         send_login_not_ok(connection);
         log_event(EVENT_ERROR, "malformed login attempt [%s]", text);
-
-        return;
     }
-
-    //Extract the char name and password from the login packet
-    char char_name[80]="";
-    char password[80]="";
-
-    get_str_island(text, char_name, 1);
-    get_str_island(text, password, 2);
 
     log_event(EVENT_SESSION, "login attempt char name [%s] password [%s]", char_name, password);
 

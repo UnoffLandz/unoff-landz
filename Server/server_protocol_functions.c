@@ -214,33 +214,30 @@ void send_raw_text(int connection, int channel, char *text){
 
     /** public function - see header */
 
-    /* the send_raw_text packet contains a variable length element carrying the text message. As C99
-    compliance prevents us having a calculated field within a struct declaration, we deal with this by
-    using a struct to hold the fixed length data elements, and then combine this to an unsigned char
-    array carrying the variable length element.*/
-
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
         Uint16 data_length;
         unsigned char channel;
+        char text[1024];
     }packet;
 
     //clear the struct
     memset(&packet, '0', sizeof(packet));
 
-    int packet_length=sizeof(packet) + strlen(text)+1;
+    //The struct size includes a reserve of 1024 for the text message.
+    //We therefore calculate the actual packet length by taking the
+    //struct size less the 1024 reserved for the message and then
+    //add on the actual message length
+    int packet_length=sizeof(packet)- 1024 + strlen(text)+1;
 
     //add data
     packet.protocol=RAW_TEXT;
     packet.data_length=packet_length-2;
     packet.channel=channel;
+    strcpy(packet.text, text);
 
-    unsigned char p[1024]={0};
-    memcpy(p, &packet, sizeof(packet));
-    memcpy(p+sizeof(packet), text, strlen(text));
-
-    send(connection, &p, packet_length, 0);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -385,162 +382,147 @@ void send_here_your_stats(int connection){
 
     /** public function - see header */
 
-    struct packet_element_type element[55];
-    unsigned char packet[1024]={0};
+    struct __attribute__((__packed__)){
 
-    element[0].data_type=PROTOCOL;
-    element[0].data.numeric=HERE_YOUR_STATS;
+        unsigned char protocol;
+        Uint16 data_length;
 
-    element[1].data_type=DATA_LENGTH;
+        Uint16 physique_pp;
+        Uint16 max_physique;
+        Uint16 coordination_pp;
+        Uint16 max_coordination;
+        Uint16 reasoning_pp;
+        Uint16 max_reasoning;
+        Uint16 will_pp;
+        Uint16 max_will;
+        Uint16 instinct_pp;
+        Uint16 max_instinct;
+        Uint16 vitality_pp;
+        Uint16 max_vitality;
 
-    //attributes
-    element[2].data_type=UINT16;
-    element[2].data.numeric=clients.client[connection].physique_pp;
-    element[3].data_type=UINT16;
-    element[3].data.numeric=clients.client[connection].max_physique;
-    element[4].data_type=UINT16;
-    element[4].data.numeric=clients.client[connection].coordination_pp;
-    element[5].data_type=UINT16;
-    element[5].data.numeric=clients.client[connection].max_coordination;
-    element[6].data_type=UINT16;
-    element[6].data.numeric=clients.client[connection].reasoning_pp;
-    element[7].data_type=UINT16;
-    element[7].data.numeric=clients.client[connection].max_reasoning;
-    element[8].data_type=UINT16;
-    element[8].data.numeric=clients.client[connection].will_pp;
-    element[9].data_type=UINT16;
-    element[9].data.numeric=clients.client[connection].max_will;
-    element[10].data_type=UINT16;
-    element[10].data.numeric=clients.client[connection].instinct_pp;
-    element[11].data_type=UINT16;
-    element[11].data.numeric=clients.client[connection].max_instinct;
-    element[12].data_type=UINT16;
-    element[12].data.numeric=clients.client[connection].vitality_pp;
-    element[13].data_type=UINT16;
-    element[13].data.numeric=clients.client[connection].max_vitality;
+        Uint16 human;
+        Uint16 max_human;
+        Uint16 animal;
+        Uint16 max_animal;
+        Uint16 vegetal;
+        Uint16 max_vegetal;
+        Uint16 inorganic;
+        Uint16 max_inorganic;
+        Uint16 artificial;
+        Uint16 max_artificial;
+        Uint16 magic;
+        Uint16 max_magic;
 
-    //nexus
-    element[14].data_type=UINT16;
-    element[14].data.numeric=clients.client[connection].human;
-    element[15].data_type=UINT16;
-    element[15].data.numeric=clients.client[connection].max_human;
-    element[16].data_type=UINT16;
-    element[16].data.numeric=clients.client[connection].animal;
-    element[17].data_type=UINT16;
-    element[17].data.numeric=clients.client[connection].max_animal;
-    element[18].data_type=UINT16;
-    element[18].data.numeric=clients.client[connection].vegetal;
-    element[19].data_type=UINT16;
-    element[19].data.numeric=clients.client[connection].max_vegetal;
-    element[20].data_type=UINT16;
-    element[20].data.numeric=clients.client[connection].inorganic;
-    element[21].data_type=UINT16;
-    element[21].data.numeric=clients.client[connection].max_inorganic;
-    element[22].data_type=UINT16;
-    element[22].data.numeric=clients.client[connection].artificial;
-    element[23].data_type=UINT16;
-    element[23].data.numeric=clients.client[connection].max_artificial;
-    element[24].data_type=UINT16;
-    element[24].data.numeric=clients.client[connection].magic;
-    element[25].data_type=UINT16;
-    element[25].data.numeric=clients.client[connection].max_magic;
+        Uint16 manufacturing_lvl;
+        Uint16 max_manufacturing_lvl;
+        Uint16 harvest_lvl;
+        Uint16 max_harvest_lvl;
+        Uint16 alchemy_lvl;
+        Uint16 max_alchemy_lvl;
+        Uint16 overall_lvl;
+        Uint16 max_overall_lvl;
+        Uint16 attack_lvl;
+        Uint16 max_attack_lvl;
+        Uint16 defence_lvl;
+        Uint16 max_defence_lvl;
+        Uint16 magic_lvl;
+        Uint16 max_magic_lvl;
+        Uint16 potion_lvl;
+        Uint16 max_potion_lvl;
 
-    //skills
-    element[26].data_type=UINT16;
-    element[26].data.numeric=clients.client[connection].manufacturing_lvl;
-    element[27].data_type=UINT16;
-    element[27].data.numeric=clients.client[connection].max_manufacturing_lvl;
-    element[28].data_type=UINT16;
-    element[28].data.numeric=clients.client[connection].harvest_lvl;
-    element[27].data_type=UINT16;
-    element[27].data.numeric=clients.client[connection].max_harvest_lvl;
-    element[28].data_type=UINT16;
-    element[28].data.numeric=clients.client[connection].alchemy_lvl;
-    element[29].data_type=UINT16;
-    element[29].data.numeric=clients.client[connection].max_alchemy_lvl;
-    element[30].data_type=UINT16;
-    element[30].data.numeric=clients.client[connection].overall_lvl;
-    element[31].data_type=UINT16;
-    element[31].data.numeric=clients.client[connection].max_overall_lvl;
-    element[32].data_type=UINT16;
-    element[32].data.numeric=clients.client[connection].attack_lvl;
-    element[33].data_type=UINT16;
-    element[33].data.numeric=clients.client[connection].max_attack_lvl;
-    element[34].data_type=UINT16;
-    element[34].data.numeric=clients.client[connection].defence_lvl;
-    element[35].data_type=UINT16;
-    element[35].data.numeric=clients.client[connection].max_defence_lvl;
-    element[36].data_type=UINT16;
-    element[36].data.numeric=clients.client[connection].magic_lvl;
-    element[37].data_type=UINT16;
-    element[37].data.numeric=clients.client[connection].max_magic_lvl;
-    element[38].data_type=UINT16;
-    element[38].data.numeric=clients.client[connection].potion_lvl;
-    element[39].data_type=UINT16;
-    element[39].data.numeric=clients.client[connection].max_potion_lvl;
+        Uint16 inventory_emu;
+        Uint16 max_inventory_emu;
+        Uint16 material_pts;
+        Uint16 max_material_pts;
+        Uint16 ethereal_pts;
+        Uint16 max_ethereal_pts;
+        Uint16 food_lvl;
+        Uint16 elapsed_book_time;
+        Uint16 unused;
 
-    //sundry
-    element[40].data_type=UINT16;
-    element[40].data.numeric=get_inventory_emu(connection);
-    element[41].data_type=UINT16;
-    element[41].data.numeric=get_max_inventory_emu(connection);
-    element[42].data_type=UINT16;
-    element[42].data.numeric=clients.client[connection].material_pts;
-    element[43].data_type=UINT16;
-    element[43].data.numeric=clients.client[connection].max_material_pts;
-    element[44].data_type=UINT16;
-    element[44].data.numeric=clients.client[connection].ethereal_pts;
-    element[45].data_type=UINT16;
-    element[45].data.numeric=clients.client[connection].max_ethereal_pts;
-    element[46].data_type=UINT16;
-    element[46].data.numeric=clients.client[connection].food_lvl;
-    element[47].data_type=UINT16;
-    element[47].data.numeric=clients.client[connection].elapsed_book_time;
-    element[38].data_type=UINT16;// unused
-    element[38].data.numeric=0;
+        int manufacture_exp;
+        int max_manufacture_exp;
+        int harvest_exp;
+        int max_harvest_exp;
+        int alchemy_exp;
+        int overall_exp;
+        int max_overall_exp;
+        int attack_exp;
+        int max_attack_exp;
+        int defence_exp;
+        int max_defence_exp;
+        int magic_exp;
+        int max_magic_exp;
+        int potion_exp;
+        int max_potion_exp;
+        Uint16 book_id;
+        Uint16 max_book_time;
+    }packet;
 
-    //skills
-    element[39].data_type=UINT32;
-    element[39].data.numeric=clients.client[connection].manufacture_exp;
-    element[40].data_type=UINT32;
-    element[40].data.numeric=clients.client[connection].max_manufacture_exp;
-    element[41].data_type=UINT32;
-    element[41].data.numeric=clients.client[connection].harvest_exp;
-    element[42].data_type=UINT32;
-    element[42].data.numeric=clients.client[connection].max_harvest_exp;
-    element[43].data_type=UINT32;
-    element[43].data.numeric=clients.client[connection].alchemy_exp;
-    element[43].data_type=UINT32;
-    element[43].data.numeric=clients.client[connection].overall_exp;
-    element[44].data_type=UINT32;
-    element[44].data.numeric=clients.client[connection].max_overall_exp;
-    element[45].data_type=UINT32;
-    element[45].data.numeric=clients.client[connection].attack_exp;
-    element[46].data_type=UINT32;
-    element[46].data.numeric=clients.client[connection].max_attack_exp;
-    element[47].data_type=UINT32;
-    element[47].data.numeric=clients.client[connection].defence_exp;
-    element[48].data_type=UINT32;
-    element[48].data.numeric=clients.client[connection].max_defence_exp;
-    element[49].data_type=UINT32;
-    element[49].data.numeric=clients.client[connection].magic_exp;
-    element[50].data_type=UINT32;
-    element[50].data.numeric=clients.client[connection].max_magic_exp;
-    element[51].data_type=UINT32;
-    element[51].data.numeric=clients.client[connection].potion_exp;
-    element[52].data_type=UINT32;
-    element[52].data.numeric=clients.client[connection].max_potion_exp;
-    element[53].data_type=UINT16;
-    element[53].data.numeric=clients.client[connection].book_id;
-    element[54].data_type=UINT16;
-    element[54].data.numeric=clients.client[connection].max_book_time;
+    int packet_length=sizeof(packet);
 
-    //packet[169]=10; summoning lvl
+    //clear the struct
+    memset(&packet, '0', packet_length);
 
-    //add one to the total elements as packet length runs from zero
-    int packet_length=build_packet(element, 55, packet);
+    //add data
+    packet.protocol=HERE_YOUR_STATS;
+    packet.data_length=packet_length-2;
 
-    send_packet(connection, packet, packet_length);
+    packet.physique_pp=clients.client[connection].physique_pp;
+    packet.max_physique=clients.client[connection].max_physique;
+    packet.coordination_pp=clients.client[connection].coordination_pp;
+    packet.max_coordination=clients.client[connection].max_coordination;
+    packet.reasoning_pp=clients.client[connection].reasoning_pp;
+    packet.max_reasoning=clients.client[connection].max_reasoning;
+    packet.will_pp=clients.client[connection].will_pp;
+    packet.max_will=clients.client[connection].max_will;
+    packet.instinct_pp=clients.client[connection].instinct_pp;
+    packet.max_instinct=clients.client[connection].max_instinct;
+    packet.vitality_pp=clients.client[connection].vitality_pp;
+    packet.max_vitality=clients.client[connection].max_vitality;
+
+    packet.human=clients.client[connection].human;
+    packet.max_human=clients.client[connection].max_human;
+    packet.animal=clients.client[connection].animal;
+    packet.max_animal=clients.client[connection].max_animal;
+    packet.vegetal=clients.client[connection].vegetal;
+    packet.max_vegetal=clients.client[connection].max_vegetal;
+    packet.inorganic=clients.client[connection].inorganic;
+    packet.max_inorganic=clients.client[connection].max_inorganic;
+    packet.artificial=clients.client[connection].artificial;
+    packet.max_artificial=clients.client[connection].max_artificial;
+    packet.magic=clients.client[connection].magic;
+    packet.max_magic=clients.client[connection].max_magic;
+
+    packet.inventory_emu=get_inventory_emu(connection);
+    packet.max_inventory_emu=get_max_inventory_emu(connection);
+    packet.material_pts=clients.client[connection].material_pts;
+    packet.max_material_pts=clients.client[connection].max_material_pts;
+    packet.ethereal_pts=clients.client[connection].ethereal_pts;
+    packet.max_ethereal_pts=clients.client[connection].max_ethereal_pts;
+    packet.food_lvl=clients.client[connection].food_lvl;
+    packet.elapsed_book_time=clients.client[connection].elapsed_book_time;
+    packet.unused=0;
+
+    packet.manufacture_exp=clients.client[connection].manufacture_exp;
+    packet.max_manufacture_exp=clients.client[connection].max_manufacture_exp;
+    packet.harvest_exp=clients.client[connection].harvest_exp;
+    packet.max_harvest_exp=clients.client[connection].max_harvest_exp;
+    packet.alchemy_exp=clients.client[connection].alchemy_exp;
+    packet.overall_exp=clients.client[connection].overall_exp;
+    packet.max_overall_exp=clients.client[connection].max_overall_exp;
+    packet.attack_exp=clients.client[connection].attack_exp;
+    packet.max_attack_exp=clients.client[connection].max_attack_exp;
+    packet.defence_exp=clients.client[connection].defence_exp;
+    packet.max_defence_exp=clients.client[connection].max_defence_exp;
+    packet.magic_exp=clients.client[connection].magic_exp;
+    packet.max_magic_exp=clients.client[connection].max_magic_exp;
+    packet.potion_exp=clients.client[connection].potion_exp;
+    packet.max_potion_exp=clients.client[connection].max_potion_exp;
+    packet.book_id=clients.client[connection].book_id;
+    packet.max_book_time=clients.client[connection].max_book_time;
+
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -548,31 +530,28 @@ void send_change_map(int connection, char *elm_filename){
 
     /** public function - see header */
 
-    /* the send_change_map packet contains a variable length element carrying the map file name. As C99
-    compliance prevents us having a calculated field within a struct declaration, we deal with this by
-    using a struct to hold the fixed length data elements, and then combine this to an unsigned char
-    array carrying the variable length element.*/
-
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
         Uint16 data_length;
+        char elm_filename[1024];
     }packet;
 
     //clear the struct
     memset(&packet, '0', sizeof(packet));
 
-    int packet_length=sizeof(packet) + strlen(elm_filename)+1;
+    //The struct size includes a reserve of 1024 for the map name.
+    //We therefore calculate the actual packet length by taking the
+    //struct size less the 1024 reserved for the map name and then
+    //add on the actual message length
+    int packet_length=sizeof(packet)- 1024 + strlen(elm_filename)+1;
 
     //add data
     packet.protocol=CHANGE_MAP;
     packet.data_length=packet_length-2;
+    strcpy(packet.elm_filename, elm_filename);
 
-    unsigned char p[1024]={0};
-    memcpy(p, &packet, sizeof(packet));
-    memcpy(p+sizeof(packet), elm_filename, strlen(elm_filename));
-
-    send(connection, &p, packet_length, 0);
+    send(connection, &packet, packet_length, 0);
 }
 
 
@@ -580,12 +559,101 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
 
     /** public function - see header */
 
-    /* the add_new_enhanced_actor packet contains a variable length element carrying the character's
-    name and guild (referred to as the 'banner'). As C99 compliance prevents us having a calculated
-    field within a struct declaration, we deal with this by creating two structs (_packet1 and _packet2)
-    to hold the fixed length data elements, and that we then proceed to join either side of an
-    unsigned char array carrying the variable length element for the banner.*/
+  struct __attribute__((__packed__)){
 
+        unsigned char protocol;
+        Uint16 data_length;
+        Uint16 connection;
+        Uint16 x_pos;
+        Uint16 y_pos;
+        Uint16 z_pos;
+        Uint16 rot;
+        unsigned char char_type;
+        unsigned char unused;
+        unsigned char skin_type;
+        unsigned char hair_type;
+        unsigned char shirt_type;
+        unsigned char pants_type;
+        unsigned char boots_type;
+        unsigned char head_type;
+        unsigned char shield_type;
+        unsigned char weapon_type;
+        unsigned char cape_type;
+        unsigned char helmet_type;
+        unsigned char frame_type;
+        Uint16 max_health;
+        Uint16 current_health;
+        unsigned char player_type;
+        char banner[80];
+    }_packet1;
+
+    //packet structure following the banner
+    struct __attribute__((__packed__)){
+
+        unsigned char unknown;
+        unsigned char char_size;
+        unsigned char riding;
+        unsigned char neck_attachment;
+    }_packet2;
+
+    //clear the structs
+    memset(&_packet1, '0', sizeof(_packet1));
+    memset(&_packet2, '0', sizeof(_packet2));
+
+        //create a char array carrying the banner (char name and guild name separated by a space and
+    //127+colour character)
+    int guild_tag_colour=guilds.guild[clients.client[connection].guild_id].guild_tag_colour;
+
+    int banner_length=sprintf(_packet1.banner, "%s %c%s",
+        clients.client[connection].char_name,
+        127+guild_tag_colour,
+        guilds.guild[clients.client[connection].guild_id].guild_tag);
+
+    //calculate the total packet length
+    *packet_length=sizeof(_packet1) - 80 + banner_length+1 + sizeof(_packet2);
+
+    //add data to packet 1
+    _packet1.protocol=ADD_NEW_ENHANCED_ACTOR;
+    _packet1.connection=connection;
+    _packet1.data_length=*packet_length-2;
+
+    int map_id=clients.client[connection].map_id;
+    int map_axis=maps.map[map_id].map_axis;
+
+    _packet1.x_pos=clients.client[connection].map_tile % map_axis;
+    _packet1.y_pos=clients.client[connection].map_tile / map_axis;
+    _packet1.z_pos=0; //z position (set to 0 pending further development)
+    _packet1.rot=45; //rotation angle (set to 45 pending further development)
+
+    _packet1.char_type=clients.client[connection].char_type;
+    _packet1.unused=0; //unused (set to 0)
+
+    _packet1.skin_type=clients.client[connection].skin_type;
+    _packet1.hair_type=clients.client[connection].hair_type;
+    _packet1.shirt_type=clients.client[connection].shirt_type;
+    _packet1.pants_type=clients.client[connection].pants_type;
+    _packet1.boots_type=clients.client[connection].boots_type;
+    _packet1.head_type=clients.client[connection].head_type;
+    _packet1.shield_type=clients.client[connection].shield_type;
+    _packet1.weapon_type=clients.client[connection].weapon_type;
+    _packet1.cape_type=clients.client[connection].cape_type;
+    _packet1.helmet_type=clients.client[connection].helmet_type;
+    _packet1.frame_type=clients.client[connection].frame;
+    _packet1.max_health=clients.client[connection].max_health;
+    _packet1.current_health=clients.client[connection].current_health;
+    _packet1.player_type=1; //special (PLAYER=1 NPC=??)
+
+    //add data to packet 2
+    _packet2.unknown=0;
+    _packet2.char_size=64; //char size (min=2 normal=64 max=127)
+    _packet2.riding=255; //riding (nothing=255  brown horse=200)
+    _packet2.neck_attachment=64; //neck attachment (none=64)
+
+    //create the complete packet
+    memcpy(packet, &_packet1, sizeof(_packet1)-80 + banner_length+1);
+    memcpy(packet + *packet_length-4, &_packet2, sizeof(_packet2));
+
+/*
     //packet structure before the banner
     struct __attribute__((__packed__)){
 
@@ -610,14 +678,10 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
         unsigned char weapon_type;
         unsigned char cape_type;
         unsigned char helmet_type;
-
         unsigned char frame_type;
-
         Uint16 max_health;
         Uint16 current_health;
-
         unsigned char player_type;
-
     }_packet1;
 
     //packet structure following the banner
@@ -691,20 +755,11 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     memcpy(packet, &_packet1, sizeof(_packet1));
     memcpy(packet + sizeof(_packet1), banner, strlen(banner)+1);
     memcpy(packet + sizeof(_packet1)+ strlen(banner)+1, &_packet2, sizeof(_packet2));
-}
-
-/*
-void send_add_new_enhanced_actor_packet(int connection, unsigned char *packet, int packet_length){
-
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("SEND_NEW_ENHANCED_ACTOR_PACKET connection [%i]\n", connection);
-    #endif
-
-    log_event(EVENT_SESSION, "SEND_NEW_ENHANCED_ACTOR_PACKET connection [%i]", connection);
-
-    send_packet(connection, packet, packet_length);
-}
 */
+
+
+}
+
 
 void remove_actor_packet(int connection, unsigned char *packet, int *packet_length){
 
@@ -758,18 +813,6 @@ void remove_actor_packet(int connection, unsigned char *packet, int *packet_leng
 */
 }
 
-/*
-void send_remove_actor_packet(int connection, unsigned char *packet, int packet_length){
-
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("SEND_REMOVE_ACTOR_PACKET connection [%i]\n", connection);
-    #endif
-
-    log_event(EVENT_SESSION, "SEND_REMOVE_ACTOR_PACKET connection [%i]", connection);
-
-    send_packet(connection, packet, packet_length);
-}
-*/
 
 void add_actor_packet(int connection, unsigned char move, unsigned char *packet, int *packet_length){
 
@@ -798,18 +841,6 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
     memcpy(packet, &_packet, sizeof(_packet));
 }
 
-/*
-void send_add_actor_packet(int connection, unsigned char *packet, int packet_length){
-
-    #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-    printf("SEND_ADD_ACTOR_PACKET connection [%i]\n", connection);
-    #endif
-
-    log_event(EVENT_SESSION, "SEND_ADD_ACTOR_PACKET connection [%i]", connection);
-
-    send_packet(connection, packet, packet_length);
-}
-*/
 
 void send_get_new_inventory_item(int connection, int object_id, int amount, int slot){
 

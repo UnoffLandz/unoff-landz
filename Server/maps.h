@@ -22,24 +22,20 @@
 
 #define MAX_MAPS 10
 
+#define ELM_FILE_HEADER 124
+
+#define MIN_MAP_AXIS 10 //used to bounds check maps
+
+#define ELM_FILE_VERSION 1
+
+#define MAX_ELM_FILE_SIZE 1000000
 #define TILE_MAP_MAX 50000
 #define HEIGHT_MAP_MAX 150000
-//#define TWOD_OBJECT_MAP_MAX 800000
-//#define THREED_OBJECT_MAP_MAX 800000
 
 //#define START_MAP_ID 1       // map_id of the map on which characters are created
 //#define START_MAP_TILE 27225 // tile_pos at which characters are created
 
 #define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
-
-#define MIN_MAP_AXIS 10 //used to bounds check maps
-
-#define ELM_FILE_HEADER_LEN 124// remove after new map load functions are completed
-
-#define ELM_FILE_HEADER_LENGTH 124
-
-#define ELM_FILE_VERSION 1
-#define MAX_ELM_FILE_SIZE 500000
 
 #define CLIENT_MAP_PATH "./maps/" //the path that needs to be sent with the send_map packet
 
@@ -63,8 +59,8 @@ enum { //return values from add_char_to_map / remove_char_from_map
 
 struct map_node_type{
 
-    char map_name[1024];    // eg Isla Prima
-    char elm_filename[1024];// eg startmap.elm
+    char map_name[80];    // eg Isla Prima
+    char elm_filename[80];// eg startmap.elm
 
     int map_axis;
 
@@ -90,7 +86,7 @@ struct map_node_type{
 };
 
 struct map_list_type {
-    int count;
+    //int count;
     struct map_node_type map[MAX_MAPS];
 };
 extern struct map_list_type maps;

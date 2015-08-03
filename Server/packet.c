@@ -34,9 +34,14 @@ Packets received by and sent to the server conform to a common format:
 #include "server_start_stop.h"
 #include "string_functions.h"
 
-int build_packet(struct packet_element_type *element, int element_count, unsigned char *packet){
+int get_packet_length(const unsigned char *packet){
 
-    /** public function - see header */
+    return packet[1] + (packet[2] * 256)+2;
+}
+
+
+/*
+int build_packet(struct packet_element_type *element, int element_count, unsigned char *packet){
 
     int count=0;
 
@@ -97,10 +102,8 @@ int build_packet(struct packet_element_type *element, int element_count, unsigne
     return count;
 }
 
-
+*/
 void read_packet(struct packet_element_type *element, int element_count, const unsigned char *packet){
-
-    /** public function - see header */
 
     int packet_length = packet[1] + (packet[2] * 256) + 2;
 
@@ -172,3 +175,4 @@ void read_packet(struct packet_element_type *element, int element_count, const u
         }
     }
 }
+

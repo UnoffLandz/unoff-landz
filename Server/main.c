@@ -35,9 +35,12 @@ To compile server, link with the following libraries :
 /***************************************************************************************************
 
                                 TO - DO
-test multiple char movement view
-convert here_your_stats packet to new format, then remove packet.c module
-change map load so data is taken from db tables rather than elm file blob
+
+test add_db_map2
+create load_db_map
+
+test new char creation
+test multiplayer capability
 walk to towards bag when clicked on if char is not standing on bag
 implement pick up bag
 implement bag poof
@@ -101,7 +104,6 @@ extern int current_database_version();
 //declare prototypes
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
-
 void timeout_cb(EV_P_ struct ev_timer* timer, int revents);
 void timeout_cb2(EV_P_ struct ev_timer* timer, int revents);
 void idle_cb(EV_P_ struct ev_idle *watcher, int revents);

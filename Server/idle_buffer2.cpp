@@ -38,7 +38,7 @@
 #define DEBUG_IDLE_BUFFER2 0
 // add a helper macro that is performing printf when DEBUG_IDLE_BUFFER2 != 0
 // and does nothing otherwise
-// this is meant to soimplify all "#if DEBUG_IDLE_BUFFER2  printf()  #endif " parts of code
+// this is meant to simplify all "#if DEBUG_IDLE_BUFFER2  printf()  #endif " parts of code
 #if DEBUG_IDLE_BUFFER2
 #define D_PRINT(...) printf(__VA_ARGS__)
 #else

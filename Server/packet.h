@@ -47,7 +47,7 @@ struct packet_element_type{
 
     NOTES   :
 */
-int build_packet(struct packet_element_type *element, int element_count, unsigned char *packet);
+//int build_packet(struct packet_element_type *element, int element_count, unsigned char *packet);
 
 
 /** RESULT  : reads a packet
@@ -60,5 +60,15 @@ int build_packet(struct packet_element_type *element, int element_count, unsigne
 */
 void read_packet(struct packet_element_type *element, int element_count, const unsigned char *packet);
 
+
+/** RESULT  : reads a packet to determine the packet length
+
+    RETURNS : packet length
+
+    PURPOSE : code reusability
+
+    NOTES   :
+*/
+int get_packet_length(const unsigned char *packet);
 
 #endif // PACKET_H_INCLUDED

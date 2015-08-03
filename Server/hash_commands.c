@@ -348,7 +348,6 @@ static int hash_test(int connection, char *text) {
     int chan_id=atoi(chan_str);
 
     clients.client[connection].active_chan=chan_id;
-    printf("set active chan %i\n", chan_id);
 
     send_get_active_channels(connection);
 
@@ -365,7 +364,6 @@ struct hash_command_array_entry {
     hash_command_function fn;
     char warning[80];
 };
-
 
 struct hash_command_array_entry hash_command_entries[] = {
 
@@ -400,8 +398,6 @@ static const struct hash_command_array_entry *find_hash_command_entry(char *comm
         NOTES   :
     */
 
-
-
     int i=0;
 
     while(hash_command_entries[i].fn!=NULL){
@@ -424,13 +420,13 @@ void process_hash_commands(int connection, char *text){
 
     char text_out[80]="";
 
-    //grab the first part of the text string as this should contain the command name
+    //grab the first part of the text string as this should contain the hash command name
     char hash_command[80]="";
     int command_parts=count_str_island(text);
     get_str_island(text, hash_command, 1);
     str_conv_upper(hash_command);
 
-    //lookup and execute the hash command function
+    //lookup the hash command function
     const struct hash_command_array_entry *hash_command_entry = find_hash_command_entry(hash_command);
 
     //if hash command doesn't exist then warn player and abort
