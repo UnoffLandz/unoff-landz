@@ -31,13 +31,13 @@
 
 /** RESULT  : loads data from the seasons table into the seasons data array
 
-    RETURNS : number of rows read from the season data table
+    RETURNS : void
 
-    PURPOSE : Loads season data from the database to memory.
+    PURPOSE : retrieve season data from permanent storage
 
     NOTES   :
 **/
-int load_db_seasons();
+void load_db_seasons();
 
 
 /** RESULT  : adds season data to the season data table

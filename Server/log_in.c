@@ -138,27 +138,6 @@ void process_log_in(int connection, const unsigned char *packet){
         return;
     }
 
-    //prevent login of dead/banned chars
-    if(clients.client[connection].char_status!=CHAR_ALIVE){
-
-        switch(clients.client[connection].char_status){
-
-            case CHAR_DEAD:
-            log_event(EVENT_SESSION, "login rejected - dead char");
-            break;
-
-            case CHAR_BANNED:
-            log_event(EVENT_SESSION, "login rejected - banned char");
-            break;
-
-            default:
-            log_event(EVENT_ERROR, "login rejected - unknown char status");
-        }
-
-        send_login_not_ok(connection);
-        return;
-    }
-
     //prevent concurrent login on same char
     for(int i=1; i<MAX_CLIENTS; i++){
 
@@ -173,40 +152,84 @@ void process_log_in(int connection, const unsigned char *packet){
         }
     }
 
-    clients.client[connection].client_status=LOGGED_IN;
-    log_event(EVENT_SESSION, "login accepted");
-
-/*
-    // notify guild that char has logged on
-    int guild_id=clients.client[connection].guild_id;
-
-    if(guild_id>0) {
-
-        chan_colour=guilds.guild[guild_id]->log_on_notification_colour;
-        sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, clients.client[connection].char_name);
-        broadcast_guild_channel_chat(guild_id, text_out);
-    }
-*/
-    //add char to map (makes scene visible in client)
+    //add char to map (makes scene visible in client). We need to do this before we inform
+    //client if char is dead or banned, otherwise client will not display that message
     map_id=clients.client[connection].map_id;
 
-    if(add_char_to_map(connection, map_id, clients.client[connection].map_tile)==ILLEGAL_MAP){
+    if(add_char_to_map(connection, map_id, clients.client[connection].map_tile)==false){
 
         log_event(EVENT_ERROR, "cannot add char [%s] to map [%s] in function %s: module %s: line %i", char_name, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
-    //record when session commenced so we can calculate time in-game
-    clients.client[connection].session_commenced=time(NULL);
-
-    send_login_ok(connection);
-    send_you_are(connection);
-    send_get_active_channels(connection);
-    send_here_your_stats(connection);
-    send_here_your_inventory(connection);
-
     //when reconnecting to the client after a disconnect, this closes any open bag inventory.
     send_close_bag(connection);
 
-    //send_new_minute(connection, game_data.game_minutes);
+    switch(clients.client[connection].char_status){
+
+        case CHAR_ALIVE:{
+
+            clients.client[connection].client_status=LOGGED_IN;
+            log_event(EVENT_SESSION, "login accepted");
+
+            /*
+            // notify guild that char has logged on
+            int guild_id=clients.client[connection].guild_id;
+
+            if(guild_id>0) {
+
+                chan_colour=guilds.guild[guild_id]->log_on_notification_colour;
+                sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, clients.client[connection].char_name);
+                broadcast_guild_channel_chat(guild_id, text_out);
+            }
+            */
+
+            //record when session commenced so we can calculate time in-game
+            clients.client[connection].session_commenced=time(NULL);
+
+            /*
+            //notify client if char has developer status
+            if(clients.client[connection].char_status==CHAR_DEVELOPER){
+
+                sprintf(text_out, "%cYour character has 'Developer' status", c_green1+127);
+                send_raw_text(connection, CHAT_SERVER, text_out);
+            }
+            */
+
+            send_login_ok(connection);
+            send_you_are(connection);
+            send_get_active_channels(connection);
+            send_here_your_stats(connection);
+            send_here_your_inventory(connection);
+            break;
+        }
+
+        case CHAR_DEAD:{
+
+            send_login_not_ok(connection);
+            log_event(EVENT_SESSION, "login rejected - dead char");
+            sprintf(text_out, "%cDead", c_red1+127);
+            send_raw_text(connection, CHAT_SERVER, text_out);
+            close_connection_slot(connection);
+            return;
+        }
+
+        case CHAR_BANNED:{
+
+            send_login_not_ok(connection);
+            log_event(EVENT_SESSION, "login rejected - banned char");
+            sprintf(text_out, "%cBanned", c_red1+127);
+            send_raw_text(connection, CHAT_SERVER, text_out);
+            close_connection_slot(connection);
+            return;
+        }
+
+        default:{
+
+            send_login_not_ok(connection);
+            log_event(EVENT_ERROR, "login rejected - unknown char status [%i]", clients.client[connection].char_status);
+            close_connection_slot(connection);
+            stop_server();
+        }
+    }
 }

@@ -22,6 +22,7 @@
 
 #include "character_race.h"
 
+#define MAX_ATTRIBUTES 4
 #define MAX_PICKPOINTS 50
 
 struct attribute_ {
@@ -31,11 +32,14 @@ struct attribute_ {
     int carry_capacity[MAX_PICKPOINTS];
 };
 extern struct attribute_ attribute[MAX_RACES];
+
 enum{
 
     ATTR_CARRY_CAPACITY=1,
     ATTR_DAY_VISION=2,
     ATTR_NIGHT_VISION=3,
 };
+
+char attribute_name[MAX_ATTRIBUTES][40];
 
 #endif // ATTRIBUTES_H_INCLUDED

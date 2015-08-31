@@ -66,6 +66,8 @@
 
     PURPOSE : Loads character data from the database to memory.
               Also used to check if a new character name duplicates an existing character
+
+    NOTES   :
 **/
 int get_db_char_data(char *char_name);
 
@@ -74,6 +76,8 @@ int get_db_char_data(char *char_name);
     RETURNS : the char_id of the character table entry
 
     PURPOSE : permanently store char data
+
+    NOTES   :
 **/
 int add_db_char_data(struct client_node_type character);
 
@@ -86,6 +90,8 @@ int add_db_char_data(struct client_node_type character);
 
     PURPOSE : Buffers database values in memory to enable faster access by function get_motd_header
               in module server_messaging.c
+
+    NOTES   :
 **/
 void get_db_last_char_created();
 
@@ -95,8 +101,22 @@ void get_db_last_char_created();
     RETURNS : The number of entries in the Character Table
 
     PURPOSE : Called at server boot to update values in game_data array. This is then used to provide
-    MOTD info
+              MOTD info
+
+    NOTES   :
 **/
 int get_db_char_count();
+
+
+/** RESULT  : determines if a char_id exists in the database CHARACTER_TABLE
+
+    RETURNS : true/false
+
+    PURPOSE : used in join_guild function
+
+    NOTES   :
+**/
+bool get_db_char_exists(int char_id);
+
 
 #endif // DB_CHARACTER_TBL_H_INCLUDED

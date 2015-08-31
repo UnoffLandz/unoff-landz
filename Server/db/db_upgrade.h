@@ -29,8 +29,8 @@ extern "C" {
 #endif
 
 /// The database upgrade function
-/// \returns -1 on failure.
-extern int upgrade_database(const char *dbname);
+
+extern void upgrade_database(const char *dbname);
 
 #ifdef __cplusplus
 }

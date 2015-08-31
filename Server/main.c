@@ -36,18 +36,47 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-test add_db_map2
-create load_db_map
+DONE NEW - need #create_guild [name][tag][permission level] so that Operators can create the Developers guild
 
-test new char creation
-test multiplayer capability
+NEW - test #create_guild
+NEW - need #appoint_guild_master [guild tag] [name] so that Ops can transfer Devs guild
+NEW - need #command to change guild permission level (operators only)
+NEW - need #command to add/change guild description
+NEW - need #command to change guild tag colour
+NEW - need #Letter system to inform ppl if guild application has been approved/rejected
+NEW - change add_db_char so it returns id the same way as add_db_guild
+NEW - test creation of default char and guild
+NEW - need #GM guild channel functionality
+NEW - need #IG guild channel functionality
+NEW - need guild channel hello/goodbye messages
+NEW - need guild master #command to list applications to join guild
+NEW - need guild master #command to accept applications to join guild
+NEW - need guild master #command to reject application to join guild
+NEW - need #leave_guild
+NEW - need #command to #pm all guild members (guild master only)
+NEW - implement guild stats
+NEW - convert attribute struct so as attribute type can be addressed programatically
+
+**restrict use of #jump to Developers and Operators guilds
+need update map function (for OL map walker)
+identify cause of stall after login
+**log illegal use of #jump and other developer #commands
+create #function to describe map (name, description, author, size)
+improve error handling on upgrade_database function
+refactor function current_database_version
+create circular buffer for receiving packets
+cope with send not sending all the bytes at once
+test new char creation (create #function to describe char and what it is wearing)
+test multiplayer capability is still working
 walk to towards bag when clicked on if char is not standing on bag
+extend add_client_to_map function so that existing bags are shown to new client
 implement pick up bag
 implement bag poof
+implement send_packet function on server protocol commands
 map object reserve respawn
 make initial field in all tables ID
 document new database/struct relationships
-load movement vectors in same way as db_upgrade struct entries
+finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 
 ***************************************************************************************************/
 #define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
@@ -55,10 +84,10 @@ load movement vectors in same way as db_upgrade struct entries
 #include <stdlib.h>     //supports free function
 #include <string.h>     //supports memset and strcpy functions
 #include <errno.h>      //supports errno function
-#include <unistd.h>     //supports close function
 #include <arpa/inet.h>  //supports recv and accept function
 #include <ev.h>         //supports ev event library
 #include <fcntl.h>      //supports fcntl
+#include <unistd.h>     //supports close function and TEMP_FAILURE_RETRY
 
 #include "server_parameters.h"
 #include "global.h"
@@ -82,6 +111,7 @@ load movement vectors in same way as db_upgrade struct entries
 #include "db/db_e3d_tbl.h"
 #include "db/db_map_object_tbl.h"
 #include "db/db_upgrade.h"
+#include "db/db_guild_tbl.h"
 #include "date_time_functions.h"
 #include "broadcast_actor_functions.h"
 #include "movement.h"
@@ -109,7 +139,7 @@ void timeout_cb2(EV_P_ struct ev_timer* timer, int revents);
 void idle_cb(EV_P_ struct ev_idle *watcher, int revents);
 void close_connection_slot(int connection);
 
-void start_server(char *db_filename){
+void start_server(){
 
     /** RESULT   : starts the server
 
@@ -130,7 +160,6 @@ void start_server(char *db_filename){
     struct sockaddr_in server_addr;
 
     int sd;
-    int loaded=0;
 
     //set server start time
     game_data.server_start_time=time(NULL);
@@ -142,130 +171,55 @@ void start_server(char *db_filename){
     get_verbose_date_str(game_data.server_start_time, verbose_date_stamp_str);
     printf("SERVER START at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
 
-    //clear the logs
-    initialise_logs();
-
-    //open database
-    open_database(db_filename);
-
     //check database version
     int old_version = current_database_version();
 
     if(old_version != CURRENT_DB_VERSION) {
 
-        printf("Wrong database version - use -U option to upgrade your database\n");
+        printf("Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", old_version, CURRENT_DB_VERSION);
         return;
     }
 
-    //check the database table count
-    int tbl_count=database_table_count();
-    log_event(EVENT_INITIALISATION, "[%i] Database tables detected", tbl_count);
-
-    if(tbl_count==0) {
-
-        log_event(EVENT_ERROR, "no tables in database");
-        stop_server();
-    }
-
+    //load data from database into memory
+    load_db_e3ds();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    loaded=load_db_e3ds();
-    if(loaded==0){
-
-        log_event(EVENT_ERROR, "no e3ds found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    //load objects from database
-    loaded=load_db_objects();
-    if(loaded==0){
-
-        log_event(EVENT_ERROR, "no objects found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    //load maps from database
-    loaded=load_db_maps();
-    if(loaded==0){
-
-        log_event(EVENT_ERROR, "no maps found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    //load map objects from database
-    loaded=load_db_map_objects();
-    if(loaded==0){
-
-        log_event(EVENT_ERROR, "no map objects found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    //load races from database
-    loaded=load_db_char_races();
-    if(loaded==0){
-
-        log_event(EVENT_ERROR, "no races found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    //load genders from database
-    loaded=load_db_genders();
-    if(loaded==0){
-
-        log_event(EVENT_ERROR, "no genders found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    //load char types from database
-    loaded=load_db_char_types();
-    if(loaded==0){
-
-        log_event(EVENT_ERROR, "no character types found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    //load attribute types from database
-    loaded=load_db_attributes();
-    if(loaded==0){
-
-        log_event(EVENT_ERROR, "no attributes found in database", loaded);
-        stop_server();
-    }
+    load_db_objects();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    //load chat channels from database
-    loaded=load_db_channels();
-    if(loaded==0){
+    load_db_maps();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-        log_event(EVENT_ERROR, "no chat channels found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+    load_db_map_objects();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    //load game data from database
-    loaded=load_db_game_data();
-    if(loaded!=1){
+    load_db_char_races();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-        log_event(EVENT_ERROR, "no game data found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+    load_db_genders();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    //load seasons from database
-    loaded=load_db_seasons();
-    if(loaded==0){
+    load_db_char_types();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-        log_event(EVENT_ERROR, "no seasons found in database", loaded);
-        stop_server();
-    }else log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+    load_db_attributes();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    load_db_channels();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    load_db_game_data();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    load_db_seasons();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    load_db_guilds();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //gather initial stats
     get_db_last_char_created(); //loads details of the last char created from the database into the game_data struct
     game_data.char_count=get_db_char_count();
-
-    //fill movement vector array so we can directly translate x/y coordinates into actor cmd codes
-    initialise_movement_vectors();
-
-    //fill send protocol array so we can automatically translate numeric protocol to text equiv
-    initialise_protocol_reporting();
 
     //create server socket & bind it to socket address
     if((sd = socket(AF_INET, SOCK_STREAM, 0))==-1){
@@ -530,34 +484,6 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 }
 
 
-void close_connection_slot(int connection){
-
-    /** RESULT   : closes a client connection
-
-        RETURNS  : void
-
-        PURPOSE  : used in socket_accept_callback and socket_read_callback
-
-        NOTES    :
-    **/
-
-    if(clients.client[connection].client_status==LOGGED_IN){
-
-        //broadcast to local
-        broadcast_remove_actor_packet(connection);
-
-        //update last in game time for char
-        clients.client[connection].time_of_last_minute=time(NULL);
-
-        char sql[MAX_SQL_LEN]="";
-        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[connection].time_of_last_minute, clients.client[connection].character_id);
-        push_sql_command(sql);
-    }
-
-    close(connection);
-}
-
-
 void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
 
     /**     RESULT   : handles timeout event
@@ -714,60 +640,88 @@ int main(int argc, char *argv[]){
         printf("-C optional [""database file name""]      ...create database\n");
         printf("-S optional [""database file name""]      ...start server\n");
         printf("-U optional [""database file name""]      ...upgrade database\n");
-        printf("-L [map id] [""map name""] [""map file""]     ...load map\n");
-        printf("-B [map id] [map tile]                ...character start location\n");
-        printf("-E [map_id] [map tile]                ...beam me target\n");
+        printf("-M [map id] [""map name""] [""elm file name""] optional [""database file name""]    ...load map\n");
+        printf("-L optional [""database file name""]      ...list maps\n");
+        //printf("-E [map_id] [map tile]                ...beam me target\n");
 
         exit(EXIT_FAILURE);
     }
 
     if (argv[1][0] == '-') {
 
+        const char *db_filename = (argc>2) ? argv[2] : DEFAULT_DATABASE_FILE_NAME;
+
+        //clear logs
+        initialise_logs();
+
+        //prepare time stamp
+        char time_stamp_str[9]="";
+        char verbose_date_stamp_str[50]="";
+        get_time_stamp_str(game_data.server_start_time, time_stamp_str);
+        get_verbose_date_str(game_data.server_start_time, verbose_date_stamp_str);
+
         switch(argv[1][1]) {
 
             case 'S': {//start server
 
-                if(argc>2){
+                printf("start server\n");
 
-                    start_server(argv[2]);
-                }else start_server(DATABASE_FILE_NAME);
+                log_text(EVENT_INITIALISATION, "SERVER START at %s on %s", time_stamp_str, verbose_date_stamp_str);
+                log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+                open_database(db_filename);
+                start_server(db_filename);
                 break;
             }
 
-            case 'L': {//add or update map
+            case 'L': {//add map
+
+                printf("add map\n");
+
+                log_text(EVENT_INITIALISATION, "ADD MAP at %s on %s", time_stamp_str, verbose_date_stamp_str);
+                log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+                open_database(db_filename);
 
                 //use uintptr_t to prevent int truncation issues when compiled as 64bit
-                if(get_db_map_exists((uintptr_t)argv[2])==true){
-
-                    //use uintptr_t to prevent int truncation issues when compiled as 64bit
-                    add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
-                }
-                else {
-
-                    //use uintptr_t to prevent int truncation issues when compiled as 64bit
-                    add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
-                }
+                add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
                 break;
+            }
+
+            case  'M': {// list maps
+
+                printf("list maps\n");
+
+                log_text(EVENT_INITIALISATION, "LIST MAPS at %s on %s", time_stamp_str, verbose_date_stamp_str);
+                log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+                open_database(db_filename);
+                list_db_maps();
+                break;
+
             }
 
             case 'C': { // create database
 
-                if(argc>2){
+                printf("create database\n");
 
-                    open_database(argv[2]);
-                }else open_database(DATABASE_FILE_NAME);
+                log_text(EVENT_INITIALISATION, "CREATE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+                log_text(EVENT_INITIALISATION, "");// insert logical separator
 
-                create_default_database();
+                create_database(db_filename);
                 break;
             }
 
             case 'U': { // upgrade database
 
-                //get the database name
-                const char *db_filename = (argc>2) ? argv[2] : DATABASE_FILE_NAME;
+                printf("upgrade database\n");
 
-                // perform upgrade
-                return upgrade_database(db_filename);
+                log_text(EVENT_INITIALISATION, "UPGRADE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+                log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+                open_database(db_filename);
+                upgrade_database(db_filename);
+                break;
             }
 
             default: { //unknown command line option

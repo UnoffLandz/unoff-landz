@@ -93,6 +93,29 @@ void send_login_ok(int connection){
 }
 
 
+void send_display_client_window(int connection){
+
+    /** public function - see header */
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        Uint16 data_length;
+    }packet;
+
+    int packet_length=sizeof(packet);
+
+    //clear the struct
+    memset(&packet, '0', packet_length);
+
+    //add data
+    packet.protocol=DISPLAY_CLIENT_WINDOW;
+    packet.data_length=packet_length-2;
+
+    send(connection, &packet, packet_length, 0);
+}
+
+
 void send_login_not_ok(int connection){
 
     /** public function - see header */
@@ -538,13 +561,13 @@ void send_change_map(int connection, char *elm_filename){
     }packet;
 
     //clear the struct
-    memset(&packet, '0', sizeof(packet));
+    memset(&packet, 0, sizeof(packet));
 
     //The struct size includes a reserve of 1024 for the map name.
     //We therefore calculate the actual packet length by taking the
     //struct size less the 1024 reserved for the map name and then
     //add on the actual message length
-    int packet_length=sizeof(packet)- 1024 + strlen(elm_filename)+1;
+    int packet_length=sizeof(packet) - 1024 + strlen(elm_filename)+1;
 
     //add data
     packet.protocol=CHANGE_MAP;

@@ -31,16 +31,6 @@ struct vector_type{
 extern struct vector_type vector[8];
 
 
-/** RESULT  : loads movement vector array with values
-
-    RETURNS : void
-
-    PURPOSE : initialise the vector array
-
-*/
-void initialise_movement_vectors();
-
-
 /** RESULT  : finds nearest unoccupied tile
 
     RETURNS : nearest unoccupied tile or 0 if there is no unoccupied tiles within MAX_UNOCCUPIED_TILE_SEARCH

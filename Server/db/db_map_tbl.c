@@ -23,6 +23,7 @@
 
 #include "database_functions.h"
 #include "db_map_tbl.h"
+#include "db_e3d_tbl.h"
 #include "../logging.h"
 #include "../maps.h"
 #include "../server_start_stop.h"
@@ -33,77 +34,32 @@
 #include "../numeric_functions.h"
 #include "../e3d.h"
 
-int load_db_maps(){
+void load_db_maps(){
 
     /** public function - see header */
 
-    int rc;
+    log_event(EVENT_INITIALISATION, "loading maps...");
+
     sqlite3_stmt *stmt;
-    int i=0, k=0;
+    int i=0;
 
-    //the union converts an array containing the elm file contents into separate elements
-    union {
-        unsigned char byte[MAX_ELM_FILE_SIZE];
+    char sql[MAX_SQL_LEN]="SELECT * FROM MAP_TABLE";
 
-        struct{
+    //check database table exists
+    char database_table[80];
+    strcpy(database_table, strstr(sql, "FROM")+5);
+    if(table_exists(database_table)==false){
 
-            unsigned char magic_number[4];
-            int h_tiles;
-            int v_tiles;
-            int tile_map_offset;
-            int height_map_offset;
+        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
+        stop_server();
+    }
 
-            int threed_object_hash_len;
-            int threed_object_count;
-            int threed_object_offset;
-
-            int twod_object_hash_len;
-            int twod_object_count;
-            int twod_object_offset;
-
-            int lights_object_hash_len;
-            int lights_object_count;
-            int lights_object_offset;
-
-            unsigned char dungeon_flag;
-            unsigned char version_flag;
-            unsigned char reserved1;
-            unsigned char reserved2;
-
-            int ambient_red;
-            int ambient_green;
-            int ambient_blue;
-
-            int particles_object_hash_len;
-            int particles_object_count;
-            int particles_object_offset;
-
-            int clusters_offset;
-
-            int reserved_9;
-            int reserved_10;
-            int reserved_11;
-            int reserved_12;
-            int reserved_13;
-            int reserved_14;
-            int reserved_15;
-            int reserved_16;
-            int reserved_17;
-
-        }elm_header;
-    }elm_file;
-
-    //prepare the sql statement
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM MAP_TABLE");
-
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
+    //prepare sql statement
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
-
-    log_event(EVENT_INITIALISATION, "loading maps...");
 
     //read the sql query result into the map array
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -111,7 +67,7 @@ int load_db_maps(){
         //get the map id and check that the value does not exceed the maximum permitted number of maps
         int map_id=sqlite3_column_int(stmt,0);
 
-        if(map_id>MAX_MAPS){
+        if(map_id>MAX_MAPS) {
 
             log_event(EVENT_ERROR, "map id [%i] exceeds range [%i] in function load_maps: module database.c", map_id, MAX_MAPS);
             stop_server();
@@ -125,184 +81,20 @@ int load_db_maps(){
         sprintf(maps.map[map_id].elm_filename, "%s%s", CLIENT_MAP_PATH, (char*)sqlite3_column_text(stmt, 2));
         log_text(EVENT_MAP_LOAD, "elm file name [%s]", maps.map[map_id].elm_filename);
 
-        //check that we have elm file data
-        int elm_file_size=sqlite3_column_bytes(stmt, 3);
+        //get map axis
+        maps.map[map_id].map_axis=sqlite3_column_int(stmt, 4);
 
-        if(elm_file_size==0){
+        //get tile map
+        int tile_map_size=sqlite3_column_bytes(stmt, 5);
+        memcpy(maps.map[map_id].tile_map, (unsigned char*)sqlite3_column_blob(stmt, 5), tile_map_size);
 
-            log_event(EVENT_ERROR, "map id [%i] has no map data in function %s: module %s: line %i", map_id, __func__, __FILE__, __LINE__);
-            stop_server();
-        }
-
-        //read elm file data into union
-        memcpy(elm_file.byte, (unsigned char*)sqlite3_column_blob(stmt, 3), elm_file_size);
-
-        //check Magic Number
-        log_text(EVENT_MAP_LOAD, "Magic Number [%c%c%c%c]", elm_file.elm_header.magic_number[0], elm_file.elm_header.magic_number[1], elm_file.elm_header.magic_number[2], elm_file.elm_header.magic_number[3]);
-
-        if(elm_file.elm_header.magic_number[0]!='e' || elm_file.elm_header.magic_number[1]!='l' || elm_file.elm_header.magic_number[2]!='m' || elm_file.elm_header.magic_number[3]!='f'){
-
-            log_event(EVENT_ERROR, "incorrect magic number for map [%i] [%s] in function %s: module %s: line %i", map_id, maps.map[map_id].elm_filename, __func__, __FILE__, __LINE__);
-            stop_server();
-        }
-
-        //Horizontal and Vertical tile
-        log_text(EVENT_MAP_LOAD, "Horizontal tiles [%i]", elm_file.elm_header.h_tiles);
-        log_text(EVENT_MAP_LOAD, "Vertical tiles [%i]", elm_file.elm_header.v_tiles);
-
-        if(elm_file.elm_header.h_tiles!=elm_file.elm_header.v_tiles){
-
-            log_event(EVENT_ERROR, "horizontal and vertical tile counts are unequal for map [%i] [%s] in function %s: module %s: line %i", map_id, maps.map[map_id].elm_filename, __func__, __FILE__, __LINE__);
-            stop_server();
-        }
-
-        //because there are 6 height map steps per tile, we calculate the map axis as 6x the number of
-        //horizontal tiles. In the case of Isla Prima, the number of horizontal tiles is 32, so
-        //our map axis is calculated as 6x32=192
-        maps.map[map_id].map_axis=elm_file.elm_header.v_tiles*6;
-
-        //get tile map size
-        log_text(EVENT_MAP_LOAD, "Tile map offset [%i]", elm_file.elm_header.tile_map_offset);
-
-        if(elm_file.elm_header.tile_map_offset!=ELM_FILE_HEADER){
-
-            log_event(EVENT_ERROR, "tile map offset does not equal elm file header length for map [%i] [%s] in function %s: module %s: line %i", map_id, maps.map[map_id].elm_filename, __func__, __FILE__, __LINE__);
-            stop_server();
-        }
-
-        //log height map offset
-        log_text(EVENT_MAP_LOAD, "Height map offset [%i]", elm_file.elm_header.height_map_offset);
-
-        //get 3d object hash length
-        log_text(EVENT_MAP_LOAD, "3d object hash length [%i]", elm_file.elm_header.threed_object_hash_len);
-        maps.map[map_id].threed_object_structure_len=elm_file.elm_header.threed_object_hash_len;
-
-        //get 3d object count
-        log_text(EVENT_MAP_LOAD, "3d object hash count [%i]", elm_file.elm_header.threed_object_count);
-        maps.map[map_id].threed_object_count=elm_file.elm_header.threed_object_count;
-
-        //log 3d object offset
-        log_text(EVENT_MAP_LOAD, "3d object offset [%i]", elm_file.elm_header.threed_object_offset);
-        maps.map[map_id].threed_object_offset=elm_file.elm_header.threed_object_offset;
-
-        //get 2d object hash length
-        log_text(EVENT_MAP_LOAD, "2d object hash length [%i]", elm_file.elm_header.twod_object_hash_len);
-        maps.map[map_id].twod_object_structure_len=elm_file.elm_header.twod_object_hash_len;
-
-        //get 2d object count
-        log_text(EVENT_MAP_LOAD, "2d object hash count [%i]", elm_file.elm_header.twod_object_count);
-        maps.map[map_id].twod_object_count=elm_file.elm_header.twod_object_count;
-
-        //log 2d object offset
-        log_text(EVENT_MAP_LOAD, "2d object offset [%i]", elm_file.elm_header.twod_object_offset);
-        maps.map[map_id].twod_object_offset=elm_file.elm_header.twod_object_offset;
-
-        //get lights object hash length
-        log_text(EVENT_MAP_LOAD, "lights object hash length [%i]", elm_file.elm_header.lights_object_hash_len);
-        maps.map[map_id].lights_object_structure_len=elm_file.elm_header.lights_object_hash_len;
-
-        //get lights object count
-        log_text(EVENT_MAP_LOAD, "lights object hash count [%i]", elm_file.elm_header.lights_object_count);
-        maps.map[map_id].lights_object_count=elm_file.elm_header.lights_object_count;
-
-        //log lights object offset
-        log_text(EVENT_MAP_LOAD, "lights object offset [%i]", elm_file.elm_header.lights_object_offset);
-
-        //log dungeon flag
-        log_text(EVENT_MAP_LOAD, "dungeon flag [%i]", elm_file.elm_header.dungeon_flag);
-
-        //log version flag
-        log_text(EVENT_MAP_LOAD, "version flag [%i]", elm_file.elm_header.version_flag);
-
-        if(elm_file.elm_header.version_flag!=ELM_FILE_VERSION){
-
-            log_event(EVENT_ERROR, "file version flag is not correct for map [%i] [%s] in function %s: module %s: line %i", map_id, maps.map[map_id].elm_filename, __func__, __FILE__, __LINE__);
-            stop_server();
-        }
-
-        //log reserved bytes
-        log_text(EVENT_MAP_LOAD, "reserved byte 1 [%i] reserved byte 2 [%i]", elm_file.elm_header.reserved1, elm_file.elm_header.reserved2);
-
-        //log ambient colours
-        log_text(EVENT_MAP_LOAD, "ambient red [%i]", elm_file.elm_header.ambient_red);
-        log_text(EVENT_MAP_LOAD, "ambient green [%i]", elm_file.elm_header.ambient_green);
-        log_text(EVENT_MAP_LOAD, "ambient blue [%i]", elm_file.elm_header.ambient_blue);
-
-        //get particles object hash length
-        log_text(EVENT_MAP_LOAD, "particles object hash length [%i]", elm_file.elm_header.particles_object_hash_len);
-
-        //get particles object count
-        log_text(EVENT_MAP_LOAD, "particles object hash count [%i]", elm_file.elm_header.particles_object_count);
-
-        //log particles object offset
-        log_text(EVENT_MAP_LOAD, "particles object offset [%i]", elm_file.elm_header.particles_object_offset);
-
-        //log clusters offset
-        log_text(EVENT_MAP_LOAD, "clusters object offset [%i]", elm_file.elm_header.clusters_offset);
-
-        //log reserved integers
-        log_text(EVENT_MAP_LOAD, "reserved 9 [%i]", elm_file.elm_header.reserved_9);
-        log_text(EVENT_MAP_LOAD, "reserved 10 [%i]", elm_file.elm_header.reserved_10);
-        log_text(EVENT_MAP_LOAD, "reserved 11 [%i]", elm_file.elm_header.reserved_11);
-        log_text(EVENT_MAP_LOAD, "reserved 12 [%i]", elm_file.elm_header.reserved_12);
-        log_text(EVENT_MAP_LOAD, "reserved 13 [%i]", elm_file.elm_header.reserved_13);
-        log_text(EVENT_MAP_LOAD, "reserved 14 [%i]", elm_file.elm_header.reserved_14);
-        log_text(EVENT_MAP_LOAD, "reserved 15 [%i]", elm_file.elm_header.reserved_15);
-        log_text(EVENT_MAP_LOAD, "reserved 16 [%i]", elm_file.elm_header.reserved_16);
-        log_text(EVENT_MAP_LOAD, "reserved 17 [%i]", elm_file.elm_header.reserved_17);
-
-        //get tile map size
-        maps.map[map_id].tile_map_size=elm_file.elm_header.height_map_offset-elm_file.elm_header.tile_map_offset;
-
-        if(maps.map[map_id].height_map_size>TILE_MAP_MAX){
-
-            log_event(EVENT_ERROR, "tile map exceeds maximum for map [%i] [%s] in function %s: module %s: line %i", map_id, maps.map[map_id].elm_filename, __func__, __FILE__, __LINE__);
-            stop_server();
-        }
-
-        log_text(EVENT_MAP_LOAD, "tile map size [%i]", maps.map[map_id].tile_map_size);
-
-        //get height map size
-        maps.map[map_id].height_map_size=elm_file.elm_header.threed_object_offset-elm_file.elm_header.height_map_offset;
-
-        if(maps.map[map_id].height_map_size>HEIGHT_MAP_MAX){
-
-            log_event(EVENT_ERROR, "height map exceeds maximum for map [%i] [%s] in function %s: module %s: line %i", map_id, maps.map[map_id].elm_filename, __func__, __FILE__, __LINE__);
-            stop_server();
-        }
-
-        log_text(EVENT_MAP_LOAD, "height map size [%i]", maps.map[map_id].height_map_size);
-
-        //get 3d object map size
-        maps.map[map_id].threed_object_map_size=elm_file.elm_header.twod_object_offset-elm_file.elm_header.threed_object_offset;
-
-        log_text(EVENT_MAP_LOAD, "3d map size [%i]", maps.map[map_id].threed_object_map_size);
-
-        //get 2d object map size
-        maps.map[map_id].twod_object_map_size=elm_file.elm_header.lights_object_offset-elm_file.elm_header.twod_object_offset;
-
-        log_text(EVENT_MAP_LOAD, "2d map size [%i]", maps.map[map_id].twod_object_map_size);
-
-        //load tile map data
-        k=0;
-        for(int j=elm_file.elm_header.tile_map_offset; j<elm_file.elm_header.height_map_offset; j++){
-
-            maps.map[map_id].tile_map[k]=elm_file.byte[j];
-            k++;
-        }
-
-        //load height map
-        k=0;
-        for(int j=elm_file.elm_header.height_map_offset; j<elm_file.elm_header.threed_object_offset; j++){
-
-            maps.map[map_id].height_map[k]=elm_file.byte[j];
-            k++;
-        }
+        //get height map
+        int height_map_size=sqlite3_column_bytes(stmt, 6);
+        memcpy(maps.map[map_id].height_map, (unsigned char*)sqlite3_column_blob(stmt, 6), height_map_size);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", map_id, maps.map[map_id].map_name);
 
         i++;
-
     }
 
     //test that we were able to read all the rows in the query result
@@ -313,37 +105,45 @@ int load_db_maps(){
 
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
+    if(rc!=SQLITE_OK) {
 
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    //return the number of query rows we were able to read
-    return i;
+   if(i==0){
+
+        log_event(EVENT_ERROR, "no maps found in database", i);
+        stop_server();
+    }
 }
 
-int get_db_map_exists(int map_id){
+int get_db_map_exists(int map_id) {
 
     /** public function - see header */
 
-    int rc=0;
     sqlite3_stmt *stmt;
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT count(*) FROM MAP_TABLE WHERE MAP_ID=?");
+    char sql[MAX_SQL_LEN]="SELECT count(*) FROM MAP_TABLE WHERE MAP_ID=?";
 
-    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
+    //prepare the sql statement
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
+    //bind the sql statement
     rc = sqlite3_bind_int(stmt, 1, map_id);
-    if(rc!=SQLITE_OK){
+    if(rc!=SQLITE_OK) {
         log_sqlite_error("sqlite3_bind_int failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    while((rc = sqlite3_step(stmt))==SQLITE_ROW);
+    //execute the sql statement
+    int map_id_count=0;
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        map_id_count=sqlite3_column_int(stmt, 0);
+    }
 
     if (rc != SQLITE_DONE) {
 
@@ -351,110 +151,41 @@ int get_db_map_exists(int map_id){
         stop_server();
     }
 
-    int map_id_count=sqlite3_column_int(stmt, 0);
-    if(map_id>1){
+    //check for duplicates
+    if(map_id_count>1) {
 
-        log_event(EVENT_ERROR, "more than one entry in MAP_TABLE with id [%i]", map_id);
+        log_event(EVENT_ERROR, "there are [%i] entries in MAP_TABLE with id [%i]", map_id_count, map_id);
         stop_server();
     }
 
+    //discard sql statement
     sqlite3_finalize(stmt);
-    if(rc!=SQLITE_DONE){
+    if(rc!=SQLITE_DONE) {
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    if(map_id_count==1) return true;
+    //return false if map_id found otherwise true
+    if(map_id_count==0) return false;
 
-    return false;
+    return true;
 }
 
 
-void add_db_map(int map_id, char *map_name, char *elm_file_name){
+void add_db_map(int map_id, char *map_name, char *elm_filename){
 
     /** public function - see header */
 
-    int rc;
+    //check map id is unused
+    if(get_db_map_exists(map_id)==true){
+
+        log_event(EVENT_ERROR, "map [%i] [%s] already exists in database", map_id, maps.map[map_id].map_name);
+        stop_server();
+    }
+
     sqlite3_stmt *stmt;
-    //FILE *file;
-    char sql[MAX_SQL_LEN]="";
 
-    snprintf(sql, MAX_SQL_LEN,
-    "INSERT INTO MAP_TABLE("  \
-    "MAP_ID," \
-    "MAP_NAME,"  \
-    "ELM_FILE_NAME," \
-    ") VALUES( ?, ?, ?)");
-
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    //bind the data to be added to the map table
-    sqlite3_bind_int(stmt, 1, map_id);
-    sqlite3_bind_text(stmt, 2, map_name, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, elm_file_name, -1, SQLITE_STATIC);
-
-/*
-    //find the size of the elm file
-    int file_size=get_file_size(elm_file_name);
-
-    if((file=fopen(elm_file_name, "r"))==NULL) {
-
-        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
-        stop_server();
-    }
-
-    //find the elm file size
-    if(file_size>MAX_ELM_FILE_SIZE){
-
-        log_event(EVENT_ERROR, "file [%s] exceeds max elm file size in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
-        stop_server();
-    }
-
-    //read the elm file into a string
-    unsigned byte[MAX_ELM_FILE_SIZE];
-
-    if((file=fopen(elm_file_name, "r"))==NULL) {
-
-        log_event(EVENT_ERROR, "unable to open file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
-        stop_server();
-    }
-
-    if(fread(byte, file_size, 1, file)!=1){
-
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
-        stop_server();
-    }
-
-    sqlite3_bind_blob(stmt, 4, byte, file_size, NULL);
-*/
-
-    rc = sqlite3_step(stmt);
-
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    printf("Map [%s] File Name [%s] added successfully\n", map_name, elm_file_name);
-
-    log_event(EVENT_SESSION, "Added map [%s] to MAP_TABLE", map_name);
-}
-
-void add_db_map2(int map_id, char *map_name, char *elm_file_name){
-
-    /** public function - see header */
-
-    struct{
+    struct {
 
         unsigned char magic_number[4];
         int h_tiles;
@@ -499,164 +230,217 @@ void add_db_map2(int map_id, char *map_name, char *elm_file_name){
         int reserved_16;
         int reserved_17;
 
-    }elm_header;
+    } elm_header;
+
+    //bounds check the map_id
+    if(map_id>MAX_MAPS) {
+
+        log_event(EVENT_ERROR, "map id [%i] exceeds range [%i] in function load_maps: module database.c", map_id, MAX_MAPS);
+        stop_server();
+    }
 
     //open elm file
     FILE *file;
 
-    if((file=fopen(elm_file_name, "r"))==NULL) {
+    if((file=fopen(elm_filename, "r"))==NULL) {
 
-        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
     //read the header
-    unsigned char header_byte[ELM_FILE_HEADER]={0};
-    if(fread(header_byte, ELM_FILE_HEADER, 1, file)!=1){
+    unsigned char header_byte[ELM_FILE_HEADER]= {0};
+    if(fread(header_byte, ELM_FILE_HEADER, 1, file)!=1) {
 
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
-    //copy bytes to header struct so we can extract data and find the maps
+    //copy bytes to header struct so we can extract data
     memcpy(&elm_header, header_byte, ELM_FILE_HEADER);
 
     //check the magic number
     if(elm_header.magic_number[0]!='e' ||
-       elm_header.magic_number[1]!='l' ||
-       elm_header.magic_number[2]!='m' ||
-       elm_header.magic_number[3]!='f') {
+            elm_header.magic_number[1]!='l' ||
+            elm_header.magic_number[2]!='m' ||
+            elm_header.magic_number[3]!='f') {
 
         log_event(EVENT_ERROR, "elm file magic number [%c%c%c%] != [elmf] in function %s: module %s: line %i",
-            elm_header.magic_number[0],
-            elm_header.magic_number[1],
-            elm_header.magic_number[2],
-            elm_header.magic_number[3],
-            __func__, __FILE__, __LINE__);
+                  elm_header.magic_number[0],
+                  elm_header.magic_number[1],
+                  elm_header.magic_number[2],
+                  elm_header.magic_number[3],
+                  __func__, __FILE__, __LINE__);
         stop_server();
     }
 
     //check the header length
-    if(elm_header.tile_map_offset!=ELM_FILE_HEADER){
+    if(elm_header.tile_map_offset!=ELM_FILE_HEADER) {
 
         log_event(EVENT_ERROR, "elm file header [%i] is not equal to [%i] in function %s: module %s: line %i", elm_header.tile_map_offset, ELM_FILE_HEADER, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
     //check the vertical and horizontal tile counts are equal
-    if(elm_header.h_tiles!=elm_header.v_tiles){
+    if(elm_header.h_tiles!=elm_header.v_tiles) {
 
         log_event(EVENT_ERROR, "horizontal tile count [%i] and vertical tile count [%i] are unequal in function %s: module %s: line %i", elm_header.h_tiles, elm_header.v_tiles, __func__, __FILE__, __LINE__);
         stop_server();
     }
+    int map_axis=elm_header.h_tiles * 6;
 
     //check the threed object hash structure length
-    if(elm_header.threed_object_hash_len!=THREED_OBJECT_HASH_LENGTH){
+    if(elm_header.threed_object_hash_len!=THREED_OBJECT_HASH_LENGTH) {
 
         log_event(EVENT_ERROR, "threed object hash length [%i] is not equal to [%i] in function %s: module %s: line %i", elm_header.threed_object_hash_len, THREED_OBJECT_HASH_LENGTH, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
-    //extract the tile map
-    unsigned char tile_map_byte[TILE_MAP_MAX]={0};
+    //extract the tile map from the elm file
+    unsigned char tile_map_byte[TILE_MAP_MAX]= {0};
     int tile_map_size=elm_header.height_map_offset - elm_header.tile_map_offset;
 
-    if(fread(tile_map_byte, tile_map_size, 1, file)!=1){
+    if(fread(tile_map_byte, tile_map_size, 1, file)!=1) {
 
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
-    //extract the height map
-    unsigned char height_map_byte[HEIGHT_MAP_MAX]={0};
+    //extract the height map from the elm file
+    unsigned char height_map_byte[HEIGHT_MAP_MAX]= {0};
     int height_map_size=elm_header.threed_object_offset - elm_header.height_map_offset;
 
-    if(fread(height_map_byte, height_map_size, 1, file)!=1){
+    if(fread(height_map_byte, height_map_size, 1, file)!=1) {
 
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
-    //extract the 3d object list
-    unsigned char threed_list_byte[THREED_OBJECT_MAP_BYTE_MAX]={0};
-    int threed_object_list_size=elm_header.twod_object_offset - elm_header.threed_object_offset;
+    //extract the e3d object list and load into the MAP_OBJECT table
+    sqlite3_stmt *stmt2;
+    char *sErrMsg2 = 0;
 
-    if(fread(threed_list_byte, threed_object_list_size, 1, file)!=1){
-
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_file_name, __func__, __FILE__, __LINE__);
-        stop_server();
-    }
-
-    struct __attribute__((__packed__)){
+    struct __attribute__((__packed__)) {
 
         char e3d_path_and_filename[80];
         float x_pos;
         float y_pos;
         float z_pos;
-        unsigned char unused[52];
-    }threed_object_list[THREED_OBJECT_MAP_ENTRY_MAX];
+        float x_rot;
+        float y_rot;
+        float z_rot;
+        unsigned char self_lit;
+        unsigned char blended;
+        unsigned char reserved[2];
+        float r;
+        float g;
+        float b;
+        unsigned char reserved2[24];
+    } threed_object_entry;
 
-    memcpy(&threed_object_list, threed_list_byte, threed_object_list_size);
+    //load the e3d data from the database into memory as we'll need to know the e3d_id for each object
+    load_db_e3ds();
 
-    //load e3d object list entries to the map_object table
-    for(int i=0; i<elm_header.threed_object_count; i++){
+    //as there's likely to be thousands of entries that take an age to load, create a sql statement to which
+    //values can be replaced
+    char sql2[MAX_SQL_LEN]="INSERT INTO MAP_OBJECT_TABLE("  \
+         "THREEDOL_ID," \
+         "MAP_ID,"  \
+         "TILE," \
+         "E3D_ID," \
+         "HARVESTABLE," \
+         "RESERVE" \
+         ") VALUES(?, ?, ?, ?, ?, ?)";
 
-        //extract the e3d file name from
+    int rc2=sqlite3_prepare_v2(db, sql2, -1, &stmt2, NULL);
+    if(rc2!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc2, sql2);
+    }
+
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg2);
+    if(rc2!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc2, sql2);
+    }
+
+    for(int i=0; i<elm_header.threed_object_count; i++) {
+
+        //clear the struct
+        memset(&threed_object_entry, 0, sizeof(threed_object_entry));
+
+        //read the binary hash into the struct
+        if(fread(&threed_object_entry, elm_header.threed_object_hash_len, 1, file)!=1) {
+
+            log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+            stop_server();
+        }
+
+        //extract the e3d file name from the path and file
         char e3d_filename[80]="";
-        strcpy(e3d_filename, strrchr(threed_object_list[i].e3d_path_and_filename, '/')+1 );
+        strcpy(e3d_filename, strrchr(threed_object_entry.e3d_path_and_filename, '/')+1 );
 
         //look up the id for the filename
         int e3d_id=get_e3d_id(e3d_filename);
 
-        //calculate the tile for the object position
-        int tile=get_tile(threed_object_list[i].x_pos,
-                    threed_object_list[i].y_pos,
-                    map_id);
+        //usually we'd use the get_tile function to calculate the tile. However, this relies on the map struct
+        //being fully loaded which only happens after a server start. We therefore have to calculate the tile
+        //based on data from the elm header
+        int tile=threed_object_entry.x_pos + (threed_object_entry.y_pos * elm_header.h_tiles);
 
         int harvestable=0;
         int reserve=0;
 
-        char sql[MAX_SQL_LEN]="";
+        sqlite3_bind_int(stmt2, 1, i);
+        sqlite3_bind_int(stmt2, 2, map_id);
+        sqlite3_bind_int(stmt2, 3, tile);
+        sqlite3_bind_int(stmt2, 4, e3d_id);
+        sqlite3_bind_int(stmt2, 5, harvestable);
+        sqlite3_bind_int(stmt2, 5, reserve);
 
-        snprintf(sql, MAX_SQL_LEN, "INSERT INTO MAP_OBJECT_TABLE("  \
-            "THREEDOL_ID," \
-            "MAP_ID,"  \
-            "TILE," \
-            "E3D_ID," \
-            "HARVESTABLE," \
-            "RESERVE" \
-            ") VALUES(%i, %i, %i, %i, %i, %i)", i, map_id, tile, e3d_id, harvestable, reserve);
+        rc2 = sqlite3_step(stmt2);
+        if (rc2!= SQLITE_DONE) {
 
-        process_sql(sql);
+            log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc2, sql2);
+        }
+
+       sqlite3_clear_bindings(stmt2);
+       sqlite3_reset(stmt2);
     }
 
-    sqlite3_stmt *stmt;
-    char sql[MAX_SQL_LEN]="";
+    sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg2);
+    if (rc2 != SQLITE_DONE) {
 
-    snprintf(sql, MAX_SQL_LEN,
-    "INSERT INTO MAP_TABLE("  \
-    "MAP_ID," \
-    "MAP_NAME,"  \
-    "MAP_AXIS," \
-    "TILE_MAP, " \
-    "TILE_MAP_SIZE, " \
-    "HEIGHT_MAP, " \
-    "HEIGHT_MAP_SIZE"
-    ") VALUES( ?, ?, ?, ?, ?, ?, ?)");
+        log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc2, sql2);
+    }
+
+    rc2=sqlite3_finalize(stmt2);
+    if(rc2!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc2, sql2);
+    }
+
+    //insert map data (as we are inserting blobs, we need to bind values rather that adding values to the string
+    char sql[MAX_SQL_LEN]="INSERT INTO MAP_TABLE("  \
+                "MAP_ID," \
+                "MAP_NAME,"  \
+                "ELM_FILENAME," \
+                "MAP_AXIS," \
+                "TILE_MAP," \
+                "HEIGHT_MAP" \
+                ") VALUES(?, ?, ?, ?, ?, ?)";
 
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
+    if(rc!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    //bind the data to be added to the map table
     sqlite3_bind_int(stmt, 1, map_id);
     sqlite3_bind_text(stmt, 2, map_name, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, elm_header.h_tiles);
-    sqlite3_bind_blob(stmt, 4, tile_map_byte, tile_map_size, NULL);
-    sqlite3_bind_int(stmt, 5, tile_map_size);
+    sqlite3_bind_text(stmt, 3, elm_filename, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 4, map_axis);
+    sqlite3_bind_blob(stmt, 5, tile_map_byte, tile_map_size, NULL);
     sqlite3_bind_blob(stmt, 6, height_map_byte, height_map_size, NULL);
-    sqlite3_bind_int(stmt, 7, height_map_size);
 
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
@@ -665,14 +449,62 @@ void add_db_map2(int map_id, char *map_name, char *elm_file_name){
     }
 
     rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
+    if(rc!=SQLITE_OK) {
 
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
     fclose(file);
 
-    printf("Map [%s] File Name [%s] added successfully\n", map_name, elm_file_name);
+    printf("Map [%s] added successfully\n", map_name);
 
-    log_event(EVENT_SESSION, "Added map [%s] to MAP_TABLE", map_name);
+    log_event(EVENT_SESSION, "Added map [%s] file name [%s] to MAP_TABLE", map_name, elm_filename);
+}
+
+void list_db_maps(){
+
+    /** public function - see header */
+
+    sqlite3_stmt *stmt;
+
+    char sql[MAX_SQL_LEN]="SELECT * FROM MAP_TABLE";
+
+    //prepare the sql statement
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    printf("%6s %s %s\n", "[MAP ID]", "[MAP_NAME]", "[ELM FILE]");
+
+    //read the sql query result into the map array
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        //get the map id and check that the value does not exceed the maximum permitted number of maps
+        int map_id=sqlite3_column_int(stmt,0);
+
+        //get map name
+        char map_name[80]="";
+        strcpy(map_name, (char*)sqlite3_column_text(stmt, 1));
+
+        //get map elm file and add client map path so that send_change_map protocol tells client where to find the file
+        char map_file_name[80]="";
+        strcpy(map_file_name, (char*)sqlite3_column_text(stmt, 2));
+
+        printf("[%6i] [%s] [%s]\n", map_id, map_name, map_file_name);
+    }
+
+    //test that we were able to read all the rows in the query result
+    if (rc!= SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    //destroy the prepared sql statement
+    rc=sqlite3_finalize(stmt);
+    if(rc!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
 }

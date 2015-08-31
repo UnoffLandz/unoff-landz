@@ -27,13 +27,13 @@
 
 /** RESULT  : loads data from the e3d table into the e3d array
 
-    RETURNS : number of rows read from the e3d table
+    RETURNS : void
 
-    PURPOSE : Loads e3d data from the database to memory.
+    PURPOSE : retrieve e3d data from permanent storage
 
     NOTES   :
 **/
-int load_db_e3ds();
+void load_db_e3ds();
 
 
 /** RESULT  : adds an e3d to the e3d table

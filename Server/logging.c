@@ -27,9 +27,268 @@
 #include "server_start_stop.h"
 #include "db/database_functions.h"
 
-struct protocol_type send_protocol[256], receive_protocol[256];
+//struct protocol_type send_protocol[256], receive_protocol[256];
+struct protocol_type protocol[] = {
 
+    {"RAW_TEXT", "RAW_TEXT"}, //0
+    {"", "MOVE_TO"}, //1
+    {"ADD_ACTOR", "SEND_PM"}, //2
+    {"YOU_ARE", ""},    //3
+    {"SYNC_CLOCK", ""}, //4
+    {"NEW_MINUTE", "GET_PLAYER_INFO"}, //5
+    {"REMOVE_ACTOR", ""}, //6
+    {"CHANGE_MAP", "SIT_DOWN"}, //7
+    {"", "SEND_ME_MY_ACTORS"}, //8
+    {"", "SEND_OPENING_SCREEN"}, //9
+    {"", "SEND_VERSION"}, //10
+    {"", ""}, //11
+    {"", ""}, //12
+    {"", ""}, //13
+    {"", "HEARTBEAT"}, //14
+    {"", ""}, //15
+    {"", "USE_OBJECT"}, //16
+    {"", ""}, //17
+    {"HERE_YOUR_STATS", ""},//18
+    {"HERE_YOUR_INVENTORY", "LOOK_AT_INVENTORY_ITEM"}, //19
+    {"", "MOVE_INVENTORY_ITEM"},//20
+    {"GET_NEW_INVENTORY_ITEM", "HARVESnT"},//21
+    {"", "DROP_ITEM"}, //22
+    {"HERE_YOUR_GROUND_ITEMS", "PICK_UP_ITEM"},//23
+    {"GET_NEW_GROUND_ITEM", ""},//24
+    {"", "INSPECT_BAG"}, //25
+    {"CLOSE_BAG", ""},//26
+    {"GET_NEW_BAG", "LOOK_AT_MAP_OBJECT"},//27
+    {"", ""}, //28
+    {"DESTROY_BAG", ""},//29
+    {"", ""}, //30
+    {"", ""}, //31
+    {"", ""}, //32
+    {"", ""}, //33
+    {"", ""}, //34
+    {"", ""}, //35
+    {"", ""}, //36
+    {"", ""}, //37
+    {"", ""}, //38
+    {"", ""}, //39
+    {"", ""}, //40
+    {"", ""}, //41
+    {"", ""}, //42
+    {"", ""}, //43
+    {"", ""}, //44
+    {"", ""}, //45
+    {"", ""}, //46
+    {"", ""}, //47
+    {"", ""}, //48
+    {"", "SEND_PARTIAL_STATS"}, //49
+    {"", ""}, //50
+    {"ADD_NEW_ENHANCED_ACTOR", ""}, //51
+    {"", ""}, //52
+    {"", ""}, //53
+    {"", ""}, //54
+    {"", ""}, //55
+    {"", ""}, //56
+    {"", ""}, //57
+    {"", ""}, //58
+    {"", ""}, //59
+    {"", "PING_RESPONSE"}, //60
+    {"", "SET_ACTIVE_CHANNEL"}, //61
+    {"", ""}, //62
+    {"", ""}, //63
+    {"", ""}, //64
+    {"", ""}, //65
+    {"", ""}, //66
+    {"", ""}, //67
+    {"", ""}, //68
+    {"", ""}, //69
+    {"", ""}, //70
+    {"GET_ACTIVE_CHANNELS", ""}, //71
+    {"", ""}, //72
+    {"", ""}, //73
+    {"", ""}, //74
+    {"", ""}, //75
+    {"", ""}, //76
+    {"", ""}, //77
+    {"", ""}, //78
+    {"", ""}, //79
+    {"", ""}, //80
+    {"", ""}, //81
+    {"", ""}, //82
+    {"", ""}, //83
+    {"", ""}, //84
+    {"", ""}, //85
+    {"", ""}, //86
+    {"", ""}, //87
+    {"", ""}, //88
+    {"", ""}, //89
+    {"", ""}, //90
+    {"", ""}, //91
+    {"", ""}, //92
+    {"", ""}, //93
+    {"", ""}, //94
+    {"", ""}, //95
+    {"", ""}, //96
+    {"", ""}, //97
+    {"", ""}, //98
+    {"", ""}, //99
+    {"", ""}, //100
+    {"", ""}, //101
+    {"", ""}, //102
+    {"", ""}, //103
+    {"", ""}, //104
+    {"", ""}, //105
+    {"", ""}, //106
+    {"", ""}, //107
+    {"", ""}, //108
+    {"", ""}, //109
+    {"", ""}, //110
+    {"", ""}, //111
+    {"", ""}, //112
+    {"", ""}, //113
+    {"", ""}, //114
+    {"", ""}, //115
+    {"", ""}, //116
+    {"", ""}, //117
+    {"", ""}, //118
+    {"", ""}, //119
+    {"", ""}, //120
+    {"", ""}, //121
+    {"", ""}, //122
+    {"", ""}, //123
+    {"", ""}, //124
+    {"", ""}, //125
+    {"", ""}, //126
+    {"", ""}, //127
+    {"", ""}, //128
+    {"", ""}, //129
+    {"", ""}, //130
+    {"", ""}, //131
+    {"", ""}, //132
+    {"", ""}, //133
+    {"", ""}, //134
+    {"", ""}, //135
+    {"", ""}, //136
+    {"", ""}, //137
+    {"", ""}, //138
+    {"", ""}, //139
+    {"", "LOG_IN"}, //140
+    {"", "CREATE_CHAR"}, //141
+    {"", ""}, //142
+    {"", ""}, //143
+    {"", ""}, //144
+    {"", ""}, //145
+    {"", ""}, //146
+    {"", ""}, //147
+    {"", ""}, //148
+    {"", ""}, //149
+    {"", ""}, //150
+    {"", ""}, //151
+    {"", ""}, //152
+    {"", ""}, //153
+    {"", ""}, //154
+    {"", ""}, //155
+    {"", ""}, //156
+    {"", ""}, //157
+    {"", ""}, //158
+    {"", ""}, //159
+    {"", ""}, //160
+    {"", ""}, //161
+    {"", ""}, //162
+    {"", ""}, //163
+    {"", ""}, //164
+    {"", ""}, //165
+    {"", ""}, //166
+    {"", ""}, //167
+    {"", ""}, //168
+    {"", ""}, //169
+    {"", ""}, //170
+    {"", ""}, //171
+    {"", ""}, //172
+    {"", ""}, //173
+    {"", ""}, //174
+    {"", ""}, //175
+    {"", ""}, //176
+    {"", ""}, //177
+    {"", ""}, //178
+    {"", ""}, //179
+    {"", ""}, //180
+    {"", ""}, //181
+    {"", ""}, //182
+    {"", ""}, //183
+    {"", ""}, //184
+    {"", ""}, //185
+    {"", ""}, //186
+    {"", ""}, //187
+    {"", ""}, //188
+    {"", ""}, //189
+    {"", ""}, //190
+    {"", ""}, //191
+    {"", ""}, //192
+    {"", ""}, //193
+    {"", ""}, //194
+    {"", ""}, //195
+    {"", ""}, //196
+    {"", ""}, //197
+    {"", ""}, //198
+    {"", ""}, //199
+    {"", ""}, //200
+    {"", ""}, //201
+    {"", ""}, //202
+    {"", ""}, //203
+    {"", ""}, //204
+    {"", ""}, //205
+    {"", ""}, //206
+    {"", ""}, //207
+    {"", ""}, //208
+    {"", ""}, //209
+    {"", ""}, //210
+    {"", ""}, //211
+    {"", ""}, //212
+    {"", ""}, //213
+    {"", ""}, //214
+    {"", ""}, //215
+    {"", ""}, //216
+    {"", ""}, //217
+    {"", ""}, //218
+    {"", ""}, //219
+    {"", ""}, //220
+    {"", ""}, //221
+    {"", ""}, //222
+    {"", ""}, //223
+    {"", ""}, //224
+    {"", ""}, //225
+    {"", ""}, //226
+    {"", ""}, //227
+    {"", ""}, //228
+    {"", ""}, //229
+    {"", "GET_DATE"}, //230
+    {"", "GET_TIME"}, //231
+    {"", "SERVER_STATS"}, //232
+    {"", ""}, //233
+    {"", ""}, //234
+    {"", ""}, //235
+    {"", ""}, //236
+    {"", ""}, //237
+    {"", ""}, //238
+    {"", ""}, //239
+    {"", ""}, //240
+    {"", ""}, //241
+    {"", ""}, //242
+    {"", ""}, //243
+    {"", ""}, //244
+    {"", ""}, //245
+    {"", ""}, //246
+    {"", ""}, //247
+    {"", ""}, //248
+    {"YOU_DONT_EXIST", ""}, //249
+    {"LOG_IN_OK", ""}, //250
+    {"LOG_IN_NOT_OK", ""}, //251
+    {"CREATE_CHAR_OK", ""},//252
+    {"CREATE_CHAR_NOT_OK", ""},//253
+    {"", ""}, //254
+    {"", ""}, //255
+};
 
+/*
 void initialise_protocol_reporting(){
 
     strcpy(send_protocol[0].type, "RAW_TEXT");
@@ -81,7 +340,7 @@ void initialise_protocol_reporting(){
     strcpy(receive_protocol[231].type, "GET_TIME");
     strcpy(receive_protocol[232].type, "SERVER_STATS");
 }
-
+*/
 
 void write_to_file(char *file_name, char *text) {
 
@@ -287,9 +546,6 @@ void initialise_logs(){
 
     /** public function - see header */
 
-    char time_stamp_str[9]="";
-    char verbose_date_stamp_str[50]="";
-
     FILE *file;
 
     //as we need to append an opening entry 'SERVER BOOT-UP COMMENCED' to the initialisation log file, we need
@@ -311,13 +567,6 @@ void initialise_logs(){
             printf("unable to clear initialisation log file [%s] in function initialise_logs: module logging.c\n", INITIALISATION_LOG_FILE_NAME);
             stop_server();
         }
-
-        get_time_stamp_str(game_data.server_start_time, time_stamp_str);
-        get_verbose_date_str(game_data.server_start_time, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "SERVER BOOT-UP at %s on %s", time_stamp_str, verbose_date_stamp_str);
-
-        // inserts a blank line to create a logical separator with subsequent log entries
-        log_text(EVENT_INITIALISATION, "");
     }
 
     log_text(EVENT_INITIALISATION, "initialising log files...");
@@ -369,21 +618,21 @@ void log_packet(int connection, unsigned char *packet, int direction){
 
     if(direction==SEND) {
 
-        log_event(EVENT_PACKET, "Sent to       [%i] %s %s", connection, send_protocol[packet[0]].type, text_out);
-        log_event(EVENT_SESSION, "Sent to       [%i] %s",    connection, send_protocol[packet[0]].type);
+        log_event(EVENT_PACKET, "Sent to       [%i] %s %s", connection, protocol[packet[0]].server, text_out);
+        log_event(EVENT_SESSION, "Sent to       [%i] %s",    connection, protocol[packet[0]].server);
 
         #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-        printf("sent to connection [%i] %s\n", connection, send_protocol[packet[0]].type);
+        printf("sent to connection [%i] %s\n", connection, protocol[packet[0]].server);
         #endif
     }
 
     if(direction==RECEIVE) {
 
-        log_event(EVENT_PACKET, "Received from [%i] %s %s", connection, receive_protocol[packet[0]].type, text_out);
-        log_event(EVENT_SESSION, "Received from [%i] %s", connection, receive_protocol[packet[0]].type);
+        log_event(EVENT_PACKET, "Received from [%i] %s %s", connection, protocol[packet[0]].client, text_out);
+        log_event(EVENT_SESSION, "Received from [%i] %s", connection, protocol[packet[0]].client);
 
         #if DEBUG_SERVER_PROTOCOL_FUNCTIONS==1
-        printf("receive from connection [%i] %s\n", connection, receive_protocol[packet[0]].type);
+        printf("receive from connection [%i] %s\n", connection, protocol[packet[0]].client);
         #endif
     }
 }

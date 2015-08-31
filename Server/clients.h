@@ -178,4 +178,15 @@ struct client_list_type {
 };
 extern struct client_list_type clients;
 
+
+/** RESULT   : closes a client connection
+
+    RETURNS  : void
+
+    PURPOSE  : used in socket_accept_callback and socket_read_callback
+
+    NOTES    :
+**/
+void close_connection_slot(int connection);
+
 #endif // CLIENTS_H_INCLUDED

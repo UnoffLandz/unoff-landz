@@ -26,27 +26,36 @@
 #include "../server_start_stop.h"
 #include "../character_race.h"
 #include "../gender.h"
+#include "db_character_race_tbl.h"
+#include "db_gender_tbl.h"
 
-int load_db_char_types(){
+void load_db_char_types(){
 
     /** public function - see header */
 
-    int rc;
+    log_event(EVENT_INITIALISATION, "loading character types...");
+
+    //check database table exists
+    const char database_table[]="CHARACTER_TYPE_TABLE";
+    if(table_exists(database_table)==false){
+
+        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
+        stop_server();
+    }
+
     sqlite3_stmt *stmt;
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TYPE_TABLE");
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    char sql[MAX_SQL_LEN]="SELECT * FROM CHARACTER_TYPE_TABLE";
 
+    //prepare sql statement
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading character types...");
-
+    //read the sql query result into the char type array
     int i=0;
-
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int char_type_id=sqlite3_column_int(stmt, 0);
@@ -70,13 +79,18 @@ int load_db_char_types(){
         log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
+    //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
     if (rc != SQLITE_OK) {
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    return i;
+    if(i==0){
+
+        log_event(EVENT_ERROR, "no character types found in database", i);
+        stop_server();
+    }
 }
 
 
@@ -89,12 +103,16 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
         "INSERT INTO CHARACTER_TYPE_TABLE("  \
         "CHARACTER_TYPE_ID," \
         "RACE_ID," \
-        "SEX_ID" \
+        "GENDER_ID" \
         ") VALUES(%i, %i, %i)", char_type_id, race_id, gender_id);
 
     process_sql(sql);
 
-    printf("Character type [%i] added successfully\n", char_type_id);
+   //load race and gender data so that we can create a meaningful messages
+    load_db_char_races();
+    load_db_genders();
 
-    log_event(EVENT_SESSION, "Added character type [%i] to CHARACTER_TYPE_TABLE", char_type_id);
+    printf("Character type [%i] gender [%s] race [%s] added successfully\n", char_type_id, race[race_id].race_name, gender[gender_id].gender_name);
+
+    log_event(EVENT_SESSION, "Added character type [%i] gender [%s] race [%s] to CHARACTER_TYPE_TABLE", char_type_id,race[race_id].race_name, gender[gender_id].gender_name);
 }

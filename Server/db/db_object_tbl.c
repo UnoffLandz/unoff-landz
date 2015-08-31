@@ -26,25 +26,31 @@
 #include "../server_start_stop.h"
 #include "../objects.h"
 
-int load_db_objects(){
+void load_db_objects(){
 
     /** public function - see header */
 
-    int rc;
+    log_event(EVENT_INITIALISATION, "loading object...");
+
     sqlite3_stmt *stmt;
 
+    char sql[MAX_SQL_LEN]="SELECT * FROM OBJECT_TABLE";
+
+    //check database table exists
+    char database_table[80];
+    strcpy(database_table, strstr(sql, "FROM")+5);
+    if(table_exists(database_table)==false){
+
+        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
+        stop_server();
+    }
+
     //prepare the sql statement
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM OBJECT_TABLE");
-
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
-
-    log_event(EVENT_INITIALISATION, "loading object...");
 
     //read the sql query result into the object array
     int i=0;
@@ -78,14 +84,16 @@ int load_db_objects(){
 
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
-
     if(rc!=SQLITE_OK){
 
          log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    //return the number of query rows we were able to read
-    return i;
+    if(i==0){
+
+        log_event(EVENT_ERROR, "no objects found in database", i);
+        stop_server();
+    }
 }
 
 void add_db_object(int object_id, char *object_name, bool harvestable, bool edible, int interval){

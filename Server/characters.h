@@ -25,7 +25,7 @@
 enum { //char status
     CHAR_ALIVE,
     CHAR_DEAD,
-    CHAR_BANNED
+    CHAR_BANNED,
 };
 
 enum {// actor frame (needed for stand up/sit down

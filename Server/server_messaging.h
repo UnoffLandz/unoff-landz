@@ -33,7 +33,7 @@ enum { // channel types
     CHAT_MOD       =4,
     CHAT_MODPM     =8,
     CHAT_SERVER_PM =9,
-    CHAT_CHANNEL0  =31,
+    CHAT_CHANNEL_0 =31,
 };
 
 /** RESULT  : sends the motd header to connection

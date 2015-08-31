@@ -26,29 +26,36 @@
 #include "../server_start_stop.h"
 
 
-int load_db_channels(){
+void load_db_channels(){
 
     /** public function - see header */
 
-    int rc;
+    log_event(EVENT_INITIALISATION, "loading channels...");
+
     sqlite3_stmt *stmt;
-    int i=0;
-    int chan_id=0;
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHANNEL_TABLE");
+    char sql[MAX_SQL_LEN]="SELECT * FROM CHANNEL_TABLE";
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    //check database table exists
+    char database_table[80];
+    strcpy(database_table, strstr(sql, "FROM")+5);
+    if(table_exists(database_table)==false){
+
+        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
+        stop_server();
+    }
+
+    //prepare sql statement
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading channels...");
-
+    int i=0;
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
-        chan_id=sqlite3_column_int(stmt, 0);
+        int chan_id=sqlite3_column_int(stmt, 0);
 
         if(i>MAX_CHANNELS) {
 
@@ -68,13 +75,24 @@ int load_db_channels(){
         i++;
     }
 
+    //test that we were able to read all the rows in the query result
+    if (rc!= SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    //destroy prepared sql statemnent
     rc=sqlite3_finalize(stmt);
     if (rc != SQLITE_OK) {
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    return i;
+    if(i==0){
+
+        log_event(EVENT_ERROR, "no chat channels found in database", i);
+        stop_server();
+    }
 }
 
 

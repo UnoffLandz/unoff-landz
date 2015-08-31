@@ -29,13 +29,13 @@
 
 /** RESULT  : loads data from the race table into the race array
 
-    RETURNS : number of rows read from the race table
+    RETURNS : void
 
-    PURPOSE : Loads race data from the database to memory.
+    PURPOSE : retrieve guild data from permanent storage
 
     NOTES   :
 **/
-int load_db_char_races();
+void load_db_char_races();
 
 
 /** RESULT  : loads an entry to the race table

@@ -28,17 +28,63 @@
 #include "../game_data.h"
 #include "../server_start_stop.h"
 
+
+bool get_db_char_exists(int char_id){
+
+    /** public function - see header */
+
+    sqlite3_stmt *stmt;
+
+    char sql[MAX_SQL_LEN]="SELECT count(*) FROM CHARACTER_TABLE WHERE CHAR_ID=?";
+
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    sqlite3_bind_int(stmt, 1, char_id);
+
+    int char_count=0;
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+         char_count=sqlite3_column_int(stmt, 0);
+    }
+
+    if (rc != SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    rc=sqlite3_finalize(stmt);
+    if (rc != SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_finalize", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    // if count of char_id is greater than 1 then we have a duplicate and need to close the server
+    if(char_count>1){
+
+        log_event(EVENT_ERROR, "duplicate char id [%i] in database", char_id);
+        stop_server();
+    }
+
+    if(char_count==0) return false;
+
+    return true;
+}
+
+
 int get_db_char_data(char *char_name){
 
     /** public function - see header */
 
-    int rc=0;
     sqlite3_stmt *stmt;
 
-    char char_tbl_sql[MAX_SQL_LEN]="";
-    snprintf(char_tbl_sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_NAME=?");
+    char char_tbl_sql[MAX_SQL_LEN]="SELECT * FROM CHARACTER_TABLE WHERE CHAR_NAME=?";
 
-    sqlite3_prepare_v2(db, char_tbl_sql, -1, &stmt, NULL);
+    int rc=sqlite3_prepare_v2(db, char_tbl_sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, char_tbl_sql);
@@ -96,18 +142,17 @@ int get_db_char_data(char *char_name){
         log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, char_tbl_sql);
     }
 
-    sqlite3_finalize(stmt);
-    if (rc != SQLITE_DONE) {
+    rc=sqlite3_finalize(stmt);
+    if (rc != SQLITE_OK) {
 
         log_sqlite_error("sqlite3_finalize", __func__, __FILE__, __LINE__, rc, char_tbl_sql);
     }
 
     //get inventory
-    char inventory_tbl_sql[MAX_SQL_LEN]="";
-    snprintf(inventory_tbl_sql, MAX_SQL_LEN, "SELECT SLOT, IMAGE_ID, AMOUNT FROM INVENTORY_TABLE WHERE CHAR_ID=?");
+    char inventory_tbl_sql[MAX_SQL_LEN]="SELECT SLOT, IMAGE_ID, AMOUNT FROM INVENTORY_TABLE WHERE CHAR_ID=?";
 
-    sqlite3_prepare_v2(db, inventory_tbl_sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_DONE){
+    rc=sqlite3_prepare_v2(db, inventory_tbl_sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, inventory_tbl_sql);
     }
@@ -126,8 +171,8 @@ int get_db_char_data(char *char_name){
         log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, inventory_tbl_sql);
     }
 
-    sqlite3_finalize(stmt);
-    if(rc!=SQLITE_DONE){
+    rc=sqlite3_finalize(stmt);
+    if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, inventory_tbl_sql);
     }

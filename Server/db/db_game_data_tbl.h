@@ -28,19 +28,20 @@
         START_MAP_TILE      INT, \
         GAME_MINUTES        INT, \
         GAME_DAYS           INT, \
-        YEAR_LENGTH         INT \
+        YEAR_LENGTH         INT, \
+        DB_VERSION          INT  \
         )"
 
 
 /** RESULT  : loads data from the game data table into the game data array
 
-    RETURNS : number of rows read from the game data table
+    RETURNS : void
 
-    PURPOSE : Loads game data from the database to memory.
+    PURPOSE : retrieve guild data from permanent storage
 
     NOTES   :
 **/
-int load_db_game_data();
+void load_db_game_data();
 
 
 /** RESULT  : adds game data to the game data table
@@ -51,6 +52,6 @@ int load_db_game_data();
 
     NOTES   : to eventually be outsourced to a separate utility
 **/
-void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int start_map_tile, int year_length);
+void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int start_map_tile, int year_length, int db_version);
 
 #endif // DB_GAME_DATA_TBL_H_INCLUDED

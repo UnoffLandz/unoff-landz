@@ -40,6 +40,7 @@
 #include "chat.h"
 #include "game_data.h"
 #include "guilds.h"
+#include "db/db_map_tbl.h"
 
 static int hash_jc(int connection, char *text) {
 
@@ -52,14 +53,18 @@ static int hash_jc(int connection, char *text) {
         NOTES   :
     */
 
-    //get the chan number
-    char chan_str[80]="";
-    get_str_island(text, chan_str, 2);
+    char command[80];
+    int chan_id=0;
 
-    //convert channel number into an integer value
-    int chan_id=atoi(chan_str);
+    if(sscanf(text, "%s %i", command, &chan_id)!=2){
 
-    //join the channel
+        char text_out[80]="";
+        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #JC [channel number]");
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return 0;
+    }
+
     join_channel(connection, chan_id);
 
     return 0;
@@ -77,14 +82,18 @@ static int hash_lc(int connection, char *text) {
         NOTES   :
     */
 
-    //get the chan number
-    char chan_str[80]="";
-    get_str_island(text, chan_str, 2);
+    char command[80];
+    int chan_id=0;
 
-    //convert channel number into an integer value
-    int chan_id=atoi(chan_str);
+    if(sscanf(text, "%s %i", command, &chan_id)!=2){
 
-    //leave the channel
+        char text_out[80]="";
+        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #LC [channel number]");
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return 0;
+    }
+
     leave_channel(connection, chan_id);
 
     return 0;
@@ -101,7 +110,6 @@ static int hash_motd(int connection, char *text) {
 
         NOTES   :
     */
-
 
     (void)(text);
 
@@ -152,7 +160,6 @@ static int hash_cp(int connection, char *text) {
 
         NOTES   :
     */
-
 
     (void)(text);
 
@@ -206,10 +213,17 @@ static int hash_details(int connection, char *text) {
         NOTES   :
     */
 
-
-    char text_out[80]="";
+    char command[80];
     char char_name[80]="";
-    get_str_island(text, char_name, 2);
+    char text_out[80]="";
+
+    if(sscanf(text, "%s %s", command, char_name)!=2){
+
+        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #DETAILS [character name]");
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return 0;
+    }
 
     //check that the char is in game
     int char_connection=char_in_game(char_name);
@@ -218,6 +232,7 @@ static int hash_details(int connection, char *text) {
 
         sprintf(text_out, "%ccharacter is not in game", c_red3+127);
         send_raw_text(connection, CHAT_SERVER, text_out);
+
         return 0;
     }
 
@@ -282,15 +297,19 @@ static int hash_beam_me(int connection, char *text) {
         NOTES   :
     */
 
-    //if hash command is #BEAM, check that second part is ME
-    if(count_str_island(text)==2){
+    char command[80];
+    char tail[80];
+    char text_out[80]="";
 
-        char part[80]="";
+    if(sscanf(text, "%s %s", command, tail)==2){
 
-        get_str_island(text, part, 2);
-        str_conv_upper(part);
+        if(strcmp(tail, "ME")!=0){
 
-        if(strcmp(part, "ME")!=0) return 0;
+            sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #BEAM_ME or #BEAM ME");
+            send_raw_text(connection, CHAT_SERVER, text_out);
+
+            return 0;
+        }
     }
 
     //if char is moving when protocol arrives, cancel rest of path
@@ -299,7 +318,11 @@ static int hash_beam_me(int connection, char *text) {
     //ensure char doesn't beam on top of another char
     int new_map_tile=get_nearest_unoccupied_tile(game_data.beam_map_id, game_data.beam_map_tile);
 
+    //beam the char
     move_char_between_maps(connection, game_data.beam_map_id, new_map_tile);
+
+    sprintf(text_out, "%c%s", c_green3+127, "Scotty beamed you up");
+    send_raw_text(connection, CHAT_SERVER, text_out);
 
     return 0;
 }
@@ -316,74 +339,163 @@ static int hash_pm(int connection, char *text) {
         NOTES   :
     */
 
-    //get character name
-    char char_name[80]="";
-    get_str_island(text, char_name, 2);
+    char command[80];
+    char char_name[80];
+    char message[1024];
 
-    //get message
-    char msg[1024]="";
-    get_str_island(text, msg, 3);
+    if(sscanf(text, "%s %s %s", command, char_name, message)!=3){
+
+        char text_out[80]="";
+        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #PM [character name][message]");
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return 0;
+    }
 
     //send pm
-    send_pm(connection, char_name, msg);
+    send_pm(connection, char_name, message);
 
     return 0;
 }
 
-static int hash_test(int connection, char *text) {
+static int hash_jump(int connection, char *text) {
 
-    /** RESULT  : test function
+    /** RESULT  : jumps char to a new map and map tile
 
         RETURNS : void
 
-        PURPOSE : debugging
+        PURPOSE : allows map developers to jump to unconnected maps
 
         NOTES   :
     */
 
-    char chan_str[80]="";
-    get_str_island(text, chan_str, 2);
+    char command[80];
+    int map_id=0;
+    int map_tile=0;
+    char text_out[80];
 
-    //convert channel number into an integer value
-    int chan_id=atoi(chan_str);
+    if(sscanf(text, "%s %i %i", command, &map_id, &map_tile)!=3){
 
-    clients.client[connection].active_chan=chan_id;
+        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #JUMP [map id] [tile]");
+        send_raw_text(connection, CHAT_SERVER, text_out);
 
-    send_get_active_channels(connection);
+        return 0;
+    }
+
+    //if char is moving when protocol arrives, cancel rest of path
+    clients.client[connection].path_count=0;
+
+    if(get_db_map_exists(map_id)==false){
+
+        sprintf(text_out, "%cmap %i doesn't exist", c_red3+127, map_id);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return 0;
+    }
+
+    //ensure char doesn't beam on top of another char
+    int new_map_tile=get_nearest_unoccupied_tile(map_id, map_tile);
+
+    //send char to new map
+    move_char_between_maps(connection, map_id, new_map_tile);
+
+    sprintf(text_out, "%cYou jumped to map %s tile %i", c_green3+127, maps.map[map_id].map_name, new_map_tile);
+    send_raw_text(connection, CHAT_SERVER, text_out);
 
     return 0;
 }
 
+static int hash_apply_guild(int connection, char *text) {
+
+    /** RESULT  : application by char to join guild
+
+        RETURNS : void
+
+        PURPOSE :
+
+        NOTES   :
+    */
+
+    char command[80];
+    char guild_tag[4];
+    char text_out[80];
+
+    if(sscanf(text, "%s %s", command, guild_tag)!=2){
+
+        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #JOIN_GUILD [guild tag] or JG [guild tag]");
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return 0;
+    }
+
+    apply_guild(connection, clients.client[connection].char_name);
+
+    return 0;
+}
+
+
+static int hash_create_guild(int connection, char *text) {
+
+    /** RESULT  : OPS command to create guild
+
+        RETURNS : void
+
+        PURPOSE : OPS only
+
+        NOTES   :
+    */
+
+    char command[80];
+    char guild_name[80];
+    char guild_tag[4];
+    int permission_level=0;
+    char text_out[80];
+
+    if(sscanf(text, "%s %s %s %i", command, guild_name, guild_tag, &permission_level)!=4){
+
+        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #CREATE_GUILD [guild name][guild tag][permission level or CG [guild name][guild tag][permission level]");
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return 0;
+    }
+
+    create_guild(connection, guild_name, guild_tag, permission_level);
+
+    return 0;
+}
 
 typedef int (*hash_command_function)(int connection, char *text);
 
 struct hash_command_array_entry {
 
     char command[80];
-    int parts;
     hash_command_function fn;
-    char warning[80];
 };
+
 
 struct hash_command_array_entry hash_command_entries[] = {
 
-    {"#JC", 2, hash_jc, "you need to use the format #JC [channel number]"},
-    {"#JOIN_CHANNEL", 2, hash_jc, "you need to use the format #JOIN_CHANNEL [channel number]"},
-    {"#LC", 2, hash_lc, "you need to use the format #LC [channel number]"},
-    {"#LEAVE_CHANNEL", 2, hash_lc, "you need to use the format #LEAVE_CHANNEL [channel number]"},
-    {"#MOTD", 1, hash_motd, "you need to use the format #MOTD"},
-    {"#MESSAGE_OF_THE_DAY", 1, hash_motd, "you need to use the format #MESSAGE_OF_THE_DAY"},
-    {"#CL", 1, hash_cl, "you need to use the format #CL"},
-    {"#CHANNEL_LIST", 1, hash_cl, "you need to use the format #CHANNEL_LIST"},
-    {"#CP", 1, hash_cp, "you need to use the format #CP"},
-    {"#CHANNEL_PARTICIPANTS", 1, hash_cp, "you need to use the format #CHANNEL_PARTICIPANTS"},
-    {"#DETAILS", 2, hash_details, "you need to use the format #DETAILS [character name]"},
-    {"#BEAM_ME", 1, hash_beam_me, "you need to use the format #BEAM_ME"},
-    {"#BEAM", 2, hash_beam_me, "you need to use the format #BEAM ME"},
-    {"#PM", 99, hash_pm, "you need to use the format #PM [message]"},
-    {"#PRIVATE_MESSAGE", 99, hash_pm, "you need to use the format #PRIVATE_MESSAGE [message]"},
-    {"#TEST", 2, hash_test, ""},
-    { "", 0, 0, ""}
+    {"#JC", hash_jc},
+    {"#JOIN_CHANNEL", hash_jc},
+    {"#LC", hash_lc},
+    {"#LEAVE_CHANNEL", hash_lc},
+    {"#MOTD", hash_motd},
+    {"#MESSAGE_OF_THE_DAY", hash_motd},
+    {"#CL", hash_cl},
+    {"#CHANNEL_LIST", hash_cl},
+    {"#CP", hash_cp},
+    {"#CHANNEL_PARTICIPANTS", hash_cp},
+    {"#DETAILS", hash_details},
+    {"#BEAM_ME", hash_beam_me},
+    {"#BEAM", hash_beam_me},
+    {"#PM", hash_pm},
+    {"#PRIVATE_MESSAGE", hash_pm},
+    {"#JUMP", hash_jump},
+    {"#AG", hash_apply_guild},
+    {"#APPLY_GUILD", hash_apply_guild},
+    {"#CG", hash_create_guild},
+    {"#CREATE_GUILD", hash_create_guild},
+    { "", 0}
 };
 
 
@@ -422,14 +534,13 @@ void process_hash_commands(int connection, char *text){
 
     //grab the first part of the text string as this should contain the hash command name
     char hash_command[80]="";
-    int command_parts=count_str_island(text);
-    get_str_island(text, hash_command, 1);
+    sscanf(text, "%s", hash_command);
     str_conv_upper(hash_command);
 
     //lookup the hash command function
     const struct hash_command_array_entry *hash_command_entry = find_hash_command_entry(hash_command);
 
-    //if hash command doesn't exist then warn player and abort
+    //check if hash command exists
     if(!hash_command_entry){
 
         sprintf(text_out, "%cCommand %s isn't supported. You may want to tell the game administrator", c_red3+127, text);
@@ -440,22 +551,9 @@ void process_hash_commands(int connection, char *text){
         return;
     }
 
-    //test the hash command format and abort if incorrect
-    //because pm, ig and gm messages may have multiple parts, we use hash command entry 99 which
-    //specifies that actual parts must be greater than 1
-    if(hash_command_entry->parts!=command_parts || (hash_command_entry->parts==99 && command_parts<2)){
-
-        sprintf(text_out, "%c%s", c_red3+127, hash_command_entry->warning);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
-        return;
-    }
-
     //execute the hash command
     hash_command_entry->fn(connection, text);
 
     log_event(EVENT_SESSION, "client [%i] character [%s] command [%s]", connection, clients.client[connection].char_name, hash_command);
-
-    return;
 }
 

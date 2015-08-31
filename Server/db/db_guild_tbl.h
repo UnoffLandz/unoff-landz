@@ -17,32 +17,41 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef DB_CHARACTER_GENDER_TBL_H_INCLUDED
-#define DB_CHARACTER_GENDER_TBL_H_INCLUDED
+#ifndef DB_GUILD_TBL_H_INCLUDED
+#define DB_GUILD_TBL_H_INCLUDED
 
-#define GENDER_TABLE_SQL "CREATE TABLE GENDER_TABLE( \
-        GENDER_ID    INTEGER PRIMARY KEY     NOT NULL, \
-        GENDER_NAME  TEXT)"
+#define GUILD_TABLE_SQL "CREATE TABLE GUILD_TABLE( \
+        GUILD_ID            INTEGER PRIMARY KEY     NOT NULL, \
+        GUILD_NAME          TEXT, \
+        GUILD_TAG           TEXT, \
+        GUILD_TAG_COLOUR    INT, \
+        GUILD_DESCRIPTION   TEXT, \
+        DATE_GUILD_CREATED  INT, \
+        PERMISSION_LEVEL    INT, \
+        STATUS              INT  \
+        )"
 
-/** RESULT  : loads data from the gender table into the gender array
+/** RESULT  : loads data from the guild table into the guild array
 
     RETURNS : void
 
-    PURPOSE : retrieve gender data from permanent storage
+    PURPOSE : retrieve guild data from permanent storage
 
     NOTES   :
 **/
-void load_db_genders();
+void load_db_guilds();
 
 
-/** RESULT  : adds a gender to the gender table
+/** RESULT  : Adds a guild to the Guild Table of the database
 
     RETURNS : void
 
-    PURPOSE : a test function to load genders to the gender table
+    PURPOSE : permanently store guild data
 
-    NOTES   : to eventually be outsourced to a separate utility
+    NOTES   :
 **/
-void add_db_gender(int gender_id, char *gender_name);
+int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *guild_description,
+    int guild_permission_level,
+    int guild_status);
 
-#endif // DB_CHARACTER_GENDER_TBL_H_INCLUDED
+#endif // DB_GUILD_TBL_H_INCLUDED

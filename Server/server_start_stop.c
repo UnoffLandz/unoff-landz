@@ -22,6 +22,7 @@
 
 #include "date_time_functions.h"
 #include "logging.h"
+#include "db/database_functions.h"
 
 void stop_server(){
 
@@ -29,13 +30,15 @@ void stop_server(){
     char verbose_date_stamp_str[50]="";
     time_t stop_time=time(NULL);
 
+    close_database();
+
     get_time_stamp_str(stop_time, time_stamp_str);
     get_verbose_date_str(stop_time, verbose_date_stamp_str);
 
-    printf("SERVER STOP at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
-    printf("check 'error.log' for details\n");
+    printf("SERVER STOP at %s on %s\ncheck 'error.log' for details\n", time_stamp_str, verbose_date_stamp_str);
 
     log_event(EVENT_ERROR, "SERVER STOP at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
+
 
     exit(EXIT_FAILURE);
 }

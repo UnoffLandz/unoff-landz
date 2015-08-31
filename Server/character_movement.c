@@ -136,24 +136,22 @@ void process_char_move(int connection, time_t current_utime){
 }
 
 
-int remove_char_from_map(int connection){
+void remove_char_from_map(int connection){
 
     /** public function - see header **/
 
     int map_id=clients.client[connection].map_id;
 
-    //check for illegal map
+    //if map is outside bounds something awful has happened so stop server
     if(map_id>MAX_MAPS || map_id<1){
 
-        log_event(EVENT_MOVE_ERROR, "attempt to remove char from illegal map (id[%i] map name [%s]) in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
-        return REMOVE_MAP_ILLEGAL;
+        log_event(EVENT_ERROR, "attempt to remove char from illegal map (id[%i] map name [%s]) in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        stop_server();
     }
 
     //broadcast actor removal to other chars on map
     broadcast_remove_actor_packet(connection);
     log_event(EVENT_SESSION, "char %s removed from map %s", clients.client[connection].char_name, maps.map[map_id].map_name);
-
-    return REMOVE_MAP_SUCESS;
 }
 
 
@@ -166,7 +164,6 @@ void send_actors_to_client(int connection){
         PURPOSE : used by add_char_to_map function
     **/
 
-    int i;
     unsigned char packet[1024];
     int packet_length;
 
@@ -174,7 +171,7 @@ void send_actors_to_client(int connection){
     int map_tile=clients.client[connection].map_tile;
     int char_visual_range=get_char_visual_range(connection);
 
-    for(i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
         //restrict to characters on the same map
         if(map_id==clients.client[i].map_id){
@@ -191,24 +188,37 @@ void send_actors_to_client(int connection){
 }
 
 
-int add_char_to_map(int connection, int map_id, int map_tile){
+bool add_char_to_map(int connection, int map_id, int map_tile){
 
     /** public function - see header **/
 
-    //check for illegal maps
+    //if map is outside bounds then abort map move and alert client
     if(map_id>MAX_MAPS || map_id<0) {
 
+        char text_out[80]="";
+
         log_event(EVENT_MOVE_ERROR, "illegal map (id[%i] name [%s]) in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
-        return ADD_MAP_ILLEGAL;
+
+        sprintf(text_out, "%cnew map is outside bounds", c_red1+127);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return false;
     }
 
-    //get nearest unoccupied tile to the clients position
+    //get nearest unoccupied tile on the map
     int unoccupied_tile=get_nearest_unoccupied_tile(map_id, map_tile);
 
+    //if unable to find unoccupied tile then abort
     if(unoccupied_tile==0){
 
+        char text_out[80]="";
+
         log_event(EVENT_MOVE_ERROR, "Unable to find unoccupied tile within [%i] tiles on map (id[%i] name [%s]) in function %s: module %s: line %i", MAX_UNOCCUPIED_TILE_SEARCH, map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
-        return ADD_MAP_UNREACHABLE;
+
+        sprintf(text_out, "%cunable to find unoccupied tile in new map", c_red1+127);
+        send_raw_text(connection, CHAT_SERVER, text_out);
+
+        return false;
     }
 
     clients.client[connection].map_tile=unoccupied_tile;
@@ -222,12 +232,12 @@ int add_char_to_map(int connection, int map_id, int map_tile){
     //send existing bags on map to client
     //send_bags_to_client(connection);
 
-    //add this char to other connected clients on this map
+    //show this char to other connected clients on this map
     broadcast_add_new_enhanced_actor_packet(connection);
 
     log_event(EVENT_SESSION, "char [%s] added to map [%s] at tile [%i]", clients.client[connection].char_name, maps.map[map_id].map_name, clients.client[connection].map_tile);
 
-    return ADD_MAP_SUCESS;
+    return true;
 }
 
 
@@ -235,24 +245,15 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
 
     /** public function - see header */
 
-    //check to see if old map is legal and, if not, transport char to Isla Prima
-    if(remove_char_from_map(connection)==ILLEGAL_MAP) {
+    remove_char_from_map(connection);
 
-        new_map_id=game_data.beam_map_id;
-        new_map_tile=game_data.beam_map_tile;
+    //if move to new map is successful update database
+    if(add_char_to_map(connection, new_map_id, new_map_tile)==true){
+
+        char sql[MAX_SQL_LEN]="";
+        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", new_map_tile, new_map_id, clients.client[connection].character_id);
+        push_sql_command(sql);
     }
-
-    //check to see if new map is legal and, if not, transport char tp Isla Prima
-    if(add_char_to_map(connection, new_map_id, new_map_tile)!=ADD_MAP_SUCESS){
-
-        new_map_id=game_data.beam_map_id;
-        new_map_tile=game_data.beam_map_tile;
-    }
-
-    //save char map id and position
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", new_map_tile, new_map_id, clients.client[connection].character_id);
-    push_sql_command(sql);
 }
 
 

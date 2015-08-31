@@ -274,5 +274,6 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
     NOTES   :
 */
 void send_close_bag(int connection);
+void send_display_client_window(int connection);
 
 #endif // SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED

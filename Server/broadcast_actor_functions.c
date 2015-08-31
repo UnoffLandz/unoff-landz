@@ -320,7 +320,7 @@ void broadcast_channel_chat(int chan, int connection, char *text_in){
                         sprintf(text_out, "%c[%s]: %s", c_grey2+127, clients.client[connection].char_name, text_in);
                     }
 
-                    send_raw_text(i, CHAT_CHANNEL0 + active_chan_slot, text_out);
+                    send_raw_text(i, CHAT_CHANNEL_0 + active_chan_slot, text_out);
                 }
             }
         }
@@ -346,7 +346,7 @@ void broadcast_channel_event(int chan, int connection, char *text_in){
 
                     int active_chan_slot=clients.client[i].active_chan;
 
-                    send_raw_text(i, CHAT_CHANNEL0 + active_chan_slot, text_in);
+                    send_raw_text(i, CHAT_CHANNEL_0 + active_chan_slot, text_in);
                 }
             }
         }

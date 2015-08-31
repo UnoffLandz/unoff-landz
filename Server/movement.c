@@ -22,19 +22,17 @@
 #include "logging.h"
 #include "characters.h"
 
-struct vector_type vector[8];
+struct vector_type vector[] = {
 
-void initialise_movement_vectors(){
-
-    vector[0].x=0; vector[0].y=1; vector[0].move_cmd=actor_cmd_move_n;
-    vector[1].x=1; vector[1].y=1; vector[1].move_cmd=actor_cmd_move_ne;
-    vector[2].x=1; vector[2].y=0; vector[2].move_cmd=actor_cmd_move_e;
-    vector[3].x=1; vector[3].y=-1; vector[3].move_cmd=actor_cmd_move_se;
-    vector[4].x=0; vector[4].y=-1; vector[4].move_cmd=actor_cmd_move_s;
-    vector[5].x=-1; vector[5].y=-1; vector[5].move_cmd=actor_cmd_move_sw;
-    vector[6].x=-1; vector[6].y=0; vector[6].move_cmd=actor_cmd_move_w;
-    vector[7].x=-1; vector[7].y=1; vector[7].move_cmd=actor_cmd_move_nw;
-}
+    {0, 1,   actor_cmd_move_n},
+    {1, 1,   actor_cmd_move_ne},
+    {1, 0,   actor_cmd_move_e},
+    {1, -1,  actor_cmd_move_se},
+    {0, -1,  actor_cmd_move_s},
+    {-1, -1, actor_cmd_move_sw},
+    {-1, 0,  actor_cmd_move_w},
+    {-1, 1,  actor_cmd_move_nw}
+};
 
 int is_map_tile_occupied(int map_id, int map_tile){
 

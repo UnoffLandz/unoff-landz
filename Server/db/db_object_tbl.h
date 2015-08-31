@@ -30,13 +30,13 @@
 
 /** RESULT  : loads data from the object table into the object array
 
-    RETURNS : number of rows read from the object table
+    RETURNS : void
 
-    PURPOSE : Loads object data from the database to memory.
+    PURPOSE : retrieve object data from permanent storage
 
     NOTES   :
 **/
-int load_db_objects();
+void load_db_objects();
 
 
 /** RESULT  : adds an object to the object table

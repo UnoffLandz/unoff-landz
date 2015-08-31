@@ -18,34 +18,41 @@
 *******************************************************************************************************************/
 
 #include <stdio.h>  //support for NULL snprintf printf
+#include <string.h> //support strcpy and strstr
 
 #include "database_functions.h"
 #include "../logging.h"
 #include "../server_start_stop.h"
 #include "../game_data.h"
 
-int load_db_game_data(){
+void load_db_game_data(){
 
     /** public function - see header */
 
-    int rc;
+    log_event(EVENT_INITIALISATION, "loading game data...");
+
     sqlite3_stmt *stmt;
 
-    //prepare the sql statement
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM GAME_DATA_TABLE");
+    char sql[MAX_SQL_LEN]="SELECT * FROM GAME_DATA_TABLE";
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    //check database table exists
+    char database_table[80];
+    strcpy(database_table, strstr(sql, "FROM")+5);
+    if(table_exists(database_table)==false){
+
+        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
+        stop_server();
+    }
+
+    //prepare the sql statement
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading game data...");
-
     //read the sql query result into the game data array
     int i=0;
-
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         //get the game data id and check that there is only one set
@@ -81,12 +88,15 @@ int load_db_game_data(){
          log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    //return the number of query rows we were able to read
-    return i;
+   if(i!=1){
+
+        log_event(EVENT_ERROR, "no game data found in database", i);
+        stop_server();
+    }
 }
 
 
-void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int start_map_tile, int year_length){
+void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int start_map_tile, int year_length, int db_version){
 
    /** public function - see header */
 
@@ -98,8 +108,9 @@ void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int 
         "BEAM_MAP_TILE,"  \
         "START_MAP_ID,"   \
         "START_MAP_TILE," \
-        "YEAR_LENGTH"     \
-        ") VALUES(%i, %i, %i, %i, %i, %i)", 1, beam_map_id, beam_map_tile, start_map_id, start_map_tile, year_length);
+        "YEAR_LENGTH,"    \
+        "DB_VERSION"      \
+        ") VALUES(%i, %i, %i, %i, %i, %i, %i)", 1, beam_map_id, beam_map_tile, start_map_id, start_map_tile, year_length, db_version);
 
     process_sql(sql);
 

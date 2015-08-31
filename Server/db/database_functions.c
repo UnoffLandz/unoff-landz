@@ -19,9 +19,9 @@
 
 #include <stdio.h> //supports snprintf
 #include <string.h> //supports strlen
+#include <stdlib.h> // testing only
 
 #include "database_functions.h"
-
 #include "db_character_tbl.h"
 #include "db_map_tbl.h"
 #include "db_character_type_tbl.h"
@@ -35,12 +35,18 @@
 #include "db_object_tbl.h"
 #include "db_e3d_tbl.h"
 #include "db_map_object_tbl.h"
+#include "db_guild_tbl.h"
 #include "../global.h"
 #include "../server_start_stop.h"
 #include "../attributes.h"
 #include "../chat.h"
 #include "../logging.h"
 #include "../file_functions.h"
+#include "../colour.h"
+#include "../characters.h"
+#include "../server_messaging.h"
+#include "../game_data.h"
+#include "../guilds.h"
 
 sqlite3 *db;
 
@@ -77,6 +83,48 @@ void open_database(const char *db_filename){
 
         log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
     }
+
+    printf("database file [%s] opened\n", db_filename);
+    log_event(EVENT_INITIALISATION, "database file [%s] opened", db_filename);
+}
+
+
+void close_database(){
+
+    sqlite3_close(db);
+
+    printf("database file closed\n");
+    log_event(EVENT_SESSION, "database file closed");
+}
+
+
+bool table_exists(const char *table_name) {
+
+    sqlite3_stmt *stmt;
+    int count=0;
+    char sql[MAX_SQL_LEN]="";
+    snprintf(sql, MAX_SQL_LEN, "SELECT count(*) FROM sqlite_master WHERE tbl_name='%s'", table_name);
+
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        count=sqlite3_column_int(stmt, 0);
+    }
+
+    rc=sqlite3_finalize(stmt);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    if(count==0) return false;
+
+    return true;
 }
 
 
@@ -84,12 +132,11 @@ static int column_exists(const char *table, const char *column) {
 
     sqlite3_stmt *stmt;
     char sql[MAX_SQL_LEN]="";
-    int rc;
     int name_column_idx=-1;
 
     snprintf(sql, MAX_SQL_LEN, "PRAGMA table_info('%s')", table);
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -140,7 +187,6 @@ int database_table_count(){
     }
 
     rc=sqlite3_finalize(stmt);
-
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -182,9 +228,7 @@ void create_database_table(char *sql){
     char table_name[80]="";
     int str_len=strlen(sql);
 
-    int i=0;
-
-    for(i=13; sql[i]!='('; i++){
+    for(int i=13; sql[i]!='('; i++){
 
         table_name[i-13]=sql[i];
 
@@ -196,6 +240,8 @@ void create_database_table(char *sql){
     }
 
     log_event(EVENT_INITIALISATION, "Created table [%s]", table_name);
+
+    printf("created table [%s]\n", table_name);
 }
 
 
@@ -225,18 +271,16 @@ void process_sql(const char *sql_str){
 
 int current_database_version() {
 
-    int rc;
-
     sqlite3_stmt *selectStmt;
-    const char *sql_str = "SELECT db_version FROM GAME_DATA_TABLE";
+    const char *sql_str = "SELECT DB_VERSION FROM GAME_DATA_TABLE";
 
-    if(0==column_exists("GAME_DATA_TABLE","db_version"))
+    if(0==column_exists("GAME_DATA_TABLE","DB_VERSION"))
         return 0;
 
     if(-1==prepare_query(sql_str,&selectStmt,__func__,__LINE__))
         return -1;
 
-    rc = sqlite3_step(selectStmt);
+    int rc = sqlite3_step(selectStmt);
     if (rc == SQLITE_DONE) {
         log_event(EVENT_ERROR,"Database is missing GAME_DATA_TABLE contents.");
         return -1;
@@ -253,9 +297,27 @@ int current_database_version() {
 }
 
 
-void create_default_database(){
+void create_database(const char *db_filename){
 
     /** public function - see header **/
+
+    //check that sqlite file does not already exist
+    if(file_exists(db_filename)){
+
+        log_text(EVENT_INITIALISATION, "sqlite file [%s] already exists", db_filename);
+        printf("sqlite file [%s] already exists\n", db_filename);
+        stop_server();
+    }
+
+    //create new sqlite database file
+    log_text(EVENT_INITIALISATION, "Creating sqlite file [%s]", db_filename);
+    printf("Creating sqlite file [%s]", db_filename);
+
+    int rc = sqlite3_open(db_filename, &db);
+    if( rc !=SQLITE_OK ){
+
+        log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
+    }
 
     //create logical divider in log file
     log_text(EVENT_INITIALISATION, "\nCreating database tables...");
@@ -271,15 +333,15 @@ void create_default_database(){
     create_database_table(RACE_TABLE_SQL);
     create_database_table(CHARACTER_TYPE_TABLE_SQL);
     create_database_table(ATTRIBUTE_TABLE_SQL);
-    create_database_table(ATTRIBUTE_VALUE_TABLE_SQL);
     create_database_table(GAME_DATA_TABLE_SQL);
     create_database_table(SEASON_TABLE_SQL);
     create_database_table(MAP_OBJECT_TABLE_SQL);
+    create_database_table(GUILD_TABLE_SQL);
 
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");
 
-    add_db_game_data(1, 27225, 1, 27225, 360);
+    add_db_game_data(1, 27225, 1, 27225, 360, CURRENT_DB_VERSION);
 
     add_db_channel(1, 0, CHAN_PERMANENT, "", "Main Channel", "A channel for chatting", 1);
 
@@ -311,52 +373,52 @@ void create_default_database(){
     add_db_season(2, "Kiwi", "An Summer season", 180, 270);
     add_db_season(3, "Butler", "An Autumn season", 270, 360);
 
-    int i=0, j=0, k=0, l=0;
-    float attribute_value;
+    int attribute_id=0;
+    int attribute_value[50];
 
-    for(i=1; i<=6; i++){
+    // create day vision attribute
+    for(int race_id=1; race_id<=6; race_id++){
 
-        j++;
-        add_db_attribute(j, "day vision", i, ATTR_DAY_VISION);
+        float i=10.0f;
 
-        attribute_value=10.0f;
+        for(int pick_points=0; pick_points<=50; pick_points++){
 
-        for(k=1; k<=50; k++){
+            attribute_value[pick_points]=i;
+            i=i + 0.20f;
+         }
 
-            add_db_attribute_value (l, j, ATTR_DAY_VISION, k, attribute_value);
-            attribute_value=attribute_value + 0.20f;
-            l++;
-        }
+        add_db_attribute(race_id, ATTR_DAY_VISION, attribute_value);
+        attribute_id++;
     }
 
-    for(i=1; i<=6; i++){
+    //create night vision attribute
+    for(int race_id=1; race_id<=6; race_id++){
 
-        j++;
-        add_db_attribute(j, "night vision", i, ATTR_NIGHT_VISION);
+        float i=10.0f;
 
-        attribute_value=10.0f;
+        for(int pick_points=0; pick_points<=50; pick_points++){
 
-        for(k=1; k<=50; k++){
-
-            add_db_attribute_value (l, j, ATTR_NIGHT_VISION, k, attribute_value);
-            attribute_value=attribute_value + 0.20f;
-            l++;
+            attribute_value[pick_points]=i;
+            i=i+18.0f;
         }
+
+        add_db_attribute(race_id, ATTR_NIGHT_VISION, attribute_value);
+        attribute_id++;
     }
 
-    for(i=1; i<=6; i++){
+    //create carry capacity attribute
+    for(int race_id=1; race_id<=MAX_RACES; race_id++){
 
-        j++;
-        add_db_attribute(j, "carry capacity", i, ATTR_CARRY_CAPACITY);
+        float i=10.0f;
 
-        attribute_value=100.0f;
+        for(int pick_points=0; pick_points<=50; pick_points++){
 
-        for(k=1; k<=50; k++){
-
-            add_db_attribute_value (l, j, ATTR_CARRY_CAPACITY, k, attribute_value);
-            attribute_value=attribute_value + 18.0f;
-            l++;
+            attribute_value[pick_points]=i;
+            i=i + 0.20f;
         }
+
+        add_db_attribute(race_id, ATTR_CARRY_CAPACITY, attribute_value);
+        attribute_id++;
     }
 
     add_db_e3d(1, "cabbage.e3d", 405);
@@ -404,5 +466,44 @@ void create_default_database(){
 */
 
     add_db_map(1, "Isla Prima", "startmap.elm");
-    add_db_map_objects("startmap.elm", 1);
+
+    add_db_guild("Operators", "OPS", c_grey3, "", 3, 0);
+
+    memset(&character, 0, sizeof(character));
+    character.skin_type=1;
+    character.hair_type=1;
+    character.shirt_type=1;
+    character.pants_type=1;
+    character.boots_type=1;
+    character.char_type=1;
+    character.head_type=1;
+
+    //set the char to stand
+    character.frame=frame_stand;
+
+    //set the char creation time
+    character.char_created=time(NULL);
+
+    //set starting channels
+    int j=0;
+    for(int i=0; i<MAX_CHANNELS; i++){
+
+        if(channel[i].new_chars==1){
+
+            if(j<MAX_CHAN_SLOTS){
+
+                if(j==0) character.active_chan=i-CHAT_CHANNEL_0;
+                character.chan[j]=i;
+            }
+        }
+    }
+
+    //set starting map and tile
+    character.map_id=game_data.beam_map_id;
+    character.map_tile=game_data.beam_map_tile;
+
+    add_db_char_data(character);
+
+    //join default character to operators guild
+    join_guild(GUILD_OPERATORS, 0);
 }

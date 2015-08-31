@@ -24,18 +24,19 @@
         CHARACTER_TYPE_ID   INTEGER PRIMARY KEY     NOT NULL, \
         CHARACTER_TYPE_NAME TEXT, \
         RACE_ID             INT, \
-        SEX_ID              INT, \
+        GENDER_ID           INT, \
         CHAR_COUNT          INT)"
 
 /** RESULT  : loads data from the character type table into the character type array
 
-    RETURNS : number of rows read from the character type table
+    RETURNS : void
 
-    PURPOSE : Loads character type data from the database to memory.
+    PURPOSE : retrieve character type data from permanent storage
 
     NOTES   :
 **/
 int load_db_char_types();
+
 
 /** RESULT  : loads an entry to the character type table
 

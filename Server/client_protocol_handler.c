@@ -90,14 +90,14 @@ void process_packet(int connection, unsigned char *packet){
             }
 
             //chat channels run from 32 (channel 1) to 63 (channel 32)
-            int active_chan_slot=clients.client[connection].active_chan - CHAT_CHANNEL0;
+            int active_chan_slot=clients.client[connection].active_chan - CHAT_CHANNEL_0;
 
             //channel slots run from zero. Hence, we need to subtract 1 from the active_chan slot value
             int chan=clients.client[connection].chan[active_chan_slot-1];
 
             //broadcast to self
             sprintf(text_out, "%c[%s]: %s", c_grey1+127, clients.client[connection].char_name, text);
-            send_raw_text(connection, CHAT_CHANNEL0 + active_chan_slot, text_out);
+            send_raw_text(connection, CHAT_CHANNEL_0 + active_chan_slot, text_out);
 
             //broadcast to others
             broadcast_channel_chat(chan, connection, text);

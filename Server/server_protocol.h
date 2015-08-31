@@ -171,6 +171,8 @@ enum { // server to client protocol
         28   Uint8               mount (nothing=255  brown horse=200)
         29   Uint8               neck attachment
 */
+
+    DISPLAY_CLIENT_WINDOW=63,
     GET_ACTIVE_CHANNELS=71,
 /*
         byte word                purpose

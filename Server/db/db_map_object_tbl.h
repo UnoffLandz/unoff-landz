@@ -31,24 +31,12 @@
 
 /** RESULT  : loads data from the map object table into the map object array
 
-    RETURNS : number of rows read from the map object table
+    RETURNS : void
 
-    PURPOSE : Loads map object data from the database to memory.
+    PURPOSE : retrieve map object data from permanent storage
 
     NOTES   :
 **/
-int load_db_map_objects();
-
-
-/** RESULT  : adds an map object to the map object table
-
-    RETURNS : void
-
-    PURPOSE : a test function to add map objects to the map object table
-
-    NOTES   : to eventually be outsourced to a separate utility
-**/
-
-void add_db_map_objects(char *elm_filename, int map_id);
+void load_db_map_objects();
 
 #endif // MAP_OBJECT_H_INCLUDED

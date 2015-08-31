@@ -49,26 +49,32 @@ edible                       4) edible
 #define DB_MAP_TBL_H_INCLUDED
 
 //#define TWOD_OBJECT_MAP_BYTE_MAX 800000
+//#define TWOD_OBJECT_MAP_ENTRY_MAX 5000_
+//#define TWOD_OBJECT_MAP_HASH_LENGTH ???
+
 #define THREED_OBJECT_MAP_BYTE_MAX 800000
 #define THREED_OBJECT_MAP_ENTRY_MAX 5000
-#define THREED_OBJECT_HASH_LENGTH 132
+#define THREED_OBJECT_HASH_LENGTH 144
 
 #define MAP_TABLE_SQL "CREATE TABLE MAP_TABLE( \
         MAP_ID              INTEGER PRIMARY KEY     NOT NULL, \
         MAP_NAME            TEXT, \
-        ELM_FILE_NAME       TEXT, \
-        ELM_FILE            BLOB \
+        ELM_FILENAME        TEXT, \
+        ELM_FILE            BLOB, \
+        MAP_AXIS            INT,  \
+        TILE_MAP            BLOB, \
+        HEIGHT_MAP          BLOB  \
         )"
 
 /** RESULT  : loads data from the map table into the map array
 
-    RETURNS : number of rows read from the map table
+    RETURNS : void
 
-    PURPOSE : Loads map data from the database to memory.
+    PURPOSE : retrieve map data from permanent storage
 
     NOTES   :
 **/
-int load_db_maps();
+void load_db_maps();
 
 
 /** RESULT  : adds a map to the map table
@@ -94,7 +100,15 @@ void add_db_map(int map_id, char *map_name, char *elm_file_name);
 int get_db_map_exists(int map_id);
 
 
-void add_db_map2(int map_id, char *map_name, char *elm_file_name);
+/** RESULT  : lists maps in database
 
+    RETURNS : void
+
+    PURPOSE : enables server users to determine which maps are loaded to database without having to directly
+              interrogate the database
+
+    NOTES   :
+**/
+void list_db_maps();
 
 #endif // DB_MAP_TBL_H_INCLUDED

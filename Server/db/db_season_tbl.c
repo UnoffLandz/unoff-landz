@@ -27,28 +27,34 @@
 #include "../season.h"
 #include "../string_functions.h"
 
-int load_db_seasons(){
+void load_db_seasons(){
 
     /** public function - see header */
 
-    int rc;
+    log_event(EVENT_INITIALISATION, "loading season data...");
+
     sqlite3_stmt *stmt;
 
-    //prepare the sql statement
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM SEASON_TABLE");
+    char sql[MAX_SQL_LEN]="SELECT * FROM SEASON_TABLE";
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    //check database table exists
+    char database_table[80];
+    strcpy(database_table, strstr(sql, "FROM")+5);
+    if(table_exists(database_table)==false){
+
+        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
+        stop_server();
+    }
+
+    //prepare the sql statement
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading season data...");
-
     //read the sql query result into the game data array
     int i=0;
-
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         //get the game data id and check that there is only one set
@@ -75,8 +81,11 @@ int load_db_seasons(){
          log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    //return the number of query rows we were able to read
-    return i;
+    if(i==0){
+
+        log_event(EVENT_ERROR, "no seasons found in database", i);
+        stop_server();
+    }
 }
 
 

@@ -21,18 +21,11 @@
 #define DB_ATTRIBUTE_TBL_H_INCLUDED
 
 #define ATTRIBUTE_TABLE_SQL "CREATE TABLE ATTRIBUTE_TABLE( \
-        ATTRIBUTE_ID            INTEGER PRIMARY KEY     NOT NULL,  \
-        ATTRIBUTE_DESCRIPTION   TEXT, \
-        ATTRIBUTE_TYPE_ID       INT, \
-        RACE_ID                 INT)"
-
-#define ATTRIBUTE_VALUE_TABLE_SQL "CREATE TABLE ATTRIBUTE_VALUE_TABLE( \
-        ATTRIBUTE_VALUE_ID  INTEGER PRIMARY KEY        NOT NULL,  \
-        ATTRIBUTE_ID        INT, \
+        ATTRIBUTE_ID  INTEGER PRIMARY KEY        NOT NULL,  \
+        RACE_ID             INT, \
         ATTRIBUTE_TYPE_ID   INT, \
         PICKPOINTS          INT, \
         ATTRIBUTE_VALUE     INT)"
-
 
 /** RESULT   : adds an attribute to the database
 
@@ -42,28 +35,17 @@
 
     NOTES    :
 **/
-void add_db_attribute(int attribute_id, char *attribute_description, int race_id, int attribute_type_id);
-
-
-/** RESULT   : adds attribute values to the database for a specified attribute
-
-    RETURNS  : void
-
-    PURPOSE  : avoids having to directly edit the database
-
-    NOTES    :
-**/
-void add_db_attribute_value (int attribute_value_id, int attribute_id, int attribute_type_id, int pickpoints, int attribute_value);
+void add_db_attribute(int race_id, int attribute_type_id, int attribute_value[50]);
 
 
 /** RESULT   : loads attributes and associated attribute values from the database to memory array
 
-    RETURNS  : the number of attributes that were loaded
+    RETURNS  : void
 
-    PURPOSE  : loads attribute/attribute value data from the database to memory
+    PURPOSE  : retrieves attribute/attribute value data from permanent storage
 
     NOTES    :
 **/
-int load_db_attributes();
+void load_db_attributes();
 
 #endif // DB_ATTRIBUTE_TBL_H_INCLUDED

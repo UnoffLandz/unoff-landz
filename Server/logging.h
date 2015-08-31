@@ -48,11 +48,14 @@ enum {//packet logging
 };
 
 
+
 struct protocol_type{
 
-    char type[80];
+    char server[80];
+    char client[80];
 };
-extern struct protocol_type send_protocol[256], receive_protocol[256];
+extern struct protocol_type protocol[256];
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,6 +128,6 @@ void log_packet(int connection, unsigned char *packet, int direction);
 
     NOTES   :
 */
-void initialise_protocol_reporting();
+//void initialise_protocol_reporting();
 
 #endif // LOGGING_H_INCLUDED

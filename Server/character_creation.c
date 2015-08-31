@@ -152,7 +152,7 @@ void add_new_character(int connection, const unsigned char *packet){
 
             if(j<MAX_CHAN_SLOTS){
 
-                if(j==0) character.active_chan=i-CHAT_CHANNEL0;
+                if(j==0) character.active_chan=i-CHAT_CHANNEL_0;
                 character.chan[j]=i;
             }
         }

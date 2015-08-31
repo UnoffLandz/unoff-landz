@@ -18,7 +18,7 @@
 ******************************************************************************************************/
 /*****************************************************************************************************
 
-                    ~~~~ Special credit goes to Nermerle for this module ~~~~
+                    ~~~~ credit goes to Nemerle for this module ~~~~
 
 *****************************************************************************************************/
 #include <sqlite3.h>
@@ -84,14 +84,14 @@ static int callback(void *unused, int argc, char **argv, char **azColName){
     return 0;
 }
 
-static int set_db_version(int new_version) {
+static int set_db_version(int db_version) {
 
     char *err_msg = NULL;
-    char buf[512];
+    char sql[MAX_SQL_LEN]="";
 
-    snprintf(buf,512,"UPDATE GAME_DATA_TABLE SET db_version = %d",new_version);
+    snprintf(sql, MAX_SQL_LEN,"UPDATE GAME_DATA_TABLE SET DB_VERSION = %d", db_version);
 
-    int rc = sqlite3_exec(db,buf,callback,0,&err_msg);
+    int rc = sqlite3_exec(db, sql, callback, 0, &err_msg);
     if( rc != SQLITE_OK ) {
 
         fprintf(stderr, "SQL error: %s\n", err_msg);
@@ -302,7 +302,7 @@ static int upgrade_v4_to_v5(const char *dbname) {
 
     create_database_table(MAP_OBJECT_TABLE_SQL);
 
-    add_db_map_objects("startup.elm", 1);
+    //add_db_map_objects("startup.elm", 1);
 
     set_db_version(5);
 
@@ -352,16 +352,13 @@ static const struct upgrade_array_entry *find_upgrade_entry(uint32_t old_version
 
 extern int current_database_version();
 
-int upgrade_database(const char *dbname) {
+void upgrade_database(const char *dbname) {
 
     if(!file_exists(dbname)) {
 
         fprintf(stderr,"Cannot upgrade database %s - no such file\n", dbname);
-
-        return -1;
+        return;
     }
-
-    open_database(dbname);
 
     int old_version = current_database_version();
     int new_version = CURRENT_DB_VERSION;
@@ -369,22 +366,26 @@ int upgrade_database(const char *dbname) {
     if(old_version>new_version) {
 
         fprintf(stderr,"Cannot update database : database is newer than server !\n");
-
-        return -1;
+        return;
     }
 
     while(old_version<new_version) {
 
         const struct upgrade_array_entry *entry = find_upgrade_entry(old_version);
 
-        if(!entry)
-            return -1;
+        if(!entry){
+
+            fprintf(stderr,"Cannot find entry for database\n");
+            return;
+        }
 
         fprintf(stdout,"DB version update %d to %d:",entry->from_version,entry->to_version);
 
         // backup is created before calling each upgrade function
-        if(-1==create_backup(dbname,old_version))
-            return -1;
+        if(-1==create_backup(dbname,old_version)){
+
+            return;
+        }
 
         if(0==entry->fn(dbname)) {
 
@@ -394,10 +395,7 @@ int upgrade_database(const char *dbname) {
         else {
 
             fprintf(stdout,"FAILED\n");
-
-            return -1;
+            return;
         }
     }
-
-    return 0;
 }

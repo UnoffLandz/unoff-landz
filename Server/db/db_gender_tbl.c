@@ -25,27 +25,33 @@
 #include "../gender.h"
 #include "../server_start_stop.h"
 
-int load_db_genders(){
+void load_db_genders(){
 
     /** public function - see header */
 
-    int rc;
+    log_event(EVENT_INITIALISATION, "loading gender...");
+
     sqlite3_stmt *stmt;
 
+    char sql[MAX_SQL_LEN]="SELECT * FROM GENDER_TABLE";
+
+    //check database table exists
+    char database_table[80];
+    strcpy(database_table, strstr(sql, "FROM")+5);
+    if(table_exists(database_table)==false){
+
+        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
+        stop_server();
+    }
+
     //prepare the sql statement
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM GENDER_TABLE");
-
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading gender...");
-
-    //read the sql query result into the map array
+    //read the sql query result into the gender array
     int i=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -75,14 +81,16 @@ int load_db_genders(){
 
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
-
     if(rc!=SQLITE_OK){
 
          log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    //return the number of query rows we were able to read
-    return i;
+    if(i==0){
+
+        log_event(EVENT_ERROR, "no genders found in database", i);
+        stop_server();
+    }
 }
 
 

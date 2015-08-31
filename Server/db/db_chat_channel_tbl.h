@@ -32,13 +32,13 @@
 
 /** RESULT  : loads data from the channel table into the channel array
 
-    RETURNS : number of rows read from the channel table
+    RETURNS : void
 
-    PURPOSE : Loads channel data from the database to memory.
+    PURPOSE : retrieve guild data from permanent storage
 
     NOTES   :
 **/
-int load_db_channels();
+void load_db_channels();
 
 
 /** RESULT  : adds a channel to the channel table

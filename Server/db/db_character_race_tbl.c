@@ -26,26 +26,33 @@
 #include "../character_race.h"
 #include "../server_start_stop.h"
 
-int load_db_char_races(){
+void load_db_char_races(){
 
     /** public function - see header */
 
-    int rc;
+    log_event(EVENT_INITIALISATION, "loading races...");
+
     sqlite3_stmt *stmt;
+    char sql[MAX_SQL_LEN]="SELECT * FROM RACE_TABLE";
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM RACE_TABLE");
+    //check database table exists
+    char database_table[80];
+    strcpy(database_table, strstr(sql, "FROM")+5);
+    if(table_exists(database_table)==false){
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
+        stop_server();
+    }
+
+    //prepare the sql statement
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_INITIALISATION, "loading races...");
-
+    //read the sql query result into the race array
     int i=0;
-
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int race_id=sqlite3_column_int(stmt, 0);
@@ -64,18 +71,24 @@ int load_db_char_races(){
         i++;
     }
 
+    //test that we were able to read all the rows in the query result
     if (rc != SQLITE_DONE) {
 
         log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
+    //destroy the sql statement
     sqlite3_finalize(stmt);
     if (rc != SQLITE_DONE) {
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    return i;
+    if(i==0){
+
+        log_event(EVENT_ERROR, "no races found in database", i);
+        stop_server();
+    }
 }
 
 
