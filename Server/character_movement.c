@@ -268,6 +268,7 @@ void start_char_move(int connection, int destination){
 
     //if char is harvesting then stop
     if(clients.client[connection].harvest_flag==true){
+
         stop_harvesting(connection);
     }
 

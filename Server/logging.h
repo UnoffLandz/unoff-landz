@@ -120,14 +120,4 @@ void log_sqlite_error(char *error_type, const char *function_name, const char *m
 void log_packet(int connection, unsigned char *packet, int direction);
 
 
-/** RESULT  : loads send_protocol and receive_protocol arrays
-
-    RETURNS : void
-
-    PURPOSE : enables protocol report to be determined from packet byte
-
-    NOTES   :
-*/
-//void initialise_protocol_reporting();
-
 #endif // LOGGING_H_INCLUDED

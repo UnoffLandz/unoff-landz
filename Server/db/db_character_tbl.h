@@ -34,6 +34,7 @@
         MAP_ID              INT, \
         MAP_TILE            INT, \
         GUILD_ID            INT, \
+        GUILD_RANK          INT, \
         CHAR_TYPE           INT, \
         SKIN_TYPE           INT, \
         HAIR_TYPE           INT, \
@@ -69,15 +70,16 @@
 
     NOTES   :
 **/
-int get_db_char_data(char *char_name);
+bool get_db_char_data(char *char_name, int char_id);
 
-/** RESULT  : Adds a char to the Character Table of the database
 
-    RETURNS : the char_id of the character table entry
+/** RESULT  : Retrieves char data from the Character Table and places it in the Character struct
 
-    PURPOSE : permanently store char data
+    RETURNS : true/false
 
-    NOTES   :
+    PURPOSE : retrieves char data from the database based on char name or char id
+
+    NOTES   : either char name or char_id must be specified.
 **/
 int add_db_char_data(struct client_node_type character);
 

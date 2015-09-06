@@ -70,8 +70,7 @@ int char_in_game(char *char_name){
 
     char compare_name[80]="";
 
-    int i=0;
-    for(i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
         if(clients.client[i].client_status==LOGGED_IN){
 

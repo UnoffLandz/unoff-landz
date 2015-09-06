@@ -68,7 +68,7 @@ void check_new_character(int connection, const unsigned char *packet){
     }
 
     //check if the character name already exists
-    if(get_db_char_data(char_name)==FOUND){
+    if(get_db_char_data(char_name, 0)==FOUND){
 
         //if the char name exists, abort character creation and send warning to client
         char text_out[80]="";

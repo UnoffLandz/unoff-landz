@@ -35,7 +35,7 @@
 
 #define DEBUG_SERVER_PROTOCOL_FUNCTIONS 0
 
-void send_packet(int connection, unsigned char *packet, int packet_length){
+void send_packet(int connection, void *packet, int packet_length){
 
     /** public function - see header */
 
@@ -66,7 +66,8 @@ void send_new_minute(int connection, int minute){
     packet.data_length=packet_length-2;
     packet.minute=minute;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -89,7 +90,8 @@ void send_login_ok(int connection){
     packet.protocol=LOG_IN_OK;
     packet.data_length=packet_length-2;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -112,7 +114,8 @@ void send_display_client_window(int connection){
     packet.protocol=DISPLAY_CLIENT_WINDOW;
     packet.data_length=packet_length-2;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -135,7 +138,8 @@ void send_login_not_ok(int connection){
     packet.protocol=LOG_IN_NOT_OK;
     packet.data_length=packet_length-2;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -158,7 +162,8 @@ void send_you_dont_exist(int connection){
     packet.protocol=YOU_DONT_EXIST;
     packet.data_length=packet_length-2;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -183,7 +188,8 @@ void send_you_are(int connection){
     packet.data_length=packet_length-2;
     packet.connection=connection;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -206,7 +212,8 @@ void send_create_char_ok(int connection){
     packet.protocol=CREATE_CHAR_OK;
     packet.data_length=packet_length-2;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -229,7 +236,8 @@ void send_create_char_not_ok(int connection){
     packet.protocol=CREATE_CHAR_NOT_OK;
     packet.data_length=packet_length-2;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -260,8 +268,28 @@ void send_raw_text(int connection, int channel, char *text){
     packet.channel=channel;
     strcpy(packet.text, text);
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
+
+void send_text(int connection, int channel_type, const char *fmt, ...){
+
+    /** public function - see header */
+
+    char text_in[1024]="";
+
+    va_list args;
+    va_start(args, fmt);
+
+    vsprintf(text_in, fmt, args);
+
+    send_raw_text(connection, channel_type, text_in);
+
+    va_end(args);
+}
+
+
+
 
 
 void send_here_your_inventory(int connection){
@@ -302,7 +330,8 @@ void send_here_your_inventory(int connection){
         packet.inventory[i].flags=0;
     }
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -342,7 +371,8 @@ void send_here_your_ground_items(int connection, int bag_id){
         packet.inventory[i].slot=i;
     }
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -365,7 +395,8 @@ void send_close_bag(int connection){
     packet.protocol=CLOSE_BAG;
     packet.data_length=packet_length-2;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -397,7 +428,8 @@ void send_get_active_channels(int connection){
         packet.chan_slot[i]=clients.client[connection].chan[i];
     }
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -545,7 +577,8 @@ void send_here_your_stats(int connection){
     packet.book_id=clients.client[connection].book_id;
     packet.max_book_time=clients.client[connection].max_book_time;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -574,7 +607,8 @@ void send_change_map(int connection, char *elm_filename){
     packet.data_length=packet_length-2;
     strcpy(packet.elm_filename, elm_filename);
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -675,112 +709,6 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     //create the complete packet
     memcpy(packet, &_packet1, sizeof(_packet1)-80 + banner_length+1);
     memcpy(packet + *packet_length-4, &_packet2, sizeof(_packet2));
-
-/*
-    //packet structure before the banner
-    struct __attribute__((__packed__)){
-
-        unsigned char protocol;
-        Uint16 data_length;
-        Uint16 connection;
-
-        Uint16 x_pos;
-        Uint16 y_pos;
-        Uint16 z_pos;
-        Uint16 rot;
-
-        unsigned char char_type;
-        unsigned char unused;
-        unsigned char skin_type;
-        unsigned char hair_type;
-        unsigned char shirt_type;
-        unsigned char pants_type;
-        unsigned char boots_type;
-        unsigned char head_type;
-        unsigned char shield_type;
-        unsigned char weapon_type;
-        unsigned char cape_type;
-        unsigned char helmet_type;
-        unsigned char frame_type;
-        Uint16 max_health;
-        Uint16 current_health;
-        unsigned char player_type;
-    }_packet1;
-
-    //packet structure following the banner
-    struct __attribute__((__packed__)){
-
-        unsigned char unknown;
-        unsigned char char_size;
-        unsigned char riding;
-        unsigned char neck_attachment;
-    }_packet2;
-
-    //create a char array carrying the banner (char name and guild name separated by a space and
-    //127+colour character)
-    char banner[80]="";
-
-    int guild_tag_colour=guilds.guild[clients.client[connection].guild_id].guild_tag_colour;
-
-    sprintf(banner, "%s %c%s",
-        clients.client[connection].char_name,
-        127+guild_tag_colour,
-        guilds.guild[clients.client[connection].guild_id].guild_tag);
-
-    //calculate the total packet length
-    *packet_length=sizeof(_packet1) + strlen(banner)+1 + sizeof(_packet2);
-
-    //clear the structs
-    memset(&_packet1, '0', sizeof(_packet1));
-    memset(&_packet2, '0', sizeof(_packet2));
-
-    //add data to packet 1
-    _packet1.protocol=ADD_NEW_ENHANCED_ACTOR;
-    _packet1.data_length=*packet_length-2;
-    _packet1.connection=connection;
-
-    int map_id=clients.client[connection].map_id;
-    int map_axis=maps.map[map_id].map_axis;
-
-    _packet1.x_pos=clients.client[connection].map_tile % map_axis;
-    _packet1.y_pos=clients.client[connection].map_tile / map_axis;
-    _packet1.z_pos=0; //z position (set to 0 pending further development)
-    _packet1.rot=45; //rotation angle (set to 45 pending further development)
-
-    _packet1.char_type=clients.client[connection].char_type;
-    _packet1.unused=0; //unused (set to 0)
-
-    _packet1.skin_type=clients.client[connection].skin_type;
-    _packet1.hair_type=clients.client[connection].hair_type;
-    _packet1.shirt_type=clients.client[connection].shirt_type;
-    _packet1.pants_type=clients.client[connection].pants_type;
-    _packet1.boots_type=clients.client[connection].boots_type;
-    _packet1.head_type=clients.client[connection].head_type;
-    _packet1.shield_type=clients.client[connection].shield_type;
-    _packet1.weapon_type=clients.client[connection].weapon_type;
-    _packet1.cape_type=clients.client[connection].cape_type;
-    _packet1.helmet_type=clients.client[connection].helmet_type;
-
-    _packet1.frame_type=clients.client[connection].frame;
-
-    _packet1.max_health=clients.client[connection].max_health;
-    _packet1.current_health=clients.client[connection].current_health;
-
-    _packet1.player_type=1; //special (PLAYER=1 NPC=??)
-
-    //add data to packet 2
-    _packet2.unknown=0;
-    _packet2.char_size=64; //char size (min=2 normal=64 max=127)
-    _packet2.riding=255; //riding (nothing=255  brown horse=200)
-    _packet2.neck_attachment=64; //neck attachment (none=64)
-
-    //create the complete packet
-    memcpy(packet, &_packet1, sizeof(_packet1));
-    memcpy(packet + sizeof(_packet1), banner, strlen(banner)+1);
-    memcpy(packet + sizeof(_packet1)+ strlen(banner)+1, &_packet2, sizeof(_packet2));
-*/
-
-
 }
 
 
@@ -807,33 +735,6 @@ void remove_actor_packet(int connection, unsigned char *packet, int *packet_leng
     _packet.connection=connection;
 
     memcpy(packet, &_packet, sizeof(_packet));
-
-/*
-    typedef struct {
-
-        unsigned char protocol;
-        unsigned char lsb;
-        unsigned char msb;
-        unsigned char connection_lsb;
-        unsigned char connection_msb;
-    }packet_data;
-
-    union {
-
-        unsigned char out[5];
-        packet_data in;
-    }p;
-
-    p.in.protocol=REMOVE_ACTOR;
-    p.in.lsb=3;
-    p.in.msb=0;
-    p.in.connection_lsb=connection % 256;
-    p.in.connection_msb=connection / 256;
-
-    *packet_length=5;
-
-    memcpy(packet, p.out, *packet_length);
-*/
 }
 
 
@@ -893,7 +794,8 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
     packet.slot=slot;
     packet.flags=0;
 
-    send(connection, &packet, packet_length, 0);
+    send_packet(connection, &packet, packet_length);
+    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -925,5 +827,3 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
 
     memcpy(packet, &_packet, sizeof(_packet));
 }
-
-

@@ -33,6 +33,13 @@ enum{//guild status
     GUILD_CLOSED,
 };
 
+enum{// guild permissions
+
+    PERMISSION_1=1, //player
+    PERMISSION_2=2, //developer
+    PERMISSION_3=3, //operator
+};
+
 struct guild_node_type {
 
     char guild_name[80];
@@ -65,7 +72,7 @@ extern struct guild_list_type guilds;
 
     NOTES    :
 **/
-void create_guild(int connection, char *guild_name, char *guild_tag, int permission_level);
+void create_guild(int connection, char *guild_name, char *guild_description, char *guild_tag, int permission_level);
 
 
 /** RESULT   : application from a char for membership of a guild
@@ -79,14 +86,63 @@ void create_guild(int connection, char *guild_name, char *guild_tag, int permiss
 void apply_guild(int connection, char *guild_tag);
 
 
-/** RESULT   : joins a char to a guild
+/** RESULT   : appoints a char to a guild based on char id and guild id
 
     RETURNS  : void
 
-    PURPOSE  : used by function create database
+    PURPOSE  : used by function create database and appoint_guild
+
+    NOTES    : enable the 'master char' to be automatically be made a member of the
+               OPS guild when the database is first created.
+**/
+void _join_guild(int guild_id, int char_id);
+
+
+/** RESULT   : appoints a char to a guild based on char name and guild tag
+
+    RETURNS  : void
+
+    PURPOSE  : used by function hash_appoint_guild
+
+    NOTES    : This function does the same as join_guild except it accepts strings rather
+               that id's. This is in order to facilitate #appoint_guild command.
+
+               This function also bounds checks the input to establish that both the guild
+               and the chat exist, and that the char is not already in a guild.
+**/
+void join_guild(int connection, char *char_name, char *guild_tag);
+
+
+/** RESULT   : removes a char from a guild
+
+    RETURNS  : void
+
+    PURPOSE  : used by function hash_ops_kick_guild_member and #kick_guild_member
 
     NOTES    :
 **/
-bool join_guild(int guild_id, int char_id);
+void kick_guild_member(int connection, char *guild_tag, char *char_name);
+
+
+/** RESULT   : changes a chars guild rank
+
+    RETURNS  : void
+
+    PURPOSE  : used by function hash_change_guild_rank and hash_ops_change_guild_rank
+
+    NOTES    :
+**/
+void change_guild_rank(int connection, char *char_name, char *guild_tag, int guild_rank);
+
+
+/** RESULT   : changes a guild permission level
+
+    RETURNS  : void
+
+    PURPOSE  : used by function hash_change_guild_permission
+
+    NOTES    : OPS only
+**/
+void change_guild_permission(int connection, char *guild_tag, int permission_level);
 
 #endif // GUILD_H_INCLUDED

@@ -304,7 +304,7 @@ void create_database(const char *db_filename){
     //check that sqlite file does not already exist
     if(file_exists(db_filename)){
 
-        log_text(EVENT_INITIALISATION, "sqlite file [%s] already exists", db_filename);
+        log_text(EVENT_ERROR, "sqlite file [%s] already exists", db_filename);
         printf("sqlite file [%s] already exists\n", db_filename);
         stop_server();
     }
@@ -467,9 +467,15 @@ void create_database(const char *db_filename){
 
     add_db_map(1, "Isla Prima", "startmap.elm");
 
-    add_db_guild("Operators", "OPS", c_grey3, "", 3, 0);
+    add_db_guild("Operators", "OPS", c_grey3, "The server operators guild", PERMISSION_1, GUILD_ACTIVE);
 
     memset(&character, 0, sizeof(character));
+
+    strcpy(character.char_name, "Player");
+    strcpy(character.password, "test");
+    character.char_created=time(NULL);
+    character.character_id=1;
+    character.char_status=CHAR_ALIVE;
     character.skin_type=1;
     character.hair_type=1;
     character.shirt_type=1;
@@ -477,12 +483,17 @@ void create_database(const char *db_filename){
     character.boots_type=1;
     character.char_type=1;
     character.head_type=1;
-
-    //set the char to stand
     character.frame=frame_stand;
-
-    //set the char creation time
     character.char_created=time(NULL);
+
+    //load game data so that starting map and map tile can be found
+    load_db_game_data();
+
+    character.map_id=game_data.beam_map_id;
+    character.map_tile=game_data.beam_map_tile;
+    character.guild_id=1;
+    character.joined_guild=time(NULL);
+    character.guild_rank=20;
 
     //set starting channels
     int j=0;
@@ -498,12 +509,6 @@ void create_database(const char *db_filename){
         }
     }
 
-    //set starting map and tile
-    character.map_id=game_data.beam_map_id;
-    character.map_tile=game_data.beam_map_tile;
-
     add_db_char_data(character);
-
-    //join default character to operators guild
-    join_guild(GUILD_OPERATORS, 0);
+    printf("Player [master_character][test] added successfully\n");
 }

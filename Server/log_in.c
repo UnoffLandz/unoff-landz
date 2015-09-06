@@ -113,7 +113,7 @@ void process_log_in(int connection, const unsigned char *packet){
     log_event(EVENT_SESSION, "login attempt char name [%s] password [%s]", char_name, password);
 
     //get the char_id corresponding to the char name
-    int char_id=get_db_char_data(char_name);
+    int char_id=get_db_char_data(char_name, 0);
 
     if(char_id==NOT_FOUND) {
 
@@ -208,8 +208,10 @@ void process_log_in(int connection, const unsigned char *packet){
 
             send_login_not_ok(connection);
             log_event(EVENT_SESSION, "login rejected - dead char");
+
             sprintf(text_out, "%cDead", c_red1+127);
             send_raw_text(connection, CHAT_SERVER, text_out);
+
             close_connection_slot(connection);
             return;
         }
@@ -218,8 +220,10 @@ void process_log_in(int connection, const unsigned char *packet){
 
             send_login_not_ok(connection);
             log_event(EVENT_SESSION, "login rejected - banned char");
+
             sprintf(text_out, "%cBanned", c_red1+127);
             send_raw_text(connection, CHAT_SERVER, text_out);
+
             close_connection_slot(connection);
             return;
         }
@@ -228,7 +232,9 @@ void process_log_in(int connection, const unsigned char *packet){
 
             send_login_not_ok(connection);
             log_event(EVENT_ERROR, "login rejected - unknown char status [%i]", clients.client[connection].char_status);
+
             close_connection_slot(connection);
+
             stop_server();
         }
     }

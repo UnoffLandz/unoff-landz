@@ -42,9 +42,11 @@ struct client_node_type{
     int packet_buffer[1024];
     int packet_buffer_length;
 
+    time_t char_created;
     int character_id; //database id for char
     int char_age;//aggregate in-game time (measured in game minutes) for this character
 
+    time_t session_commenced;
     time_t time_of_last_heartbeat;
     time_t time_of_last_minute;
 
@@ -75,6 +77,8 @@ struct client_node_type{
     int map_tile;
 
     int guild_id;
+    time_t joined_guild;
+    int guild_rank;
 
     int char_type;
     int skin_type;
@@ -90,10 +94,6 @@ struct client_node_type{
     int frame;
     int max_health;
     int current_health;
-
-    time_t char_created;
-    time_t joined_guild;
-    time_t session_commenced;
 
     int physique_pp;
     int max_physique;

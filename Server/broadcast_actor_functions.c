@@ -256,6 +256,7 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                     }
 
                     send_packet(connection, packet, packet_length);
+                    //send(connection, &packet, packet_length, 0);
                 }
             }
         }

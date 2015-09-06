@@ -91,11 +91,13 @@ void push_idle_buffer2(int connection, int process_type, const unsigned char *pa
 
     idle_buffer2.push_back(entry);
 }
+
+
 void push_sql_command(const char *sql){
+
     /** public function - see header **/
 
-    if(idle_buffer2.size()>=IDLE_BUFFER2_MAX)
-    {
+    if(idle_buffer2.size()>=IDLE_BUFFER2_MAX) {
 
         //buffer overflow
         log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
@@ -117,6 +119,7 @@ void process_idle_buffer2(){
     //make sure we have something in the buffer to process
     if(idle_buffer2.empty())
         return;
+
     const data_ &command(idle_buffer2.front());
 
     int connection=command.connection;
@@ -146,6 +149,7 @@ void process_idle_buffer2(){
     /**********************************************************************************************/
 
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_LOGIN){
+
         D_PRINT("IDLE_BUFFER2_PROCESS_LOGIN\n");
         process_log_in(connection, command.packet);
     }

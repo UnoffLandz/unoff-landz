@@ -36,45 +36,38 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-DONE NEW - need #create_guild [name][tag][permission level] so that Operators can create the Developers guild
-
-NEW - test #create_guild
-NEW - need #appoint_guild_master [guild tag] [name] so that Ops can transfer Devs guild
-NEW - need #command to change guild permission level (operators only)
-NEW - need #command to add/change guild description
-NEW - need #command to change guild tag colour
-NEW - need #Letter system to inform ppl if guild application has been approved/rejected
-NEW - change add_db_char so it returns id the same way as add_db_guild
-NEW - test creation of default char and guild
-NEW - need #GM guild channel functionality
-NEW - need #IG guild channel functionality
-NEW - need guild channel hello/goodbye messages
-NEW - need guild master #command to list applications to join guild
-NEW - need guild master #command to accept applications to join guild
-NEW - need guild master #command to reject application to join guild
-NEW - need #leave_guild
-NEW - need #command to #pm all guild members (guild master only)
-NEW - implement guild stats
-NEW - convert attribute struct so as attribute type can be addressed programatically
-
-**restrict use of #jump to Developers and Operators guilds
+use send_text in place of send_raw_text
+find way of putting get_char_data in idle buffer
+need way to manage multiple guild applications
+test guild related #commands
+need OPS #command to #pm all active players
+need #GM guild channel functionality
+need #IG guild channel functionality
+need guild channel hello/goodbye messages
+need #letter system to inform ppl if guild application has been approved/rejected
+need #command to change guild tag colour
+need #command to change guild description
+need #leave_guild
+need #command to withdraw application to join guild
+need #command to #pm all guild members (guild master only)
+implement guild stats
+convert attribute struct so as attribute type can be addressed programatically
 need update map function (for OL map walker)
-identify cause of stall after login
-**log illegal use of #jump and other developer #commands
+identify cause of stall after login (likely to be loading of inventory from db)
+put inventory slots in a binary blob (may solve stall on log in)
+log illegal use of #jump and other developer #commands
 create #function to describe map (name, description, author, size)
 improve error handling on upgrade_database function
 refactor function current_database_version
 create circular buffer for receiving packets
 cope with send not sending all the bytes at once
-test new char creation (create #function to describe char and what it is wearing)
+need #function to describe char and what it is wearing)
 test multiplayer capability is still working
 walk to towards bag when clicked on if char is not standing on bag
 extend add_client_to_map function so that existing bags are shown to new client
 implement pick up bag
 implement bag poof
-implement send_packet function on server protocol commands
 map object reserve respawn
-make initial field in all tables ID
 document new database/struct relationships
 finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 
@@ -536,8 +529,6 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     (void)(timer);//removes unused parameter warning
     (void)(loop);
 
-    int i=0;
-
     if (EV_ERROR & revents) {
 
         log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
@@ -548,7 +539,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     gettimeofday(&time_check, NULL);
 
     //check through each connect client and process pending actions
-    for(i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
         //restrict to clients that are logged on or connected
         if(clients.client[i].client_status==LOGGED_IN || clients.client[i].client_status==CONNECTED) {
@@ -698,7 +689,6 @@ int main(int argc, char *argv[]){
                 open_database(db_filename);
                 list_db_maps();
                 break;
-
             }
 
             case 'C': { // create database

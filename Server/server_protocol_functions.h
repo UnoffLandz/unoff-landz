@@ -27,8 +27,10 @@
 
     PURPOSE : groups all server communications so as packets sent from server can be monitored
               from a single source
+
+    NOTES   :
 */
-void send_packet(int connection, unsigned char *packet, int packet_length);
+void send_packet(int connection, void *packet, int packet_length);
 
 
 /** RESULT  : sends the log_in_ok packet to the client
@@ -36,6 +38,8 @@ void send_packet(int connection, unsigned char *packet, int packet_length);
     RETURNS : void
 
     PURPOSE : to let the client know that char has been successfully logged in
+
+    NOTES   :
 */
 void send_login_ok(int connection);
 
@@ -45,6 +49,8 @@ void send_login_ok(int connection);
     RETURNS : void
 
     PURPOSE : to let the client know that char has not been successfully logged in
+
+    NOTES   :
 */
 void send_login_not_ok(int connection);
 
@@ -54,6 +60,8 @@ void send_login_not_ok(int connection);
     RETURNS : void
 
     PURPOSE : to let the client know that char does not exist
+
+    NOTES   :
 */
 void send_you_dont_exist(int connection);
 
@@ -63,6 +71,8 @@ void send_you_dont_exist(int connection);
     RETURNS : void
 
     PURPOSE : sent following successful char creation
+
+    NOTES   :
 */
 void send_create_char_ok(int sock);
 
@@ -72,6 +82,8 @@ void send_create_char_ok(int sock);
     RETURNS : void
 
     PURPOSE : sent following unsuccessful char creation
+
+    NOTES   :
 */
 void send_create_char_not_ok(int sock);
 
@@ -81,6 +93,8 @@ void send_create_char_not_ok(int sock);
     RETURNS : void
 
     PURPOSE : sends the client a code to identify connection following log in
+
+    NOTES   :
 */
 void send_you_are(int connection);
 
@@ -89,11 +103,23 @@ void send_you_are(int connection);
 
     RETURNS : void
 
-    PURPOSE : sends text messages to connected clients via the specified channel
+    PURPOSE : sends text messages to a client via the specified channel
 
     NOTES   :
 */
 void send_raw_text(int connection, int chan_type, char *text);
+
+
+/** RESULT  : wrapper for send_raw_text
+
+    RETURNS : void
+
+    PURPOSE : sends formatted text message to a client via  the specified channel
+
+    NOTES   :
+
+*/
+void send_text(int connection, int channel_type, const char *fmt, ...);
 
 
 /** RESULT  : sends the here_your_inventory packet to client
@@ -274,6 +300,8 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
     NOTES   :
 */
 void send_close_bag(int connection);
+
+
 void send_display_client_window(int connection);
 
 #endif // SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED
