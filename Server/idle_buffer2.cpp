@@ -39,6 +39,7 @@
 // add a helper macro that is performing printf when DEBUG_IDLE_BUFFER2 != 0
 // and does nothing otherwise
 // this is meant to simplify all "#if DEBUG_IDLE_BUFFER2  printf()  #endif " parts of code
+
 #if DEBUG_IDLE_BUFFER2
 #define D_PRINT(...) printf(__VA_ARGS__)
 #else
@@ -53,6 +54,7 @@ struct data_{
     int connection;
     int process_type;
 };
+
 // command storage typedef
 typedef std::deque<data_> buffer_list_type;
 
@@ -62,14 +64,14 @@ void push_idle_buffer2(int connection, int process_type, const unsigned char *pa
 
     /** public function - see header **/
 
-    if(idle_buffer2.size()>=IDLE_BUFFER2_MAX)
-    {
+    if(idle_buffer2.size()>=IDLE_BUFFER2_MAX) {
 
         //buffer overflow
         log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
         return;
     }
+
     data_ entry;
 
     entry.sql.clear();
@@ -111,6 +113,7 @@ void push_sql_command(const char *sql){
 
     idle_buffer2.push_back(entry);
 }
+
 
 void process_idle_buffer2(){
 

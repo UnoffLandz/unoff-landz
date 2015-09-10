@@ -47,21 +47,20 @@ int get_guild_id(char *guild_tag){
     return -1;
 }
 
+
 void apply_guild(int connection, char *guild_tag){
 
     /** public function - see header **/
 
     int guild_id=get_guild_id(guild_tag);
-    char text_out[80]="";
 
     if(guild_id==-1){
 
-        sprintf(text_out, "%cguild %s does not exist", c_red3+127, guild_tag);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cguild %s does not exist", c_red3+127, guild_tag);
         return;
     }
 
+    //add applicant to guild applicant list
     for(int i=0; i<MAX_GUILD_APPLICANTS; i++){
 
         if(strcmp(guilds.guild[guild_id].applicant[i].char_name, "")==0){
@@ -69,15 +68,11 @@ void apply_guild(int connection, char *guild_tag){
             strcpy(guilds.guild[guild_id].applicant[i].char_name, clients.client[connection].char_name);
             guilds.guild[guild_id].applicant[i].application_date=time(NULL);
 
-            sprintf(text_out, "%cyour application to join guild %s has been made. Now wait for the guild master to approve your application", c_green3+127, guild_tag);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
             return;
         }
     }
 
-    sprintf(text_out, "%csorry. Guild %s has too many pending applications. Please contact the guild master", c_red3+127, guild_tag);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%csorry. Guild %s has too many pending applications. Please contact the guild master", c_red3+127, guild_tag);
 }
 
 
@@ -85,25 +80,20 @@ void create_guild(int connection, char *guild_name, char *guild_description, cha
 
     /** public function - see header **/
 
-    char text_out[80]="";
-
-    for(int i=0; i<MAX_GUILDS; i++){
+    //loop from 1 as guild 0 is reserved for unguilded players
+    for(int i=1; i<MAX_GUILDS; i++){
 
         //check for duplicate guild tag
         if(strcmp(guilds.guild[i].guild_tag, guild_tag)==0){
 
-            sprintf(text_out, "%c a guild with that tag already exists", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
+            send_text(connection, CHAT_SERVER, "%c a guild with that tag already exists", c_red3+127);
             return;
         }
 
-        //check for duplicate guild tag
+        //check for duplicate guild name
         if(strcmp(guilds.guild[i].guild_name, guild_name)==0){
 
-            sprintf(text_out, "%c a guild with that name already exists", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
+            send_text(connection, CHAT_SERVER, "%ca guild with that name already exists", c_red3+127);
             return;
         }
 
@@ -113,15 +103,14 @@ void create_guild(int connection, char *guild_name, char *guild_description, cha
             strcpy(guilds.guild[i].guild_name, guild_name);
             strcpy(guilds.guild[i].guild_tag, guild_tag);
             strcpy(guilds.guild[i].guild_description, guild_description);
-            guilds.guild[i].guild_tag_colour=c_grey4;
+            guilds.guild[i].guild_tag_colour=c_grey1;
             guilds.guild[i].date_guild_created=time(NULL);
             guilds.guild[i].permission_level=permission_level;
             guilds.guild[i].status=GUILD_ACTIVE;
 
             log_event(EVENT_SESSION, "create guild [%s]", guild_tag);
 
-            sprintf(text_out, "%cyou have created the guild", c_green3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
+            send_text(connection, CHAT_SERVER, "%cyou have created the guild", c_green3+127);
 
             char sql[MAX_SQL_LEN]="";
 
@@ -141,22 +130,17 @@ void create_guild(int connection, char *guild_name, char *guild_description, cha
         }
     }
 
-    sprintf(text_out, "%c maximum number of guilds supported by the server has been exceeded", c_red3+127);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cmaximum number of guilds supported by the server has been exceeded", c_red3+127);
 }
 
 
 void kick_guild_member(int connection, char *guild_tag, char *char_name){
 
-    char text_out[80]="";
-
     // check guild tag exists
     int guild_id=get_guild_id(guild_tag);
     if(guild_id==-1){
 
-        sprintf(text_out, "%cguild tag does not exist", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cguild tag does not exist", c_red3+127);
         return;
     }
 
@@ -170,9 +154,7 @@ void kick_guild_member(int connection, char *guild_tag, char *char_name){
     // check if char is already in a guild
     if(character.guild_id!=get_guild_id(guild_tag)){
 
-        sprintf(text_out, "%ccharacter is not a member of guild %s", c_red3+127, guilds.guild[character.guild_id].guild_tag);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%ccharacter is not a member of guild %s", c_red3+127, guilds.guild[character.guild_id].guild_tag);
         return;
     }
 
@@ -243,15 +225,11 @@ void join_guild(int connection, char *char_name, char *guild_tag){
 
     /** public function - see header **/
 
-    char text_out[80]="";
-
     // check guild tag exists
     int guild_id=get_guild_id(guild_tag);
     if(guild_id==-1){
 
-        sprintf(text_out, "%cguild tag does not exist", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cguild tag does not exist", c_red3+127);
         return;
     }
 
@@ -265,28 +243,23 @@ void join_guild(int connection, char *char_name, char *guild_tag){
     // check if char is already in a guild
     if(character.guild_id>0){
 
-        sprintf(text_out, "%ccharacter is already a member of guild %s", c_red3+127, guilds.guild[character.guild_id].guild_tag);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%ccharacter is already a member of guild %s", c_red3+127, guilds.guild[character.guild_id].guild_tag);
         return;
     }
 
     _join_guild(character.character_id, guild_id);
 }
 
+
 void change_guild_rank(int connection, char *char_name, char *guild_tag, int guild_rank){
 
     /** public function - see header **/
-
-    char text_out[80]="";
 
     // check guild tag exists
     int guild_id=get_guild_id(guild_tag);
     if(guild_id==-1){
 
-        sprintf(text_out, "%cguild tag does not exist", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cguild tag does not exist", c_red3+127);
         return;
     }
 
@@ -300,36 +273,28 @@ void change_guild_rank(int connection, char *char_name, char *guild_tag, int gui
     // check if char is in guild
     if(character.guild_id!=guild_id){
 
-        sprintf(text_out, "%ccharacter is not a member of guild %s", c_red3+127, guilds.guild[character.guild_id].guild_tag);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%ccharacter is not a member of guild %s", c_red3+127, guilds.guild[character.guild_id].guild_tag);
         return;
     }
 
     //check rank bounds
     if(guild_rank<0 || guild_rank>20){
 
-        sprintf(text_out, "%cinvalid rank", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cinvalid rank", c_red3+127);
         return;
     }
 
     //check rank permission
     if(guild_rank<20 && guild_rank>clients.client[connection].guild_rank-1){
 
-        sprintf(text_out, "%cthat rank increase can only be granted by someone with guild rank %i or above", c_red3+127, guild_rank+1);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cthat rank increase can only be granted by someone with guild rank %i or above", c_red3+127, guild_rank+1);
         return;
     }
 
     //check guild master promotion permission
     if(guild_rank==20 && clients.client[connection].guild_rank<20){
 
-        sprintf(text_out, "%cthat rank increase can only be granted by someone with guild rank 20", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cthat rank increase can only be granted by someone with guild rank '20'", c_red3+127);
         return;
     }
 
@@ -346,7 +311,6 @@ void change_guild_rank(int connection, char *char_name, char *guild_tag, int gui
             clients.client[i].guild_rank=guild_rank;
 
             log_event(EVENT_SESSION, "char [%s] promoted to rank [%i] in guild [%s]", clients.client[i].char_name, guild_rank, guilds.guild[guild_id].guild_tag);
-
             return;
         }
     }
@@ -356,24 +320,18 @@ void change_guild_permission(int connection, char *guild_tag, int permission_lev
 
     /** public function - see header **/
 
-    char text_out[80]="";
-
     //does guild tag exist
     int guild_id=get_guild_id(guild_tag);
     if(guild_id==-1){
 
-        sprintf(text_out, "%cguild %s does not exist", c_red3+127, guild_tag);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cguild %s does not exist", c_red3+127, guild_tag);
         return;
     }
 
     //bounds check permission level
     if(permission_level<PERMISSION_1 || permission_level>PERMISSION_3){
 
-        sprintf(text_out, "%cinvalid guild permission level", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cinvalid guild permission level", c_red3+127);
         return;
     }
 
@@ -382,7 +340,6 @@ void change_guild_permission(int connection, char *guild_tag, int permission_lev
     snprintf(sql, MAX_SQL_LEN, "UPDATE GUILD_TABLE SET PERMISSION_LEVEL=%i WHERE GUILD_ID=%i", permission_level, guild_id);
     push_sql_command(sql);
 
-    sprintf(text_out, "%cyou have changed the permission level for guild %s to %i", c_red3+127, guild_tag, permission_level);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cyou have changed the permission level for guild %s to %i", c_green3+127, guild_tag, permission_level);
 }
 

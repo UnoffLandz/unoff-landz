@@ -65,7 +65,12 @@ struct client_node_type{
 
     char char_name[80];
     char password[80];
-    int char_status;
+
+    enum {
+        CHAR_ALIVE,
+        CHAR_DEAD,
+        CHAR_BANNED,
+    }char_status;
 
     int active_chan;
     int chan[MAX_CHAN_SLOTS];       // chan0, chan1, chan2  (chan3 used for guild chat)

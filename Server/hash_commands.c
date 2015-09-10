@@ -58,10 +58,7 @@ static int hash_jc(int connection, char *text) {
 
     if(sscanf(text, "%s %i", command, &chan_id)!=2){
 
-        char text_out[80]="";
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #JC [channel number]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #JC [channel number]", c_red3+127);
         return 0;
     }
 
@@ -87,10 +84,7 @@ static int hash_lc(int connection, char *text) {
 
     if(sscanf(text, "%s %i", command, &chan_id)!=2){
 
-        char text_out[80]="";
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #LC [channel number]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #LC [channel number]", c_red3+127);
         return 0;
     }
 
@@ -132,17 +126,13 @@ static int hash_cl(int connection, char *text) {
 
     (void)(text);
 
-    char text_out[80]="";
-
-    sprintf(text_out, "\n%cNo   Channel    Description", c_blue1+127);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "\n%cNo   Channel    Description", c_blue1+127);
 
     for(int i=0; i<MAX_CHANNELS; i++){
 
         if(channel[i].chan_type!=CHAN_VACANT) {
 
-            sprintf(text_out, "%c%i %s %-10s %-30s", c_blue1+127, i, "  ", channel[i].channel_name, channel[i].description);
-            send_raw_text(connection, CHAT_SERVER, text_out);
+            send_text(connection, CHAT_SERVER, "%c%i %s %-10s %-30s", c_blue1+127, i, "  ", channel[i].channel_name, channel[i].description);
         }
     }
 
@@ -163,28 +153,19 @@ static int hash_cp(int connection, char *text) {
 
     (void)(text);
 
-    char text_out[80]="";
-
     int active_chan_slot=clients.client[connection].active_chan;
 
     if(active_chan_slot==0){
 
-        sprintf(text_out, "%cNo active channel", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cNo active channel", c_red3+127);
         return 0;
     }
 
     int chan_id=clients.client[connection].chan[active_chan_slot-31];
 
-    sprintf(text_out, "%cListing for channel [%i]: %s", c_blue1+127, chan_id, channel[chan_id].channel_name);
-    send_raw_text(connection, CHAT_SERVER, text_out);
-
-    sprintf(text_out, "%cDescription: %s", c_blue1+127, channel[chan_id].description);
-    send_raw_text(connection, CHAT_SERVER, text_out);
-
-    sprintf(text_out, "%cCharacters in channel...", c_blue1+127);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cListing for channel [%i]: %s", c_blue1+127, chan_id, channel[chan_id].channel_name);
+    send_text(connection, CHAT_SERVER, "%cDescription: %s", c_blue1+127, channel[chan_id].description);
+    send_text(connection, CHAT_SERVER, "%cCharacters in channel...", c_blue1+127);
 
     for(int i=0; i<MAX_CLIENTS; i++){
 
@@ -192,8 +173,7 @@ static int hash_cp(int connection, char *text) {
 
             if(player_in_chan(i, chan_id)!=-1){
 
-                sprintf(text_out, "%c%s ", c_blue1+127, clients.client[i].char_name);
-                send_raw_text(connection, CHAT_SERVER, text_out);
+                send_text(connection, CHAT_SERVER, "%c%s ", c_blue1+127, clients.client[i].char_name);
             }
         }
     }
@@ -223,13 +203,14 @@ static int hash_details(int connection, char *text) {
         return 0;
     }
 
+    str_conv_upper(char_name);
+
     //check that the char is in game
     int char_connection=char_in_game(char_name);
 
     if(char_connection==NOT_FOUND){
 
         send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "character is not in game");
-
         return 0;
     }
 
@@ -283,15 +264,12 @@ static int hash_beam_me(int connection, char *text) {
 
     char command[80];
     char tail[80];
-    char text_out[80]="";
 
     if(sscanf(text, "%s %s", command, tail)==2){
 
         if(strcmp(tail, "ME")!=0){
 
-            sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #BEAM_ME or #BEAM ME");
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
+            send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
             return 0;
         }
     }
@@ -305,9 +283,7 @@ static int hash_beam_me(int connection, char *text) {
     //beam the char
     move_char_between_maps(connection, game_data.beam_map_id, new_map_tile);
 
-    sprintf(text_out, "%c%s", c_green3+127, "Scotty beamed you up");
-    send_raw_text(connection, CHAT_SERVER, text_out);
-
+    send_text(connection, CHAT_SERVER, "%cScotty beamed you up", c_green3+127);
     return 0;
 }
 
@@ -329,12 +305,11 @@ static int hash_pm(int connection, char *text) {
 
     if(sscanf(text, "%s %s %s", command, char_name, message)!=3){
 
-        char text_out[80]="";
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #PM [character name][message]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #PM [character name][message]", c_red3+127);
         return 0;
     }
+
+    str_conv_upper(char_name);
 
     //send pm
     send_pm(connection, char_name, message);
@@ -357,13 +332,10 @@ static int hash_jump(int connection, char *text) {
     char command[80];
     int map_id=0;
     int map_tile=0;
-    char text_out[80];
 
     if(sscanf(text, "%s %i %i", command, &map_id, &map_tile)!=3){
 
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #JUMP [map id] [tile]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #JUMP [map id] [tile]", c_red3+127);
         return 0;
     }
 
@@ -372,9 +344,7 @@ static int hash_jump(int connection, char *text) {
 
     if(get_db_map_exists(map_id)==false){
 
-        sprintf(text_out, "%cmap %i doesn't exist", c_red3+127, map_id);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cmap %i doesn't exist", c_red3+127, map_id);
         return 0;
     }
 
@@ -384,8 +354,7 @@ static int hash_jump(int connection, char *text) {
     //send char to new map
     move_char_between_maps(connection, map_id, new_map_tile);
 
-    sprintf(text_out, "%cYou jumped to map %s tile %i", c_green3+127, maps.map[map_id].map_name, new_map_tile);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cYou jumped to map %s tile %i", c_green3+127, maps.map[map_id].map_name, new_map_tile);
 
     return 0;
 }
@@ -403,15 +372,14 @@ static int hash_apply_guild_member(int connection, char *text) {
 
     char command[80];
     char guild_tag[4];
-    char text_out[80];
 
     if(sscanf(text, "%s %s", command, guild_tag)!=2){
 
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #APPLY_GUILD [guild tag] or JG [guild tag]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #APPLY_GUILD [guild tag] or JG [guild tag]", c_red3+127);
         return 0;
     }
+
+    str_conv_upper(guild_tag);
 
     apply_guild(connection, clients.client[connection].char_name);
 
@@ -434,15 +402,14 @@ static int hash_ops_create_guild(int connection, char *text) {
     char guild_name[80];
     char guild_tag[4];
     int permission_level=0;
-    char text_out[80];
 
-    if(sscanf(text, "%s %s %s %i", command, guild_name, guild_tag, &permission_level)!=3){
+    if(sscanf(text, "%s %s %s %i", command, guild_name, guild_tag, &permission_level)!=4){
 
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #OPS_CREATE_GUILD [guild name][guild tag][permission level]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #OPS_CREATE_GUILD [guild name][guild tag][permission level]", c_red3+127);
         return 0;
     }
+
+    str_conv_upper(guild_tag);
 
     create_guild(connection, guild_name, "", guild_tag, permission_level);
 
@@ -465,15 +432,15 @@ static int hash_ops_appoint_guild_member(int connection, char *text) {
     char guild_tag[4];
     char char_name[80];
     int guild_rank=0;
-    char text_out[80];
 
     if(sscanf(text, "%s %s %s %i", command, guild_tag, char_name, &guild_rank)!=4){
 
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #OPS_APPOINT_GUILD_MEMBER [guild tag][character_name][rank]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "you need to use the format #OPS_APPOINT_GUILD_MEMBER [guild tag][character_name][rank]", c_red3+127);
         return 0;
     }
+
+    str_conv_upper(guild_tag);
+    str_conv_upper(char_name);
 
     join_guild(connection, guild_tag, char_name);
 
@@ -498,15 +465,16 @@ static int hash_change_guild_member_rank(int connection, char *text) {
 
     if(sscanf(text, "%s %s %i", command, char_name, &guild_rank)!=3){
 
-        char text_out[80];
-
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #CHANGE_GUILD_RANK [character_name][rank] or #CR [character_name][rank]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER,"you need to use the format #CHANGE_GUILD_RANK [character_name][rank] or #CR [character_name][rank]", c_red3+127);
         return 0;
     }
 
-    char *guild_tag=guilds.guild[clients.client[connection].guild_id].guild_tag;
+    str_conv_upper(char_name);
+
+    char guild_tag[4]="";
+    strcpy(guild_tag, guilds.guild[clients.client[connection].guild_id].guild_tag);
+
+    str_conv_upper(guild_tag);
 
     change_guild_rank(connection, char_name, guild_tag, guild_rank);
 
@@ -532,13 +500,12 @@ static int hash_ops_change_guild_member_rank(int connection, char *text) {
 
     if(sscanf(text, "%s %s %s %i", command, guild_tag, char_name, &guild_rank)!=4){
 
-        char text_out[80];
-
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #OPS_CHANGE_GUILD_RANK [guild tag][character_name][rank]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "you need to use the format #OPS_CHANGE_GUILD_RANK [guild tag][character_name][rank]", c_red3+127);
         return 0;
     }
+
+    str_conv_upper(char_name);
+    str_conv_upper(guild_tag);
 
     change_guild_rank(connection, char_name, guild_tag, guild_rank);
 
@@ -563,13 +530,11 @@ static int hash_ops_change_guild_permission(int connection, char *text) {
 
     if(sscanf(text, "%s %s %i", command, guild_tag, &permission_level)!=3){
 
-        char text_out[80]="";
-
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #OPS_CHANGE_GUILD_PERMISSION [guild tag][permission level]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "you need to use the format #OPS_CHANGE_GUILD_PERMISSION [guild tag][permission level]", c_red3+127);
         return 0;
     }
+
+    str_conv_upper(guild_tag);
 
     change_guild_permission(connection, guild_tag, permission_level);
 
@@ -589,18 +554,14 @@ static int hash_list_guild_applicants(int connection, char *text) {
     */
 
     char command[80]="";
-    char text_out[80]="";
 
     if(sscanf(text, "%s", command)!=1){
 
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #LIST_GUILD_APPLICANTS or #LA");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "you need to use the format #LIST_GUILD_APPLICANTS or #LA", c_red3+127);
         return 0;
     }
 
-    sprintf(text_out, "%cThe following characters have applied to join your guild...", c_green3+127);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+   send_text(connection, CHAT_SERVER,"%cThe following characters have applied to join your guild...", c_green3+127 );
 
     int guild_id=clients.client[connection].guild_id;
 
@@ -609,10 +570,9 @@ static int hash_list_guild_applicants(int connection, char *text) {
         if(strcmp(guilds.guild[guild_id].applicant[i].char_name, "")!=0){
 
             char time_stamp_str[50]="";
-
             get_time_stamp_str(guilds.guild[guild_id].applicant[i].application_date, time_stamp_str);
-            sprintf(text_out, "%c%s %s", c_green3+127, guilds.guild[guild_id].applicant[i].char_name, time_stamp_str);
-            send_raw_text(connection, CHAT_SERVER, text_out);
+
+            send_text(connection, CHAT_SERVER, "%c%s %s", c_green3+127, guilds.guild[guild_id].applicant[i].char_name, time_stamp_str);
        }
     }
 
@@ -633,20 +593,18 @@ static int hash_accept_guild_applicant(int connection, char *text) {
 
     char command[80]="";
     char char_name[80]="";
-    char text_out[80]="";
 
     if(sscanf(text, "%s %s", command, char_name)!=2){
 
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #ACCEPT_GUILD_APPLICANTS [character name] or #AA [character name]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "you need to use the format #ACCEPT_GUILD_APPLICANTS [character name] or #AA [character name]", c_red3+127);
         return 0;
     }
 
+    str_conv_upper(char_name);
+
     join_guild(connection, char_name, guilds.guild[clients.client[connection].guild_id].guild_tag);
 
-    sprintf(text_out, "%cYou have accepted the character's application to join your guild", c_green3+127);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cYou have accepted the character's application to join your guild", c_green3+127);
 
     int guild_id=clients.client[connection].guild_id;
 
@@ -676,18 +634,16 @@ static int hash_reject_guild_applicant(int connection, char *text) {
 
     char command[80]="";
     char char_name[80]="";
-    char text_out[80]="";
 
     if(sscanf(text, "%s %s", command, char_name)!=2){
 
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #REJECT_GUILD_APPLICANTS [character name] or #RA [character name]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "you need to use the format #REJECT_GUILD_APPLICANTS [character name] or #RA [character name]", c_red3+127);
         return 0;
     }
 
-    sprintf(text_out, "%cYou have rejected the character's application to join your guild", c_green3+127);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    str_conv_upper(char_name);
+
+    send_text(connection, CHAT_SERVER, "%cYou have rejected the character's application to join your guild", c_green3+127);
 
     int guild_id=clients.client[connection].guild_id;
 
@@ -718,15 +674,15 @@ static int hash_ops_kick_guild_member(int connection, char *text) {
     char command[80]="";
     char char_name[80]="";
     char guild_tag[4]="";
-    char text_out[80]="";
 
     if(sscanf(text, "%s %s %s", command, guild_tag, char_name)!=3){
 
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #OPS_KICK_GUILD_MEMBER [guild tag][character name]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "you need to use the format #OPS_KICK_GUILD_MEMBER [guild tag][character name]", c_red3+127);
         return 0;
     }
+
+    str_conv_upper(char_name);
+    str_conv_upper(guild_tag);
 
     kick_guild_member(connection, guild_tag, char_name);
 
@@ -747,15 +703,15 @@ static int hash_kick_guild_member(int connection, char *text) {
 
     char command[80]="";
     char char_name[80]="";
-    char text_out[80]="";
 
     if(sscanf(text, "%s %s", command, char_name)!=2){
 
-        sprintf(text_out, "%c%s", c_red3+127, "you need to use the format #KICK_GUILD_MEMBER [character name]");
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, "you need to use the format #KICK_GUILD_MEMBER [character name]", c_red3+127);
 
         return 0;
     }
+
+    str_conv_upper(char_name);
 
     kick_guild_member(connection, guilds.guild[clients.client[connection].guild_id].guild_tag, char_name);
 
@@ -849,8 +805,6 @@ void process_hash_commands(int connection, char *text){
 
     /** public function - see header */
 
-    char text_out[80]="";
-
     //grab the first part of the text string as this contains the hash command name
     char hash_command[80]="";
     sscanf(text, "%s", hash_command);
@@ -862,9 +816,7 @@ void process_hash_commands(int connection, char *text){
     //check if hash command exists
     if(!hash_command_entry){
 
-        sprintf(text_out, "%ccommand %s is not supported", c_red3+127, hash_command);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%ccommand %s is not supported", c_red3+127, hash_command);
         log_event(EVENT_SESSION, "unknown #command [%s]", hash_command);
         return;
     }
@@ -874,8 +826,7 @@ void process_hash_commands(int connection, char *text){
 
     if(hash_command_entry->guild_command==true && guild_id==0){
 
-        sprintf(text_out, "%cCommand can only be used by guild members", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, "%cCommand can only be used by guild members", c_red3+127 );
         return;
     }
 
@@ -884,8 +835,7 @@ void process_hash_commands(int connection, char *text){
 
     if(guild_id>0 && required_rank>clients.client[connection].guild_rank){
 
-        sprintf(text_out, "%cCommand can only be used by guild members with rank %i or above", c_red3+127, required_rank);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, "%cCommand can only be used by guild members with rank %i or above", c_red3+127, required_rank);
         return;
     }
 
@@ -894,8 +844,7 @@ void process_hash_commands(int connection, char *text){
 
     if(guild_id>0 && hash_command_entry->permission_level>permission_level){
 
-        sprintf(text_out, "%cYou are not authorised to use that command", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, "%cYou are not authorised to use that command", c_red3+127);
         return;
     }
 

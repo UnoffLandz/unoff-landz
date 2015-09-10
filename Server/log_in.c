@@ -35,55 +35,12 @@
 #include "game_data.h"
 #include "packet.h"
 
-void load_char_data_into_connection(int connection){
-
-    clients.client[connection].character_id=character.character_id;
-    strcpy(clients.client[connection].char_name, character.char_name);
-    strcpy(clients.client[connection].password, character.password);
-    clients.client[connection].char_status=character.char_status;
-    clients.client[connection].active_chan=character.active_chan;
-    clients.client[connection].chan[0]=character.chan[0];
-    clients.client[connection].chan[1]=character.chan[1];
-    clients.client[connection].chan[2]=character.chan[2];
-    clients.client[connection].gm_permission=character.gm_permission;
-    clients.client[connection].ig_permission=character.ig_permission;
-    clients.client[connection].map_id=character.map_id;
-    clients.client[connection].map_tile=character.map_tile;
-    clients.client[connection].guild_id=character.guild_id;
-    clients.client[connection].char_type=character.char_type;
-    clients.client[connection].skin_type=character.skin_type;
-    clients.client[connection].hair_type=character.hair_type;
-    clients.client[connection].shirt_type=character.shirt_type;
-    clients.client[connection].pants_type=character.pants_type;
-    clients.client[connection].boots_type=character.boots_type;
-    clients.client[connection].head_type=character.head_type;
-    clients.client[connection].shield_type=character.shield_type;
-    clients.client[connection].weapon_type=character.weapon_type;
-    clients.client[connection].cape_type=character.cape_type;
-    clients.client[connection].helmet_type=character.helmet_type;
-    clients.client[connection].frame=character.frame;
-    clients.client[connection].max_health=character.max_health;
-    clients.client[connection].current_health=character.current_health;
-    clients.client[connection].char_created=character.char_created;
-    clients.client[connection].joined_guild=character.joined_guild;
-
-    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
-
-        clients.client[connection].client_inventory[i].object_id=character.client_inventory[i].object_id;
-        clients.client[connection].client_inventory[i].amount=character.client_inventory[i].amount;
-    }
-
-    clients.client[connection].overall_exp=character.overall_exp;
-    clients.client[connection].harvest_exp=character.harvest_exp;
-}
-
 
 void process_log_in(int connection, const unsigned char *packet){
 
     /** public function - see header **/
 
     char text[80]="";
-    char text_out[80]="";
     int map_id=0;
     //int chan_colour=0;
 
@@ -103,8 +60,7 @@ void process_log_in(int connection, const unsigned char *packet){
     //for two strings separated by a space
     if(sscanf(char_name_and_password, "%s %s", char_name, password)!=2){
 
-        sprintf(text_out, "%cSorry, but that caused an error", c_red1+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, "%cSorry, but that caused an error", c_red1+127);
 
         send_login_not_ok(connection);
         log_event(EVENT_ERROR, "malformed login attempt [%s]", text);
@@ -118,16 +74,20 @@ void process_log_in(int connection, const unsigned char *packet){
     if(char_id==NOT_FOUND) {
 
         send_you_dont_exist(connection);
-        send_raw_text(connection, CHAT_SERVER, "unknown character name");
 
+        send_text(connection, CHAT_SERVER, "%cunknown character name", c_red1+127);
         log_event(EVENT_SESSION, "login rejected - unknown char name");
-
         return;
     }
 
-    //the get_char_data function loads the char data into a temporary struct, so now we use the load_char_data
-    //function to transfer that data into the client struct
-    load_char_data_into_connection(connection);
+    //save data already inserted into the client struct (so we don't lose this when we
+    //copy the contents of the character struct across)
+    character.client_status=clients.client[connection].client_status;
+    strcpy(character.ip_address, clients.client[connection].ip_address);
+    character.time_of_last_heartbeat=clients.client[connection].time_of_last_heartbeat;
+
+    //now copy the data in the character struct to the client struct
+    clients.client[connection]=character;
 
     //check we have the correct password for our char
     if(strcmp(password, clients.client[connection].password)!=0){
@@ -187,15 +147,6 @@ void process_log_in(int connection, const unsigned char *packet){
             //record when session commenced so we can calculate time in-game
             clients.client[connection].session_commenced=time(NULL);
 
-            /*
-            //notify client if char has developer status
-            if(clients.client[connection].char_status==CHAR_DEVELOPER){
-
-                sprintf(text_out, "%cYour character has 'Developer' status", c_green1+127);
-                send_raw_text(connection, CHAT_SERVER, text_out);
-            }
-            */
-
             send_login_ok(connection);
             send_you_are(connection);
             send_get_active_channels(connection);
@@ -209,8 +160,7 @@ void process_log_in(int connection, const unsigned char *packet){
             send_login_not_ok(connection);
             log_event(EVENT_SESSION, "login rejected - dead char");
 
-            sprintf(text_out, "%cDead", c_red1+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
+            send_text(connection, CHAT_SERVER, "%cThat character is dead!", c_red1+127);
 
             close_connection_slot(connection);
             return;
@@ -221,8 +171,7 @@ void process_log_in(int connection, const unsigned char *packet){
             send_login_not_ok(connection);
             log_event(EVENT_SESSION, "login rejected - banned char");
 
-            sprintf(text_out, "%cBanned", c_red1+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
+            send_text(connection, CHAT_SERVER, "%cThat character is banned!", c_red1+127);
 
             close_connection_slot(connection);
             return;

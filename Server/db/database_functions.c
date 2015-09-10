@@ -304,13 +304,13 @@ void create_database(const char *db_filename){
     //check that sqlite file does not already exist
     if(file_exists(db_filename)){
 
-        log_text(EVENT_ERROR, "sqlite file [%s] already exists", db_filename);
+        log_event(EVENT_ERROR, "sqlite file [%s] already exists", db_filename);
         printf("sqlite file [%s] already exists\n", db_filename);
         stop_server();
     }
 
     //create new sqlite database file
-    log_text(EVENT_INITIALISATION, "Creating sqlite file [%s]", db_filename);
+    log_event(EVENT_INITIALISATION, "Creating sqlite file [%s]", db_filename);
     printf("Creating sqlite file [%s]", db_filename);
 
     int rc = sqlite3_open(db_filename, &db);
@@ -467,7 +467,7 @@ void create_database(const char *db_filename){
 
     add_db_map(1, "Isla Prima", "startmap.elm");
 
-    add_db_guild("Operators", "OPS", c_grey3, "The server operators guild", PERMISSION_1, GUILD_ACTIVE);
+    add_db_guild("Operators", "OPS", c_grey3, "The server operators guild", PERMISSION_3, GUILD_ACTIVE);
 
     memset(&character, 0, sizeof(character));
 

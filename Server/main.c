@@ -36,10 +36,15 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
+DONE NEW - incorporate load_char_data_into_connection function into the process_log_in function
+DONE test guild related #commands
+-tested - ops_create_guild
+-tested - ops_change_guild_permission
+
 use send_text in place of send_raw_text
-find way of putting get_char_data in idle buffer
-need way to manage multiple guild applications
-test guild related #commands
+NEW - remove character_type_name field from CHARACTER_TYPE_TABLE
+NEW - remove elm_file field from MAP TABLE
+need #command to give guild details (same as char details)
 need OPS #command to #pm all active players
 need #GM guild channel functionality
 need #IG guild channel functionality
@@ -51,6 +56,8 @@ need #leave_guild
 need #command to withdraw application to join guild
 need #command to #pm all guild members (guild master only)
 implement guild stats
+find way of putting get_char_data in idle buffer
+need way to manage multiple guild applications
 convert attribute struct so as attribute type can be addressed programatically
 need update map function (for OL map walker)
 identify cause of stall after login (likely to be loading of inventory from db)

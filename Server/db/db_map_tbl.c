@@ -185,7 +185,7 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
 
     sqlite3_stmt *stmt;
 
-    struct {
+    struct __attribute__((__packed__)){
 
         unsigned char magic_number[4];
         int h_tiles;
@@ -357,7 +357,7 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc2, sql2);
     }
 
-    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg2);
+    rc2=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg2);
     if(rc2!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc2, sql2);
@@ -375,6 +375,10 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
             stop_server();
         }
 
+        //adjust object coordinates to height map
+        threed_object_entry.x_pos=threed_object_entry.x_pos * 2.00f;
+        threed_object_entry.y_pos=threed_object_entry.y_pos * 2.00f;
+
         //extract the e3d file name from the path and file
         char e3d_filename[80]="";
         strcpy(e3d_filename, strrchr(threed_object_entry.e3d_path_and_filename, '/')+1 );
@@ -385,7 +389,7 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
         //usually we'd use the get_tile function to calculate the tile. However, this relies on the map struct
         //being fully loaded which only happens after a server start. We therefore have to calculate the tile
         //based on data from the elm header
-        int tile=threed_object_entry.x_pos + (threed_object_entry.y_pos * elm_header.h_tiles);
+        int tile=(int)threed_object_entry.x_pos + ((int)threed_object_entry.y_pos * map_axis);
 
         int harvestable=0;
         int reserve=0;
@@ -395,7 +399,7 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
         sqlite3_bind_int(stmt2, 3, tile);
         sqlite3_bind_int(stmt2, 4, e3d_id);
         sqlite3_bind_int(stmt2, 5, harvestable);
-        sqlite3_bind_int(stmt2, 5, reserve);
+        sqlite3_bind_int(stmt2, 6, reserve);
 
         rc2 = sqlite3_step(stmt2);
         if (rc2!= SQLITE_DONE) {
@@ -407,8 +411,8 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
        sqlite3_reset(stmt2);
     }
 
-    sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg2);
-    if (rc2 != SQLITE_DONE) {
+    rc2=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg2);
+    if (rc2!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc2, sql2);
     }

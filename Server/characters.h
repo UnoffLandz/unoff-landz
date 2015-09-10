@@ -22,11 +22,6 @@
 
 #include "clients.h"
 
-enum { //char status
-    CHAR_ALIVE,
-    CHAR_DEAD,
-    CHAR_BANNED,
-};
 
 enum {// actor frame (needed for stand up/sit down
     frame_sit=12,

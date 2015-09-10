@@ -110,20 +110,15 @@ bool get_db_char_data(char *char_name, int char_id){
         strcpy(character.password, (char*) sqlite3_column_text(stmt,2));
         character.char_status=sqlite3_column_int(stmt, 3);
         character.active_chan=sqlite3_column_int(stmt, 4);
-
         character.chan[0]=sqlite3_column_int(stmt, 5);
         character.chan[1]=sqlite3_column_int(stmt, 6);
         character.chan[2]=sqlite3_column_int(stmt, 7);
-
         character.gm_permission=sqlite3_column_int(stmt, 8);
         character.ig_permission=sqlite3_column_int(stmt, 9);
-
         character.map_id=sqlite3_column_int(stmt, 10);
         character.map_tile=sqlite3_column_int(stmt, 11);
-
         character.guild_id=sqlite3_column_int(stmt, 12);
         character.guild_rank=sqlite3_column_int(stmt, 13);
-
         character.char_type=sqlite3_column_int(stmt, 14);
         character.skin_type=sqlite3_column_int(stmt, 15);
         character.hair_type=sqlite3_column_int(stmt, 16);
@@ -135,17 +130,12 @@ bool get_db_char_data(char *char_name, int char_id){
         character.weapon_type=sqlite3_column_int(stmt, 22);
         character.cape_type=sqlite3_column_int(stmt, 23);
         character.helmet_type=sqlite3_column_int(stmt, 24);
-
         character.frame=sqlite3_column_int(stmt, 25);
-
         character.max_health=sqlite3_column_int(stmt, 26);
         character.current_health=sqlite3_column_int(stmt, 27);
-
         //character.last_in_game=sqlite3_column_int(stmt,  28);
-
         character.char_created=sqlite3_column_int(stmt, 29);
         character.joined_guild=sqlite3_column_int(stmt, 30);
-
         character.physique_pp=sqlite3_column_int(stmt, 31);
         character.vitality_pp=sqlite3_column_int(stmt, 32);
         character.will_pp=sqlite3_column_int(stmt, 33);

@@ -20,6 +20,8 @@
 #ifndef SERVER_PROTOCOL_H_INCLUDED
 #define SERVER_PROTOCOL_H_INCLUDED
 
+#define SEND_TEXT_MAX 1024
+
 enum { // server to client protocol
 
     RAW_TEXT=0,

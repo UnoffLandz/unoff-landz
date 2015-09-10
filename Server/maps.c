@@ -33,9 +33,11 @@
 
 struct map_list_type maps;
 
+
 int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
 
     /** public function - see header */
+    //tile_pos_1=tile_pos_1/2;
 
     int x_diff=abs((tile_pos_1 % map_axis) - (tile_pos_2 % map_axis));
     int y_diff=abs((tile_pos_1 / map_axis) - (tile_pos_2 / map_axis));

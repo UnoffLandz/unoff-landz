@@ -20,11 +20,6 @@
 #ifndef LOG_IN_H_INCLUDED
 #define LOG_IN_H_INCLUDED
 
-enum { //return values for validate_password function
-    PASSWORD_CORRECT=0,
-    PASSWORD_INCORRECT=-1
-};
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,8 +29,10 @@ extern "C" {
     RETURNS : void
 
     PURPOSE : reduce need for code in client_protocol_handler.c
+
+    NOTES   :
 */
-void process_log_in(int connection, const unsigned char *data);
+void process_log_in(int connection, const unsigned char *packet);
 
 #ifdef __cplusplus
 }

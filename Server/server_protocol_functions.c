@@ -32,6 +32,7 @@
 #include "string_functions.h"
 #include "guilds.h"
 #include "bags.h"
+#include "server_start_stop.h"
 
 #define DEBUG_SERVER_PROTOCOL_FUNCTIONS 0
 
@@ -276,20 +277,21 @@ void send_text(int connection, int channel_type, const char *fmt, ...){
 
     /** public function - see header */
 
-    char text_in[1024]="";
+    char text_in[SEND_TEXT_MAX]="";
 
     va_list args;
     va_start(args, fmt);
 
-    vsprintf(text_in, fmt, args);
+    if (vsprintf(text_in, fmt, args)>SEND_TEXT_MAX){
+
+        log_event(EVENT_ERROR, "text string exceeds max in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
+    }
 
     send_raw_text(connection, channel_type, text_in);
 
     va_end(args);
 }
-
-
-
 
 
 void send_here_your_inventory(int connection){
