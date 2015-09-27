@@ -33,6 +33,7 @@
 void send_packet(int connection, void *packet, int packet_length);
 
 
+
 /** RESULT  : sends the log_in_ok packet to the client
 
     RETURNS : void
@@ -108,18 +109,6 @@ void send_you_are(int connection);
     NOTES   :
 */
 void send_raw_text(int connection, int chan_type, char *text);
-
-
-/** RESULT  : wrapper for send_raw_text
-
-    RETURNS : void
-
-    PURPOSE : sends formatted text message to a client via  the specified channel
-
-    NOTES   :
-
-*/
-void send_text(int connection, int channel_type, const char *fmt, ...);
 
 
 /** RESULT  : sends the here_your_inventory packet to client
@@ -303,5 +292,34 @@ void send_close_bag(int connection);
 
 
 void send_display_client_window(int connection);
+
+/*****************************************************************************************************
+***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
+******************************************************************************************************/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** RESULT  : wrapper for send_raw_text
+
+    RETURNS : void
+
+    PURPOSE : sends formatted text message to a client via  the specified channel
+
+    NOTES   :
+
+*/
+void send_text(int connection, int channel_type, const char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+
+
+
+
 
 #endif // SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED

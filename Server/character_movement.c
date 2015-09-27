@@ -17,9 +17,7 @@
     along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#include <stdlib.h>     //supports exit function
 #include <stdio.h>      //support sprintf function
-#include <sys/socket.h> //support for send function
 
 #include "logging.h"
 #include "clients.h"
@@ -181,7 +179,9 @@ void send_actors_to_client(int connection){
 
                 //send actors within visual proximity to this char
                 add_new_enhanced_actor_packet(i, packet, &packet_length);
-                send(connection, packet, packet_length, 0);
+
+                //send(connection, packet, packet_length, 0);
+                send_packet(connection, packet, packet_length);
             }
         }
     }
@@ -195,12 +195,9 @@ bool add_char_to_map(int connection, int map_id, int map_tile){
     //if map is outside bounds then abort map move and alert client
     if(map_id>MAX_MAPS || map_id<0) {
 
-        char text_out[80]="";
-
         log_event(EVENT_MOVE_ERROR, "illegal map (id[%i] name [%s]) in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
 
-        sprintf(text_out, "%cnew map is outside bounds", c_red1+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, "%cnew map is outside bounds", c_red1+127);
 
         return false;
     }
@@ -211,12 +208,9 @@ bool add_char_to_map(int connection, int map_id, int map_tile){
     //if unable to find unoccupied tile then abort
     if(unoccupied_tile==0){
 
-        char text_out[80]="";
-
         log_event(EVENT_MOVE_ERROR, "Unable to find unoccupied tile within [%i] tiles on map (id[%i] name [%s]) in function %s: module %s: line %i", MAX_UNOCCUPIED_TILE_SEARCH, map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
 
-        sprintf(text_out, "%cunable to find unoccupied tile in new map", c_red1+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, "%cunable to find unoccupied tile in new map", c_red1+127);
 
         return false;
     }
@@ -261,8 +255,6 @@ void start_char_move(int connection, int destination){
 
     /** public function - see header */
 
-    char text_out[1024]="";
-
     int map_id=clients.client[connection].map_id;
     int current_tile=clients.client[connection].map_tile;
 
@@ -286,9 +278,7 @@ void start_char_move(int connection, int destination){
     //check if the destination is walkable
     if(maps.map[map_id].height_map[destination]<MIN_TRAVERSABLE_VALUE){
 
-        sprintf(text_out, "%cThe tile you clicked on can't be walked on", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cThe tile you clicked on can't be walked on", c_red3+127);
         return;
     }
 

@@ -36,16 +36,31 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-DONE NEW - incorporate load_char_data_into_connection function into the process_log_in function
-DONE test guild related #commands
--tested - ops_create_guild
--tested - ops_change_guild_permission
+NEW DONE added guild rank to #details command
+NEW DONE BUG - race not showing in #details
+NEW DONE BUG - sex shown in #details is incorrect
+NEW DONE process #details command in idle buffer
+NEW DONE extend #details to offline characters
+NEW DONE #details defaults to calling char if no char is specified
 
+TESTED DONE #apply_guild
+TESTED DONE #list_applicants
+TESTED DONE #reject_applicant
+TESTED DONE #accept_applicant
+TESTED DONE #kick_guild_member
+TESTED DONE #change_rank
+
+NEW - #list_guild [by rank][by time]
+NEW - save guild applicant list to database
+NEW - finish script loading
+NEW - document idle_buffer2.h
+NEW - widen distance that new/beamed chars are from other chars
+NEW - make push_sql the same as send_text
 use send_text in place of send_raw_text
 NEW - remove character_type_name field from CHARACTER_TYPE_TABLE
 NEW - remove elm_file field from MAP TABLE
 need #command to give guild details (same as char details)
-need OPS #command to #pm all active players
+need OPS #command to #pm all active players (surely this is mod channel???)
 need #GM guild channel functionality
 need #IG guild channel functionality
 need guild channel hello/goodbye messages
@@ -56,7 +71,6 @@ need #leave_guild
 need #command to withdraw application to join guild
 need #command to #pm all guild members (guild master only)
 implement guild stats
-find way of putting get_char_data in idle buffer
 need way to manage multiple guild applications
 convert attribute struct so as attribute type can be addressed programatically
 need update map function (for OL map walker)
@@ -123,6 +137,8 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include "file_functions.h"
 #include "objects.h"
 #include "harvesting.h"
+#include "gender.h"
+#include "character_type.h"
 
 #define DEBUG_MAIN 1
 #define VERSION "4"
@@ -335,7 +351,7 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
         log_event(EVENT_ERROR, "new connection [%i] exceeds client array max [%i] ", client_sd, MAX_CLIENTS);
 
         //send message to client and deny connection
-        send_raw_text(client_sd, CHAT_SERVER, "\nSorry but the server is currently full\n");
+        send_text(client_sd, CHAT_SERVER, "\nSorry but the server is currently full\n");
         close(client_sd);
         return;
     }
@@ -361,7 +377,7 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
     //send welcome message and motd to client
     send_raw_text(client_sd, CHAT_SERVER, SERVER_WELCOME_MSG);
     send_motd(client_sd);
-    send_raw_text(client_sd, CHAT_SERVER, "\nHit any key to continue...\n");
+    send_text(client_sd, CHAT_SERVER, "\nHit any key to continue...\n");
 }
 
 
@@ -706,6 +722,7 @@ int main(int argc, char *argv[]){
                 log_text(EVENT_INITIALISATION, "");// insert logical separator
 
                 create_database(db_filename);
+                //_create_database("load_script.txt");
                 break;
             }
 

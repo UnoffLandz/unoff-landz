@@ -71,14 +71,10 @@ void check_new_character(int connection, const unsigned char *packet){
     if(get_db_char_data(char_name, 0)==true){
 
         //if the char name exists, abort character creation and send warning to client
-        char text_out[80]="";
-        sprintf(text_out, "%cSorry, but that character name already exists", c_red1+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cSorry, but that character name already exists", c_red1+127);
         send_create_char_not_ok(connection);
 
         log_event(EVENT_NEW_CHAR, "new character name [%s] rejected", char_name);
-
     }
     else {
 
@@ -185,9 +181,7 @@ void add_new_character(int connection, const unsigned char *packet){
     gender[gender_id].char_count++;
 
     //notify client that character has been created
-    char text_out[80]="";
-    sprintf(text_out, "%cCongratulations. You've created your new game character.", c_green3+127);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cCongratulations. You've created your new game character.", c_green3+127);
     send_create_char_ok(connection);
 
     //log character creation event

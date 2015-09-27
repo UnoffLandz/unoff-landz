@@ -95,9 +95,7 @@ void add_item_to_inventory(int connection, int object_id, int amount){
         //if we can't find space slot, inform client and abort
         if(new_slot==false){
 
-            char text_out[80]="";
-            sprintf(text_out, "%cYou have no room in your inventory for any new items.", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
+            send_text(connection, CHAT_SERVER, "%cYou have no room in your inventory for any new items.", c_red3+127);
             return;
         }
     }

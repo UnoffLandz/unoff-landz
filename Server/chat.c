@@ -58,45 +58,35 @@ int join_channel(int connection, int chan){
     // check for valid channel number
     if(chan<0 || chan>=MAX_CHANNELS){
 
-        sprintf(text_out, "%cyou tried to join an invalid channel", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cyou tried to join an invalid channel", c_red3+127);
         return CHANNEL_NOT_JOINED;
     }
 
     //stop players from joining system channels
     else if(channel[chan].chan_type==CHAN_SYSTEM){
 
-        sprintf(text_out, "%cchannel is reserved for system use", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cchannel is reserved for system use", c_red3+127);
         return CHANNEL_NOT_JOINED;
     }
 
     //stop players from joining vacant channels
     else if(channel[chan].chan_type==CHAN_VACANT){
 
-        sprintf(text_out, "%cThat channel is not open", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cThat channel is not open", c_red3+127);
         return CHANNEL_NOT_JOINED;
     }
 
     //stop players from joining guild channels
     else if(channel[chan].chan_type==CHAN_GUILD){
 
-        sprintf(text_out, "%cThat channel is for a guild", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cThat channel is for a guild", c_red3+127);
         return CHANNEL_NOT_JOINED;
     }
 
     //check if player is already in chan
     if(player_in_chan(connection, chan)!=-1){
 
-        sprintf(text_out, "%cYou have already joined that chan", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
-
+        send_text(connection, CHAT_SERVER, "%cYou have already joined that chan", c_red3+127);
         return CHANNEL_NOT_JOINED;
     }
 
@@ -122,10 +112,8 @@ int join_channel(int connection, int chan){
             push_sql_command(sql);
 
             //echo back to player which channel was just joined and its description etc
-            sprintf(text_out, "%cYou joined channel %s", c_green3+127, channel[chan].channel_name);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-            sprintf(text_out, "%cDescription : %s", c_green2+127, channel[chan].description);
-            send_raw_text(connection, CHAT_SERVER, text_out);
+            send_text(connection, CHAT_SERVER, "%cYou joined channel %s", c_green3+127, channel[chan].channel_name);
+            send_text(connection, CHAT_SERVER, "%cDescription : %s", c_green2+127, channel[chan].description);
 
             //THE FOLLOWING IS COMMENTED OUT AS ITS TOO RESOURCE HEAVY...
             //sprintf(text_out, "%cIn channel :", c_green1+127);
@@ -141,8 +129,7 @@ int join_channel(int connection, int chan){
     }
 
     //free chan slot not found
-    sprintf(text_out, "%cyou have no free channel slots left", c_red3+127);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cyou have no free channel slots left", c_red3+127);
 
     return CHANNEL_NOT_JOINED;
 }
@@ -159,10 +146,8 @@ int leave_channel(int connection, int chan){
 
     if(slot==-1){
 
-            sprintf(text_out, "%cyou are not in this channel", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
-            return CHANNEL_NOT_LEFT;
+        send_text(connection, CHAT_SERVER, "%cyou are not in this channel", c_red3+127);
+        return CHANNEL_NOT_LEFT;
     }
 
     //echo back to player which channel was just left
@@ -176,8 +161,7 @@ int leave_channel(int connection, int chan){
     push_sql_command(sql);
 
     // need to echo back to player which channel was just joined and its description etc
-    sprintf(text_out, "%cyou left channel %s", c_green3+127, channel[chan].channel_name);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cyou left channel %s", c_green3+127, channel[chan].channel_name);
 
     //tell others in chan that player has left
     sprintf(text_out, "%c%s has left channel %s", c_yellow2+127, clients.client[connection].char_name, channel[chan].channel_name);
@@ -202,8 +186,7 @@ int leave_channel(int connection, int chan){
 
     if(clients.client[connection].active_chan==0){
 
-        sprintf(text_out, "%cyou have no channels", c_red3+127);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, "%cyou have no channels", c_red3+127);
     }
 
     return CHANNEL_LEFT;
@@ -212,24 +195,19 @@ int leave_channel(int connection, int chan){
 
 void send_pm(int connection, char *target_name, char *message) {
 
-    char text_out[1024]="";
-
     // echo message back to sender
-    sprintf(text_out, "%c[PM to %s: %s]", c_orange1+127, target_name, message);
-    send_raw_text(connection, CHAT_PERSONAL, text_out);
+    send_text(connection, CHAT_PERSONAL, "%c[PM to %s: %s]", c_orange1+127, target_name, message);
 
     //check if message recipient is in game
     int target_connection=char_in_game(target_name);
 
     if(target_connection==NOT_FOUND){
 
-         log_text(EVENT_CHAT, "target character not logged in");
-
+        log_text(EVENT_CHAT, "target character not logged in");
         return;
     }
 
-    sprintf(text_out, "%c[PM from %s: %s]", c_orange1+127, target_name, message);
-    send_raw_text(target_connection, CHAT_PERSONAL, text_out);
+    send_text(target_connection, CHAT_PERSONAL, "%c[PM from %s: %s]", c_orange1+127, target_name, message);
 
     return;
 }

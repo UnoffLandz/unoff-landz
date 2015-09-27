@@ -26,27 +26,6 @@
 
 extern struct timeval time_check;//output struct for gettimeofday function
 
-/** RESULT  : gets a time stamp in format 'hh:mm:ss'
-
-    RETURNS : void
-
-    PURPOSE : stamp the log with the time of an event
-
-    NOTES   : buffer must be 9 bytes long
-*/
-void get_time_stamp_str(time_t raw_time, char *buffer);
-
-
-/** RESULT  : gets a date stamp in format 'dd:mm:yyyy'
-
-    RETURNS : void
-
-    PURPOSE : stamp the log with the current time
-
-    NOTES   : buffer must be 11 bytes long
-*/
-void get_date_stamp_str(time_t raw_time, char *buffer);
-
 
 /** RESULT  : gets a date stamp in format 'date month year'
 
@@ -90,5 +69,41 @@ void send_verbose_date(int connection, int game_days);
     NOTES   :
 **/
 void send_verbose_time(int connection, int game_minutes);
+
+
+/*****************************************************************************************************
+***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
+******************************************************************************************************/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** RESULT  : gets a time stamp in format 'hh:mm:ss'
+
+    RETURNS : void
+
+    PURPOSE : stamp the log with the time of an event
+
+    NOTES   : buffer must be 9 bytes long
+*/
+void get_time_stamp_str(time_t raw_time, char *buffer);
+
+
+/** RESULT  : gets a date stamp in format 'dd:mm:yyyy'
+
+    RETURNS : void
+
+    PURPOSE : stamp the log with the current time
+
+    NOTES   : buffer must be 11 bytes long
+*/
+void get_date_stamp_str(time_t raw_time, char *buffer);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif // DATE_TIME_FUNCTIONS_H_INCLUDED

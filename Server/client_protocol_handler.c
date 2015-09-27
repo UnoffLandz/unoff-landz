@@ -84,8 +84,7 @@ void process_packet(int connection, unsigned char *packet){
             // check if char has an active channel
             if(clients.client[connection].active_chan==0){
 
-                sprintf(text_out, "%cyou have not joined a channel yet", c_red3+127);
-                send_raw_text(connection, CHAT_SERVER, text_out);
+                send_text(connection, CHAT_SERVER, "%cyou have not joined a channel yet", c_red3+127);
                 return;
             }
 
@@ -107,7 +106,6 @@ void process_packet(int connection, unsigned char *packet){
         else if(text[0]=='#'){
 
             process_hash_commands(connection, text);
-
             return;
         }
 
@@ -150,10 +148,8 @@ void process_packet(int connection, unsigned char *packet){
 
         //extract target name and message from pm packet
         char char_name[80]="";
-        get_str_island(text, char_name, 1);
-
         char msg[1024]="";
-        get_str_island(text, msg, 2);
+        sscanf(text, "%s %[^\n]", char_name, msg);
 
         //send the message
         send_pm(connection, char_name, msg);
