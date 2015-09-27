@@ -37,8 +37,6 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
 
     /** public function - see header */
 
-    int i=0;
-
     int map_id=clients.client[connection].map_id;
     int char_tile=clients.client[connection].map_tile;
     int map_axis=maps.map[map_id].map_axis;
@@ -50,7 +48,7 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
     add_new_enhanced_actor_packet(connection, packet, &packet_length);
 
     //cycle through all the clients
-    for(i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
         //restrict to clients that are logged in
         if(clients.client[i].client_status==LOGGED_IN){
@@ -85,8 +83,6 @@ void broadcast_remove_actor_packet(int connection) {
 
     /** public function - see header */
 
-    int i=0;
-
     int map_id=clients.client[connection].map_id;
     int char_tile=clients.client[connection].map_tile;
     int map_axis=maps.map[map_id].map_axis;
@@ -98,7 +94,7 @@ void broadcast_remove_actor_packet(int connection) {
     remove_actor_packet(connection, packet, &packet_length);
 
     //cycle through all the clients
-    for(i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
         //restrict to clients that are logged in
         if(clients.client[i].client_status==LOGGED_IN){
@@ -132,8 +128,6 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
 
     /** public function - see header */
 
-    int i=0;
-
     unsigned char packet[1024];// sending char packets
     int packet_length=0;
 
@@ -161,7 +155,7 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
     remove_actor_packet(connection, packet3, &packet3_length);
 
     // broadcast sender char move to all receiver clients
-    for(i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
         if(clients.client[i].client_status==LOGGED_IN){
 
@@ -256,7 +250,6 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                     }
 
                     send_packet(connection, packet, packet_length);
-                    //send(connection, &packet, packet_length, 0);
                 }
             }
         }
@@ -271,9 +264,7 @@ void broadcast_local_chat(int connection, char *text_in){
     int map_id=clients.client[connection].map_id;
     int map_axis=maps.map[map_id].map_axis;
 
-    int i=0;
-
-    for(i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
         if(clients.client[i].client_status==LOGGED_IN){
 
@@ -281,7 +272,10 @@ void broadcast_local_chat(int connection, char *text_in){
 
                 if(get_proximity(clients.client[connection].map_tile, clients.client[i].map_tile, map_axis)<LOCAL_CHAT_RANGE){
 
-                    if(connection!=i) send_raw_text(i, CHAT_LOCAL, text_in);
+                    if(connection!=i) {
+
+                        send_text(i, CHAT_LOCAL, text_in);
+                    }
                 }
             }
         }
@@ -293,12 +287,7 @@ void broadcast_channel_chat(int chan, int connection, char *text_in){
 
     /** public function - see header */
 
-    char text_out[1024]="";
-
-    //send to channel
-    int i=0;
-
-    for(i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
         if(clients.client[i].client_status==LOGGED_IN){
 
@@ -312,16 +301,8 @@ void broadcast_channel_chat(int chan, int connection, char *text_in){
                     int active_chan=clients.client[i].chan[active_chan_slot-1];
 
                     //show non-active chan in darker grey
-                    if(active_chan==chan){
-
-                        sprintf(text_out, "%c[%s]: %s", c_grey1+127, clients.client[connection].char_name, text_in);
-                    }
-                    else {
-
-                        sprintf(text_out, "%c[%s]: %s", c_grey2+127, clients.client[connection].char_name, text_in);
-                    }
-
-                    send_raw_text(i, CHAT_CHANNEL_0 + active_chan_slot, text_out);
+                    int text_colour = (active_chan==chan) ? c_grey1+127 : c_grey2+127;
+                    send_text(i, CHAT_CHANNEL_0, "%c[%s]: %s", text_colour, clients.client[connection].char_name, text_in);
                 }
             }
         }
@@ -333,22 +314,14 @@ void broadcast_channel_event(int chan, int connection, char *text_in){
 
     /** public function - see header */
 
-    int i=0;
-
-    for(i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
         if(clients.client[i].client_status==LOGGED_IN){
 
-            //don't echo to self
-            if(connection!=i){
+            //filter out self and players who are not in this chan
+            if(connection!=i || player_in_chan(i,chan)!=-1){
 
-                //filter out players who are not in this chan
-                if(player_in_chan(i,chan)!=-1){
-
-                    int active_chan_slot=clients.client[i].active_chan;
-
-                    send_raw_text(i, CHAT_CHANNEL_0 + active_chan_slot, text_in);
-                }
+                send_text(i, CHAT_CHANNEL_0 + clients.client[i].active_chan, text_in);
             }
         }
     }
