@@ -24,6 +24,7 @@
 #include "character_creation.h"
 #include "db/database_functions.h"
 #include "server_start_stop.h"
+#include "characters.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -53,6 +54,7 @@ struct data_{
     int packet_len;
     int connection;
     int process_type;
+    char char_name[80];
 };
 
 // command storage typedef
@@ -90,6 +92,29 @@ void push_idle_buffer2(int connection, int process_type, const unsigned char *pa
 
         memcpy(entry.packet, packet, packet_len);
     }
+
+    idle_buffer2.push_back(entry);
+}
+
+
+void push_command(int connection, int process_type, char *char_name){
+
+    /** public function - see header **/
+
+    if(idle_buffer2.size()>=IDLE_BUFFER2_MAX) {
+
+        //buffer overflow
+        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
+        return;
+    }
+
+    data_ entry;
+
+    entry.sql.clear();
+    entry.connection=connection;
+    entry.process_type=process_type;
+    strcpy(entry.char_name, char_name);
 
     idle_buffer2.push_back(entry);
 }
@@ -162,6 +187,13 @@ void process_idle_buffer2(){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_SQL\n");
         process_sql(command.sql.c_str());
+    }
+    /**********************************************************************************************/
+
+    else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_HASH_DETAILS){
+
+        D_PRINT("IDLE_BUFFER2_PROCESS_HASH_DETAILS\n");
+        send_char_details(connection, command.char_name);
     }
     /**********************************************************************************************/
 

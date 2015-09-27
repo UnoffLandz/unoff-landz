@@ -41,6 +41,7 @@
 #include "game_data.h"
 #include "guilds.h"
 #include "db/db_map_tbl.h"
+#include "idle_buffer2.h"
 
 static int hash_jc(int connection, char *text) {
 
@@ -53,10 +54,9 @@ static int hash_jc(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80];
     int chan_id=0;
 
-    if(sscanf(text, "%s %i", command, &chan_id)!=2){
+    if(sscanf(text, "%*s %i", &chan_id)!=1){
 
         send_text(connection, CHAT_SERVER, "%cyou need to use the format #JC [channel number]", c_red3+127);
         return 0;
@@ -79,10 +79,9 @@ static int hash_lc(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80];
     int chan_id=0;
 
-    if(sscanf(text, "%s %i", command, &chan_id)!=2){
+    if(sscanf(text, "%*s %i", &chan_id)!=1){
 
         send_text(connection, CHAT_SERVER, "%cyou need to use the format #LC [channel number]", c_red3+127);
         return 0;
@@ -193,59 +192,23 @@ static int hash_details(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80];
     char char_name[80]="";
 
-    if(sscanf(text, "%s %s", command, char_name)!=2){
+    // if char name not specified, substitute with calling char name
+    if(sscanf(text, "%*s %s", char_name)==-1){
 
-        send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "you need to use the format #DETAILS [character name]");
-
+        push_command(connection, IDLE_BUFFER_PROCESS_HASH_DETAILS, clients.client[connection].char_name);
         return 0;
     }
 
-    str_conv_upper(char_name);
+    // if char name is specified use that name
+    if(sscanf(text, "%*s %s", char_name)==1){
 
-    //check that the char is in game
-    int char_connection=char_in_game(char_name);
-
-    if(char_connection==NOT_FOUND){
-
-        send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "character is not in game");
+        push_command(connection, IDLE_BUFFER_PROCESS_HASH_DETAILS, char_name);
         return 0;
     }
 
-    //send details to client
-    send_text(connection, CHAT_SERVER, "%cCharacter    :%s", c_green3+127, clients.client[char_connection].char_name);
-
-    int race_id=character_type[clients.client[char_connection].char_type].race_id;
-    send_text(connection, CHAT_SERVER, "%cRace         :%s", c_green3+127, race[race_id].race_name);
-
-    int gender_id=character_type[clients.client[char_connection].char_type].gender_id;
-    send_text(connection, CHAT_SERVER, "%cGender       :%s", c_green3+127, gender[gender_id].gender_name);
-
-    char time_stamp_str[9]="";
-    char date_stamp_str[11]="";
-
-    get_time_stamp_str(character.char_created, time_stamp_str);
-    get_date_stamp_str(character.char_created, date_stamp_str);
-    send_text(connection, CHAT_SERVER, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
-
-    send_text(connection, CHAT_SERVER, "%cCharacter Age:%i", c_green3+127, char_age(char_connection));
-
-    if(character.guild_id==0){
-
-        send_text(connection, CHAT_SERVER, "%cGuild        :guildless player", c_green3+127);
-        send_text(connection, CHAT_SERVER, "%cJoined       :n/a", c_green3+127);
-    }
-    else {
-
-        send_text(connection, CHAT_SERVER, "%cGuild        :%s", c_green3+127, guilds.guild[character.guild_id].guild_name);
-        send_text(connection, CHAT_SERVER,"%cGuild tag    :%s", c_green3+127, guilds.guild[character.guild_id].guild_tag );
-
-        get_time_stamp_str(character.joined_guild, time_stamp_str);
-        get_date_stamp_str(character.joined_guild, date_stamp_str);
-        send_text(connection, CHAT_SERVER, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
-    }
+    send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "you need to use the format #DETAILS [character name]");
 
     return 0;
 }
@@ -265,13 +228,25 @@ static int hash_beam_me(int connection, char *text) {
     char command[80];
     char tail[80];
 
-    if(sscanf(text, "%s %s", command, tail)==2){
+    if(sscanf(text, "%s %s", command, tail)>2){
 
-        if(strcmp(tail, "ME")!=0){
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
+        return 0;
+    }
 
-            send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
-            return 0;
-        }
+    str_conv_upper(command);
+    str_conv_upper(tail);
+
+    if(strcmp(command, "BEAM_ME")!=1){
+
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
+        return 0;
+    }
+
+    if(strcmp(command, "BEAM")!=0 || strcmp(tail, "ME")!=0){
+
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
+        return 0;
     }
 
     //if char is moving when protocol arrives, cancel rest of path
@@ -284,6 +259,7 @@ static int hash_beam_me(int connection, char *text) {
     move_char_between_maps(connection, game_data.beam_map_id, new_map_tile);
 
     send_text(connection, CHAT_SERVER, "%cScotty beamed you up", c_green3+127);
+
     return 0;
 }
 
@@ -299,19 +275,15 @@ static int hash_pm(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80];
     char char_name[80];
     char message[1024];
 
-    if(sscanf(text, "%s %s %s", command, char_name, message)!=3){
+    if(sscanf(text, "%*s %s %s", char_name, message)!=2){
 
         send_text(connection, CHAT_SERVER, "%cyou need to use the format #PM [character name][message]", c_red3+127);
         return 0;
     }
 
-    str_conv_upper(char_name);
-
-    //send pm
     send_pm(connection, char_name, message);
 
     return 0;
@@ -329,11 +301,10 @@ static int hash_jump(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80];
     int map_id=0;
     int map_tile=0;
 
-    if(sscanf(text, "%s %i %i", command, &map_id, &map_tile)!=3){
+    if(sscanf(text, "%*s %i %i", &map_id, &map_tile)!=2){
 
         send_text(connection, CHAT_SERVER, "%cyou need to use the format #JUMP [map id] [tile]", c_red3+127);
         return 0;
@@ -359,7 +330,8 @@ static int hash_jump(int connection, char *text) {
     return 0;
 }
 
-static int hash_apply_guild_member(int connection, char *text) {
+
+static int hash_apply_guild(int connection, char *text) {
 
     /** RESULT  : application by char to join guild
 
@@ -370,18 +342,15 @@ static int hash_apply_guild_member(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80];
-    char guild_tag[4];
+    char guild_tag[GUILD_TAG_LENGTH];
 
-    if(sscanf(text, "%s %s", command, guild_tag)!=2){
+    if(sscanf(text, "%*s %s", guild_tag)!=1){
 
-        send_text(connection, CHAT_SERVER, "%cyou need to use the format #APPLY_GUILD [guild tag] or JG [guild tag]", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #APPLY_GUILD [guild tag] or #AG [guild tag]", c_red3+127);
         return 0;
     }
 
-    str_conv_upper(guild_tag);
-
-    apply_guild(connection, clients.client[connection].char_name);
+    apply_guild(connection, guild_tag);
 
     return 0;
 }
@@ -398,18 +367,15 @@ static int hash_ops_create_guild(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80];
     char guild_name[80];
-    char guild_tag[4];
+    char guild_tag[GUILD_TAG_LENGTH];
     int permission_level=0;
 
-    if(sscanf(text, "%s %s %s %i", command, guild_name, guild_tag, &permission_level)!=4){
+    if(sscanf(text, "%*s %s %s %i", guild_name, guild_tag, &permission_level)!=3){
 
         send_text(connection, CHAT_SERVER, "%cyou need to use the format #OPS_CREATE_GUILD [guild name][guild tag][permission level]", c_red3+127);
         return 0;
     }
-
-    str_conv_upper(guild_tag);
 
     create_guild(connection, guild_name, "", guild_tag, permission_level);
 
@@ -428,27 +394,22 @@ static int hash_ops_appoint_guild_member(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80];
-    char guild_tag[4];
-    char char_name[80];
-    int guild_rank=0;
+    char char_name[80]="";
+    char guild_tag[GUILD_TAG_LENGTH]="";
 
-    if(sscanf(text, "%s %s %s %i", command, guild_tag, char_name, &guild_rank)!=4){
+    if(sscanf(text, "%*s %s %s", char_name, guild_tag)!=2){
 
-        send_text(connection, CHAT_SERVER, "you need to use the format #OPS_APPOINT_GUILD_MEMBER [guild tag][character_name][rank]", c_red3+127);
+        send_text(connection, CHAT_SERVER, "you need to use the format #OPS_APPOINT_GUILD_MEMBER [character name][guild tag]", c_red3+127);
         return 0;
     }
 
-    str_conv_upper(guild_tag);
-    str_conv_upper(char_name);
-
-    join_guild(connection, guild_tag, char_name);
+    join_guild(connection, char_name, guild_tag);
 
     return 0;
 }
 
 
-static int hash_change_guild_member_rank(int connection, char *text) {
+static int hash_change_rank(int connection, char *text) {
 
     /** RESULT  : change a chars guild rank
 
@@ -459,24 +420,16 @@ static int hash_change_guild_member_rank(int connection, char *text) {
         NOTES   : rank 18+ guild members only
     */
 
-    char command[80];
     char char_name[80];
     int guild_rank=0;
 
-    if(sscanf(text, "%s %s %i", command, char_name, &guild_rank)!=3){
+    if(sscanf(text, "%*s %s %i", char_name, &guild_rank)!=2){
 
-        send_text(connection, CHAT_SERVER,"you need to use the format #CHANGE_GUILD_RANK [character_name][rank] or #CR [character_name][rank]", c_red3+127);
+        send_text(connection, CHAT_SERVER,"you need to use the format #CHANGE_RANK [character_name][rank] or #CR [character_name][rank]", c_red3+127);
         return 0;
     }
 
-    str_conv_upper(char_name);
-
-    char guild_tag[4]="";
-    strcpy(guild_tag, guilds.guild[clients.client[connection].guild_id].guild_tag);
-
-    str_conv_upper(guild_tag);
-
-    change_guild_rank(connection, char_name, guild_tag, guild_rank);
+    change_guild_rank(connection, char_name, guilds.guild[clients.client[connection].guild_id].guild_tag, guild_rank);
 
     return 0;
 }
@@ -493,19 +446,15 @@ static int hash_ops_change_guild_member_rank(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80]="";
     char char_name[80]="";
-    char guild_tag[4]="";
+    char guild_tag[GUILD_TAG_LENGTH]="";
     int guild_rank=0;
 
-    if(sscanf(text, "%s %s %s %i", command, guild_tag, char_name, &guild_rank)!=4){
+    if(sscanf(text, "%*s %s %s %i", char_name, guild_tag, &guild_rank)!=3){
 
-        send_text(connection, CHAT_SERVER, "you need to use the format #OPS_CHANGE_GUILD_RANK [guild tag][character_name][rank]", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #OPS_CHANGE_GUILD_MEMBER_RANK [character_name][guild_tag][rank]", c_red3+127);
         return 0;
     }
-
-    str_conv_upper(char_name);
-    str_conv_upper(guild_tag);
 
     change_guild_rank(connection, char_name, guild_tag, guild_rank);
 
@@ -524,17 +473,14 @@ static int hash_ops_change_guild_permission(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80]="";
-    char guild_tag[4]="";
+    char guild_tag[GUILD_TAG_LENGTH]="";
     int permission_level=0;
 
-    if(sscanf(text, "%s %s %i", command, guild_tag, &permission_level)!=3){
+    if(sscanf(text, "%*s %s %i", guild_tag, &permission_level)!=2){
 
         send_text(connection, CHAT_SERVER, "you need to use the format #OPS_CHANGE_GUILD_PERMISSION [guild tag][permission level]", c_red3+127);
         return 0;
     }
-
-    str_conv_upper(guild_tag);
 
     change_guild_permission(connection, guild_tag, permission_level);
 
@@ -542,7 +488,7 @@ static int hash_ops_change_guild_permission(int connection, char *text) {
 }
 
 
-static int hash_list_guild_applicants(int connection, char *text) {
+static int hash_list_applicants(int connection, char *text) {
 
     /** RESULT  : change a guilds permission level
 
@@ -553,15 +499,9 @@ static int hash_list_guild_applicants(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80]="";
+    (void)(text);
 
-    if(sscanf(text, "%s", command)!=1){
-
-        send_text(connection, CHAT_SERVER, "you need to use the format #LIST_GUILD_APPLICANTS or #LA", c_red3+127);
-        return 0;
-    }
-
-   send_text(connection, CHAT_SERVER,"%cThe following characters have applied to join your guild...", c_green3+127 );
+    send_text(connection, CHAT_SERVER,"%cThe following characters have applied to join your guild...", c_green3+127 );
 
     int guild_id=clients.client[connection].guild_id;
 
@@ -569,10 +509,13 @@ static int hash_list_guild_applicants(int connection, char *text) {
 
         if(strcmp(guilds.guild[guild_id].applicant[i].char_name, "")!=0){
 
+            char date_stamp_str[50]="";
+            get_date_stamp_str(guilds.guild[guild_id].applicant[i].application_date, date_stamp_str);
+
             char time_stamp_str[50]="";
             get_time_stamp_str(guilds.guild[guild_id].applicant[i].application_date, time_stamp_str);
 
-            send_text(connection, CHAT_SERVER, "%c%s %s", c_green3+127, guilds.guild[guild_id].applicant[i].char_name, time_stamp_str);
+            send_text(connection, CHAT_SERVER, "%c%s %s %s", c_green3+127, guilds.guild[guild_id].applicant[i].char_name, date_stamp_str, time_stamp_str);
        }
     }
 
@@ -580,7 +523,7 @@ static int hash_list_guild_applicants(int connection, char *text) {
 }
 
 
-static int hash_accept_guild_applicant(int connection, char *text) {
+static int hash_accept_applicant(int connection, char *text) {
 
     /** RESULT  : accepts a chars application to join a guild
 
@@ -591,29 +534,24 @@ static int hash_accept_guild_applicant(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80]="";
     char char_name[80]="";
 
-    if(sscanf(text, "%s %s", command, char_name)!=2){
+    if(sscanf(text, "%*s %s", char_name)!=1){
 
-        send_text(connection, CHAT_SERVER, "you need to use the format #ACCEPT_GUILD_APPLICANTS [character name] or #AA [character name]", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #ACCEPT_APPLICANT [character name] or #AA [character name]", c_red3+127);
         return 0;
     }
 
-    str_conv_upper(char_name);
-
     join_guild(connection, char_name, guilds.guild[clients.client[connection].guild_id].guild_tag);
 
-    send_text(connection, CHAT_SERVER, "%cYou have accepted the character's application to join your guild", c_green3+127);
-
-    int guild_id=clients.client[connection].guild_id;
-
+    //update the guild applicants list
     for(int i=0; i<MAX_GUILD_APPLICANTS; i++){
 
-        if(strcmp(char_name, guilds.guild[guild_id].applicant[i].char_name)==0){
+        if(strcmp_upper(char_name, guilds.guild[clients.client[connection].guild_id].applicant[i].char_name)==0){
 
-            strcpy(guilds.guild[guild_id].applicant[i].char_name, "");
-            guilds.guild[guild_id].applicant[i].application_date=0;
+            strcpy(guilds.guild[clients.client[connection].guild_id].applicant[i].char_name, "");
+            guilds.guild[clients.client[connection].guild_id].applicant[i].application_date=0;
+            return 0;
         }
     }
 
@@ -621,7 +559,7 @@ static int hash_accept_guild_applicant(int connection, char *text) {
 }
 
 
-static int hash_reject_guild_applicant(int connection, char *text) {
+static int hash_reject_applicant(int connection, char *text) {
 
     /** RESULT  : accepts a chars application to join a guild
 
@@ -632,30 +570,27 @@ static int hash_reject_guild_applicant(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80]="";
     char char_name[80]="";
 
-    if(sscanf(text, "%s %s", command, char_name)!=2){
+    if(sscanf(text, "%*s %s", char_name)!=1){
 
-        send_text(connection, CHAT_SERVER, "you need to use the format #REJECT_GUILD_APPLICANTS [character name] or #RA [character name]", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #REJECT_APPLICANT [character name] or #RA [character name]", c_red3+127);
         return 0;
     }
 
-    str_conv_upper(char_name);
-
-    send_text(connection, CHAT_SERVER, "%cYou have rejected the character's application to join your guild", c_green3+127);
-
-    int guild_id=clients.client[connection].guild_id;
-
+    //update the guild applicants list
     for(int i=0; i<MAX_GUILD_APPLICANTS; i++){
 
-        if(strcmp(char_name, guilds.guild[guild_id].applicant[i].char_name)==0){
+        if(strcmp_upper(char_name, guilds.guild[clients.client[connection].guild_id].applicant[i].char_name)==0){
 
-            strcpy(guilds.guild[guild_id].applicant[i].char_name, "");
-            guilds.guild[guild_id].applicant[i].application_date=0;
+            strcpy(guilds.guild[clients.client[connection].guild_id].applicant[i].char_name, "");
+            guilds.guild[clients.client[connection].guild_id].applicant[i].application_date=0;
+            send_text(connection, CHAT_SERVER, "%cyou rejected the guild application from %s", c_green3+127, char_name);
+            return 0;
         }
     }
 
+    send_text(connection, CHAT_SERVER, "can't find application to join guild from %s", c_red3+127, char_name);
     return 0;
 }
 
@@ -671,18 +606,14 @@ static int hash_ops_kick_guild_member(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80]="";
     char char_name[80]="";
-    char guild_tag[4]="";
+    char guild_tag[GUILD_TAG_LENGTH]="";
 
-    if(sscanf(text, "%s %s %s", command, guild_tag, char_name)!=3){
+    if(sscanf(text, "%*s %s %s", guild_tag, char_name)!=2){
 
-        send_text(connection, CHAT_SERVER, "you need to use the format #OPS_KICK_GUILD_MEMBER [guild tag][character name]", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #OPS_KICK_GUILD_MEMBER [guild tag][character name]", c_red3+127);
         return 0;
     }
-
-    str_conv_upper(char_name);
-    str_conv_upper(guild_tag);
 
     kick_guild_member(connection, guild_tag, char_name);
 
@@ -701,17 +632,14 @@ static int hash_kick_guild_member(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80]="";
     char char_name[80]="";
 
-    if(sscanf(text, "%s %s", command, char_name)!=2){
+    if(sscanf(text, "%*s %s", char_name)!=1){
 
-        send_text(connection, CHAT_SERVER, "you need to use the format #KICK_GUILD_MEMBER [character name]", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #KICK_GUILD_MEMBER [character name]", c_red3+127);
 
         return 0;
     }
-
-    str_conv_upper(char_name);
 
     kick_guild_member(connection, guilds.guild[clients.client[connection].guild_id].guild_tag, char_name);
 
@@ -753,20 +681,20 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#PM",                     false, 0,       PERMISSION_1, hash_pm},
     {"#PRIVATE_MESSAGE",        false, 0,       PERMISSION_1, hash_pm},
     {"#JUMP",                   false, 0,       PERMISSION_2, hash_jump},
-    {"#AG",                     false, 0,       PERMISSION_1, hash_apply_guild_member},
-    {"#APPLY_GUILD_MEMBER",     false, 0,       PERMISSION_1, hash_apply_guild_member},
+    {"#AG",                     false, 0,       PERMISSION_1, hash_apply_guild},
+    {"#APPLY_GUILD",            false, 0,       PERMISSION_1, hash_apply_guild},
     {"#OPS_CREATE_GUILD",       true,  0,       PERMISSION_3, hash_ops_create_guild},
     {"#OPS_APPOINT_GUILD_MEMBER", true,  0,     PERMISSION_3, hash_ops_appoint_guild_member},
-    {"#CR",                     true,  18,      PERMISSION_1, hash_change_guild_member_rank},
-    {"#CHANGE_GUILD_MEMBER_RANK", true,  18,    PERMISSION_1, hash_change_guild_member_rank},
+    {"#CR",                      true,  18,     PERMISSION_1, hash_change_rank},
+    {"#CHANGE_RANK",             true,  18,     PERMISSION_1, hash_change_rank},
     {"#OPS_CHANGE_GUILD_MEMBER_RANK", true, 0,  PERMISSION_3, hash_ops_change_guild_member_rank},
     {"#OPS_CHANGE_GUILD_PERMISSION",true, 20,   PERMISSION_3, hash_ops_change_guild_permission},
-    {"#LA",                      true,   18,    PERMISSION_1, hash_list_guild_applicants},
-    {"#LIST_GUILD_APPLICANTS",  true,   18,     PERMISSION_1, hash_list_guild_applicants},
-    {"#AA",                     true,   18,     PERMISSION_1, hash_accept_guild_applicant},
-    {"#ACCEPT_GUILD_APPLICANT",  true,   18,    PERMISSION_1, hash_accept_guild_applicant},
-    {"#RA",                      true,   18,    PERMISSION_1, hash_reject_guild_applicant},
-    {"#REJECT_GUILD_APPLICANT",  true,   18,    PERMISSION_1, hash_reject_guild_applicant},
+    {"#LA",                      true,   18,    PERMISSION_1, hash_list_applicants},
+    {"#LIST_APPLICANTS",         true,   18,    PERMISSION_1, hash_list_applicants},
+    {"#AA",                      true,   18,    PERMISSION_1, hash_accept_applicant},
+    {"#ACCEPT_APPLICANT",        true,   18,    PERMISSION_1, hash_accept_applicant},
+    {"#RA",                      true,   18,    PERMISSION_1, hash_reject_applicant},
+    {"#REJECT_APPLICANT",        true,   18,    PERMISSION_1, hash_reject_applicant},
     {"#KM",                      true,   18,    PERMISSION_1, hash_kick_guild_member},
     {"#KICK_GUILD_MEMBER",       true,   18,    PERMISSION_1, hash_kick_guild_member},
     {"#OPS_KICK_GUILD_MEMBER",   true,   18,    PERMISSION_3, hash_ops_kick_guild_member},

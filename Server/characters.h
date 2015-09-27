@@ -141,6 +141,14 @@ int get_char_visual_range(int connection);
 int char_in_game(char *char_name);
 
 
+/*****************************************************************************************************
+***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
+******************************************************************************************************/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** RESULT  : determines how long a char has been in game since creation
 
     RETURNS : time in seconds
@@ -150,5 +158,20 @@ int char_in_game(char *char_name);
     NOTES   :
 */
 int char_age(int connection);
+
+/** RESULT  : sends char details to client in response to #details command
+
+    RETURNS : void
+
+    PURPOSE : used in process_idle_buffer2
+
+    NOTES   :
+*/
+void send_char_details(int connection, const char *char_name);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // CHARACTERS_H_INCLUDED

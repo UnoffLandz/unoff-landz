@@ -27,6 +27,7 @@
 #include "../logging.h"
 #include "../game_data.h"
 #include "../server_start_stop.h"
+#include "../string_functions.h"
 
 
 bool get_db_char_exists(int char_id){
@@ -76,23 +77,29 @@ bool get_db_char_exists(int char_id){
 }
 
 
-bool get_db_char_data(char *char_name, int char_id){
+bool get_db_char_data(const char *char_name, int char_id){
 
     /** public function - see header */
 
     sqlite3_stmt *stmt;
 
+    //create copy of char name to avoid 'discards const qualifier' warning on conversion to upper case
+    char char_name_uc[80]="";
+    strcpy(char_name_uc, char_name);
+
+    //convert char name to upper case
+    str_conv_upper(char_name_uc);
+
     char char_tbl_sql[MAX_SQL_LEN]="";
 
-    if(strcmp(char_name, "")!=0){
+    if(strcmp(char_name, "")!=0 || char_id==-1){
 
-        snprintf(char_tbl_sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_NAME='%s'", char_name);
+        snprintf(char_tbl_sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE UPPER(CHAR_NAME)='%s'", char_name_uc);
     }
     else {
 
         snprintf(char_tbl_sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_ID=%i", char_id);
     }
-
 
     int rc=sqlite3_prepare_v2(db, char_tbl_sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){

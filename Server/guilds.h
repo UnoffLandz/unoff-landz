@@ -26,6 +26,7 @@
 #define MAX_GUILDS 10
 #define MAX_GUILD_APPLICANTS 10
 #define GUILD_OPERATORS 0 //defines the guild id for the Operators guild
+#define GUILD_TAG_LENGTH 5
 
 enum{//guild status
 
@@ -43,7 +44,7 @@ enum{// guild permissions
 struct guild_node_type {
 
     char guild_name[80];
-    char guild_tag[5];
+    char guild_tag[GUILD_TAG_LENGTH];
     char guild_description[1024];
     int guild_tag_colour;
     time_t date_guild_created;
@@ -84,18 +85,6 @@ void create_guild(int connection, char *guild_name, char *guild_description, cha
     NOTES    :
 **/
 void apply_guild(int connection, char *guild_tag);
-
-
-/** RESULT   : appoints a char to a guild based on char id and guild id
-
-    RETURNS  : void
-
-    PURPOSE  : used by function create database and appoint_guild
-
-    NOTES    : enable the 'master char' to be automatically be made a member of the
-               OPS guild when the database is first created.
-**/
-void _join_guild(int guild_id, int char_id);
 
 
 /** RESULT   : appoints a char to a guild based on char name and guild tag

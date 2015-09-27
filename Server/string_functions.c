@@ -21,6 +21,7 @@
 #include <string.h> //support for strlen
 #include <ctype.h> // support for isspace
 #include <stdarg.h> // support for args
+#include <stdbool.h> //support for boolean data type
 
 #include "string_functions.h"
 #include "logging.h"
@@ -115,72 +116,6 @@ void str_remove_underscores(char *str_in){
     }
 }
 
-int count_str_island(char *str_in) {
-
-    /** public function - see header */
-
-    int i=0, j=0;
-    int last_char=32;
-
-    for(i=0; i<(int)strlen(str_in); i++){
-
-        if(str_in[i]!=32 && last_char==32) {
-            j++;
-            last_char=str_in[i];
-        }
-
-        if(str_in[i]==32 && last_char!=32) {
-            last_char=32;
-        }
-
-    }
-
-    return j;
-}
-
-void get_str_island(char *str_in, char *str_out, int island_no) {
-
-     /** public function - see header */
-
-    int i=0, j=0;
-    int last_char=32;
-
-    int str_start=0;
-    int str_end=strlen(str_in);
-
-    for(i=0; i<(int) strlen(str_in); i++){
-
-        if(str_in[i]!=32 && last_char==32) {
-            j++;
-
-            if(j==island_no) {
-                str_start=i;
-            }
-
-            last_char=str_in[i];
-        }
-
-        if(str_in[i]==32 && last_char!=32) {
-
-            if(j<island_no){
-                last_char=32;
-            }
-            else {
-                str_end=i;
-                break;
-            }
-        }
-    }
-
-    if(j==island_no) {
-        memcpy(str_out, str_in+str_start, str_end-str_start);
-        str_out[str_end+1]='\0';
-    }
-    else {
-        str_out[0]='\0';
-    }
-}
-
 void extract_file_name(char *str_in, char *str_out){
 
     /** public function - see header */
@@ -200,19 +135,41 @@ void extract_file_name(char *str_in, char *str_out){
     sprintf(str_out, "%s", str_in+i);
 }
 
-/*
-void filter_str_range(char *str_in, int min_ascii, int max_ascii){
 
-    int i=0;
-    int clean=0;
+void parse_line(char *line, char output[][80]){
 
-    for(i=0; i<(int)strlen(str_in); i++){
+    /** public function - see header */
 
-        str_in[i-clean]=str_in[i];
+    int start=0;
+    bool sentence=false;
+    int j=0;
 
-        if(str_in[i]<min_ascii || str_in[i]>max_ascii) clean++;
+    for(int i=0; i<(int)strlen(line); i++){
 
+        if(line[i]=='"' && sentence==true) sentence=false;
+        else if(line[i]=='"' && sentence==false) sentence=true;
+
+        if(line[i]==' ' && sentence==false){
+
+            strncpy(&output[j][0], line+start, i-start);
+            start=i+1;
+            j++;
+        }
     }
-    str_in[i-clean]='\0';
 }
-*/
+
+
+int strcmp_upper(char *str1, char *str2){
+
+    /** public function - see header */
+
+    char u_str1[80]="";
+    strcpy(u_str1, str1);
+    str_conv_upper(u_str1);
+
+    char u_str2[80]="";
+    strcpy(u_str2, str2);
+    str_conv_upper(u_str2);
+
+    return strcmp(u_str1, u_str2);
+}

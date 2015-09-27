@@ -87,28 +87,6 @@ void str_conv_upper(char *str_in);
 void str_conv_lower(char *str_in);
 
 
-/** RESULT  : counts the number of text islands in a sea of spaces
-
-    RETURNS : void
-
-    PURPOSE : code resusability
-
-    NOTES   :
-*/
-int count_str_island(char *str_in);
-
-
-/** RESULT  : gets the text island specified by island_no from a sea of spaces
-
-    RETURNS : void
-
-    PURPOSE : code resusability
-
-    NOTES   :
-*/
-void get_str_island(char *str_in, char *str_out, int island_no);
-
-
 /** RESULT  : extracts a file name from a string containing a full path
 
     RETURNS : void
@@ -129,5 +107,28 @@ void extract_file_name(char *str_in, char *str_out);
     NOTES   :
 */
 void str_remove_underscores(char *str_in);
+
+
+/** RESULT  : splits a string up into parts separated by ascii 32 spaces or "" quotes
+
+    RETURNS : void
+
+    PURPOSE : replacement for sscanf function which is unable to read sentences between "" quotes
+
+    NOTES   :
+*/
+void parse_line(char *line, char output[][80]);
+
+
+/** RESULT  : compares upper case of two strings
+
+    RETURNS : as per strcmp function
+
+    PURPOSE :
+
+    NOTES   :
+*/
+int strcmp_upper(char *str1, char *str2);
+
 
 #endif // STRING_FUNCTIONS_H_INCLUDED

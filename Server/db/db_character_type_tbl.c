@@ -66,8 +66,8 @@ void load_db_char_types(){
             stop_server();
         }
 
-        character_type[char_type_id].race_id=sqlite3_column_int(stmt, 1);
-        character_type[char_type_id].gender_id=sqlite3_column_int(stmt, 2);
+        character_type[char_type_id].race_id=sqlite3_column_int(stmt, 2);
+        character_type[char_type_id].gender_id=sqlite3_column_int(stmt, 3);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] %s %s", char_type_id, race[character_type[char_type_id].race_id].race_name, gender[character_type[char_type_id].gender_id].gender_name);
 

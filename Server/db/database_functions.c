@@ -47,6 +47,8 @@
 #include "../server_messaging.h"
 #include "../game_data.h"
 #include "../guilds.h"
+#include "../string_functions.h"
+#include "../gender.h"
 
 sqlite3 *db;
 
@@ -91,7 +93,11 @@ void open_database(const char *db_filename){
 
 void close_database(){
 
-    sqlite3_close(db);
+    int rc=sqlite3_close(db);
+    if( rc !=SQLITE_OK ){
+
+        log_sqlite_error("sqlite3_close", __func__ , __FILE__, __LINE__, rc, "");
+    }
 
     printf("database file closed\n");
     log_event(EVENT_SESSION, "database file closed");
@@ -203,6 +209,8 @@ void create_database_table(char *sql){
        RETURNS  : void
 
        PURPOSE  : used by function create_new_database
+
+       NOTES    :
     **/
 
     int rc;
@@ -512,3 +520,225 @@ void create_database(const char *db_filename){
     add_db_char_data(character);
     printf("Player [master_character][test] added successfully\n");
 }
+
+/*
+void _create_database(const char *db_scriptfile){
+
+    FILE* file;
+
+    if((file=fopen(db_scriptfile, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "database script file [%s] not found", db_scriptfile);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[80]="";
+    char command[80]="";
+    int line_counter=0;
+
+    char db_filename[80]="database.sqlite";
+
+    int db_version=1;
+    int game_year_length=360;
+
+    int start_map_id=1;
+    int start_map_tile=0;
+    bool start_position_found=false;
+
+    int beam_map_id=1;
+    int beam_map_tile=0;
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        //detect start of comment section and insert a null terminator so that comments are
+        //ignored when parsing the instruction
+        for(int i=0; i<80; i++){
+
+            if(line[i]=='#'){
+
+                line[i]=0;
+                break;
+            }
+        }
+
+        //get the instruction
+        sscanf(line, "%s", command);
+        str_conv_upper(command);
+
+        //parse the instruction
+        if(strcmp(command, "DATABASE_FILENAME")==0){
+
+            if(sscanf(line, "%*s %s", db_filename)!=1){
+
+                printf("line %i - error in database_filename statement\n", line_counter);
+            }
+        }
+
+        if(strcmp(command, "DATABASE_VERSION")==0){
+
+            if(sscanf(line, "%*s %i", &db_version)!=1){
+
+                printf("line %i - error in database_version statement\n", line_counter);
+            }
+        }
+
+        if(strcmp(command, "GAME_YEAR_LENGTH")==0){
+
+
+            if(sscanf(line, "%*s %i", &game_year_length)!=1){
+
+                printf("line %i - error in game_year_length statement\n", line_counter);
+            }
+        }
+
+        if(strcmp(command, "START_MAP_POSITION")==0){
+
+            if(sscanf(line, "%*s %i %i", &start_map_id, &start_map_tile)!=2){
+
+                printf("line %i - error in start_position statement\n", line_counter);
+            }
+
+            start_position_found=true;
+            if(beam_map_id==0) beam_map_id=start_map_id;
+            if(beam_map_tile==0) beam_map_tile=start_map_tile;
+        }
+
+        if(strcmp(command, "BEAM_MAP_POSITION")==0){
+
+            if(sscanf(line, "%*s %i %i", &beam_map_id, &beam_map_tile)!=2){
+
+                printf("line %i - error in beam_position statement\n", line_counter);
+            }
+        }
+
+        //if(start_position_found==true) add_db_game_data(beam_map_id, beam_map_tile, start_map_id, start_map_tile, game_year_length, db_version);
+
+        if(strcmp(command, "ADD_CHANNEL")==0){
+
+            char output[10][80];
+            parse_line(line, output);
+
+            int chan_id=atoi(output[0]);
+            int owner_id=atoi(output[1]);
+            int chan_type=atoi(output[2]);
+            int new_chars=atoi(output[6]);
+
+            //add_db_channel(chan_id, owner_id, chan_type, output[3], output[4], output[5], new_chars);
+        }
+
+        if(strcmp(command, "ADD_RACE")==0){
+
+            int race_id=0;
+            char race_name[80]="";
+
+            if(sscanf(line, "%*s %i %s", &race_id, race_name)!=2){
+
+                printf("line %i - error in ADD_RACE\n", line_counter);
+            }
+
+            //copy the race name to the race struct so we can lookup the race id
+            strcpy(race[race_id].race_name, race_name);
+
+            //add_db_race(race_id, output[1], output[2]);
+        }
+
+        if(strcmp(command, "ADD_GENDER")==0){
+
+            int gender_id=0;
+            char gender_name[80]="";
+
+            if(sscanf(line, "%*s %i %s", &gender_id, gender_name)!=2){
+
+                printf("line %i - error in ADD_GENDER\n", line_counter);
+            }
+
+            //copy the gender name to the gender struct so we can lookup the gender id
+            strcpy(gender[gender_id].gender_name, gender_name);
+
+            //add_db_race(gender_id, output[1]);
+        }
+
+        if(strcmp(command, "ADD_CHAR_TYPE")==0){
+
+            int char_type=0;
+            char race_name[80]="";
+            char gender_name[80]="";
+
+            if(sscanf(line, "%*s %i %s %s", &char_type, race_name, gender_name)!=3){
+
+                printf("line %i - error in ADD_CHAR_TYPE\n", line_counter);
+            }
+
+            //find the race id based on the race name
+            bool found=false;
+            int race_id=0;
+
+            for(int i=0; i<MAX_RACES; i++){
+
+                if(strcmp(race_name, race[i].race_name)==0){
+
+                    found=true;
+                    race_id=i;
+                    break;
+                }
+            }
+
+            if(found==false){
+
+                printf("line %i - race name not found\n", line_counter);
+            }
+
+            found=false;
+            int gender_id=0;
+
+            for(int i=0; i<MAX_GENDER; i++){
+
+                if(strcmp(gender_name, gender[i].gender_name)==0){
+
+                    found=true;
+                    gender_id=i;
+                    break;
+                }
+            }
+
+            if(found==false){
+
+                printf("line %i - gender name not found\n", line_counter);
+            }
+
+            //add_db_char_type(char_type, race_id, gender_id);
+        }
+
+        if(strcmp(command, "ADD_SEASON")==0){
+
+            char output[10][80];
+            parse_line(line, output);
+
+            int season_id=atoi(output[0]);
+            int start=atoi(output[3]);
+            int finish=atoi(output[4]);
+
+            //add_db_season(season_id, output[1], output[2], start, finish);
+        }
+
+        if(strcmp(command, "ADD_MAP")==0){
+
+            char output[10][80];
+            parse_line(line, output);
+
+            int map_id=atoi(output[0]);
+
+            //add_db_map(map_id, output[1], output[2]);
+        }
+
+        //ADD_GUILD
+        //ADD_CHARACTER
+        //ADD_ATTRIBUTES
+        // remove "" from sentences
+    }
+
+    fclose(file);
+}
+*/

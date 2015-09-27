@@ -33,6 +33,10 @@
 #include "server_messaging.h"
 #include "server_protocol_functions.h"
 #include "characters.h"
+#include "gender.h"
+#include "date_time_functions.h"
+#include "guilds.h"
+#include "db/db_character_tbl.h"
 
 struct client_node_type character;
 
@@ -98,6 +102,57 @@ int char_age(int connection){
 
     return age;
 }
+
+void send_char_details(int connection, const char *char_name){
+
+    /** public function - see header */
+
+    if(get_db_char_data(char_name, -1)==false){
+
+        send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "character does not exist");
+        return;
+    }
+
+    send_text(connection, CHAT_SERVER, "%cCharacter    :%s", c_green3+127, character.char_name);
+
+    int race_id=character_type[character.char_type].race_id;
+    send_text(connection, CHAT_SERVER, "%cRace         :%s", c_green3+127, race[race_id].race_name);
+
+    int gender_id=character_type[character.char_type].gender_id;
+    send_text(connection, CHAT_SERVER, "%cGender       :%s", c_green3+127, gender[gender_id].gender_name);
+
+    char time_stamp_str[9]="";
+    char date_stamp_str[11]="";
+    get_time_stamp_str(character.char_created, time_stamp_str);
+    get_date_stamp_str(character.char_created, date_stamp_str);
+
+    send_text(connection, CHAT_SERVER, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+
+    send_text(connection, CHAT_SERVER, "%cCharacter Age:%i", c_green3+127, char_age(connection));
+
+    if(character.guild_id==0){
+
+        send_text(connection, CHAT_SERVER, "%cGuild        :guildless player", c_green3+127);
+        send_text(connection, CHAT_SERVER, "%cRank         :n/a", c_green3+127);
+        send_text(connection, CHAT_SERVER, "%cJoined       :n/a", c_green3+127);
+    }
+    else {
+
+        int guild_id=character.guild_id;
+
+        send_text(connection, CHAT_SERVER, "%cGuild        :%s", c_green3+127, guilds.guild[guild_id].guild_name);
+        send_text(connection, CHAT_SERVER, "%cGuild tag    :%s", c_green3+127, guilds.guild[guild_id].guild_tag );
+
+        send_text(connection, CHAT_SERVER, "%cRank         :%i", c_green3+127, character.guild_rank);
+
+        get_time_stamp_str(character.joined_guild, time_stamp_str);
+        get_date_stamp_str(character.joined_guild, date_stamp_str);
+
+        send_text(connection, CHAT_SERVER, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+    }
+
+}
+
 
 /*
 int rename_char(int connection, char *new_char_name){

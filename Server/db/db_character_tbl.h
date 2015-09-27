@@ -61,16 +61,16 @@
 
 #include "../clients.h"
 
-/** RESULT  : loads data from the character table into the client array
 
-    RETURNS : FOUND if char with the char_name is found in database, else NOT_FOUND
+/** RESULT  : determines if a char_id exists in the database CHARACTER_TABLE
 
-    PURPOSE : Loads character data from the database to memory.
-              Also used to check if a new character name duplicates an existing character
+    RETURNS : true/false
+
+    PURPOSE : used in join_guild function
 
     NOTES   :
 **/
-bool get_db_char_data(char *char_name, int char_id);
+bool get_db_char_exists(int char_id);
 
 
 /** RESULT  : Retrieves char data from the Character Table and places it in the Character struct
@@ -109,16 +109,28 @@ void get_db_last_char_created();
 **/
 int get_db_char_count();
 
+/*****************************************************************************************************
+***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
+******************************************************************************************************/
 
-/** RESULT  : determines if a char_id exists in the database CHARACTER_TABLE
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    RETURNS : true/false
+/** RESULT  : loads data from the character table into the client array
 
-    PURPOSE : used in join_guild function
+    RETURNS : FOUND if char with the char_name is found in database, else NOT_FOUND
+
+    PURPOSE : Loads character data from the database to memory.
+              Also used to check if a new character name duplicates an existing character
 
     NOTES   :
 **/
-bool get_db_char_exists(int char_id);
+bool get_db_char_data(const char *char_name, int char_id);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // DB_CHARACTER_TBL_H_INCLUDED
