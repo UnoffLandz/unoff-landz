@@ -63,7 +63,6 @@ static int hash_jc(int connection, char *text) {
     }
 
     join_channel(connection, chan_id);
-
     return 0;
 }
 
@@ -88,7 +87,6 @@ static int hash_lc(int connection, char *text) {
     }
 
     leave_channel(connection, chan_id);
-
     return 0;
 }
 
@@ -107,7 +105,6 @@ static int hash_motd(int connection, char *text) {
     (void)(text);
 
     send_motd_file(connection);
-
     return 0;
 }
 
@@ -209,7 +206,6 @@ static int hash_details(int connection, char *text) {
     }
 
     send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "you need to use the format #DETAILS [character name]");
-
     return 0;
 }
 
@@ -259,7 +255,6 @@ static int hash_beam_me(int connection, char *text) {
     move_char_between_maps(connection, game_data.beam_map_id, new_map_tile);
 
     send_text(connection, CHAT_SERVER, "%cScotty beamed you up", c_green3+127);
-
     return 0;
 }
 
@@ -278,14 +273,13 @@ static int hash_pm(int connection, char *text) {
     char char_name[80];
     char message[1024];
 
-    if(sscanf(text, "%*s %s %s", char_name, message)!=2){
+    if(sscanf(text, "%*s %s %[^\n]", char_name, message)!=2){
 
         send_text(connection, CHAT_SERVER, "%cyou need to use the format #PM [character name][message]", c_red3+127);
         return 0;
     }
 
     send_pm(connection, char_name, message);
-
     return 0;
 }
 
@@ -326,7 +320,6 @@ static int hash_jump(int connection, char *text) {
     move_char_between_maps(connection, map_id, new_map_tile);
 
     send_text(connection, CHAT_SERVER, "%cYou jumped to map %s tile %i", c_green3+127, maps.map[map_id].map_name, new_map_tile);
-
     return 0;
 }
 
@@ -351,7 +344,6 @@ static int hash_apply_guild(int connection, char *text) {
     }
 
     apply_guild(connection, guild_tag);
-
     return 0;
 }
 
@@ -378,7 +370,6 @@ static int hash_ops_create_guild(int connection, char *text) {
     }
 
     create_guild(connection, guild_name, "", guild_tag, permission_level);
-
     return 0;
 }
 
@@ -404,7 +395,6 @@ static int hash_ops_appoint_guild_member(int connection, char *text) {
     }
 
     join_guild(connection, char_name, guild_tag);
-
     return 0;
 }
 
@@ -430,7 +420,6 @@ static int hash_change_rank(int connection, char *text) {
     }
 
     change_guild_rank(connection, char_name, guilds.guild[clients.client[connection].guild_id].guild_tag, guild_rank);
-
     return 0;
 }
 
@@ -457,7 +446,6 @@ static int hash_ops_change_guild_member_rank(int connection, char *text) {
     }
 
     change_guild_rank(connection, char_name, guild_tag, guild_rank);
-
     return 0;
 }
 
@@ -483,18 +471,17 @@ static int hash_ops_change_guild_permission(int connection, char *text) {
     }
 
     change_guild_permission(connection, guild_tag, permission_level);
-
     return 0;
 }
 
 
 static int hash_list_applicants(int connection, char *text) {
 
-    /** RESULT  : change a guilds permission level
+    /** RESULT  : lists characters who have applied for guild membership
 
         RETURNS : void
 
-        PURPOSE : OPS only
+        PURPOSE :
 
         NOTES   :
     */
@@ -616,7 +603,6 @@ static int hash_ops_kick_guild_member(int connection, char *text) {
     }
 
     kick_guild_member(connection, guild_tag, char_name);
-
     return 0;
 }
 
@@ -642,10 +628,135 @@ static int hash_kick_guild_member(int connection, char *text) {
     }
 
     kick_guild_member(connection, guilds.guild[clients.client[connection].guild_id].guild_tag, char_name);
+    return 0;
+}
+
+
+static int hash_list_guild(int connection, char *text) {
+
+    /** RESULT  : lists guild members
+
+        RETURNS : void
+
+        PURPOSE :
+
+        NOTES   :
+    */
+
+    char list_type[40]="";
+
+    // if list type is not specified, default to RANK
+    if(sscanf(text, "%*s %s", list_type)==-1){
+
+        push_command(connection, IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK, "");
+        return 0;
+    }
+
+    // if list type is specified use that type
+    if(sscanf(text, "%*s %s", list_type)==1){
+
+        str_conv_upper(list_type);
+
+        if(strcmp(list_type, "R")==0 || strcmp(list_type, "RANK")==0){
+
+            push_command(connection, IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK, "");
+            return 0;
+        }
+        else if(strcmp(list_type, "T")==0 || strcmp(list_type, "TIME")==0){
+
+            push_command(connection, IDLE_BUFFER_PROCESS_LIST_GUILD_BY_TIME, "");
+            return 0;
+        }
+    }
+
+    send_text(connection, CHAT_SERVER, "%cyou need to use the format #LIST_GUILD [RANK/TIME] or #LG [R/T]", c_red3+127);
+    return 0;
+}
+
+
+static int hash_where_am_i(int connection, char *text) {
+
+    /** RESULT  : tells char map information
+
+        RETURNS : void
+
+        PURPOSE :
+
+        NOTES   :
+    */
+
+    (void)(text);
+
+    get_map_details(connection, clients.client[connection].map_id);
 
     return 0;
 }
 
+static int hash_map(int connection, char *text) {
+
+    /** RESULT  : extended map information
+
+        RETURNS : void
+
+        PURPOSE :
+
+        NOTES   :
+    */
+
+    char map_name[80]="";
+    int map_id;
+
+    if(sscanf(text, "%*s")==-1){
+
+        map_id=clients.client[connection].map_id;
+    }
+    else if(sscanf(text, "%*s %[^\n]", map_name)==1){
+
+        map_id=get_map_id(map_name);
+
+        if(map_id==-1){
+
+            send_text(connection, CHAT_SERVER, "%cMap does not exist", c_red3+127);
+            return 0;
+        }
+    }
+    else {
+
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #MAP [map_name] or #MAP", c_red3+127);
+        return 0;
+    }
+
+    get_map_details(connection, map_id);
+    get_map_developer_details(connection, map_id);
+
+    return 0;
+}
+
+
+static int hash_clear_inventory(int connection, char *text) {
+
+    /** RESULT  : clears char inventory
+
+        RETURNS : void
+
+        PURPOSE : debugging and testing
+
+        NOTES   :
+    */
+
+    (void)(text);
+
+    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
+
+        clients.client[connection].inventory[i].object_id=0;
+        clients.client[connection].inventory[i].amount=0;
+        clients.client[connection].inventory[i].flags=0;
+    }
+
+    send_here_your_inventory(connection);
+
+    return 0;
+}
 
 typedef int (*hash_command_function)(int connection, char *text);
 
@@ -698,6 +809,11 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#KM",                      true,   18,    PERMISSION_1, hash_kick_guild_member},
     {"#KICK_GUILD_MEMBER",       true,   18,    PERMISSION_1, hash_kick_guild_member},
     {"#OPS_KICK_GUILD_MEMBER",   true,   18,    PERMISSION_3, hash_ops_kick_guild_member},
+    {"#LIST_GUILD",              true,   0,     PERMISSION_1, hash_list_guild},
+    {"#LG",                      true,   0,     PERMISSION_1, hash_list_guild},
+    {"#WHERE_AM_I",              false,  0,     PERMISSION_1, hash_where_am_i},
+    {"#MAP",                     false,  0,     PERMISSION_1, hash_map},
+    {"#CLEAR_INVENTORY",         false,  0,     PERMISSION_3, hash_clear_inventory},
     {"", false, 0, 0, 0}
 };
 
@@ -727,6 +843,8 @@ static const struct hash_command_array_entry *find_hash_command_entry(char *comm
 
     return NULL;
 }
+
+
 
 
 void process_hash_commands(int connection, char *text){

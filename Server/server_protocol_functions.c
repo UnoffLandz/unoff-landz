@@ -68,7 +68,6 @@ void send_new_minute(int connection, int minute){
     packet.minute=minute;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -92,7 +91,6 @@ void send_login_ok(int connection){
     packet.data_length=packet_length-2;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -116,7 +114,6 @@ void send_display_client_window(int connection){
     packet.data_length=packet_length-2;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -140,7 +137,6 @@ void send_login_not_ok(int connection){
     packet.data_length=packet_length-2;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -164,7 +160,6 @@ void send_you_dont_exist(int connection){
     packet.data_length=packet_length-2;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -190,7 +185,6 @@ void send_you_are(int connection){
     packet.connection=connection;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -214,7 +208,6 @@ void send_create_char_ok(int connection){
     packet.data_length=packet_length-2;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -238,7 +231,6 @@ void send_create_char_not_ok(int connection){
     packet.data_length=packet_length-2;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -270,7 +262,6 @@ void send_raw_text(int connection, int channel, char *text){
     strcpy(packet.text, text);
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 void send_text(int connection, int channel_type, const char *fmt, ...){
@@ -310,7 +301,7 @@ void send_here_your_inventory(int connection){
             int amount;
             unsigned char slot;
             unsigned char flags;
-        }inventory[MAX_BAG_SLOTS];
+        }inventory[MAX_INVENTORY_SLOTS];
 
     }packet;
 
@@ -326,14 +317,13 @@ void send_here_your_inventory(int connection){
 
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        packet.inventory[i].object_id=clients.client[connection].client_inventory[i].object_id;
-        packet.inventory[i].amount=clients.client[connection].client_inventory[i].amount;
+        packet.inventory[i].object_id=clients.client[connection].inventory[i].object_id;
+        packet.inventory[i].amount=clients.client[connection].inventory[i].amount;
         packet.inventory[i].slot=i;
         packet.inventory[i].flags=0;
     }
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -374,7 +364,6 @@ void send_here_your_ground_items(int connection, int bag_id){
     }
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -398,7 +387,6 @@ void send_close_bag(int connection){
     packet.data_length=packet_length-2;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -431,7 +419,6 @@ void send_get_active_channels(int connection){
     }
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -580,7 +567,6 @@ void send_here_your_stats(int connection){
     packet.max_book_time=clients.client[connection].max_book_time;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -610,7 +596,6 @@ void send_change_map(int connection, char *elm_filename){
     strcpy(packet.elm_filename, elm_filename);
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 
@@ -797,7 +782,6 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
     packet.flags=0;
 
     send_packet(connection, &packet, packet_length);
-    //send(connection, &packet, packet_length, 0);
 }
 
 

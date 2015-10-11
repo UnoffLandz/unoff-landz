@@ -51,6 +51,7 @@
 #include "date_time_functions.h"
 #include "client_protocol_handler.h"
 #include "bags.h"
+#include "packet.h"
 
 #define DEBUG_CLIENT_PROTOCOL_HANDLER 1//set debug mode
 
@@ -67,9 +68,9 @@ void process_packet(int connection, unsigned char *packet){
 
     if(protocol==RAW_TEXT) {
 
+        //copy unsigned char text to signed char variable
         char text[1024]="";
-        int data_length=packet[1]+(packet[2]*256)-1;
-        memcpy(text, packet+3, data_length);
+        memcpy(text, packet+3, get_packet_length(packet)-3);
 
         // trim off excess left hand space
         str_trim_left(text);
@@ -95,8 +96,7 @@ void process_packet(int connection, unsigned char *packet){
             int chan=clients.client[connection].chan[active_chan_slot-1];
 
             //broadcast to self
-            sprintf(text_out, "%c[%s]: %s", c_grey1+127, clients.client[connection].char_name, text);
-            send_raw_text(connection, CHAT_CHANNEL_0 + active_chan_slot, text_out);
+            send_text(connection, CHAT_CHANNEL_0 + active_chan_slot, "%c[%s]: %s", c_grey1+127, clients.client[connection].char_name, text);
 
             //broadcast to others
             broadcast_channel_chat(chan, connection, text);
@@ -115,10 +115,8 @@ void process_packet(int connection, unsigned char *packet){
             char map_name[80]="";
             strcpy(map_name, maps.map[clients.client[connection].map_id].map_name);
 
-            sprintf(text_out, "%c%s: %s", c_grey1+127, clients.client[connection].char_name, text);
-
             //broadcast to self
-            send_raw_text(connection, CHAT_LOCAL, text_out);
+            send_text(connection, CHAT_LOCAL,"%c%s: %s", c_grey1+127, clients.client[connection].char_name, text);
 
             //broadcast to others
             broadcast_local_chat(connection, text_out);
@@ -142,9 +140,9 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==SEND_PM) {
 
+        //copy unsigned char text to signed char variable
         char text[1024]="";
-        int data_length=packet[1]+(packet[2]*256)-1;
-        memcpy(text, packet+3, data_length);
+        memcpy(text, packet+3, get_packet_length(packet)-3);
 
         //extract target name and message from pm packet
         char char_name[80]="";
@@ -185,9 +183,7 @@ void process_packet(int connection, unsigned char *packet){
         }
 
         //update database
-        char sql[MAX_SQL_LEN]="";
-        sprintf(sql, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i",clients.client[connection].frame, clients.client[connection].character_id);
-        push_sql_command(sql);
+        push_sql_command("UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i",clients.client[connection].frame, clients.client[connection].character_id);
 
         log_event(EVENT_SESSION, "Protocol SIT_DOWN by [%s] frame[%i]", clients.client[connection].char_name,  clients.client[connection].frame);
     }
@@ -195,14 +191,10 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==GET_PLAYER_INFO){
 
-        unsigned char data[1024]={0};
-        int data_length=packet[1]+(packet[2]*256)-1;
-        memcpy(data, packet+3, data_length);
+        //extract integer from packet
+        int other_connection=*((int*)(packet+3));
 
-        int other_connection=Uint32_to_dec(data[0], data[1], data[2], data[3]);
-
-        sprintf(text_out, "You see %s", clients.client[other_connection].char_name);
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, "You see %s", clients.client[other_connection].char_name);
    }
 /***************************************************************************************************/
 
@@ -219,8 +211,8 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==SEND_VERSION){
 
         unsigned char data[1024]={0};
-        int data_length=packet[1]+(packet[2]*256)-1;
-        memcpy(data, packet+3, data_length);
+        int data_length=get_packet_length(packet);
+        memcpy(data, packet+3, data_length-3);
 
         int first_digit=Uint16_to_dec(data[0], data[1]);
         int second_digit=Uint16_to_dec(data[2], data[3]);
@@ -234,9 +226,7 @@ void process_packet(int connection, unsigned char *packet){
         int host4=(int)data[11];
         int port=((int)data[12] *256)+(int)data[13];
 
-        log_text(EVENT_SESSION, "first digit [%i] second digit [%i]", first_digit, second_digit);
-        log_text(EVENT_SESSION, "major [%i] minor [%i] release [%i] patch [%i]", major, minor, release, patch);
-        log_text(EVENT_SESSION, "host [%i.%i.%i.%i] port [%i]", host1, host2, host3, host4, port);
+        log_text(EVENT_SESSION, "first digit [%i] second digit [%i] major [%i] minor [%i] release [%i] patch [%i] host [%i.%i.%i.%i] port [%i]", first_digit, second_digit, major, minor, release, patch, host1, host2, host3, host4, port);
     }
 /***************************************************************************************************/
 
@@ -279,37 +269,17 @@ void process_packet(int connection, unsigned char *packet){
 
         //returns a Uint8 giving the slot number looked at
 
-        unsigned char data[1]={0};
-        int data_length=packet[1]+(packet[2]*256)-1;
-        memcpy(data, packet+3, data_length);
+        int slot=packet[3];
+        int item=clients.client[connection].inventory[slot].object_id;
 
-        int slot=(int)data[0];
-        int i=0;
-        bool found=false;
+        if(object[item].edible==true){
 
-        for(i=0; i<MAX_INVENTORY_SLOTS; i++){
-
-            if(i==clients.client[connection].client_inventory[slot].object_id){
-
-                found=true;
-                break;
-            }
+            send_text(connection, CHAT_SERVER, "%cYou see a %s. It's edible!", c_green3+127, object[item].object_name);
         }
+        else {
 
-        if(found==false){
-
-            sprintf(text_out, "%cyou see an unknown item", c_green3+127);
+            send_text(connection, CHAT_SERVER, "%cYou see a %s.", c_green3+127, object[item].object_name);
         }
-
-        //tell the client what the item is
-        sprintf(text_out, "%cyou see a %s. ", c_green3+127, object[i].object_name);
-
-        if(object[i].edible==true){
-
-            sprintf(text_out, "%s It's edible.", text_out);
-        }
-
-        send_raw_text(connection, CHAT_SERVER, text_out);
     }
 /***************************************************************************************************/
 
@@ -318,12 +288,8 @@ void process_packet(int connection, unsigned char *packet){
         //returns 2 Uint8 indicating the slots to be moved from and to
         //if an attempt is made to move to an occupied slot or, to move from an empty slot, the client will automatically block
 
-        unsigned char data[6]={0};
-        int data_length=packet[1]+(packet[2]*256)-1;
-        memcpy(data, packet+3, data_length);
-
-        int from_slot=(int)data[0];
-        int to_slot=(int)data[1];
+        int from_slot=packet[3];
+        int to_slot=packet[4];
 
         move_inventory_item(connection, from_slot, to_slot);
     }
@@ -331,7 +297,7 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==HARVEST){
 
-        //returns a integer corresponding to the order of the object in the map 3d object list
+        //returns a 16bit integer corresponding to the order of the object in the map 3d object list
 
         int threed_object_list_pos=Uint16_to_dec(packet[3], packet[4]);
 
@@ -353,83 +319,71 @@ void process_packet(int connection, unsigned char *packet){
 
         //returns a byte indicating the slot number followed by a 32bit integer indicating the amount to be dropped
         int inventory_slot=packet[3];
-        int amount=Uint32_to_dec(packet[4], packet[5], packet[6], packet[7]);
-        int object_id=clients.client[connection].client_inventory[inventory_slot].object_id;
-        int bag_id=0;
-        int slot=0;
+        int withdraw_amount=*((int*)(packet+4));
 
-        //use existing bag if one exists
-        if(clients.client[connection].bag_open==true){
+        //determine the item to be dropped
+        int object_id=clients.client[connection].inventory[inventory_slot].object_id;
 
+        int bag_id;
+        int bag_slot=-1;
+
+        if(clients.client[connection].bag_open==true){//use existing bag
+
+            //find the existing bag id
             bag_id=clients.client[connection].open_bag_id;
 
-            //search the bag to find an existing of free slot in which to place the drop
-            bool existing_slot_found=false;
-            bool new_slot_found=false;
+            //find a slot in which to place the item
+            bag_slot=find_bag_slot(bag_id, object_id);
 
-            for(int i=0; i<MAX_BAG_SLOTS; i++){
+            //check if max bag slots exceeded
+            if(bag_slot==-1){
 
-                if(bag[bag_id].inventory[i].object_id==object_id){
-
-                    existing_slot_found=true;
-                    slot=i;
-                    break;
-                }
-
-                if(bag[bag_id].inventory[i].amount==0 && new_slot_found==false){
-
-                    new_slot_found=true;
-                    slot=i;
-                }
-            }
-
-            //if no existing or free slots then abort drop
-            if(existing_slot_found==false && new_slot_found==false){
-
-                char text_out[80]="";
-
-                sprintf(text_out, "%cthere are no slots left in this bag", c_red3+127);
-                send_raw_text(connection, CHAT_SERVER, text_out);
-
+                send_text(connection, CHAT_SERVER, "%cthere are no slots left in this bag", c_red3+127);
                 return;
             }
+
         }
+        else {// create a new bag
 
-        //create new bag if none exist
-        if(clients.client[connection].bag_open==false){
+            // get new bag id
+            bag_id=create_bag(clients.client[connection].map_id, clients.client[connection].map_tile);
 
-            bag_id=create_bag(connection, clients.client[connection].map_id, clients.client[connection].map_tile);
-
-            //test to see if maximum bags has been exceeded
+            //check if max bags permitted by server has been exceeded
             if(bag_id==-1){
 
-                char text_out[80]="";
-
-                sprintf(text_out, "%cserver has reached the maximum number of bags. Wait for one to poof. ", c_red3+127);
-                send_raw_text(connection, CHAT_SERVER, text_out);
-
+                send_text(connection, CHAT_SERVER, "%cThe server has reached the maximum number of bags. Wait for one to poof! ", c_red3+127);
                 return;
             }
 
-            clients.client[connection].bag_open=true;
-            clients.client[connection].open_bag_id=bag_id;
+           //broadcast the bag drop
+            broadcast_get_new_bag_packet(connection, bag_id);
+
+            //place item in first slot of new bag
+            bag_slot=0;
+         }
+
+        //update char to show that it is standing on an open bag
+        clients.client[connection].bag_open=true;
+        clients.client[connection].open_bag_id=bag_id;
+
+        //remove item from char inventory
+        int amount_withdrawn=remove_from_inventory(connection, object_id, withdraw_amount, inventory_slot);
+
+        // add to bag
+        int amount_added=add_to_bag(bag_id, object_id, amount_withdrawn, bag_slot);
+
+        //catch if amount added to bag is less than amount withdrawn from inventory
+        if(amount_added != amount_withdrawn){
+
+            log_event(EVENT_ERROR, "char [%s] error dropping item from inventory", clients.client[connection].char_name);
+            log_text(EVENT_ERROR, "item [%s]", object[object_id].object_name);
+            log_text(EVENT_ERROR, "amount withdrawn from inventory [%i]", amount_withdrawn);
+            log_text(EVENT_ERROR, "amount added to bag [%i]", amount_added);
+
+            stop_server();
         }
 
-        //remove item from inventory
-        clients.client[connection].client_inventory[inventory_slot].amount-=amount;
-
-        //if amount is zero, remove item entry from inventory
-        if(clients.client[connection].client_inventory[inventory_slot].amount==0){
-
-            clients.client[connection].client_inventory[inventory_slot].object_id=0;
-            clients.client[connection].client_inventory[inventory_slot].flags=0;
-        }
-
-        //add item to bag
-        bag[bag_id].inventory[slot].amount+=amount;
-        bag[bag_id].inventory[slot].object_id=object_id;
-
-        //send revised char and bag inventory to client
+        //send revised char inventory and bag inventory to client
         send_here_your_inventory(connection);
         send_here_your_ground_items(connection, bag_id);
     }
@@ -475,11 +429,7 @@ void process_packet(int connection, unsigned char *packet){
         //if there is no bag then abort
         if(bag_found==false){
 
-            char text_out[80]="";
-
-            sprintf(text_out, "%cthere is no bag at this location", c_red3+127);
-            send_raw_text(connection, CHAT_SERVER, text_out);
-
+            send_text(connection, CHAT_SERVER, "%cthere is no bag at this location", c_red3+127);
             return;
         }
 
@@ -522,7 +472,7 @@ void process_packet(int connection, unsigned char *packet){
             sprintf(text_out, "%cyou see an unknown item", c_green3+127);
         }
 
-        send_raw_text(connection, CHAT_SERVER, text_out);
+        send_text(connection, CHAT_SERVER, text_out);
     }
 /***************************************************************************************************/
 
@@ -535,7 +485,6 @@ void process_packet(int connection, unsigned char *packet){
 
         //set the active channel
         clients.client[connection].active_chan=packet[3]-32;
-        printf("active chan %i\n",  clients.client[connection].active_chan);
 
         //update the database
         char sql[MAX_SQL_LEN]="";
@@ -546,14 +495,14 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==LOG_IN){
 
-        int data_len=packet[1] + (packet[2] * 256) + 2;
-        push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_LOGIN, packet, data_len);
+        int packet_len=get_packet_length(packet);
+        push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_LOGIN, packet, packet_len);
     }
 /***************************************************************************************************/
 
     else if(protocol==CREATE_CHAR){
 
-        int packet_len=packet[1] + (packet[2] * 256) + 2;
+        int packet_len=get_packet_length(packet);
         push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_CHECK_NEWCHAR, packet, packet_len);
     }
 /***************************************************************************************************/
@@ -562,7 +511,6 @@ void process_packet(int connection, unsigned char *packet){
 
         //calculate day of year
         int day_of_year=game_data.game_days % game_data.year_length;
-
         send_verbose_date(connection, day_of_year);
     }
 /***************************************************************************************************/

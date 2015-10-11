@@ -39,7 +39,6 @@ void stop_server(){
 
     log_event(EVENT_ERROR, "SERVER STOP at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
 
-
     exit(EXIT_FAILURE);
 }
 

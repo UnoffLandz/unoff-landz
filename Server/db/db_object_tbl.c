@@ -67,9 +67,9 @@ void load_db_objects(){
         }
 
         strcpy(object[object_id].object_name, (char*)sqlite3_column_text(stmt, 1));
-        if(sqlite3_column_int(stmt, 3)==1) object[object_id].harvestable=true; else object[object_id].harvestable=false;
-        if(sqlite3_column_int(stmt, 4)==1) object[object_id].edible=true; else object[object_id].edible=false;
-        object[object_id].harvest_interval=sqlite3_column_int(stmt, 5);
+        if(sqlite3_column_int(stmt, 2)==1) object[object_id].harvestable=true; else object[object_id].harvestable=false;
+        if(sqlite3_column_int(stmt, 3)==1) object[object_id].edible=true; else object[object_id].edible=false;
+        object[object_id].harvest_interval=sqlite3_column_int(stmt, 4);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", i, object[object_id].object_name);
 

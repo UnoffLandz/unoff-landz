@@ -83,11 +83,9 @@ bool get_db_char_data(const char *char_name, int char_id){
 
     sqlite3_stmt *stmt;
 
-    //create copy of char name to avoid 'discards const qualifier' warning on conversion to upper case
+    //create upper case copy of char name
     char char_name_uc[80]="";
     strcpy(char_name_uc, char_name);
-
-    //convert char name to upper case
     str_conv_upper(char_name_uc);
 
     char char_tbl_sql[MAX_SQL_LEN]="";
@@ -176,8 +174,8 @@ bool get_db_char_data(const char *char_name, int char_id){
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int slot=sqlite3_column_int(stmt, 0);
-        character.client_inventory[slot].object_id=sqlite3_column_int(stmt, 1);
-        character.client_inventory[slot].amount=sqlite3_column_int(stmt, 2);
+        character.inventory[slot].object_id=sqlite3_column_int(stmt, 1);
+        character.inventory[slot].amount=sqlite3_column_int(stmt, 2);
     }
 
     if (rc != SQLITE_DONE) {

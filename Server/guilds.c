@@ -28,12 +28,15 @@
 #include "logging.h"
 #include "db/database_functions.h"
 #include "db/db_character_tbl.h"
+#include "db/db_guild_tbl.h"
 #include "server_start_stop.h"
 #include "idle_buffer2.h"
 #include "characters.h"
 #include "string_functions.h"
+#include "date_time_functions.h"
 
 struct guild_list_type guilds;
+struct guild_member_list_type guild_member_list;
 
 void update_guild_details(int character_id, int guild_id, int joined_guild, int guild_rank){
 
@@ -256,6 +259,19 @@ void join_guild(int connection, char *char_name, char *guild_tag){
         return;
     }
 
+    //remove pending applications from this char to other guilds
+    for(int i=0; i<MAX_GUILDS; i++){
+
+        for(int j=0; j<MAX_GUILD_APPLICANTS; j++){
+
+            if(strcmp(guilds.guild[i].applicant[j].char_name, char_name)==0){
+
+                strcpy(guilds.guild[i].applicant[j].char_name, "");
+                guilds.guild[i].applicant[j].application_date=0;
+            }
+        }
+    }
+
     update_guild_details(character.character_id, guild_id, time(NULL), 0);
 
     log_event(EVENT_SESSION, "char [%s] accepted as member of guild [%s]", char_name, guild_tag);
@@ -346,4 +362,29 @@ void change_guild_permission(int connection, char *guild_tag, int permission_lev
     push_sql_command(sql);
 
     send_text(connection, CHAT_SERVER, "%cyou have changed the permission level for guild %s to %i", c_green3+127, guild_tag, permission_level);
+}
+
+
+void list_guild_members(int connection, int order){
+
+    /** public function - see header **/
+
+    int guild_id=clients.client[connection].guild_id;
+
+    get_db_guild_member_list(guild_id, order);
+
+    for(int i=0; i<guild_member_list.guild_member_count; i++){
+
+        char date_stamp_str[50]="";
+        get_date_stamp_str(guild_member_list.guild_member[i].date_joined_guild, date_stamp_str);
+
+        char time_stamp_str[50]="";
+        get_time_stamp_str(guild_member_list.guild_member[i].date_joined_guild, time_stamp_str);
+
+        send_text(connection, CHAT_SERVER, "%c%s %s %s %i", c_green3+127,
+            guild_member_list.guild_member[i].character_name,
+            date_stamp_str,
+            time_stamp_str,
+            guild_member_list.guild_member[i].guild_rank);
+    }
 }

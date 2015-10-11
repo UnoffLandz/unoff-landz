@@ -40,8 +40,8 @@ void get_db_char_inventory(int character_id){
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int slot=sqlite3_column_int(stmt, 0);
-        character.client_inventory[slot].object_id=sqlite3_column_int(stmt, 1);
-        character.client_inventory[slot].amount=sqlite3_column_int(stmt, 2);
+        character.inventory[slot].object_id=sqlite3_column_int(stmt, 1);
+        character.inventory[slot].amount=sqlite3_column_int(stmt, 2);
     }
 
     if (rc != SQLITE_DONE) {
@@ -81,14 +81,13 @@ void add_db_char_inventory(struct client_node_type character){
         log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    int i=0;
-    for(i=0; i<MAX_INVENTORY_SLOTS; i++){
+    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
         //usually, we'd start by binding an inventory_id to column 0. However, sqlite creates this automatically
         sqlite3_bind_int(stmt, 1, character.character_id);
         sqlite3_bind_int(stmt, 2, i);
-        sqlite3_bind_int(stmt, 3, character.client_inventory[i].object_id);
-        sqlite3_bind_int(stmt, 4, character.client_inventory[i].amount);
+        sqlite3_bind_int(stmt, 3, character.inventory[i].object_id);
+        sqlite3_bind_int(stmt, 4, character.inventory[i].amount);
 
         rc = sqlite3_step(stmt);
         if (rc != SQLITE_DONE) {

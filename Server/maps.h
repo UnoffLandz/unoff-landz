@@ -60,9 +60,13 @@ enum { //return values from add_char_to_map / remove_char_from_map
 struct map_node_type{
 
     char map_name[80];    // eg Isla Prima
+    char description[160]; // eg land of the trolls
     char elm_filename[80];// eg startmap.elm
-
+    char author[80];
+    char author_email[80];
+    int upload_date;
     int map_axis;
+    enum {DEVELOPMENT, TESTING, FINAL}development_status;
 
     unsigned char tile_map[TILE_MAP_MAX];
     int tile_map_size;
@@ -134,6 +138,39 @@ int get_x_pos(int tile, int map_id);
     NOTES   :
 */
 int get_y_pos(int tile, int map_id);
+
+
+/** RESULT  : finds the map id for a map name
+
+    RETURNS : the map id
+
+    PURPOSE : used in function:
+
+    NOTES   :
+*/
+int get_map_id(char *map_name);
+
+
+/** RESULT  : sends basic map details to client
+
+    RETURNS : void
+
+    PURPOSE : used in functions: hash_where_am_i, get_map_developer_details
+
+    NOTES   :
+*/
+void get_map_details(int connection, int map_id);
+
+
+/** RESULT  : sends map developer details to client
+
+    RETURNS : void
+
+    PURPOSE : used in functions: hash_map
+
+    NOTES   :
+*/
+void get_map_developer_details(int connection, int map_id);
 
 
 #endif // MAPS_H_INCLUDED

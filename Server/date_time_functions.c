@@ -113,8 +113,6 @@ void send_verbose_date(int connection, int game_days){
 
     /** public function - see header */
 
-    char text_out[160]="";
-
     int game_year=game_data.game_days / 360;
     int year_days=game_data.game_days % 360;
 
@@ -122,14 +120,10 @@ void send_verbose_date(int connection, int game_days){
     char season_description[160]="";
     get_game_season(year_days, season_name, season_description);
 
-    sprintf(text_out, "%cThe day is %02i in the season of %s, year %i", 127+c_purple1, game_days, season_name, game_year);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cThe day is %02i in the season of %s, year %i", 127+c_purple1, game_days, season_name, game_year);
 }
 
 void send_verbose_time(int connection, int game_minutes){
 
-    char text_out[80]="";
-
-    sprintf(text_out, "%cThe time is %02i:%02i",  127+c_purple1, game_minutes / 60, game_minutes % 60);
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    send_text(connection, CHAT_SERVER, "%cThe time is %02i:%02i",  127+c_purple1, game_minutes / 60, game_minutes % 60);
 }

@@ -116,8 +116,7 @@ int join_channel(int connection, int chan){
             send_text(connection, CHAT_SERVER, "%cDescription : %s", c_green2+127, channel[chan].description);
 
             //THE FOLLOWING IS COMMENTED OUT AS ITS TOO RESOURCE HEAVY...
-            //sprintf(text_out, "%cIn channel :", c_green1+127);
-            //send_raw_text(connection, CHAT_SERVER, text_out);
+            //send_text(connection, CHAT_SERVER, %cIn channel :", c_green1+127);
             //list_characters_in_chan(connection, chan);
 
             //tell other in chan that player has joined

@@ -15,49 +15,75 @@
 
 struct bag_type bag[MAX_BAGS];
 
-int create_bag(int connection, int map_id, int tile){
 
-    /** public function - see header */
+int find_bag_slot(int bag_id, int object_id){
 
-    //find empty entry in bag list
-    bool found_empty_bag=false;
+    /** public function - see header **/
 
-    int i=0;
-    for(i=0; i<MAX_BAGS; i++){
+    //find an existing bag slot or next empty slot or return -1 if no slots available
+    int slot=-1;
+    for(int i=0; i<MAX_BAG_SLOTS; i++){
 
-        if(bag[i].bag_in_use==false) {
+        if(bag[bag_id].inventory[i].object_id==0 && slot==-1) slot=i;
 
-            found_empty_bag=true;
-            bag[i].bag_in_use=true;
+        if(bag[bag_id].inventory[i].object_id==object_id){
+
+            return i;
             break;
         }
     }
 
-    if(found_empty_bag==false){
+    return slot;
+}
 
-        return -1;
+
+int create_bag(int map_id, int tile){
+
+    /** public function - see header */
+
+    for(int i=0; i<MAX_BAGS; i++){
+
+        if(bag[i].bag_in_use==false) {
+
+            bag[i].bag_in_use=true;
+            bag[i].bag_type_id=0; /** 0=ordinary bag **/
+            bag[i].map_id=map_id;
+            bag[i].tile=tile;
+
+            //calculate and store the bag creation time so we know when to poof
+            gettimeofday(&time_check, NULL);
+            bag[i].bag_created=time_check.tv_sec;
+
+            #if DEBUG_BAGS==1
+            printf("Create new bag\n");
+            #endif
+
+            return i;
+        }
     }
 
-    //populate the bag entry
-    bag[i].bag_type_id=0; /** 0=ordinary bag **/
-    bag[i].map_id=map_id;
-    bag[i].tile=tile;
-    bag[i].bag_in_use=true;
-
-    //calculate and store the bag creation time so we know when to poof
-    gettimeofday(&time_check, NULL);
-    bag[i].bag_created=time_check.tv_sec;
-
-    //broadcast the bag drop
-    broadcast_get_new_bag_packet(connection, i);
-
     #if DEBUG_BAGS==1
-    printf("Create new bag\n");
+    printf("Max bags exceeded. Can't create new bag\n");
     #endif
 
-    //return the bag_id
-    return i;
+    return -1;
 }
+
+
+int add_to_bag(int bag_id, int object_id, int amount, int slot){
+
+    /** public function - see header */
+
+    //add the item to the inventory
+    bag[bag_id].inventory[slot].amount+=amount;
+    bag[bag_id].inventory[slot].object_id=object_id;
+
+    //TO DO: reset remaining bag poof time
+
+    return amount;
+}
+
+
 
 /*
 void clear_bag(int bag_id){
@@ -92,21 +118,6 @@ void bag_timer_poof_cb (struct ev_loop *loop, struct ev_timer *ev_bag_timer, int
         broadcast_bag_poof(bag_id, map_id);
         clear_bag(bag_id);
     }
-}
-
-int get_unused_bag(){
-
-    int i;
-
-    for(i=1; i<MAX_BAGS; i++){
-
-        if(bag_list[i].mode==BAG_UNUSED) return i;
-
-    }
-
-    log_event2(EVENT_ERROR, "Bag array max [%i] exceeded", MAX_BAGS);
-
-    return -1;
 }
 
 
@@ -153,18 +164,6 @@ int bag_exists(int map_id, int tile_pos){
     return -1;
 }
 
-
-int get_unused_bag_slot(int bag_id){
-
-    int i;
-
-    for(i=0; i<MAX_BAG_SLOTS; i++){
-
-        if(bag_list[bag_id].inventory[i].amount==0) return i;
-    }
-
-    return -1;
-}
 
 int bag_is_empty(int bag_id){
 

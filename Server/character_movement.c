@@ -123,11 +123,8 @@ void process_char_move(int connection, time_t current_utime){
                 //update char current position and save
                 clients.client[connection].map_tile=next_tile;
 
-                //update_db_char_position(connection);
-                char sql[MAX_SQL_LEN]="";
-                snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i",next_tile, map_id, clients.client[connection].character_id);
-                push_sql_command(sql);
-
+                //update_database
+                push_sql_command("UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i",next_tile, map_id, clients.client[connection].character_id);
             }
         }
     }

@@ -54,4 +54,16 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
     int guild_permission_level,
     int guild_status);
 
+
+/** RESULT  : Populates the  guild_list struct with a list of guild members
+
+    RETURNS : true/false
+
+    PURPOSE : used in #list_guild command
+
+    NOTES   :
+**/
+bool get_db_guild_member_list(int guild_id, int order);
+
+
 #endif // DB_GUILD_TBL_H_INCLUDED

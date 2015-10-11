@@ -27,6 +27,38 @@ struct bag_type {
 
 extern struct bag_type bag[MAX_BAGS];
 
-int create_bag(int connection, int map_id, int tile);
+
+/** RESULT  : creates a new bag
+
+    RETURNS : bag_id
+
+    PURPOSE :
+
+    NOTES   :
+*/
+int create_bag(int map_id, int tile);
+
+
+/** RESULT  : finds an existing inventory slot with an item or the next free slot
+
+    RETURNS : slot number or -1 if no existing or free slot found
+
+    PURPOSE : used in function: start_harvesting
+
+    NOTES   :
+*/
+int find_bag_slot(int connection, int object_id);
+
+
+/** RESULT  : adds objects to the bag
+
+    RETURNS : the amount actually added to bag
+
+    PURPOSE : used in function: process_packet DROP_ITEM protocol
+
+    NOTES   :
+*/
+int add_to_bag(int bag_id, int object_id, int amount, int slot);
+
 
 #endif // BAGS_H_INCLUDED

@@ -36,59 +36,56 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-NEW DONE added guild rank to #details command
-NEW DONE BUG - race not showing in #details
-NEW DONE BUG - sex shown in #details is incorrect
-NEW DONE process #details command in idle buffer
-NEW DONE extend #details to offline characters
-NEW DONE #details defaults to calling char if no char is specified
+NEW - create Centos 6.4 compile environment
+NEW - database tables need to be order independent (as (*) causes too many bugs)
 
-TESTED DONE #apply_guild
-TESTED DONE #list_applicants
-TESTED DONE #reject_applicant
-TESTED DONE #accept_applicant
-TESTED DONE #kick_guild_member
-TESTED DONE #change_rank
+DONE NEW - test harvesting
+NEW - test #map (uploaded date looks strange) (#map default doesn't work)
+NEW - test multiple guild application handling
+NEW - convert elm_file field in MAP TABLE to description
+NEW - implement map_author, map_author_email, map_status, map_upload_date in MAP_TABLE
 
-NEW - #list_guild [by rank][by time]
-NEW - save guild applicant list to database
-NEW - finish script loading
-NEW - document idle_buffer2.h
-NEW - widen distance that new/beamed chars are from other chars
-NEW - make push_sql the same as send_text
-use send_text in place of send_raw_text
-NEW - remove character_type_name field from CHARACTER_TYPE_TABLE
-NEW - remove elm_file field from MAP TABLE
-need #command to give guild details (same as char details)
-need OPS #command to #pm all active players (surely this is mod channel???)
+NEW - convert db inventory storage to blob and separately record all drops/pick ups in db
+NEW - db record of chars leaving and joining guilds
+
+finish making push_sql the same as send_text
+finish script loading
+widen distance that new/beamed chars are from other chars
 need #GM guild channel functionality
 need #IG guild channel functionality
+need #command to give guild details (same as char details)
+need OPS #command to #pm all active players (surely this is mod channel???)
 need guild channel hello/goodbye messages
-need #letter system to inform ppl if guild application has been approved/rejected
+need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
 need #command to change guild tag colour
 need #command to change guild description
 need #leave_guild
 need #command to withdraw application to join guild
 need #command to #pm all guild members (guild master only)
 implement guild stats
-need way to manage multiple guild applications
+
+walk to towards bag when clicked on if char is not standing on bag
+extend add_client_to_map function so that existing bags are shown to new client
+implement pick up bag
+NEW - implement move item between slots in bag
+implement bag poof (include reset poof time on add/drop from bag)
+
+remove character_type_name field from CHARACTER_TYPE_TABLE
+map object reserve respawn
+
+save guild applicant list to database
+document idle_buffer2.h
 convert attribute struct so as attribute type can be addressed programatically
-need update map function (for OL map walker)
 identify cause of stall after login (likely to be loading of inventory from db)
+identify cause of char bobbing
 put inventory slots in a binary blob (may solve stall on log in)
 log illegal use of #jump and other developer #commands
-create #function to describe map (name, description, author, size)
 improve error handling on upgrade_database function
 refactor function current_database_version
 create circular buffer for receiving packets
 cope with send not sending all the bytes at once
 need #function to describe char and what it is wearing)
-test multiplayer capability is still working
-walk to towards bag when clicked on if char is not standing on bag
-extend add_client_to_map function so that existing bags are shown to new client
-implement pick up bag
-implement bag poof
-map object reserve respawn
+NEW - extract data for SEND_VERSION in the same way as GET_PLAYER_INFO, ie using pointers
 document new database/struct relationships
 finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 
@@ -375,11 +372,23 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
     clients.client[client_sd].time_of_last_heartbeat=time_check.tv_sec;
 
     //send welcome message and motd to client
-    send_raw_text(client_sd, CHAT_SERVER, SERVER_WELCOME_MSG);
+    send_text(client_sd, CHAT_SERVER, SERVER_WELCOME_MSG);
     send_motd(client_sd);
     send_text(client_sd, CHAT_SERVER, "\nHit any key to continue...\n");
 }
 
+/*
+TEST CODE TO SUPPORT WRITE CALLBACK
+
+void socket_write_callback(struct ev_loop *loop, struct ev_io *watcher, int revents) {
+
+    if(revents & EV_WRITE){
+
+        printf("write\n");
+        ev_io_stop(loop, watcher);
+    }
+}
+*/
 
 void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int revents) {
 
@@ -402,41 +411,23 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         stop_server();
     }
 
-    //wrapping recv in this macro prevents connection reset by peer errors
-    read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
+    if(EV_READ & revents){
 
-    if (read <0) {
+        //wrapping recv in this macro prevents connection reset by peer errors
+        read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
 
-        int errnum=errno;
+        if (read <0) {
 
-        log_event(EVENT_ERROR, "read failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-        log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]", watcher->fd, errnum, strerror(errnum));
+            int errnum=errno;
 
-        #if DEBUG_MAIN==1
-        printf("read failed for client [%i] with error [%i] [%s]\n", watcher->fd, errnum, strerror(errnum));
-        #endif
+            log_event(EVENT_ERROR, "read failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]", watcher->fd, errnum, strerror(errnum));
 
-        log_event(EVENT_SESSION, "closing client [%i] following read error", watcher->fd);
+            #if DEBUG_MAIN==1
+            printf("read failed for client [%i] with error [%i] [%s]\n", watcher->fd, errnum, strerror(errnum));
+            #endif
 
-        close_connection_slot(watcher->fd);
-
-        ev_io_stop(loop, libevlist[watcher->fd]);
-        free(libevlist[watcher->fd]);
-        libevlist[watcher->fd] = NULL;
-
-        //clear the struct
-        memset(&clients.client[watcher->fd], '\0', sizeof(clients.client[watcher->fd]));
-
-        return;
-    }
-
-    if (read == 0) {
-
-        #if DEBUG_MAIN==1
-        printf("client [%i] disconnected\n", watcher->fd);
-        #endif
-
-        if (libevlist[watcher->fd]!= NULL) {
+            log_event(EVENT_SESSION, "closing client [%i] following read error", watcher->fd);
 
             close_connection_slot(watcher->fd);
 
@@ -446,56 +437,84 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 
             //clear the struct
             memset(&clients.client[watcher->fd], '\0', sizeof(clients.client[watcher->fd]));
-        }
-        return;
-    }
 
-    //check for data received from client
-    if(read>0){
-
-        log_event(EVENT_SESSION, "bytes received [%i]", read);
-
-        //copy new bytes to client packet buffer(memcpy doesn't work)
-        int j=0;
-        for(j=0; j<read; j++){
-            clients.client[watcher->fd].packet_buffer[clients.client[watcher->fd].packet_buffer_length]=buffer[j];
-            clients.client[watcher->fd].packet_buffer_length++;
+            return;
         }
 
-        //if data is in the buffer then read it
-        if(clients.client[watcher->fd].packet_buffer_length>0) {
+        if (read == 0) {
 
-            do {
+            #if DEBUG_MAIN==1
+            printf("client [%i] disconnected\n", watcher->fd);
+            #endif
 
-                int lsb=clients.client[watcher->fd].packet_buffer[1];
-                int msb=clients.client[watcher->fd].packet_buffer[2];
+            if (libevlist[watcher->fd]!= NULL) {
 
-                int packet_length=lsb+(msb*256)+2;
+                close_connection_slot(watcher->fd);
 
-                //update heartbeat
-                clients.client[watcher->fd].time_of_last_heartbeat=time_check.tv_sec;
+                ev_io_stop(loop, libevlist[watcher->fd]);
+                free(libevlist[watcher->fd]);
+                libevlist[watcher->fd] = NULL;
 
-                //if insufficient data received then wait for more data
-                if(clients.client[watcher->fd].packet_buffer_length<packet_length) break;
-
-                //copy packet from buffer
-                for(j=0; j<packet_length; j++){
-
-                    packet[j]=clients.client[watcher->fd].packet_buffer[j];
-                }
-
-                //process packet
-                process_packet(watcher->fd, packet);
-
-                // remove packet from buffer
-                clients.client[watcher->fd].packet_buffer_length=clients.client[watcher->fd].packet_buffer_length-packet_length;
-
-                for(j=0; j<=clients.client[watcher->fd].packet_buffer_length; j++){
-                    clients.client[watcher->fd].packet_buffer[j]=clients.client[watcher->fd].packet_buffer[j+packet_length];
-                }
-
-            } while(1);
+                //clear the struct
+                memset(&clients.client[watcher->fd], '\0', sizeof(clients.client[watcher->fd]));
+            }
+            return;
         }
+
+        //check for data received from client
+        if(read>0){
+
+            log_event(EVENT_SESSION, "bytes received [%i]", read);
+
+            //copy new bytes to client packet buffer(memcpy doesn't work)
+            int j=0;
+            for(j=0; j<read; j++){
+                clients.client[watcher->fd].packet_buffer[clients.client[watcher->fd].packet_buffer_length]=buffer[j];
+                clients.client[watcher->fd].packet_buffer_length++;
+            }
+
+            //if data is in the buffer then read it
+            if(clients.client[watcher->fd].packet_buffer_length>0) {
+
+                do {
+
+                    int lsb=clients.client[watcher->fd].packet_buffer[1];
+                    int msb=clients.client[watcher->fd].packet_buffer[2];
+
+                    int packet_length=lsb+(msb*256)+2;
+
+                    //update heartbeat
+                    clients.client[watcher->fd].time_of_last_heartbeat=time_check.tv_sec;
+
+                    //if insufficient data received then wait for more data
+                    if(clients.client[watcher->fd].packet_buffer_length<packet_length) break;
+
+                    //copy packet from buffer
+                    for(j=0; j<packet_length; j++){
+
+                        packet[j]=clients.client[watcher->fd].packet_buffer[j];
+                    }
+
+                    //process packet
+                    process_packet(watcher->fd, packet);
+
+                    // remove packet from buffer
+                    clients.client[watcher->fd].packet_buffer_length=clients.client[watcher->fd].packet_buffer_length-packet_length;
+
+                    for(j=0; j<=clients.client[watcher->fd].packet_buffer_length; j++){
+                        clients.client[watcher->fd].packet_buffer[j]=clients.client[watcher->fd].packet_buffer[j+packet_length];
+                    }
+
+                } while(1);
+            }
+        }
+/*
+        TEST CODE TO SUPPORT WRITE CALLBACK
+
+        ev_io_stop(loop, watcher);
+        ev_io_init(watcher, socket_write_callback, watcher->fd, EV_WRITE);
+        ev_io_start(loop, watcher);
+*/
     }
 }
 
@@ -656,7 +675,6 @@ int main(int argc, char *argv[]){
         printf("-U optional [""database file name""]      ...upgrade database\n");
         printf("-M [map id] [""map name""] [""elm file name""] optional [""database file name""]    ...load map\n");
         printf("-L optional [""database file name""]      ...list maps\n");
-        //printf("-E [map_id] [map tile]                ...beam me target\n");
 
         exit(EXIT_FAILURE);
     }
@@ -688,11 +706,11 @@ int main(int argc, char *argv[]){
                 break;
             }
 
-            case 'L': {//add map
+            case 'M': {//load map
 
-                printf("add map\n");
+                printf("load map\n");
 
-                log_text(EVENT_INITIALISATION, "ADD MAP at %s on %s", time_stamp_str, verbose_date_stamp_str);
+                log_text(EVENT_INITIALISATION, "LOAD MAP at %s on %s", time_stamp_str, verbose_date_stamp_str);
                 log_text(EVENT_INITIALISATION, "");// insert logical separator
 
                 open_database(db_filename);
@@ -702,7 +720,7 @@ int main(int argc, char *argv[]){
                 break;
             }
 
-            case  'M': {// list maps
+            case  'L': {// list maps
 
                 printf("list maps\n");
 

@@ -58,7 +58,7 @@ struct client_node_type{
     int harvest_amount;    //amount harvested each cycle
     int harvest_object_id; //object being harvested
     int harvest_interval;  //interval between each harvest
-    int inventory_slot;
+    int harvest_inventory_slot;
     time_t time_of_last_harvest;
 
     char ip_address[16];
@@ -170,7 +170,7 @@ struct client_node_type{
     int max_book_time;
     int elapsed_book_time;
 
-    struct client_inventory_type client_inventory[MAX_INVENTORY_SLOTS];
+    struct client_inventory_type inventory[MAX_INVENTORY_SLOTS];
 
     bool bag_open;
     int open_bag_id;

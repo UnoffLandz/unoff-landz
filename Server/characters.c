@@ -152,21 +152,3 @@ void send_char_details(int connection, const char *char_name){
     }
 
 }
-
-
-/*
-int rename_char(int connection, char *new_char_name){
-
-    //check that no existing char has the new name
-    if(get_char_data_from_db(new_char_name)!=NOT_FOUND) return CHAR_RENAME_FAILED_DUPLICATE;
-
-    //update char name and save
-    strcpy(clients.client[connection].char_name, new_char_name);
-    update_db_char_name(connection);
-
-    // add this char to each connected client
-    broadcast_add_new_enhanced_actor_packet(connection);
-
-    return CHAR_RENAME_SUCCESS;
-}
-*/

@@ -27,6 +27,7 @@
 #define MAX_GUILD_APPLICANTS 10
 #define GUILD_OPERATORS 0 //defines the guild id for the Operators guild
 #define GUILD_TAG_LENGTH 5
+#define MAX_GUILD_MEMBERS 100
 
 enum{//guild status
 
@@ -39,6 +40,12 @@ enum{// guild permissions
     PERMISSION_1=1, //player
     PERMISSION_2=2, //developer
     PERMISSION_3=3, //operator
+};
+
+enum{// order in which list of guild members is displayed
+
+    GUILD_ORDER_RANK, //list by char rank
+    GUILD_ORDER_TIME, //list by date char joined guild
 };
 
 struct guild_node_type {
@@ -58,11 +65,29 @@ struct guild_node_type {
     }applicant[MAX_GUILD_APPLICANTS];
 };
 
+
 struct guild_list_type {
 
     struct guild_node_type guild[MAX_GUILDS];
 };
 extern struct guild_list_type guilds;
+
+
+//structs to carry list of guild members (used in #list_guild command)
+struct guild_member_type{
+
+    char character_name[80];
+    int date_joined_guild;
+    int guild_rank;
+};
+
+struct guild_member_list_type{
+
+    int guild_member_count;
+    struct guild_member_type guild_member[MAX_GUILD_MEMBERS];
+
+};
+extern struct guild_member_list_type guild_member_list;
 
 
 /** RESULT   : creates a guild
@@ -133,5 +158,27 @@ void change_guild_rank(int connection, char *char_name, char *guild_tag, int gui
     NOTES    : OPS only
 **/
 void change_guild_permission(int connection, char *guild_tag, int permission_level);
+
+/*****************************************************************************************************
+***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
+******************************************************************************************************/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** RESULT   : sends a list of guild members to a character
+
+    RETURNS  : void
+
+    PURPOSE  : used by function hash_change_guild_permission
+
+    NOTES    : used by function process_idle_buffer
+**/
+void list_guild_members(int connection, int order);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // GUILD_H_INCLUDED

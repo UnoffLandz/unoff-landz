@@ -226,7 +226,6 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
     int node=0;
     int heuristic_value=0;
     int found=false;
-    char text_out[1024]="";
     int start_tile=clients.client[connection].map_tile;
     int map_id=clients.client[connection].map_id;
 
@@ -270,8 +269,7 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
 
         if(found==false) {
 
-            sprintf(text_out, "%cthat destination is unreachable", c_red1+127);
-            send_raw_text(connection, CHAT_PERSONAL, text_out);
+            send_text(connection, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
             log_event(EVENT_MOVE_ERROR, "destination unreachable - no explorable tiles left in stack in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
 
             return NOT_FOUND;
@@ -311,7 +309,6 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
     int lowest_value=0;
     int next_tile=0;
     int map_id=clients.client[connection].map_id;
-    char text_out[1024]="";
     int found=false;
 
     if(explore_path(connection, destination_tile, &path_stack_count, path_stack)==NOT_FOUND) return NOT_FOUND;
@@ -349,8 +346,7 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
         //if no adjacent tiles then start is unreachable from destination so abort function
         if(found==false) {
 
-            sprintf(text_out, "%cthat destination is unreachable", c_red1+127);
-            send_raw_text(connection, CHAT_PERSONAL, text_out);
+            send_text(connection, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
             return NOT_FOUND;
         }
 

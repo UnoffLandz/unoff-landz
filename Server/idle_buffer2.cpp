@@ -25,6 +25,7 @@
 #include "db/database_functions.h"
 #include "server_start_stop.h"
 #include "characters.h"
+#include "guilds.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -120,9 +121,40 @@ void push_command(int connection, int process_type, char *char_name){
 }
 
 
-void push_sql_command(const char *sql){
+void push_sql_command(const char *fmt, ...){
 
-    /** public function - see header **/
+    /** public function - see header */
+
+    char sql[MAX_SQL_LEN]="";
+
+    va_list args;
+    va_start(args, fmt);
+
+    if (vsprintf(sql, fmt, args)>MAX_SQL_LEN){
+
+        log_event(EVENT_ERROR, "sql string exceeds max [%i] in function %s: module %s: line %i", MAX_SQL_LEN, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    if(idle_buffer2.size()>=IDLE_BUFFER2_MAX) {
+
+        //buffer overflow
+        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
+        return;
+    }
+    data_ entry;
+
+    entry.sql = sql;
+    entry.process_type=IDLE_BUFFER_PROCESS_SQL;
+
+    idle_buffer2.push_back(entry);
+
+    va_end(args);
+}
+
+/*
+void push_sql_command(const char *sql){
 
     if(idle_buffer2.size()>=IDLE_BUFFER2_MAX) {
 
@@ -138,7 +170,7 @@ void push_sql_command(const char *sql){
 
     idle_buffer2.push_back(entry);
 }
-
+*/
 
 void process_idle_buffer2(){
 
@@ -194,6 +226,21 @@ void process_idle_buffer2(){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_HASH_DETAILS\n");
         send_char_details(connection, command.char_name);
+    }
+    /**********************************************************************************************/
+
+    else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK){
+
+        D_PRINT("IDLE_BUFFER2_PROCESS_LIST_GUILD_BY_RANK\n");
+        list_guild_members(connection, GUILD_ORDER_RANK);
+
+    }
+    /**********************************************************************************************/
+
+    else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_LIST_GUILD_BY_TIME){
+
+        D_PRINT("IDLE_BUFFER2_PROCESS_LIST_GUILD_BY_TIME\n");
+        list_guild_members(connection, GUILD_ORDER_TIME);
     }
     /**********************************************************************************************/
 

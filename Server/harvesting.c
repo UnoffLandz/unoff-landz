@@ -37,8 +37,8 @@ void process_char_harvest(int connection, time_t current_time){
 
     if(clients.client[connection].harvest_flag==true){
 
+        //get the harvest interval for item
         int object_id=clients.client[connection].harvest_object_id;
-
         int harvest_interval=object[object_id].harvest_interval;
 
         if(clients.client[connection].time_of_last_harvest + harvest_interval < current_time){
@@ -47,12 +47,20 @@ void process_char_harvest(int connection, time_t current_time){
             printf("harvest char [%s]\n", clients.client[connection].char_name);
             #endif
 
-            add_item_to_inventory(connection, clients.client[connection].harvest_object_id, clients.client[connection].harvest_amount);
+            //add item to the char inventory
+            int slot=clients.client[connection].harvest_inventory_slot;
+            int amount=clients.client[connection].harvest_amount;
+
+            if(add_to_inventory(connection, object_id, amount, slot)==false){
+
+                send_text(connection, CHAT_SERVER, "%cYou exceeded your maximum inventory EMU!", c_red3+127);
+
+                stop_harvesting(connection);
+                return;
+            }
 
             //update time of last harvest
             clients.client[connection].time_of_last_harvest=current_time;
-
-            /** TODO update db exp **/
         }
     }
 }
@@ -61,31 +69,24 @@ void stop_harvesting(int connection){
 
     /** public function - see header */
 
-    char text_out[80]="";
-
     clients.client[connection].harvest_flag=false;
 
-    sprintf(text_out, "%cYou stopped harvesting.", c_green3+127);
-
-    //We ought to be able to use the following, but the the OL/EL client relies on the above
-    //phrase to stop the harvesting effect
-    //int object_id=clients.client[connection].harvest_object_id;
-    //sprintf(text_out, "%cyou stopped harvesting %s", c_green3+127, object[object_id].object_name);
-
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    //The the OL/EL client relies on the phrase 'You stopped harvesting' to stop the harvesting
+    //effect. Hence, we can't implement a better statement such as 'You stopped harvesting [item]'
+    send_text(connection, CHAT_SERVER, "%cYou stopped harvesting.", c_green3+127);
 
     #if DEBUG_HARVESTING==1
     printf("harvesting stopped, char [%s]\n", clients.client[connection],char_name);
     #endif
 
-    log_event(EVENT_SESSION, "harvesting stopped, character [%s]", clients.client[connection].char_name);
+    int object_id=clients.client[connection].harvest_object_id;
+    log_text(EVENT_SESSION, " char [%s] stopped harvesting [%s]", clients.client[connection].char_name, object[object_id].object_name);
 }
+
 
 void start_harvesting(int connection, int threed_object_list_pos){
 
     /** public function - see header */
-
-    char text_out[80]="";
 
     //get the map id
     int map_id=clients.client[connection].map_id;
@@ -93,73 +94,53 @@ void start_harvesting(int connection, int threed_object_list_pos){
     //get the id for the object being harvested
     int object_id=get_object_id(map_id, threed_object_list_pos);
 
-    //get the position of the object
+    //determine if the object is close enough for the char to harvest
     int object_tile=get_object_tile(map_id, threed_object_list_pos);
-
-    //get the distance between the object and the char
     int object_proximity=get_proximity(clients.client[connection].map_tile, object_tile, maps.map[map_id].map_axis);
 
-    //determine if the object is close enough for the char to harvest
-    if(object_proximity<=MIN_HARVEST_PROXIMITY){
+    if(object_proximity>MIN_HARVEST_PROXIMITY){
 
-        //check if we know what this item is
-        if (object_id>0){
-
-            //check if item is harvestable
-            if(object[object_id].harvestable==true){
-
-                sprintf(text_out, "%cyou started to harvest %s. ", c_green3+127, object[object_id].object_name);
-
-                //set the chars harvest flag to show that it is now harvesting and set the item
-                clients.client[connection].harvest_flag=true;
-
-                //record what item the char is harvesting
-                clients.client[connection].harvest_object_id=object_id;
-
-                //set the amount to be harvested each cycle
-                clients.client[connection].harvest_amount=1; //default amount
-
-                clients.client[connection].harvest_interval=2;
-
-                #if DEBUG_HARVESTING==1
-                printf("harvesting started, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
-                #endif
-
-                log_text(EVENT_SESSION, "started harvesting");
-            }
-            else {
-
-                sprintf(text_out, "%csorry! %s isn't harvestable.", c_red3+122, object[object_id].object_name);
-
-                #if DEBUG_HARVESTING==1
-                printf("item not harvestable, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
-                #endif
-
-                log_text(EVENT_SESSION, "attempt to harvest unharvestable object");
-            }
-        }
-        else {
-
-            sprintf(text_out, "%cyou tried to harvest an unknown item", c_red3+127);
-
-            #if DEBUG_HARVESTING==1
-            printf("harvest item unknown, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
-            #endif
-
-            log_event(EVENT_ERROR, "attempt to harvest unknown object");
-        }
-    }
-    else {
-
-        sprintf(text_out, "%cyou are too far away to harvest that item", c_red3+127);
-
-        #if DEBUG_HARVESTING==1
-        printf("harvest item too far away, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
-        #endif
-
-        log_event(EVENT_ERROR, "object to far away to harvest");
+        send_text(connection, CHAT_SERVER, "%cYou are too far away to harvest that item!", c_red3+127);
+        return;
     }
 
-    send_raw_text(connection, CHAT_SERVER, text_out);
+    //check if item is harvestable
+    if(object[object_id].harvestable==false){
+
+        send_text(connection, CHAT_SERVER, "%cItem isn't harvestable!", c_red3+122);
+        return;
+    }
+
+    //check that we have an existing or free slot
+    int slot=find_inventory_slot(connection, object_id);
+
+    if(slot==-1){
+
+        send_text(connection, CHAT_SERVER, "%cYou have no free slots in your inventory!. ", c_red3+127);
+        return;
+    }
+
+    send_text(connection, CHAT_SERVER, "%cYou started to harvest %s!. ", c_green3+127, object[object_id].object_name);
+
+    //set the chars harvest flag to show that it is now harvesting and set the item
+    clients.client[connection].harvest_flag=true;
+
+    //record what item the char is harvesting
+    clients.client[connection].harvest_object_id=object_id;
+
+    //set the char inventory slot
+    clients.client[connection].harvest_inventory_slot=slot;
+
+    //set the amount to be harvested each cycle
+    clients.client[connection].harvest_amount=1; //default amount
+
+    //set the harvest interval
+    clients.client[connection].harvest_interval=object[object_id].harvest_interval;
+
+    #if DEBUG_HARVESTING==1
+    printf("harvesting started, char [%s], object number [%i], item_id [%i] item name [%s]\n", clients.client[connection],char_name, object_number, item_id, map_object[item_id].object_name);
+    #endif
+
+    log_text(EVENT_SESSION, "char [%s] started harvesting [%s]", clients.client[connection].char_name, object[object_id].object_name);
 }
 

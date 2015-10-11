@@ -301,11 +301,11 @@ void send_display_client_window(int connection);
 extern "C" {
 #endif
 
-/** RESULT  : wrapper for send_raw_text
+/** RESULT  : sends formatted text message to a client via  the specified channel
 
     RETURNS : void
 
-    PURPOSE : sends formatted text message to a client via  the specified channel
+    PURPOSE : wrapper for send_raw_text
 
     NOTES   :
 

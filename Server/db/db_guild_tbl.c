@@ -177,3 +177,71 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
 
     return id;
 }
+
+
+void get_db_guild_member_list(int guild_id, int order){
+
+    /** public function - see header */
+
+    sqlite3_stmt *stmt;
+
+    char sql[MAX_SQL_LEN]="";
+
+    if(order==GUILD_ORDER_RANK){
+
+        snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE GUILD_ID=%i ORDER BY GUILD_RANK", guild_id);
+    }
+    else if (order==GUILD_ORDER_TIME){
+
+        snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE GUILD_ID=%i ORDER BY JOINED_GUILD", guild_id);
+    }
+    else {
+
+        log_event(EVENT_ERROR, "unknown order type [%i] function %s: module %s: line %i", order, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //prepare sql command
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    //zero the struct
+    memset(&guild_member_list, 0, sizeof(guild_member_list));
+
+    int i=0;
+
+    //execute sql command
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+
+        strcpy(guild_member_list.guild_member[i].character_name, (char*) sqlite3_column_text(stmt, 1));
+        guild_member_list.guild_member[i].date_joined_guild=sqlite3_column_int(stmt, 30);
+        guild_member_list.guild_member[i].guild_rank=sqlite3_column_int(stmt, 13);
+
+        i++;
+
+        //if number of guild members exceeds maximum, log as an error but do not stop server
+        if(i==MAX_GUILD_MEMBERS){
+
+            log_event(EVENT_ERROR, "guild member count exceeds maximum guild members [%i]", MAX_GUILD_MEMBERS);
+            break;
+        }
+    }
+
+    guild_member_list.guild_member_count=i;
+
+    if (rc != SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    //destroy sql command
+    rc=sqlite3_finalize(stmt);
+    if (rc != SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_finalize", __func__, __FILE__, __LINE__, rc, sql);
+    }
+}

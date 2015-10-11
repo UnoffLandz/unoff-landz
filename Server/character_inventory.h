@@ -21,6 +21,8 @@
 #ifndef CHARACTER_INVENTORY_H_INCLUDED
 #define CHARACTER_INVENTORY_H_INCLUDED
 
+#include <stdbool.h>
+
 #define MAX_INVENTORY_SLOTS 36
 
 struct client_inventory_type {
@@ -46,25 +48,46 @@ int get_max_inventory_emu(int connection);
 
     RETURNS : the total emu of items in an inventory
 
-    PURPOSE : determine if inventory is overloaded
+    PURPOSE : used in function process_char_harvest
 
-    NOTES   :the server keeps a record of the total inventory emu in the client struct in order to
-             avoid having to continually recalculate this value from scratch. The value is initially
-             set when the char logs-in using the get_inventory_emu function
-
+    NOTES   :
 */
 int get_inventory_emu(int connection);
 
 
-/** RESULT  : adds objects to the char inventory
+/** RESULT  : finds an existing inventory slot with an item or the next free slot
 
-    RETURNS : void
+    RETURNS : slot number or -1 if no existing or free slot found
 
-    PURPOSE : common function to harvesting and picking up bags
+    PURPOSE : used in function: start_harvesting
 
     NOTES   :
 */
-void add_item_to_inventory(int connection, int object_id, int amount);
+int find_inventory_slot(int connection, int object_id);
+
+
+/** RESULT  : adds objects to the char inventory
+
+    RETURNS : true if item is added / false if not added
+
+    PURPOSE : used in function: process_char_harvest
+
+    NOTES   :
+*/
+bool add_to_inventory(int connection, int object_id, int amount, int slot);
+
+
+/** RESULT  : removes objects to the char inventory
+
+    RETURNS : amount removed from inventory
+
+    PURPOSE : used in function: process_packet (DROP_ITEM)
+
+    NOTES   : the removal amount passed by the client takes no account of whether there is
+              sufficient in the inventory. Hence, the amount returned by the function indicates
+              what was actually removed
+*/
+int remove_from_inventory(int connection, int object_id, int amount, int slot);
 
 
 /** RESULT  : moves objects between slots in the char inventory

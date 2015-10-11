@@ -179,8 +179,7 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
     //check map id is unused
     if(get_db_map_exists(map_id)==true){
 
-        log_event(EVENT_ERROR, "map [%i] [%s] already exists in database", map_id, maps.map[map_id].map_name);
-        stop_server();
+        log_event(EVENT_ERROR, "map [%i] [%s] replaced", map_id, maps.map[map_id].map_name);
     }
 
     sqlite3_stmt *stmt;

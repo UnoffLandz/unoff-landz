@@ -26,8 +26,15 @@ extern "C" {
 #endif
 
 void push_idle_buffer2(int connection, int process_type, const unsigned char *packet, int packet_len);
-void push_sql_command(const char *sql);
+
+
+void push_sql_command(const char *fmt, ...);
+//void push_sql_command(const char *sql);
+
+
 void process_idle_buffer2();
+
+
 void push_command(int connection, int process_type, char *char_name);
 
 #ifdef __cplusplus
@@ -40,6 +47,8 @@ enum{//database buffer processing types
     IDLE_BUFFER_PROCESS_CHECK_NEWCHAR,
     IDLE_BUFFER_PROCESS_ADD_NEWCHAR,
     IDLE_BUFFER_PROCESS_LOGIN,
+    IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK,
+    IDLE_BUFFER_PROCESS_LIST_GUILD_BY_TIME,
 };
 
 #endif // IDLE_BUFFER2_H_INCLUDED
