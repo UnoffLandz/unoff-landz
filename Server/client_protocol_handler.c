@@ -19,6 +19,8 @@
 
 #include <stdio.h>  //support for sprintf
 #include <string.h> //support for memcpy strlen strcpy
+#include <stdint.h> //support for int16_t data type
+
 #include <stdlib.h> // testing only
 
 #include "client_protocol.h"
@@ -70,7 +72,7 @@ void process_packet(int connection, unsigned char *packet){
 
         //copy unsigned char text to signed char variable
         char text[1024]="";
-        memcpy(text, packet+3, get_packet_length(packet)-3);
+        memcpy(text, packet+3, (size_t)get_packet_length(packet)-3);
 
         // trim off excess left hand space
         str_trim_left(text);
@@ -142,7 +144,7 @@ void process_packet(int connection, unsigned char *packet){
 
         //copy unsigned char text to signed char variable
         char text[1024]="";
-        memcpy(text, packet+3, get_packet_length(packet)-3);
+        memcpy(text, packet+3, (size_t)get_packet_length(packet)-3);
 
         //extract target name and message from pm packet
         char char_name[80]="";
@@ -210,21 +212,22 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==SEND_VERSION){
 
-        unsigned char data[1024]={0};
-        int data_length=get_packet_length(packet);
-        memcpy(data, packet+3, data_length-3);
+        int first_digit=*((int16_t*)(packet+3));
+        int second_digit=*((int16_t*)(packet+5));
 
-        int first_digit=Uint16_to_dec(data[0], data[1]);
-        int second_digit=Uint16_to_dec(data[2], data[3]);
-        int major=(int)data[4];
-        int minor=(int)data[5];
-        int release=(int)data[6];
-        int patch=(int)data[7];
-        int host1=(int)data[8];
-        int host2=(int)data[9];
-        int host3=(int)data[10];
-        int host4=(int)data[11];
-        int port=((int)data[12] *256)+(int)data[13];
+        int major=(int)packet[7];
+        int minor=(int)packet[8];
+
+        int release=(int)packet[9];
+
+        int patch=(int)packet[10];
+
+        int host1=(int)packet[11];
+        int host2=(int)packet[12];
+        int host3=(int)packet[13];
+        int host4=(int)packet[14];
+
+        int port=((int)packet[15] *256)+(int)packet[16];
 
         log_text(EVENT_SESSION, "first digit [%i] second digit [%i] major [%i] minor [%i] release [%i] patch [%i] host [%i.%i.%i.%i] port [%i]", first_digit, second_digit, major, minor, release, patch, host1, host2, host3, host4, port);
     }

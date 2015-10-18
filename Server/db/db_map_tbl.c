@@ -86,11 +86,11 @@ void load_db_maps(){
 
         //get tile map
         int tile_map_size=sqlite3_column_bytes(stmt, 5);
-        memcpy(maps.map[map_id].tile_map, (unsigned char*)sqlite3_column_blob(stmt, 5), tile_map_size);
+        memcpy(maps.map[map_id].tile_map, (unsigned char*)sqlite3_column_blob(stmt, 5), (size_t)tile_map_size);
 
         //get height map
         int height_map_size=sqlite3_column_bytes(stmt, 6);
-        memcpy(maps.map[map_id].height_map, (unsigned char*)sqlite3_column_blob(stmt, 6), height_map_size);
+        memcpy(maps.map[map_id].height_map, (unsigned char*)sqlite3_column_blob(stmt, 6), (size_t)height_map_size);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", map_id, maps.map[map_id].map_name);
 
@@ -298,7 +298,7 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
     unsigned char tile_map_byte[TILE_MAP_MAX]= {0};
     int tile_map_size=elm_header.height_map_offset - elm_header.tile_map_offset;
 
-    if(fread(tile_map_byte, tile_map_size, 1, file)!=1) {
+    if(fread(tile_map_byte, (size_t)tile_map_size, 1, file)!=1) {
 
         log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
@@ -308,7 +308,7 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
     unsigned char height_map_byte[HEIGHT_MAP_MAX]= {0};
     int height_map_size=elm_header.threed_object_offset - elm_header.height_map_offset;
 
-    if(fread(height_map_byte, height_map_size, 1, file)!=1) {
+    if(fread(height_map_byte, (size_t)height_map_size, 1, file)!=1) {
 
         log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
@@ -368,7 +368,7 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
         memset(&threed_object_entry, 0, sizeof(threed_object_entry));
 
         //read the binary hash into the struct
-        if(fread(&threed_object_entry, elm_header.threed_object_hash_len, 1, file)!=1) {
+        if(fread(&threed_object_entry, (size_t)elm_header.threed_object_hash_len, 1, file)!=1) {
 
             log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
             stop_server();

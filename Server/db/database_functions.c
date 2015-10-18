@@ -234,9 +234,9 @@ void create_database_table(char *sql){
 
     //extract table name from sql string
     char table_name[80]="";
-    int str_len=strlen(sql);
+    size_t str_len=strlen(sql);
 
-    for(int i=13; sql[i]!='('; i++){
+    for(size_t i=13; sql[i]!='('; i++){
 
         table_name[i-13]=sql[i];
 
@@ -391,7 +391,7 @@ void create_database(const char *db_filename){
 
         for(int pick_points=0; pick_points<=50; pick_points++){
 
-            attribute_value[pick_points]=i;
+            attribute_value[pick_points]=(int)i;
             i=i + 0.20f;
          }
 
@@ -406,7 +406,7 @@ void create_database(const char *db_filename){
 
         for(int pick_points=0; pick_points<=50; pick_points++){
 
-            attribute_value[pick_points]=i;
+            attribute_value[pick_points]=(int)i;
             i=i+18.0f;
         }
 
@@ -421,7 +421,7 @@ void create_database(const char *db_filename){
 
         for(int pick_points=0; pick_points<=50; pick_points++){
 
-            attribute_value[pick_points]=i;
+            attribute_value[pick_points]=(int)i;
             i=i + 0.20f;
         }
 

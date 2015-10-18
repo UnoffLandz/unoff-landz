@@ -95,7 +95,7 @@ void get_map_details(int connection, int map_id){
 
     /** public function - see header */
 
-    send_text(connection, CHAT_SERVER, "%cYou are in '%s' %s", c_green3+127,
+    send_text(connection, CHAT_SERVER, "%cYou are in %s %s", c_green3+127,
         maps.map[map_id].map_name,
         maps.map[map_id].description);
 
@@ -109,7 +109,7 @@ void get_map_developer_details(int connection, int map_id){
         maps.map[map_id].description);
 
     send_text(connection, CHAT_SERVER, "%cArea   :  %i x %i", c_green3+127, maps.map[map_id].map_axis, maps.map[map_id].map_axis);
-    send_text(connection, CHAT_SERVER, "%cAuthor : %s'", c_green3+127, maps.map[map_id].author);
+    send_text(connection, CHAT_SERVER, "%cAuthor : %s", c_green3+127, maps.map[map_id].author);
     send_text(connection, CHAT_SERVER, "%cEmail  : %s", c_green3+127, maps.map[map_id].author_email);
 
     char time_stamp_str[9]="";

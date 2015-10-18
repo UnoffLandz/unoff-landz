@@ -246,17 +246,6 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
 void send_new_minute(int connection, int minute);
 
 
-/** RESULT  : sends the active channels packet
-
-    RETURNS : void
-
-    PURPOSE :
-
-    NOTES   : used at log in
-*/
-void send_get_active_channels(int connection);
-
-
 /** RESULT  : sends the get_new_inventory_item packet
 
     RETURNS : void

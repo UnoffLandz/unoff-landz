@@ -52,7 +52,7 @@ void str_trim_right(char *str_in){
     /** public function - see header */
 
     int i=0;
-    int len=strlen(str_in)-1;
+    int len=(int)strlen(str_in)-1;
 
     for(i=len; i>=0; i--) {
         if(!isspace(str_in[i])) break;
@@ -67,8 +67,8 @@ void str_trim_left(char *str_in){
 
      /** public function - see header */
 
-    int i=0;
-    int len=strlen(str_in);
+    size_t i=0;
+    size_t len=strlen(str_in);
 
     for(i=0; i<len; i++){
         if(!isspace(str_in[i])) break;
@@ -86,7 +86,7 @@ void str_conv_lower(char *str_in){
 
     int i;
 
-    for(i=0; i<(int) strlen(str_in); i++){
+    for(i=0; i<strlen(str_in); i++){
 
         if(str_in[i]>=65 && str_in[i]<=90) str_in[i]+=32;
     }
@@ -98,9 +98,9 @@ void str_conv_upper(char *str_in){
 
     int i;
 
-    for(i=0; i<(int) strlen(str_in); i++){
+    for(i=0; i< strlen(str_in); i++){
 
-        if(str_in[i]>=97 && str_in[i]<=122)str_in[i]-=32;
+        if(str_in[i]>=97 && str_in[i]<=122) str_in[i]-=32;
     }
 }
 
@@ -120,8 +120,8 @@ void extract_file_name(char *str_in, char *str_out){
 
     /** public function - see header */
 
-    int len=strlen(str_in);
-    int i=0;
+    size_t len=strlen(str_in);
+    size_t i;
 
     for(i=len; i>0; i--){
 
@@ -140,11 +140,11 @@ void parse_line(char *line, char output[][80]){
 
     /** public function - see header */
 
-    int start=0;
+    size_t start=0;
     bool sentence=false;
     int j=0;
 
-    for(int i=0; i<(int)strlen(line); i++){
+    for(size_t i=0; i<strlen(line); i++){
 
         if(line[i]=='"' && sentence==true) sentence=false;
         else if(line[i]=='"' && sentence==false) sentence=true;

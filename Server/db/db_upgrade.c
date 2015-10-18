@@ -320,8 +320,11 @@ typedef int (*upgrade_function)(const char *dbname);
 
 struct upgrade_array_entry {
 
-    uint32_t from_version;
-    uint32_t to_version;
+    //uint32_t from_version;
+    //uint32_t to_version;
+    int from_version;
+    int to_version;
+
     upgrade_function fn;
 };
 
@@ -335,7 +338,7 @@ struct upgrade_array_entry entries[] = {
     { 0, 0, NULL}
 };
 
-static const struct upgrade_array_entry *find_upgrade_entry(uint32_t old_version) {
+static const struct upgrade_array_entry *find_upgrade_entry(int old_version) {
 
     int idx=0;
 

@@ -53,7 +53,7 @@ void process_log_in(int connection, const unsigned char *packet){
     //we know that there are always 3 bytes before the char name
     //and password, so we can extract this adding
     //3 to the packet start and subtracting 3 from the packet length
-    strncpy(char_name_and_password, (char*)packet+3, packet_length-3);
+    strncpy(char_name_and_password, (char*)packet+3, (size_t)packet_length-3);
 
     //we know that the char name and password are separated by an
     //ascii space, so we can extract each separately by scanning

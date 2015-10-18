@@ -56,7 +56,7 @@ void check_new_character(int connection, const unsigned char *packet){
     //we know that there are always 3 bytes before the char name
     //and password and 7 bytes after, so we can extract this adding
     //3 to the packet start and subtracting 7 from packet end
-    strncpy(char_name_and_password, (char*)packet+3, packet_length-7);
+    strncpy(char_name_and_password, (char*)packet+3, (size_t)packet_length-7);
 
     //we know that the char name and password are separated by an
     //ascii space, so we can extract each separately by scanning
@@ -116,7 +116,7 @@ void add_new_character(int connection, const unsigned char *packet){
     memset(&_packet_2, '0', sizeof(_packet_2));
 
     //populate the structs
-    memcpy(&_packet_1, packet, packet_length-7);
+    memcpy(&_packet_1, packet, (size_t)packet_length-7);
     memcpy(&_packet_2, packet+packet_length-7, 7);
 
     //extract the char name and password

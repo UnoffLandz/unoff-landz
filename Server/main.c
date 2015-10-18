@@ -36,17 +36,19 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-NEW - create Centos 6.4 compile environment
-NEW - database tables need to be order independent (as (*) causes too many bugs)
+DONE  - extract data for SEND_VERSION in the same way as GET_PLAYER_INFO, ie using pointers
+DONE - test harvesting
 
-DONE NEW - test harvesting
-NEW - test #map (uploaded date looks strange) (#map default doesn't work)
-NEW - test multiple guild application handling
-NEW - convert elm_file field in MAP TABLE to description
-NEW - implement map_author, map_author_email, map_status, map_upload_date in MAP_TABLE
+create Centos 6.4 compile environment
+database tables need to be order independent (as (*) causes too many bugs)
 
-NEW - convert db inventory storage to blob and separately record all drops/pick ups in db
-NEW - db record of chars leaving and joining guilds
+test #map (uploaded date looks strange) (#map default doesn't work)
+test multiple guild application handling
+convert elm_file field in MAP TABLE to description
+implement map_author, map_author_email, map_status, map_upload_date in MAP_TABLE
+
+convert db inventory storage to blob and separately record all drops/pick ups in db
+db record of chars leaving and joining guilds
 
 finish making push_sql the same as send_text
 finish script loading
@@ -67,7 +69,7 @@ implement guild stats
 walk to towards bag when clicked on if char is not standing on bag
 extend add_client_to_map function so that existing bags are shown to new client
 implement pick up bag
-NEW - implement move item between slots in bag
+implement move item between slots in bag
 implement bag poof (include reset poof time on add/drop from bag)
 
 remove character_type_name field from CHARACTER_TYPE_TABLE
@@ -85,7 +87,6 @@ refactor function current_database_version
 create circular buffer for receiving packets
 cope with send not sending all the bytes at once
 need #function to describe char and what it is wearing)
-NEW - extract data for SEND_VERSION in the same way as GET_PLAYER_INFO, ie using pointers
 document new database/struct relationships
 finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 
@@ -150,7 +151,6 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 void timeout_cb(EV_P_ struct ev_timer* timer, int revents);
 void timeout_cb2(EV_P_ struct ev_timer* timer, int revents);
 void idle_cb(EV_P_ struct ev_idle *watcher, int revents);
-void close_connection_slot(int connection);
 
 void start_server(){
 
@@ -492,7 +492,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
                     //copy packet from buffer
                     for(j=0; j<packet_length; j++){
 
-                        packet[j]=clients.client[watcher->fd].packet_buffer[j];
+                        packet[j]=(unsigned char)clients.client[watcher->fd].packet_buffer[j];
                     }
 
                     //process packet

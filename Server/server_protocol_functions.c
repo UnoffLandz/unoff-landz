@@ -42,7 +42,7 @@ void send_packet(int connection, void *packet, int packet_length){
 
     log_packet(connection, packet, SEND);
 
-    send(connection, packet, packet_length, 0);
+    send(connection, packet, (size_t)packet_length, 0);
 }
 
 
@@ -60,7 +60,7 @@ void send_new_minute(int connection, int minute){
     int packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, '0', (size_t)packet_length);
 
     //add data
     packet.protocol=NEW_MINUTE;
@@ -81,7 +81,7 @@ void send_login_ok(int connection){
         Uint16 data_length;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', packet_length);
@@ -104,7 +104,7 @@ void send_display_client_window(int connection){
         Uint16 data_length;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', packet_length);
@@ -127,7 +127,7 @@ void send_login_not_ok(int connection){
         Uint16 data_length;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', packet_length);
@@ -153,7 +153,7 @@ void send_you_dont_exist(int connection){
     int packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, '0', (size_t)packet_length);
 
     //add data
     packet.protocol=YOU_DONT_EXIST;
@@ -177,7 +177,7 @@ void send_you_are(int connection){
     int packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, '0', (size_t)packet_length);
 
     //add data
     packet.protocol=YOU_ARE;
@@ -201,7 +201,7 @@ void send_create_char_ok(int connection){
     int packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, '0', (size_t)packet_length);
 
     //add data
     packet.protocol=CREATE_CHAR_OK;
@@ -253,12 +253,12 @@ void send_raw_text(int connection, int channel, char *text){
     //We therefore calculate the actual packet length by taking the
     //struct size less the 1024 reserved for the message and then
     //add on the actual message length
-    int packet_length=sizeof(packet)- 1024 + strlen(text)+1;
+    size_t packet_length=sizeof(packet)- 1024 + strlen(text)+1;
 
     //add data
     packet.protocol=RAW_TEXT;
     packet.data_length=packet_length-2;
-    packet.channel=channel;
+    packet.channel=(unsigned char)channel;
     strcpy(packet.text, text);
 
     send_packet(connection, &packet, packet_length);
@@ -319,7 +319,7 @@ void send_here_your_inventory(int connection){
 
         packet.inventory[i].object_id=clients.client[connection].inventory[i].object_id;
         packet.inventory[i].amount=clients.client[connection].inventory[i].amount;
-        packet.inventory[i].slot=i;
+        packet.inventory[i].slot=(unsigned char)i;
         packet.inventory[i].flags=0;
     }
 
@@ -360,7 +360,7 @@ void send_here_your_ground_items(int connection, int bag_id){
 
         packet.inventory[i].object_id=bag[bag_id].inventory[i].object_id;
         packet.inventory[i].amount=bag[bag_id].inventory[i].amount;
-        packet.inventory[i].slot=i;
+        packet.inventory[i].slot=(unsigned char)i;
     }
 
     send_packet(connection, &packet, packet_length);
@@ -778,7 +778,7 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
     packet.data_length=packet_length-2;
     packet.object_id=object_id;
     packet.amount=amount;
-    packet.slot=slot;
+    packet.slot=(unsigned char)slot;
     packet.flags=0;
 
     send_packet(connection, &packet, packet_length);
@@ -809,7 +809,7 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
     _packet.data_length=*packet_length-2;
     _packet.x_pos=get_x_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
     _packet.y_pos=get_y_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
-    _packet.bag_list_number=bag_list_number;
+    _packet.bag_list_number=(unsigned char)bag_list_number;
 
     memcpy(packet, &_packet, sizeof(_packet));
 }

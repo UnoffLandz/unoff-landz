@@ -118,7 +118,7 @@ void process_char_move(int connection, time_t current_utime){
 
                 //calculate the move_cmd and broadcast to clients
                 move_cmd=get_move_command(current_tile, next_tile, map_axis);
-                broadcast_actor_packet(connection, move_cmd, next_tile);
+                broadcast_actor_packet(connection, (unsigned char)move_cmd, next_tile);
 
                 //update char current position and save
                 clients.client[connection].map_tile=next_tile;

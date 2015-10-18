@@ -706,7 +706,7 @@ static int hash_map(int connection, char *text) {
     char map_name[80]="";
     int map_id;
 
-    if(sscanf(text, "%*s")==-1){
+    if(sscanf(text, "%*s")==0){
 
         map_id=clients.client[connection].map_id;
     }
