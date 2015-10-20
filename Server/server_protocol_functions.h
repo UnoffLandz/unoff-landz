@@ -30,7 +30,7 @@
 
     NOTES   :
 */
-void send_packet(int connection, void *packet, int packet_length);
+void send_packet(int connection, void *packet, size_t packet_length);
 
 
 
@@ -175,7 +175,7 @@ void send_change_map(int connection, char *elm_filename);
     NOTES   : Because this packet is broadcasted to multiple clients we simply create the packet
               and leave the broadcast function to send
 */
-void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *packet_length);
+void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : sends an add_new_enhanced_actor_packet
@@ -198,7 +198,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     NOTES   : Because this packet is broadcasted to multiple clients we simply create the packet
               and leave the broadcast function to send
 */
-void remove_actor_packet(int connection, unsigned char *packet, int *packet_length);
+void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : sends a remove_actor_packet
@@ -221,7 +221,7 @@ void remove_actor_packet(int connection, unsigned char *packet, int *packet_leng
     NOTES   : Because this packet is broadcasted to multiple clients we simply create the packet
               and leave the broadcast function to send
 */
-void add_actor_packet(int connection, unsigned char move, unsigned char *packet, int *packet_length);
+void add_actor_packet(int connection, unsigned char move, unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : sends an add_actor_packet
@@ -266,7 +266,7 @@ void send_get_new_inventory_item( int connection, int image_id, int amount, int 
     NOTES   : Because this packet is broadcasted to multiple clients we simply create the packet
               and leave the broadcast function to send
 */
-void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, int *packet_length);
+void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : sends the close_bag packet

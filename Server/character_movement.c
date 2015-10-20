@@ -159,8 +159,8 @@ void send_actors_to_client(int connection){
         PURPOSE : used by add_char_to_map function
     **/
 
-    unsigned char packet[1024];
-    int packet_length;
+    unsigned char packet[1024]={0};
+    size_t packet_length;
 
     int map_id=clients.client[connection].map_id;
     int map_tile=clients.client[connection].map_tile;

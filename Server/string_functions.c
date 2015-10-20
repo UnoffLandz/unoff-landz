@@ -84,11 +84,9 @@ void str_conv_lower(char *str_in){
 
      /** public function - see header */
 
-    int i;
+    for(size_t i=0; i<strlen(str_in); i++){
 
-    for(i=0; i<strlen(str_in); i++){
-
-        if(str_in[i]>=65 && str_in[i]<=90) str_in[i]+=32;
+        if(str_in[i]>=65 && str_in[i]<=90) str_in[i]=tolower(str_in[i]);
     }
 }
 
@@ -96,11 +94,9 @@ void str_conv_upper(char *str_in){
 
      /** public function - see header */
 
-    int i;
+    for(size_t i=0; i<strlen(str_in); i++){
 
-    for(i=0; i< strlen(str_in); i++){
-
-        if(str_in[i]>=97 && str_in[i]<=122) str_in[i]-=32;
+        if(str_in[i]>=97 && str_in[i]<=122) str_in[i]=toupper(str_in[i]);
     }
 }
 

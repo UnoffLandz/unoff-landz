@@ -26,7 +26,7 @@
 enum {// actor frame (needed for stand up/sit down
     frame_sit=12,
     frame_stand=13,
-    frame_sit_idle=14,
+    frame_sit_idle=14
 };
 
 enum { // actor command
@@ -51,12 +51,12 @@ enum { // shield type
     SHIELD_BRONZE=5,
     QUIVER_ARROWS=7,
     SHIELD_NONE=11,
-    QUIVER_BOLTS=13,
+    QUIVER_BOLTS=13
 };
 
 enum { // weapon type
     WEAPON_NONE=0,
-    SWORD_1=1,
+    SWORD_1=1
 };
 
 enum { // cape type
@@ -90,7 +90,7 @@ enum { // cape type
     CAPE_UNUSED_27,
     CAPE_UNUSED_28,
     CAPE_UNUSED_29,
-    CAPE_NONE,
+    CAPE_NONE
 };
 
 enum { // helmet type
@@ -114,7 +114,7 @@ enum { // helmet type
     HELMET_UNUSED_17,
     HELMET_UNUSED_18,
     HELMET_UNUSED_19,
-    HELMET_NONE,
+    HELMET_NONE
 };
 
 extern struct client_node_type character;

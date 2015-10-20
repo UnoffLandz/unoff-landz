@@ -36,13 +36,13 @@
 
 #define DEBUG_SERVER_PROTOCOL_FUNCTIONS 0
 
-void send_packet(int connection, void *packet, int packet_length){
+void send_packet(int connection, void *packet, size_t packet_length){
 
     /** public function - see header */
 
     log_packet(connection, packet, SEND);
 
-    send(connection, packet, (size_t)packet_length, 0);
+    send(connection, packet, packet_length, 0);
 }
 
 
@@ -57,10 +57,10 @@ void send_new_minute(int connection, int minute){
         Uint16 minute;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', (size_t)packet_length);
+    memset(&packet, '0', packet_length);
 
     //add data
     packet.protocol=NEW_MINUTE;
@@ -150,7 +150,7 @@ void send_you_dont_exist(int connection){
         Uint16 data_length;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', (size_t)packet_length);
@@ -174,7 +174,7 @@ void send_you_are(int connection){
         Uint16 connection;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', (size_t)packet_length);
@@ -198,7 +198,7 @@ void send_create_char_ok(int connection){
         Uint16 data_length;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', (size_t)packet_length);
@@ -221,7 +221,7 @@ void send_create_char_not_ok(int connection){
         Uint16 data_length;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', packet_length);
@@ -305,7 +305,7 @@ void send_here_your_inventory(int connection){
 
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', packet_length);
@@ -346,7 +346,7 @@ void send_here_your_ground_items(int connection, int bag_id){
 
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', packet_length);
@@ -377,7 +377,7 @@ void send_close_bag(int connection){
         Uint16 data_length;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', packet_length);
@@ -403,7 +403,7 @@ void send_get_active_channels(int connection){
 
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', packet_length);
@@ -411,7 +411,7 @@ void send_get_active_channels(int connection){
     //add data
     packet.protocol=GET_ACTIVE_CHANNELS;
     packet.data_length=packet_length-2;
-    packet.active_channel=clients.client[connection].active_chan;
+    packet.active_channel=(unsigned char)clients.client[connection].active_chan;
 
     for(int i=0; i<MAX_CHAN_SLOTS; i++){
 
@@ -503,7 +503,7 @@ void send_here_your_stats(int connection){
         Uint16 max_book_time;
     }packet;
 
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the struct
     memset(&packet, '0', packet_length);
@@ -512,40 +512,40 @@ void send_here_your_stats(int connection){
     packet.protocol=HERE_YOUR_STATS;
     packet.data_length=packet_length-2;
 
-    packet.physique_pp=clients.client[connection].physique_pp;
-    packet.max_physique=clients.client[connection].max_physique;
-    packet.coordination_pp=clients.client[connection].coordination_pp;
-    packet.max_coordination=clients.client[connection].max_coordination;
-    packet.reasoning_pp=clients.client[connection].reasoning_pp;
-    packet.max_reasoning=clients.client[connection].max_reasoning;
-    packet.will_pp=clients.client[connection].will_pp;
-    packet.max_will=clients.client[connection].max_will;
-    packet.instinct_pp=clients.client[connection].instinct_pp;
-    packet.max_instinct=clients.client[connection].max_instinct;
-    packet.vitality_pp=clients.client[connection].vitality_pp;
-    packet.max_vitality=clients.client[connection].max_vitality;
+    packet.physique_pp=(Uint16)clients.client[connection].physique_pp;
+    packet.max_physique=(Uint16)clients.client[connection].max_physique;
+    packet.coordination_pp=(Uint16)clients.client[connection].coordination_pp;
+    packet.max_coordination=(Uint16)clients.client[connection].max_coordination;
+    packet.reasoning_pp=(Uint16)clients.client[connection].reasoning_pp;
+    packet.max_reasoning=(Uint16)clients.client[connection].max_reasoning;
+    packet.will_pp=(Uint16)clients.client[connection].will_pp;
+    packet.max_will=(Uint16)clients.client[connection].max_will;
+    packet.instinct_pp=(Uint16)clients.client[connection].instinct_pp;
+    packet.max_instinct=(Uint16)clients.client[connection].max_instinct;
+    packet.vitality_pp=(Uint16)clients.client[connection].vitality_pp;
+    packet.max_vitality=(Uint16)clients.client[connection].max_vitality;
 
-    packet.human=clients.client[connection].human;
-    packet.max_human=clients.client[connection].max_human;
-    packet.animal=clients.client[connection].animal;
-    packet.max_animal=clients.client[connection].max_animal;
-    packet.vegetal=clients.client[connection].vegetal;
-    packet.max_vegetal=clients.client[connection].max_vegetal;
-    packet.inorganic=clients.client[connection].inorganic;
-    packet.max_inorganic=clients.client[connection].max_inorganic;
-    packet.artificial=clients.client[connection].artificial;
-    packet.max_artificial=clients.client[connection].max_artificial;
-    packet.magic=clients.client[connection].magic;
-    packet.max_magic=clients.client[connection].max_magic;
+    packet.human=(Uint16)clients.client[connection].human;
+    packet.max_human=(Uint16)clients.client[connection].max_human;
+    packet.animal=(Uint16)clients.client[connection].animal;
+    packet.max_animal=(Uint16)clients.client[connection].max_animal;
+    packet.vegetal=(Uint16)clients.client[connection].vegetal;
+    packet.max_vegetal=(Uint16)clients.client[connection].max_vegetal;
+    packet.inorganic=(Uint16)clients.client[connection].inorganic;
+    packet.max_inorganic=(Uint16)clients.client[connection].max_inorganic;
+    packet.artificial=(Uint16)clients.client[connection].artificial;
+    packet.max_artificial=(Uint16)clients.client[connection].max_artificial;
+    packet.magic=(Uint16)clients.client[connection].magic;
+    packet.max_magic=(Uint16)clients.client[connection].max_magic;
 
-    packet.inventory_emu=get_inventory_emu(connection);
-    packet.max_inventory_emu=get_max_inventory_emu(connection);
-    packet.material_pts=clients.client[connection].material_pts;
-    packet.max_material_pts=clients.client[connection].max_material_pts;
-    packet.ethereal_pts=clients.client[connection].ethereal_pts;
-    packet.max_ethereal_pts=clients.client[connection].max_ethereal_pts;
-    packet.food_lvl=clients.client[connection].food_lvl;
-    packet.elapsed_book_time=clients.client[connection].elapsed_book_time;
+    packet.inventory_emu=(Uint16)get_inventory_emu(connection);
+    packet.max_inventory_emu=(Uint16)get_max_inventory_emu(connection);
+    packet.material_pts=(Uint16)clients.client[connection].material_pts;
+    packet.max_material_pts=(Uint16)clients.client[connection].max_material_pts;
+    packet.ethereal_pts=(Uint16)clients.client[connection].ethereal_pts;
+    packet.max_ethereal_pts=(Uint16)clients.client[connection].max_ethereal_pts;
+    packet.food_lvl=(Uint16)clients.client[connection].food_lvl;
+    packet.elapsed_book_time=(Uint16)clients.client[connection].elapsed_book_time;
     packet.unused=0;
 
     packet.manufacture_exp=clients.client[connection].manufacture_exp;
@@ -588,7 +588,7 @@ void send_change_map(int connection, char *elm_filename){
     //We therefore calculate the actual packet length by taking the
     //struct size less the 1024 reserved for the map name and then
     //add on the actual message length
-    int packet_length=sizeof(packet) - 1024 + strlen(elm_filename)+1;
+    size_t packet_length=sizeof(packet) - 1024 + strlen(elm_filename)+1;
 
     //add data
     packet.protocol=CHANGE_MAP;
@@ -599,7 +599,7 @@ void send_change_map(int connection, char *elm_filename){
 }
 
 
-void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *packet_length){
+void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t *packet_length){
 
     /** public function - see header */
 
@@ -648,7 +648,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     //127+colour character)
     int guild_tag_colour=guilds.guild[clients.client[connection].guild_id].guild_tag_colour;
 
-    int banner_length=sprintf(_packet1.banner, "%s %c%s",
+    size_t banner_length=(size_t)sprintf(_packet1.banner, "%s %c%s",
         clients.client[connection].char_name,
         127+guild_tag_colour,
         guilds.guild[clients.client[connection].guild_id].guild_tag);
@@ -658,7 +658,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
 
     //add data to packet 1
     _packet1.protocol=ADD_NEW_ENHANCED_ACTOR;
-    _packet1.connection=connection;
+    _packet1.connection=(Uint16)connection;
     _packet1.data_length=*packet_length-2;
 
     int map_id=clients.client[connection].map_id;
@@ -669,22 +669,22 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
     _packet1.z_pos=0; //z position (set to 0 pending further development)
     _packet1.rot=45; //rotation angle (set to 45 pending further development)
 
-    _packet1.char_type=clients.client[connection].char_type;
+    _packet1.char_type=(unsigned char)clients.client[connection].char_type;
     _packet1.unused=0; //unused (set to 0)
 
-    _packet1.skin_type=clients.client[connection].skin_type;
-    _packet1.hair_type=clients.client[connection].hair_type;
-    _packet1.shirt_type=clients.client[connection].shirt_type;
-    _packet1.pants_type=clients.client[connection].pants_type;
-    _packet1.boots_type=clients.client[connection].boots_type;
-    _packet1.head_type=clients.client[connection].head_type;
-    _packet1.shield_type=clients.client[connection].shield_type;
-    _packet1.weapon_type=clients.client[connection].weapon_type;
-    _packet1.cape_type=clients.client[connection].cape_type;
-    _packet1.helmet_type=clients.client[connection].helmet_type;
-    _packet1.frame_type=clients.client[connection].frame;
-    _packet1.max_health=clients.client[connection].max_health;
-    _packet1.current_health=clients.client[connection].current_health;
+    _packet1.skin_type=(unsigned char)clients.client[connection].skin_type;
+    _packet1.hair_type=(unsigned char)clients.client[connection].hair_type;
+    _packet1.shirt_type=(unsigned char)clients.client[connection].shirt_type;
+    _packet1.pants_type=(unsigned char)clients.client[connection].pants_type;
+    _packet1.boots_type=(unsigned char)clients.client[connection].boots_type;
+    _packet1.head_type=(unsigned char)clients.client[connection].head_type;
+    _packet1.shield_type=(unsigned char)clients.client[connection].shield_type;
+    _packet1.weapon_type=(unsigned char)clients.client[connection].weapon_type;
+    _packet1.cape_type=(unsigned char)clients.client[connection].cape_type;
+    _packet1.helmet_type=(unsigned char)clients.client[connection].helmet_type;
+    _packet1.frame_type=(unsigned char)clients.client[connection].frame;
+    _packet1.max_health=(unsigned char)clients.client[connection].max_health;
+    _packet1.current_health=(unsigned char)clients.client[connection].current_health;
     _packet1.player_type=1; //special (PLAYER=1 NPC=??)
 
     //add data to packet 2
@@ -699,7 +699,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, int *p
 }
 
 
-void remove_actor_packet(int connection, unsigned char *packet, int *packet_length){
+void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_length){
 
     /** public function - see header */
 
@@ -725,7 +725,7 @@ void remove_actor_packet(int connection, unsigned char *packet, int *packet_leng
 }
 
 
-void add_actor_packet(int connection, unsigned char move, unsigned char *packet, int *packet_length){
+void add_actor_packet(int connection, unsigned char move, unsigned char *packet, size_t *packet_length){
 
     /** public function - see header */
 
@@ -768,7 +768,7 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
     }packet;
 
     //calculate the packet length
-    int packet_length=sizeof(packet);
+    size_t packet_length=sizeof(packet);
 
     //clear the structs
     memset(&packet, '0', sizeof(packet));
@@ -785,7 +785,7 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
 }
 
 
-void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, int *packet_length){
+void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, size_t *packet_length){
 
     /** public function - see header */
 

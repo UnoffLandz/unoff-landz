@@ -44,7 +44,7 @@ void process_log_in(int connection, const unsigned char *packet){
     int map_id=0;
     //int chan_colour=0;
 
-    int packet_length=get_packet_length(packet);
+    size_t packet_length=get_packet_length(packet);
 
     char char_name_and_password[80]="";
     char char_name[80]="";

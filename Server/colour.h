@@ -48,7 +48,7 @@ enum {// colours
     c_green4,
     c_blue4,
     c_purple4,
-    c_grey4,
+    c_grey4
 };
 
 #endif // COLOUR_H_INCLUDED

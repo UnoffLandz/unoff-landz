@@ -44,7 +44,7 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
     //pre-create the add_new_enhanced_actor packet so we don't have to repeat this on each occasion when
     //it needs to sent to other actors
     unsigned char packet[1024];
-    int packet_length=0;
+    size_t packet_length=0;
     add_new_enhanced_actor_packet(connection, packet, &packet_length);
 
     //cycle through all the clients
@@ -90,7 +90,7 @@ void broadcast_remove_actor_packet(int connection) {
     //pre-create the remove char packet so we don't have to repeat this on each occasion when it needs to
     //sent to other actors
     unsigned char packet[1024];
-    int packet_length=0;
+    size_t packet_length=0;
     remove_actor_packet(connection, packet, &packet_length);
 
     //cycle through all the clients
@@ -129,16 +129,16 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
     /** public function - see header */
 
     unsigned char packet[1024];// sending char packets
-    int packet_length=0;
+    size_t packet_length=0;
 
     unsigned char packet1[1024];// receiving char add_actor packet
-    int packet1_length=0;
+    size_t packet1_length=0;
 
     unsigned char packet2[1024];// receiving char add_enhanced_actor packet
-    int packet2_length=0;
+    size_t packet2_length=0;
 
     unsigned char packet3[1024];// receiving char remove_actor packet
-    int packet3_length=0;
+    size_t packet3_length=0;
 
     int sender_current_tile=clients.client[connection].map_tile;
     int sender_visual_range=get_char_visual_range(connection);
@@ -338,7 +338,7 @@ void broadcast_get_new_bag_packet(int connection, int bag_list_number) {
     //pre-create the packet so we don't have to repeat this on each occasion when it needs to
     //sent to other actors
     unsigned char packet[1024]={0};
-    int packet_length=0;
+    size_t packet_length=0;
 
     get_new_bag_packet(connection, bag_list_number, packet, &packet_length);
 

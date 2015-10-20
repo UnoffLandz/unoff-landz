@@ -38,7 +38,7 @@ enum { //log events
     EVENT_MOVE_ERROR,
     EVENT_INITIALISATION,
     EVENT_MAP_LOAD,
-    EVENT_PACKET,
+    EVENT_PACKET
 };
 
 

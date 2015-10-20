@@ -69,6 +69,6 @@ void read_packet(struct packet_element_type *element, int element_count, const u
 
     NOTES   :
 */
-int get_packet_length(const unsigned char *packet);
+size_t get_packet_length(const unsigned char *packet);
 
 #endif // PACKET_H_INCLUDED

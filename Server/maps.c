@@ -104,6 +104,8 @@ void get_map_details(int connection, int map_id){
 
 void get_map_developer_details(int connection, int map_id){
 
+    /** public function - see header */
+
    send_text(connection, CHAT_SERVER, "%cMap     :'%s' %s", c_green3+127,
         maps.map[map_id].map_name,
         maps.map[map_id].description);
@@ -114,8 +116,8 @@ void get_map_developer_details(int connection, int map_id){
 
     char time_stamp_str[9]="";
     char verbose_date_stamp_str[50]="";
-    get_time_stamp_str(time(NULL), time_stamp_str);
-    get_verbose_date_str(time(NULL), verbose_date_stamp_str);
+    //get_time_stamp_str(  , time_stamp_str);
+    //get_verbose_date_str(    , verbose_date_stamp_str);
     send_text(connection, CHAT_SERVER, "%cUploaded: %s %s", c_green3+127, verbose_date_stamp_str, time_stamp_str);
 
     switch (maps.map[map_id].development_status){
@@ -133,4 +135,3 @@ void get_map_developer_details(int connection, int map_id){
         break;
     }
 }
-

@@ -34,9 +34,15 @@ Packets received by and sent to the server conform to a common format:
 #include "server_start_stop.h"
 #include "string_functions.h"
 
-int get_packet_length(const unsigned char *packet){
+size_t get_packet_length(const unsigned char *packet){
 
-    return packet[1] + (packet[2] * 256)+2;
+    int packet_length=packet[1] + (packet[2] * 256) +2;
+    size_t _packet_length=(size_t)packet_length;
+
+    return _packet_length;
+
+    //we ought to be able to use the following but it creates a compiler warning
+    //return packet[1] + (packet[2] * 256)+2;
 }
 
 
@@ -105,12 +111,11 @@ int build_packet(struct packet_element_type *element, int element_count, unsigne
 */
 void read_packet(struct packet_element_type *element, int element_count, const unsigned char *packet){
 
-    int packet_length = packet[1] + (packet[2] * 256) + 2;
+    size_t packet_length = get_packet_length(packet);
 
-    int count=0;
+    size_t count=0;
 
-    int i=0;
-    for(i=0; i<element_count; i++){
+    for(int i=0; i<element_count; i++){
 
         if(element[i].data_type==PROTOCOL){
 
@@ -146,7 +151,7 @@ void read_packet(struct packet_element_type *element, int element_count, const u
 
         else if(element[i].data_type==STRING_NULL){
 
-            int j=0;
+            size_t j=0;
             for(j=count; j<packet_length; j++){
 
                 if(packet[j]==ASCII_NULL) break;
@@ -160,7 +165,7 @@ void read_packet(struct packet_element_type *element, int element_count, const u
 
         else if(element[i].data_type==STRING_SPACE){
 
-            int j=0;
+            size_t j=0;
             for(j=count; j<packet_length; j++){
 
                 if(packet[j]==ASCII_SPACE) break;

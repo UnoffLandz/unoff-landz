@@ -23,6 +23,7 @@
 To compile server, set the following compiler flags :
 
     -std=c99                - target c99 compliance
+    -Wconversion            - 64bit compliance
 
                                     LINKING INFORMATION
 
@@ -36,17 +37,12 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-DONE  - extract data for SEND_VERSION in the same way as GET_PLAYER_INFO, ie using pointers
-DONE - test harvesting
-
-create Centos 6.4 compile environment
+convert Uint16 to uint16_t (remove sdl library)
 database tables need to be order independent (as (*) causes too many bugs)
-
-test #map (uploaded date looks strange) (#map default doesn't work)
 test multiple guild application handling
 convert elm_file field in MAP TABLE to description
 implement map_author, map_author_email, map_status, map_upload_date in MAP_TABLE
-
+#map uploaded date needs implementation
 convert db inventory storage to blob and separately record all drops/pick ups in db
 db record of chars leaving and joining guilds
 
@@ -715,8 +711,8 @@ int main(int argc, char *argv[]){
 
                 open_database(db_filename);
 
-                //use uintptr_t to prevent int truncation issues when compiled as 64bit
-                add_db_map((uintptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
+                //use intptr_t to prevent int truncation issues when compiled as 64bit
+                add_db_map((intptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
                 break;
             }
 

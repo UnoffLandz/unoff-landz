@@ -21,11 +21,13 @@
 #ifndef IDLE_BUFFER2_H_INCLUDED
 #define IDLE_BUFFER2_H_INCLUDED
 
+#include <stdlib.h> //support size_t data type
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void push_idle_buffer2(int connection, int process_type, const unsigned char *packet, int packet_len);
+void push_idle_buffer2(int connection, int process_type, const unsigned char *packet, size_t packet_len);
 
 
 void push_sql_command(const char *fmt, ...);

@@ -37,9 +37,9 @@ enum{
 
     ATTR_CARRY_CAPACITY=1,
     ATTR_DAY_VISION=2,
-    ATTR_NIGHT_VISION=3,
+    ATTR_NIGHT_VISION=3
 };
 
-char attribute_name[MAX_ATTRIBUTES][40];
+extern char attribute_name[MAX_ATTRIBUTES][40];
 
 #endif // ATTRIBUTES_H_INCLUDED

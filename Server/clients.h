@@ -36,7 +36,7 @@ struct client_node_type{
 
         LOGGED_OUT=0,
         LOGGED_IN=1,
-        CONNECTED=2,
+        CONNECTED=2
     }client_status;
 
     int packet_buffer[1024];
@@ -67,9 +67,10 @@ struct client_node_type{
     char password[80];
 
     enum {
+
         CHAR_ALIVE,
         CHAR_DEAD,
-        CHAR_BANNED,
+        CHAR_BANNED
     }char_status;
 
     int active_chan;

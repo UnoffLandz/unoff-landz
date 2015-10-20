@@ -498,14 +498,14 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==LOG_IN){
 
-        int packet_len=get_packet_length(packet);
+        size_t packet_len=get_packet_length(packet);
         push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_LOGIN, packet, packet_len);
     }
 /***************************************************************************************************/
 
     else if(protocol==CREATE_CHAR){
 
-        int packet_len=get_packet_length(packet);
+        size_t packet_len=get_packet_length(packet);
         push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_CHECK_NEWCHAR, packet, packet_len);
     }
 /***************************************************************************************************/
