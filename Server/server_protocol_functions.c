@@ -64,8 +64,11 @@ void send_new_minute(int connection, int minute){
 
     //add data
     packet.protocol=NEW_MINUTE;
-    packet.data_length=packet_length-2;
-    packet.minute=minute;
+
+
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
+    packet.minute=(Uint16)minute;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -88,7 +91,8 @@ void send_login_ok(int connection){
 
     //add data
     packet.protocol=LOG_IN_OK;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -111,7 +115,8 @@ void send_display_client_window(int connection){
 
     //add data
     packet.protocol=DISPLAY_CLIENT_WINDOW;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -134,7 +139,8 @@ void send_login_not_ok(int connection){
 
     //add data
     packet.protocol=LOG_IN_NOT_OK;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -157,7 +163,8 @@ void send_you_dont_exist(int connection){
 
     //add data
     packet.protocol=YOU_DONT_EXIST;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -181,8 +188,9 @@ void send_you_are(int connection){
 
     //add data
     packet.protocol=YOU_ARE;
-    packet.data_length=packet_length-2;
-    packet.connection=connection;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
+    packet.connection=(Uint16)connection;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -205,7 +213,8 @@ void send_create_char_ok(int connection){
 
     //add data
     packet.protocol=CREATE_CHAR_OK;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -228,7 +237,8 @@ void send_create_char_not_ok(int connection){
 
     //add data
     packet.protocol=CREATE_CHAR_NOT_OK;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -257,7 +267,8 @@ void send_raw_text(int connection, int channel, char *text){
 
     //add data
     packet.protocol=RAW_TEXT;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
     packet.channel=(unsigned char)channel;
     strcpy(packet.text, text);
 
@@ -312,12 +323,14 @@ void send_here_your_inventory(int connection){
 
     //add data
     packet.protocol=HERE_YOUR_INVENTORY;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
+
     packet.slot_count=MAX_INVENTORY_SLOTS;
 
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        packet.inventory[i].object_id=clients.client[connection].inventory[i].object_id;
+        packet.inventory[i].object_id=(Uint16)clients.client[connection].inventory[i].object_id;
         packet.inventory[i].amount=clients.client[connection].inventory[i].amount;
         packet.inventory[i].slot=(unsigned char)i;
         packet.inventory[i].flags=0;
@@ -353,12 +366,14 @@ void send_here_your_ground_items(int connection, int bag_id){
 
     //add data
     packet.protocol=HERE_YOUR_GROUND_ITEMS;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
+
     packet.slot_count=MAX_BAG_SLOTS;
 
     for(int i=0; i<MAX_BAG_SLOTS; i++){
 
-        packet.inventory[i].object_id=bag[bag_id].inventory[i].object_id;
+        packet.inventory[i].object_id=(Uint16)bag[bag_id].inventory[i].object_id;
         packet.inventory[i].amount=bag[bag_id].inventory[i].amount;
         packet.inventory[i].slot=(unsigned char)i;
     }
@@ -384,7 +399,8 @@ void send_close_bag(int connection){
 
     //add data
     packet.protocol=CLOSE_BAG;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -410,7 +426,9 @@ void send_get_active_channels(int connection){
 
     //add data
     packet.protocol=GET_ACTIVE_CHANNELS;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
+
     packet.active_channel=(unsigned char)clients.client[connection].active_chan;
 
     for(int i=0; i<MAX_CHAN_SLOTS; i++){
@@ -510,7 +528,8 @@ void send_here_your_stats(int connection){
 
     //add data
     packet.protocol=HERE_YOUR_STATS;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
 
     packet.physique_pp=(Uint16)clients.client[connection].physique_pp;
     packet.max_physique=(Uint16)clients.client[connection].max_physique;
@@ -563,8 +582,8 @@ void send_here_your_stats(int connection){
     packet.max_magic_exp=clients.client[connection].max_magic_exp;
     packet.potion_exp=clients.client[connection].potion_exp;
     packet.max_potion_exp=clients.client[connection].max_potion_exp;
-    packet.book_id=clients.client[connection].book_id;
-    packet.max_book_time=clients.client[connection].max_book_time;
+    packet.book_id=(Uint16)clients.client[connection].book_id;
+    packet.max_book_time=(Uint16)clients.client[connection].max_book_time;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -592,7 +611,9 @@ void send_change_map(int connection, char *elm_filename){
 
     //add data
     packet.protocol=CHANGE_MAP;
-    packet.data_length=packet_length-2;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
+
     strcpy(packet.elm_filename, elm_filename);
 
     send_packet(connection, &packet, packet_length);
@@ -659,13 +680,16 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
     //add data to packet 1
     _packet1.protocol=ADD_NEW_ENHANCED_ACTOR;
     _packet1.connection=(Uint16)connection;
-    _packet1.data_length=*packet_length-2;
+    int data_length=(int)*packet_length-2;
+    _packet1.data_length=(Uint16)data_length;
+
+    //_packet1.data_length=*packet_length-2;
 
     int map_id=clients.client[connection].map_id;
     int map_axis=maps.map[map_id].map_axis;
 
-    _packet1.x_pos=clients.client[connection].map_tile % map_axis;
-    _packet1.y_pos=clients.client[connection].map_tile / map_axis;
+    _packet1.x_pos=(Uint16)clients.client[connection].map_tile % (Uint16)map_axis;
+    _packet1.y_pos=(Uint16)clients.client[connection].map_tile / (Uint16)map_axis;
     _packet1.z_pos=0; //z position (set to 0 pending further development)
     _packet1.rot=45; //rotation angle (set to 45 pending further development)
 
@@ -718,8 +742,11 @@ void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_l
 
     //add data to packet 1
     _packet.protocol=REMOVE_ACTOR;
-    _packet.data_length=*packet_length-2;
-    _packet.connection=connection;
+    int data_length=(int)*packet_length-2;
+    _packet.data_length=(Uint16)data_length;
+
+    //_packet.data_length=*packet_length-2;
+    _packet.connection=(Uint16)connection;
 
     memcpy(packet, &_packet, sizeof(_packet));
 }
@@ -745,8 +772,11 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
 
     //add data to packet 1
     _packet.protocol=ADD_ACTOR;
-    _packet.data_length=*packet_length-2;
-    _packet.connection=connection;
+    int data_length=(int)*packet_length-2;
+    _packet.data_length=(Uint16)data_length;
+
+    //_packet.data_length=*packet_length-2;
+    _packet.connection=(Uint16)connection;
     _packet.move=move;
 
     memcpy(packet, &_packet, sizeof(_packet));
@@ -775,8 +805,10 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
 
     //add data to packet
     packet.protocol=GET_NEW_INVENTORY_ITEM;
-    packet.data_length=packet_length-2;
-    packet.object_id=object_id;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(Uint16)data_length;
+
+    packet.object_id=(Uint16)object_id;
     packet.amount=amount;
     packet.slot=(unsigned char)slot;
     packet.flags=0;
@@ -806,9 +838,12 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
 
     //add data to packet
     _packet.protocol=GET_NEW_BAG;
-    _packet.data_length=*packet_length-2;
-    _packet.x_pos=get_x_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
-    _packet.y_pos=get_y_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
+    int data_length=(int)*packet_length-2;
+    _packet.data_length=(Uint16)data_length;
+
+    //_packet.data_length=*packet_length-2;
+    _packet.x_pos=(Uint16)get_x_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
+    _packet.y_pos=(Uint16)get_y_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
     _packet.bag_list_number=(unsigned char)bag_list_number;
 
     memcpy(packet, &_packet, sizeof(_packet));

@@ -47,6 +47,7 @@ void ssnprintf(char *str, int max_len, char *fmt, ...){
     va_end(args);
 }
 
+
 void str_trim_right(char *str_in){
 
     /** public function - see header */
@@ -62,6 +63,7 @@ void str_trim_right(char *str_in){
 
     return;
 }
+
 
 void str_trim_left(char *str_in){
 
@@ -80,15 +82,17 @@ void str_trim_left(char *str_in){
     return;
 }
 
+
 void str_conv_lower(char *str_in){
 
      /** public function - see header */
 
     for(size_t i=0; i<strlen(str_in); i++){
 
-        if(str_in[i]>=65 && str_in[i]<=90) str_in[i]=tolower(str_in[i]);
+        if(str_in[i]>=65 && str_in[i]<=90) str_in[i]=(char)tolower(str_in[i]);
     }
 }
+
 
 void str_conv_upper(char *str_in){
 
@@ -96,21 +100,21 @@ void str_conv_upper(char *str_in){
 
     for(size_t i=0; i<strlen(str_in); i++){
 
-        if(str_in[i]>=97 && str_in[i]<=122) str_in[i]=toupper(str_in[i]);
+        if(str_in[i]>=97 && str_in[i]<=122) str_in[i]=(char)toupper(str_in[i]);
     }
 }
+
 
 void str_remove_underscores(char *str_in){
 
     /** public function - see header */
 
-    int i;
-
-    for(i=0; i<(int) strlen(str_in); i++){
+    for(size_t i=0; i<strlen(str_in); i++){
 
         if(str_in[i]==ASCII_UNDERSCORE) str_in[i]=ASCII_SPACE;
     }
 }
+
 
 void extract_file_name(char *str_in, char *str_out){
 

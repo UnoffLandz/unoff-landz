@@ -52,7 +52,7 @@ struct data_{
 
     std::string sql;
     unsigned char packet[MAX_PROTOCOL_PACKET_SIZE2];
-    int packet_len;
+    size_t packet_len;
     int connection;
     int process_type;
     char char_name[80];

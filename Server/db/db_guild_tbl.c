@@ -118,7 +118,7 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
     }
 
     //bind the data
-    int date_guild_created=time(NULL);
+    int date_guild_created=(int)time(NULL);
 
     sqlite3_bind_text(stmt, 1, guild_name, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, guild_tag, -1, SQLITE_STATIC);

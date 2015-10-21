@@ -307,8 +307,8 @@ int add_db_char_data(struct client_node_type character){
     sqlite3_bind_int(stmt, 25, character.frame);
     sqlite3_bind_int(stmt, 26, 0); // max health
     sqlite3_bind_int(stmt, 27, 0); // current health
-    sqlite3_bind_int(stmt, 28, character.char_created);
-    sqlite3_bind_int(stmt, 29, character.joined_guild);
+    sqlite3_bind_int(stmt, 28, (int)character.char_created);
+    sqlite3_bind_int(stmt, 29, (int)character.joined_guild);
 
     //process sql statement
     rc=sqlite3_step(stmt);

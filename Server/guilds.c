@@ -38,11 +38,11 @@
 struct guild_list_type guilds;
 struct guild_member_list_type guild_member_list;
 
-void update_guild_details(int character_id, int guild_id, int joined_guild, int guild_rank){
+void update_guild_details(int character_id, int guild_id, time_t joined_guild, int guild_rank){
 
     //update database
     char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET GUILD_ID=%i, JOINED_GUILD=%i, GUILD_RANK=%i WHERE CHAR_ID=%i", guild_id, joined_guild, guild_rank, character_id);
+    snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET GUILD_ID=%i, JOINED_GUILD=%i, GUILD_RANK=%i WHERE CHAR_ID=%i", guild_id, (int)joined_guild, guild_rank, character_id);
     push_sql_command(sql);
 
     //if char in game then update client data
