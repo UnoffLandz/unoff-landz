@@ -159,6 +159,17 @@ void change_guild_rank(int connection, char *char_name, char *guild_tag, int gui
 **/
 void change_guild_permission(int connection, char *guild_tag, int permission_level);
 
+
+/** RESULT   : finds the guild id from the guild tag
+
+    RETURNS  : guild id
+
+    PURPOSE  : used by function apply_guild and hash_guild_details
+
+    NOTES    :
+**/
+int get_guild_id(char *guild_tag);
+
 /*****************************************************************************************************
 ***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
 ******************************************************************************************************/
@@ -176,6 +187,18 @@ extern "C" {
     NOTES    : used by function process_idle_buffer
 **/
 void list_guild_members(int connection, int order);
+
+
+/** RESULT   : sends details of a guild
+
+    RETURNS  : void
+
+    PURPOSE  : used by function hash_guild_details
+
+    NOTES    :
+**/
+void send_guild_details(int connection, int guild_id);
+
 
 #ifdef __cplusplus
 }

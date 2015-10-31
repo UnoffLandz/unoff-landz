@@ -18,9 +18,7 @@ void close_connection_slot(int connection){
         //update last in game time for char
         clients.client[connection].time_of_last_minute=time(NULL);
 
-        char sql[MAX_SQL_LEN]="";
-        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[connection].time_of_last_minute, clients.client[connection].character_id);
-        push_sql_command(sql);
+        push_sql_command("UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[connection].time_of_last_minute, clients.client[connection].character_id);
     }
 
     close(connection);

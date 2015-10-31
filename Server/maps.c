@@ -116,8 +116,8 @@ void get_map_developer_details(int connection, int map_id){
 
     char time_stamp_str[9]="";
     char verbose_date_stamp_str[50]="";
-    //get_time_stamp_str(  , time_stamp_str);
-    //get_verbose_date_str(    , verbose_date_stamp_str);
+    get_time_stamp_str(maps.map[map_id].upload_date, time_stamp_str);
+    get_verbose_date_str(maps.map[map_id].upload_date, verbose_date_stamp_str);
     send_text(connection, CHAT_SERVER, "%cUploaded: %s %s", c_green3+127, verbose_date_stamp_str, time_stamp_str);
 
     switch (maps.map[map_id].development_status){

@@ -241,9 +241,7 @@ void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
     //if move to new map is successful update database
     if(add_char_to_map(connection, new_map_id, new_map_tile)==true){
 
-        char sql[MAX_SQL_LEN]="";
-        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", new_map_tile, new_map_id, clients.client[connection].character_id);
-        push_sql_command(sql);
+        push_sql_command("UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", new_map_tile, new_map_id, clients.client[connection].character_id);
     }
 }
 
@@ -267,9 +265,7 @@ void start_char_move(int connection, int destination){
         clients.client[connection].frame=frame_stand;
         broadcast_actor_packet(connection, actor_cmd_stand_up, clients.client[connection].map_tile);
 
-        char sql[MAX_SQL_LEN]="";
-        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i", clients.client[connection].frame, clients.client[connection].character_id);
-        push_sql_command(sql);
+        push_sql_command("UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i", clients.client[connection].frame, clients.client[connection].character_id);
     }
 
     //check if the destination is walkable

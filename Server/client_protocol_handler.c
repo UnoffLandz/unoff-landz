@@ -20,7 +20,6 @@
 #include <stdio.h>  //support for sprintf
 #include <string.h> //support for memcpy strlen strcpy
 #include <stdint.h> //support for int16_t data type
-
 #include <stdlib.h> // testing only
 
 #include "client_protocol.h"
@@ -129,8 +128,8 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==MOVE_TO) {
 
         //get destination tile
-        int x_dest=Uint16_to_dec(packet[3], packet[4]);
-        int y_dest=Uint16_to_dec(packet[5], packet[6]);
+        int x_dest=uint16_t_to_dec(packet[3], packet[4]);
+        int y_dest=uint16_t_to_dec(packet[5], packet[6]);
         int tile_dest=get_tile(x_dest, y_dest, clients.client[connection].map_id);
 
         //move the char
@@ -302,7 +301,7 @@ void process_packet(int connection, unsigned char *packet){
 
         //returns a 16bit integer corresponding to the order of the object in the map 3d object list
 
-        int threed_object_list_pos=Uint16_to_dec(packet[3], packet[4]);
+        int threed_object_list_pos=uint16_t_to_dec(packet[3], packet[4]);
 
         log_event(EVENT_SESSION, "protocol HARVEST - started, char [%s], threed object list position [%i], map [%i]", clients.client[connection].char_name, threed_object_list_pos, clients.client[connection].map_id);
 
@@ -490,9 +489,8 @@ void process_packet(int connection, unsigned char *packet){
         clients.client[connection].active_chan=packet[3]-32;
 
         //update the database
-        char sql[MAX_SQL_LEN]="";
-        snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", packet[3], clients.client[connection].character_id);
-        push_sql_command(sql);
+        push_sql_command("UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", packet[3], clients.client[connection].character_id);
+
     }
 /***************************************************************************************************/
 

@@ -19,7 +19,7 @@
 
 #include <stdio.h> //support for FILE data type, fopen, fprintf, fflush, sprintf, printf
 #include <string.h> //support for strcpy
-#include <stdarg.h> // required for args support
+#include <stdarg.h> //required for args support
 
 #include "logging.h"
 #include "date_time_functions.h"

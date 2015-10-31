@@ -39,7 +39,7 @@ int Uint32_to_dec( unsigned char byte1, unsigned char byte2, unsigned char byte3
 
     NOTES   :
 */
-int Uint16_to_dec( unsigned char byte1, unsigned char byte2);
+int uint16_t_to_dec( unsigned char byte1, unsigned char byte2);
 
 
 /** RESULT  : converts a 32bit to an float value

@@ -20,7 +20,8 @@
 #include <string.h>     //support for memcpy and strlen
 #include <sys/socket.h> //support for send function
 #include <stdio.h>      //support for sprintf
-#include <SDL/SDL_types.h> //support for Uint16 data type
+#include <stdint.h>     //support uint16_t data type
+#include <stdarg.h>     //support for args
 
 #include "server_protocol.h"
 #include "character_inventory.h"
@@ -53,8 +54,8 @@ void send_new_minute(int connection, int minute){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
-        Uint16 minute;
+        uint16_t data_length;
+        uint16_t minute;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -67,8 +68,8 @@ void send_new_minute(int connection, int minute){
 
 
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
-    packet.minute=(Uint16)minute;
+    packet.data_length=(uint16_t)data_length;
+    packet.minute=(uint16_t)minute;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -81,7 +82,7 @@ void send_login_ok(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -92,7 +93,7 @@ void send_login_ok(int connection){
     //add data
     packet.protocol=LOG_IN_OK;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -105,7 +106,7 @@ void send_display_client_window(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -116,7 +117,7 @@ void send_display_client_window(int connection){
     //add data
     packet.protocol=DISPLAY_CLIENT_WINDOW;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -129,7 +130,7 @@ void send_login_not_ok(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -140,7 +141,7 @@ void send_login_not_ok(int connection){
     //add data
     packet.protocol=LOG_IN_NOT_OK;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -153,7 +154,7 @@ void send_you_dont_exist(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -164,7 +165,7 @@ void send_you_dont_exist(int connection){
     //add data
     packet.protocol=YOU_DONT_EXIST;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -177,8 +178,8 @@ void send_you_are(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
-        Uint16 connection;
+        uint16_t data_length;
+        uint16_t connection;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -189,8 +190,8 @@ void send_you_are(int connection){
     //add data
     packet.protocol=YOU_ARE;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
-    packet.connection=(Uint16)connection;
+    packet.data_length=(uint16_t)data_length;
+    packet.connection=(uint16_t)connection;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -203,7 +204,7 @@ void send_create_char_ok(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -214,7 +215,7 @@ void send_create_char_ok(int connection){
     //add data
     packet.protocol=CREATE_CHAR_OK;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -227,7 +228,7 @@ void send_create_char_not_ok(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -238,7 +239,7 @@ void send_create_char_not_ok(int connection){
     //add data
     packet.protocol=CREATE_CHAR_NOT_OK;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -251,7 +252,7 @@ void send_raw_text(int connection, int channel, char *text){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
         unsigned char channel;
         char text[1024];
     }packet;
@@ -268,7 +269,7 @@ void send_raw_text(int connection, int channel, char *text){
     //add data
     packet.protocol=RAW_TEXT;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
     packet.channel=(unsigned char)channel;
     strcpy(packet.text, text);
 
@@ -303,12 +304,12 @@ void send_here_your_inventory(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
         unsigned char slot_count;
 
         struct __attribute__((__packed__)){
 
-            Uint16 object_id;
+            uint16_t object_id;
             int amount;
             unsigned char slot;
             unsigned char flags;
@@ -324,13 +325,13 @@ void send_here_your_inventory(int connection){
     //add data
     packet.protocol=HERE_YOUR_INVENTORY;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     packet.slot_count=MAX_INVENTORY_SLOTS;
 
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        packet.inventory[i].object_id=(Uint16)clients.client[connection].inventory[i].object_id;
+        packet.inventory[i].object_id=(uint16_t)clients.client[connection].inventory[i].object_id;
         packet.inventory[i].amount=clients.client[connection].inventory[i].amount;
         packet.inventory[i].slot=(unsigned char)i;
         packet.inventory[i].flags=0;
@@ -347,12 +348,12 @@ void send_here_your_ground_items(int connection, int bag_id){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
         unsigned char slot_count;
 
         struct __attribute__((__packed__)){
 
-            Uint16 object_id;
+            uint16_t object_id;
             int amount;
             unsigned char slot;
         }inventory[MAX_BAG_SLOTS];
@@ -367,13 +368,13 @@ void send_here_your_ground_items(int connection, int bag_id){
     //add data
     packet.protocol=HERE_YOUR_GROUND_ITEMS;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     packet.slot_count=MAX_BAG_SLOTS;
 
     for(int i=0; i<MAX_BAG_SLOTS; i++){
 
-        packet.inventory[i].object_id=(Uint16)bag[bag_id].inventory[i].object_id;
+        packet.inventory[i].object_id=(uint16_t)bag[bag_id].inventory[i].object_id;
         packet.inventory[i].amount=bag[bag_id].inventory[i].amount;
         packet.inventory[i].slot=(unsigned char)i;
     }
@@ -389,7 +390,7 @@ void send_close_bag(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -400,7 +401,7 @@ void send_close_bag(int connection){
     //add data
     packet.protocol=CLOSE_BAG;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -413,7 +414,7 @@ void send_get_active_channels(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
         unsigned char active_channel;
         int chan_slot[MAX_CHAN_SLOTS];
 
@@ -427,7 +428,7 @@ void send_get_active_channels(int connection){
     //add data
     packet.protocol=GET_ACTIVE_CHANNELS;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     packet.active_channel=(unsigned char)clients.client[connection].active_chan;
 
@@ -447,60 +448,60 @@ void send_here_your_stats(int connection){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
 
-        Uint16 physique_pp;
-        Uint16 max_physique;
-        Uint16 coordination_pp;
-        Uint16 max_coordination;
-        Uint16 reasoning_pp;
-        Uint16 max_reasoning;
-        Uint16 will_pp;
-        Uint16 max_will;
-        Uint16 instinct_pp;
-        Uint16 max_instinct;
-        Uint16 vitality_pp;
-        Uint16 max_vitality;
+        uint16_t physique_pp;
+        uint16_t max_physique;
+        uint16_t coordination_pp;
+        uint16_t max_coordination;
+        uint16_t reasoning_pp;
+        uint16_t max_reasoning;
+        uint16_t will_pp;
+        uint16_t max_will;
+        uint16_t instinct_pp;
+        uint16_t max_instinct;
+        uint16_t vitality_pp;
+        uint16_t max_vitality;
 
-        Uint16 human;
-        Uint16 max_human;
-        Uint16 animal;
-        Uint16 max_animal;
-        Uint16 vegetal;
-        Uint16 max_vegetal;
-        Uint16 inorganic;
-        Uint16 max_inorganic;
-        Uint16 artificial;
-        Uint16 max_artificial;
-        Uint16 magic;
-        Uint16 max_magic;
+        uint16_t human;
+        uint16_t max_human;
+        uint16_t animal;
+        uint16_t max_animal;
+        uint16_t vegetal;
+        uint16_t max_vegetal;
+        uint16_t inorganic;
+        uint16_t max_inorganic;
+        uint16_t artificial;
+        uint16_t max_artificial;
+        uint16_t magic;
+        uint16_t max_magic;
 
-        Uint16 manufacturing_lvl;
-        Uint16 max_manufacturing_lvl;
-        Uint16 harvest_lvl;
-        Uint16 max_harvest_lvl;
-        Uint16 alchemy_lvl;
-        Uint16 max_alchemy_lvl;
-        Uint16 overall_lvl;
-        Uint16 max_overall_lvl;
-        Uint16 attack_lvl;
-        Uint16 max_attack_lvl;
-        Uint16 defence_lvl;
-        Uint16 max_defence_lvl;
-        Uint16 magic_lvl;
-        Uint16 max_magic_lvl;
-        Uint16 potion_lvl;
-        Uint16 max_potion_lvl;
+        uint16_t manufacturing_lvl;
+        uint16_t max_manufacturing_lvl;
+        uint16_t harvest_lvl;
+        uint16_t max_harvest_lvl;
+        uint16_t alchemy_lvl;
+        uint16_t max_alchemy_lvl;
+        uint16_t overall_lvl;
+        uint16_t max_overall_lvl;
+        uint16_t attack_lvl;
+        uint16_t max_attack_lvl;
+        uint16_t defence_lvl;
+        uint16_t max_defence_lvl;
+        uint16_t magic_lvl;
+        uint16_t max_magic_lvl;
+        uint16_t potion_lvl;
+        uint16_t max_potion_lvl;
 
-        Uint16 inventory_emu;
-        Uint16 max_inventory_emu;
-        Uint16 material_pts;
-        Uint16 max_material_pts;
-        Uint16 ethereal_pts;
-        Uint16 max_ethereal_pts;
-        Uint16 food_lvl;
-        Uint16 elapsed_book_time;
-        Uint16 unused;
+        uint16_t inventory_emu;
+        uint16_t max_inventory_emu;
+        uint16_t material_pts;
+        uint16_t max_material_pts;
+        uint16_t ethereal_pts;
+        uint16_t max_ethereal_pts;
+        uint16_t food_lvl;
+        uint16_t elapsed_book_time;
+        uint16_t unused;
 
         int manufacture_exp;
         int max_manufacture_exp;
@@ -517,8 +518,8 @@ void send_here_your_stats(int connection){
         int max_magic_exp;
         int potion_exp;
         int max_potion_exp;
-        Uint16 book_id;
-        Uint16 max_book_time;
+        uint16_t book_id;
+        uint16_t max_book_time;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -529,42 +530,42 @@ void send_here_your_stats(int connection){
     //add data
     packet.protocol=HERE_YOUR_STATS;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
-    packet.physique_pp=(Uint16)clients.client[connection].physique_pp;
-    packet.max_physique=(Uint16)clients.client[connection].max_physique;
-    packet.coordination_pp=(Uint16)clients.client[connection].coordination_pp;
-    packet.max_coordination=(Uint16)clients.client[connection].max_coordination;
-    packet.reasoning_pp=(Uint16)clients.client[connection].reasoning_pp;
-    packet.max_reasoning=(Uint16)clients.client[connection].max_reasoning;
-    packet.will_pp=(Uint16)clients.client[connection].will_pp;
-    packet.max_will=(Uint16)clients.client[connection].max_will;
-    packet.instinct_pp=(Uint16)clients.client[connection].instinct_pp;
-    packet.max_instinct=(Uint16)clients.client[connection].max_instinct;
-    packet.vitality_pp=(Uint16)clients.client[connection].vitality_pp;
-    packet.max_vitality=(Uint16)clients.client[connection].max_vitality;
+    packet.physique_pp=(uint16_t)clients.client[connection].physique_pp;
+    packet.max_physique=(uint16_t)clients.client[connection].max_physique;
+    packet.coordination_pp=(uint16_t)clients.client[connection].coordination_pp;
+    packet.max_coordination=(uint16_t)clients.client[connection].max_coordination;
+    packet.reasoning_pp=(uint16_t)clients.client[connection].reasoning_pp;
+    packet.max_reasoning=(uint16_t)clients.client[connection].max_reasoning;
+    packet.will_pp=(uint16_t)clients.client[connection].will_pp;
+    packet.max_will=(uint16_t)clients.client[connection].max_will;
+    packet.instinct_pp=(uint16_t)clients.client[connection].instinct_pp;
+    packet.max_instinct=(uint16_t)clients.client[connection].max_instinct;
+    packet.vitality_pp=(uint16_t)clients.client[connection].vitality_pp;
+    packet.max_vitality=(uint16_t)clients.client[connection].max_vitality;
 
-    packet.human=(Uint16)clients.client[connection].human;
-    packet.max_human=(Uint16)clients.client[connection].max_human;
-    packet.animal=(Uint16)clients.client[connection].animal;
-    packet.max_animal=(Uint16)clients.client[connection].max_animal;
-    packet.vegetal=(Uint16)clients.client[connection].vegetal;
-    packet.max_vegetal=(Uint16)clients.client[connection].max_vegetal;
-    packet.inorganic=(Uint16)clients.client[connection].inorganic;
-    packet.max_inorganic=(Uint16)clients.client[connection].max_inorganic;
-    packet.artificial=(Uint16)clients.client[connection].artificial;
-    packet.max_artificial=(Uint16)clients.client[connection].max_artificial;
-    packet.magic=(Uint16)clients.client[connection].magic;
-    packet.max_magic=(Uint16)clients.client[connection].max_magic;
+    packet.human=(uint16_t)clients.client[connection].human;
+    packet.max_human=(uint16_t)clients.client[connection].max_human;
+    packet.animal=(uint16_t)clients.client[connection].animal;
+    packet.max_animal=(uint16_t)clients.client[connection].max_animal;
+    packet.vegetal=(uint16_t)clients.client[connection].vegetal;
+    packet.max_vegetal=(uint16_t)clients.client[connection].max_vegetal;
+    packet.inorganic=(uint16_t)clients.client[connection].inorganic;
+    packet.max_inorganic=(uint16_t)clients.client[connection].max_inorganic;
+    packet.artificial=(uint16_t)clients.client[connection].artificial;
+    packet.max_artificial=(uint16_t)clients.client[connection].max_artificial;
+    packet.magic=(uint16_t)clients.client[connection].magic;
+    packet.max_magic=(uint16_t)clients.client[connection].max_magic;
 
-    packet.inventory_emu=(Uint16)get_inventory_emu(connection);
-    packet.max_inventory_emu=(Uint16)get_max_inventory_emu(connection);
-    packet.material_pts=(Uint16)clients.client[connection].material_pts;
-    packet.max_material_pts=(Uint16)clients.client[connection].max_material_pts;
-    packet.ethereal_pts=(Uint16)clients.client[connection].ethereal_pts;
-    packet.max_ethereal_pts=(Uint16)clients.client[connection].max_ethereal_pts;
-    packet.food_lvl=(Uint16)clients.client[connection].food_lvl;
-    packet.elapsed_book_time=(Uint16)clients.client[connection].elapsed_book_time;
+    packet.inventory_emu=(uint16_t)get_inventory_emu(connection);
+    packet.max_inventory_emu=(uint16_t)get_max_inventory_emu(connection);
+    packet.material_pts=(uint16_t)clients.client[connection].material_pts;
+    packet.max_material_pts=(uint16_t)clients.client[connection].max_material_pts;
+    packet.ethereal_pts=(uint16_t)clients.client[connection].ethereal_pts;
+    packet.max_ethereal_pts=(uint16_t)clients.client[connection].max_ethereal_pts;
+    packet.food_lvl=(uint16_t)clients.client[connection].food_lvl;
+    packet.elapsed_book_time=(uint16_t)clients.client[connection].elapsed_book_time;
     packet.unused=0;
 
     packet.manufacture_exp=clients.client[connection].manufacture_exp;
@@ -582,8 +583,8 @@ void send_here_your_stats(int connection){
     packet.max_magic_exp=clients.client[connection].max_magic_exp;
     packet.potion_exp=clients.client[connection].potion_exp;
     packet.max_potion_exp=clients.client[connection].max_potion_exp;
-    packet.book_id=(Uint16)clients.client[connection].book_id;
-    packet.max_book_time=(Uint16)clients.client[connection].max_book_time;
+    packet.book_id=(uint16_t)clients.client[connection].book_id;
+    packet.max_book_time=(uint16_t)clients.client[connection].max_book_time;
 
     send_packet(connection, &packet, packet_length);
 }
@@ -596,7 +597,7 @@ void send_change_map(int connection, char *elm_filename){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
         char elm_filename[1024];
     }packet;
 
@@ -612,7 +613,7 @@ void send_change_map(int connection, char *elm_filename){
     //add data
     packet.protocol=CHANGE_MAP;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
     strcpy(packet.elm_filename, elm_filename);
 
@@ -627,12 +628,12 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
   struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
-        Uint16 connection;
-        Uint16 x_pos;
-        Uint16 y_pos;
-        Uint16 z_pos;
-        Uint16 rot;
+        uint16_t data_length;
+        uint16_t connection;
+        uint16_t x_pos;
+        uint16_t y_pos;
+        uint16_t z_pos;
+        uint16_t rot;
         unsigned char char_type;
         unsigned char unused;
         unsigned char skin_type;
@@ -646,8 +647,8 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
         unsigned char cape_type;
         unsigned char helmet_type;
         unsigned char frame_type;
-        Uint16 max_health;
-        Uint16 current_health;
+        uint16_t max_health;
+        uint16_t current_health;
         unsigned char player_type;
         char banner[80];
     }_packet1;
@@ -679,17 +680,17 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
 
     //add data to packet 1
     _packet1.protocol=ADD_NEW_ENHANCED_ACTOR;
-    _packet1.connection=(Uint16)connection;
+    _packet1.connection=(uint16_t)connection;
     int data_length=(int)*packet_length-2;
-    _packet1.data_length=(Uint16)data_length;
+    _packet1.data_length=(uint16_t)data_length;
 
     //_packet1.data_length=*packet_length-2;
 
     int map_id=clients.client[connection].map_id;
     int map_axis=maps.map[map_id].map_axis;
 
-    _packet1.x_pos=(Uint16)clients.client[connection].map_tile % (Uint16)map_axis;
-    _packet1.y_pos=(Uint16)clients.client[connection].map_tile / (Uint16)map_axis;
+    _packet1.x_pos=(uint16_t)clients.client[connection].map_tile % (uint16_t)map_axis;
+    _packet1.y_pos=(uint16_t)clients.client[connection].map_tile / (uint16_t)map_axis;
     _packet1.z_pos=0; //z position (set to 0 pending further development)
     _packet1.rot=45; //rotation angle (set to 45 pending further development)
 
@@ -730,8 +731,8 @@ void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_l
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
-        Uint16 connection;
+        uint16_t data_length;
+        uint16_t connection;
     }_packet;
 
     //calculate the packet length
@@ -743,10 +744,10 @@ void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_l
     //add data to packet 1
     _packet.protocol=REMOVE_ACTOR;
     int data_length=(int)*packet_length-2;
-    _packet.data_length=(Uint16)data_length;
+    _packet.data_length=(uint16_t)data_length;
 
     //_packet.data_length=*packet_length-2;
-    _packet.connection=(Uint16)connection;
+    _packet.connection=(uint16_t)connection;
 
     memcpy(packet, &_packet, sizeof(_packet));
 }
@@ -759,8 +760,8 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
-        Uint16 connection;
+        uint16_t data_length;
+        uint16_t connection;
         unsigned char move;
     }_packet;
 
@@ -773,10 +774,10 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
     //add data to packet 1
     _packet.protocol=ADD_ACTOR;
     int data_length=(int)*packet_length-2;
-    _packet.data_length=(Uint16)data_length;
+    _packet.data_length=(uint16_t)data_length;
 
     //_packet.data_length=*packet_length-2;
-    _packet.connection=(Uint16)connection;
+    _packet.connection=(uint16_t)connection;
     _packet.move=move;
 
     memcpy(packet, &_packet, sizeof(_packet));
@@ -790,8 +791,8 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
-        Uint16 object_id;
+        uint16_t data_length;
+        uint16_t object_id;
         int amount;
         unsigned char slot;
         unsigned char flags;
@@ -806,9 +807,9 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
     //add data to packet
     packet.protocol=GET_NEW_INVENTORY_ITEM;
     int data_length=(int)packet_length-2;
-    packet.data_length=(Uint16)data_length;
+    packet.data_length=(uint16_t)data_length;
 
-    packet.object_id=(Uint16)object_id;
+    packet.object_id=(uint16_t)object_id;
     packet.amount=amount;
     packet.slot=(unsigned char)slot;
     packet.flags=0;
@@ -824,9 +825,9 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
-        Uint16 x_pos;
-        Uint16 y_pos;
+        uint16_t data_length;
+        uint16_t x_pos;
+        uint16_t y_pos;
         unsigned char bag_list_number;
     }_packet;
 
@@ -839,11 +840,11 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
     //add data to packet
     _packet.protocol=GET_NEW_BAG;
     int data_length=(int)*packet_length-2;
-    _packet.data_length=(Uint16)data_length;
+    _packet.data_length=(uint16_t)data_length;
 
     //_packet.data_length=*packet_length-2;
-    _packet.x_pos=(Uint16)get_x_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
-    _packet.y_pos=(Uint16)get_y_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
+    _packet.x_pos=(uint16_t)get_x_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
+    _packet.y_pos=(uint16_t)get_y_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
     _packet.bag_list_number=(unsigned char)bag_list_number;
 
     memcpy(packet, &_packet, sizeof(_packet));

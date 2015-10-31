@@ -37,21 +37,18 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-convert Uint16 to uint16_t (remove sdl library)
-database tables need to be order independent (as (*) causes too many bugs)
-test multiple guild application handling
-convert elm_file field in MAP TABLE to description
-implement map_author, map_author_email, map_status, map_upload_date in MAP_TABLE
-#map uploaded date needs implementation
-convert db inventory storage to blob and separately record all drops/pick ups in db
-db record of chars leaving and joining guilds
+DONE convert uint16_t to uint16_t (remove sdl library)
+DONE convert elm_file field in MAP TABLE to description
+DONE implement map_author, map_author_email, map_status, map_upload_date in MAP_TABLE
+DONE #map uploaded date implemented
+DONE finish making push_sql the same as send_text
+DONE #guild_details command (equiv of #char_details)
 
-finish making push_sql the same as send_text
+test multiple guild application handling
 finish script loading
 widen distance that new/beamed chars are from other chars
 need #GM guild channel functionality
 need #IG guild channel functionality
-need #command to give guild details (same as char details)
 need OPS #command to #pm all active players (surely this is mod channel???)
 need guild channel hello/goodbye messages
 need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
@@ -59,18 +56,19 @@ need #command to change guild tag colour
 need #command to change guild description
 need #leave_guild
 need #command to withdraw application to join guild
-need #command to #pm all guild members (guild master only)
-implement guild stats
 
 walk to towards bag when clicked on if char is not standing on bag
 extend add_client_to_map function so that existing bags are shown to new client
 implement pick up bag
 implement move item between slots in bag
 implement bag poof (include reset poof time on add/drop from bag)
-
 remove character_type_name field from CHARACTER_TYPE_TABLE
 map object reserve respawn
 
+need #command to #letter all guild members (guild master only)
+implement guild stats
+Table to separately record all drops/pick ups in db
+Table to separately record chars leaving and joining guilds
 save guild applicant list to database
 document idle_buffer2.h
 convert attribute struct so as attribute type can be addressed programatically
@@ -535,7 +533,6 @@ void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
         stop_server();
     }
 
-    char sql[MAX_SQL_LEN]="";
     game_data.game_minutes++;
 
     //update game time
@@ -544,12 +541,10 @@ void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
         game_data.game_minutes=0;
         game_data.game_days++;
 
-        snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_DAYS=%i WHERE GAME_DATA_ID=1", game_data.game_days);
-        push_sql_command(sql);
+        push_sql_command("UPDATE GAME_DATA_TABLE SET GAME_DAYS=%i WHERE GAME_DATA_ID=1", game_data.game_days);
     }
 
-    snprintf(sql, MAX_SQL_LEN, "UPDATE GAME_DATA_TABLE SET GAME_MINUTES=%i WHERE GAME_DATA_ID=1", game_data.game_minutes);
-    push_sql_command(sql);
+    push_sql_command("UPDATE GAME_DATA_TABLE SET GAME_MINUTES=%i WHERE GAME_DATA_ID=1", game_data.game_minutes);
  }
 
 
@@ -610,9 +605,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                     send_new_minute(i, game_data.game_minutes);
 
                     //update database with time char was last in game
-                    char sql[MAX_SQL_LEN]="";
-                    snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[i].time_of_last_minute, clients.client[i].character_id);
-                    push_sql_command(sql);
+                    push_sql_command("UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[i].time_of_last_minute, clients.client[i].character_id);
                 }
 
                 //process any char movements
@@ -669,7 +662,8 @@ int main(int argc, char *argv[]){
         printf("-C optional [""database file name""]      ...create database\n");
         printf("-S optional [""database file name""]      ...start server\n");
         printf("-U optional [""database file name""]      ...upgrade database\n");
-        printf("-M [map id] [""map name""] [""elm file name""] optional [""database file name""]    ...load map\n");
+        printf("-M [map id] [""elm filename""] [""map name""] [""author name""] [""author email""] [""development status code""] optional [""database file name""]    ...load map\n");
+        printf("development status codes 0=development 1=testing 2=final");
         printf("-L optional [""database file name""]      ...list maps\n");
 
         exit(EXIT_FAILURE);
@@ -712,7 +706,7 @@ int main(int argc, char *argv[]){
                 open_database(db_filename);
 
                 //use intptr_t to prevent int truncation issues when compiled as 64bit
-                add_db_map((intptr_t)argv[2], (char*)argv[3], (char*)argv[4]);
+                add_db_map((intptr_t)argv[2], (char*)argv[3], (char*)argv[4], (char*)argv[5], (char*)argv[6], (char*)argv[7], (intptr_t)argv[8]);
                 break;
             }
 

@@ -178,7 +178,7 @@ static int hash_cp(int connection, char *text) {
 }
 
 
-static int hash_details(int connection, char *text) {
+static int hash_char_details(int connection, char *text) {
 
     /** RESULT  : handles details hash command
 
@@ -191,21 +191,21 @@ static int hash_details(int connection, char *text) {
 
     char char_name[80]="";
 
-    // if char name not specified, substitute with calling char name
     if(sscanf(text, "%*s %s", char_name)==-1){
 
-        push_command(connection, IDLE_BUFFER_PROCESS_HASH_DETAILS, clients.client[connection].char_name);
+        // if char name not specified, substitute with calling char name
+        push_command(connection, IDLE_BUFFER_PROCESS_HASH_DETAILS, clients.client[connection].char_name, 0);
+        return 0;
+    }
+    else if(sscanf(text, "%*s %s", char_name)==1){
+
+        // if char name is specified use that name
+        push_command(connection, IDLE_BUFFER_PROCESS_HASH_DETAILS, char_name, 0);
         return 0;
     }
 
-    // if char name is specified use that name
-    if(sscanf(text, "%*s %s", char_name)==1){
+    send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "you need to use the format #CHAR_DETAILS [character name] or #CD [character name");
 
-        push_command(connection, IDLE_BUFFER_PROCESS_HASH_DETAILS, char_name);
-        return 0;
-    }
-
-    send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "you need to use the format #DETAILS [character name]");
     return 0;
 }
 
@@ -648,7 +648,7 @@ static int hash_list_guild(int connection, char *text) {
     // if list type is not specified, default to RANK
     if(sscanf(text, "%*s %s", list_type)==-1){
 
-        push_command(connection, IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK, "");
+        push_command(connection, IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK, "", 0);
         return 0;
     }
 
@@ -659,12 +659,12 @@ static int hash_list_guild(int connection, char *text) {
 
         if(strcmp(list_type, "R")==0 || strcmp(list_type, "RANK")==0){
 
-            push_command(connection, IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK, "");
+            push_command(connection, IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK, "", 0);
             return 0;
         }
         else if(strcmp(list_type, "T")==0 || strcmp(list_type, "TIME")==0){
 
-            push_command(connection, IDLE_BUFFER_PROCESS_LIST_GUILD_BY_TIME, "");
+            push_command(connection, IDLE_BUFFER_PROCESS_LIST_GUILD_BY_TIME, "", 0);
             return 0;
         }
     }
@@ -706,8 +706,9 @@ static int hash_map(int connection, char *text) {
     char map_name[80]="";
     int map_id;
 
-    if(sscanf(text, "%*s")==0){
+    if(sscanf(text, "%*s *s")==-1){
 
+        //if no tail specified in command, default to current map
         map_id=clients.client[connection].map_id;
     }
     else if(sscanf(text, "%*s %[^\n]", map_name)==1){
@@ -729,6 +730,48 @@ static int hash_map(int connection, char *text) {
     get_map_details(connection, map_id);
     get_map_developer_details(connection, map_id);
 
+    return 0;
+}
+
+
+static int hash_guild_details(int connection, char *text) {
+
+    /** RESULT  : guild information
+
+        RETURNS : void
+
+        PURPOSE :
+
+        NOTES   :
+    */
+
+    char guild_tag[80]="";
+    int guild_id;
+
+    if(sscanf(text, "%*s %s", guild_tag)==-1){
+
+        // if no tail specified in command, default to current guild
+        guild_id=clients.client[connection].guild_id;
+    }
+    else if(sscanf(text, "%*s %s", guild_tag)==1){
+
+        // if tail specified in command, use that to indicate guild
+        guild_id=get_guild_id(guild_tag);
+        if(guild_id==-1){
+
+            send_text(connection, CHAT_SERVER, "%cGuild does not exist", c_red3+127);
+            return 0;
+        }
+    }
+    else {
+
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #GUILD_DETAILS [guild_tag] or #GD [guild_tag]", c_red3+127);
+        return 0;
+    }
+
+    push_command(connection, IDLE_BUFFER_PROCESS_GUILD_DETAILS , "", guild_id);
+
+    // send_guild_details(connection, guild_id);
     return 0;
 }
 
@@ -786,7 +829,8 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#CHANNEL_LIST",           false, 0,       PERMISSION_1, hash_cl},
     {"#CP",                     false, 0,       PERMISSION_1, hash_cp},
     {"#CHANNEL_PARTICIPANTS",   false, 0,       PERMISSION_1, hash_cp},
-    {"#DETAILS",                false, 0,       PERMISSION_1, hash_details},
+    {"#CHAR_DETAILS",           false, 0,       PERMISSION_1, hash_char_details},
+    {"#CD",                     false, 0,       PERMISSION_1, hash_char_details},
     {"#BEAM_ME",                false, 0,       PERMISSION_1, hash_beam_me},
     {"#BEAM",                   false, 0,       PERMISSION_1, hash_beam_me},
     {"#PM",                     false, 0,       PERMISSION_1, hash_pm},
@@ -813,6 +857,8 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#LG",                      true,   0,     PERMISSION_1, hash_list_guild},
     {"#WHERE_AM_I",              false,  0,     PERMISSION_1, hash_where_am_i},
     {"#MAP",                     false,  0,     PERMISSION_1, hash_map},
+    {"#GUILD_DETAILS",           false,  0,     PERMISSION_1, hash_guild_details},
+    {"#GD",                      false,  0,     PERMISSION_1, hash_guild_details},
     {"#CLEAR_INVENTORY",         false,  0,     PERMISSION_3, hash_clear_inventory},
     {"", false, 0, 0, 0}
 };
@@ -843,8 +889,6 @@ static const struct hash_command_array_entry *find_hash_command_entry(char *comm
 
     return NULL;
 }
-
-
 
 
 void process_hash_commands(int connection, char *text){

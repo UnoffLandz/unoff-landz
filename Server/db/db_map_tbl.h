@@ -59,11 +59,15 @@ edible                       4) edible
 #define MAP_TABLE_SQL "CREATE TABLE MAP_TABLE( \
         MAP_ID              INTEGER PRIMARY KEY     NOT NULL, \
         MAP_NAME            TEXT, \
-        ELM_FILENAME        TEXT, \
-        ELM_FILE            BLOB, \
+        MAP_DESCRIPTION     TEXT, \
+        ELM_FILE_NAME       TEXT, \
         MAP_AXIS            INT,  \
         TILE_MAP            BLOB, \
-        HEIGHT_MAP          BLOB  \
+        HEIGHT_MAP          BLOB, \
+        MAP_AUTHOR          TEXT, \
+        MAP_AUTHOR_EMAIL    TEXT, \
+        MAP_UPLOAD_DATE     INT,  \
+        MAP_STATUS          INT \
         )"
 
 /** RESULT  : loads data from the map table into the map array
@@ -85,7 +89,8 @@ void load_db_maps();
 
     NOTES   :
 **/
-void add_db_map(int map_id, char *map_name, char *elm_file_name);
+void add_db_map(int map_id, char *map_name, char *elm_file, char *map_description, char *map_author,
+    char *map_author_email, int status);
 
 
 /** RESULT  : determines if map id exists on database

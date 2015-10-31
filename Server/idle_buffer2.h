@@ -31,13 +31,12 @@ void push_idle_buffer2(int connection, int process_type, const unsigned char *pa
 
 
 void push_sql_command(const char *fmt, ...);
-//void push_sql_command(const char *sql);
 
 
 void process_idle_buffer2();
 
 
-void push_command(int connection, int process_type, char *char_name);
+void push_command(int connection, int process_type, char *char_name, int guild_id);
 
 #ifdef __cplusplus
 }
@@ -51,6 +50,7 @@ enum{//database buffer processing types
     IDLE_BUFFER_PROCESS_LOGIN,
     IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK,
     IDLE_BUFFER_PROCESS_LIST_GUILD_BY_TIME,
+    IDLE_BUFFER_PROCESS_GUILD_DETAILS
 };
 
 #endif // IDLE_BUFFER2_H_INCLUDED

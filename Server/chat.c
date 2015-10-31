@@ -101,15 +101,12 @@ int join_channel(int connection, int chan){
 
             clients.client[connection].chan[i]=chan;
 
-            char sql[MAX_SQL_LEN]="";
-            snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", i, chan, clients.client[connection].character_id);
-            push_sql_command(sql);
+            push_sql_command("UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", i, chan, clients.client[connection].character_id);
 
             clients.client[connection].active_chan=i;
             send_get_active_channels(connection);
 
-            snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
-            push_sql_command(sql);
+            push_sql_command("UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
 
             //echo back to player which channel was just joined and its description etc
             send_text(connection, CHAT_SERVER, "%cYou joined channel %s", c_green3+127, channel[chan].channel_name);
@@ -139,7 +136,6 @@ int leave_channel(int connection, int chan){
     /** public function - see header */
 
     char text_out[80]="";
-    char sql[MAX_SQL_LEN]="";
 
     int slot=player_in_chan(connection, chan);
 
@@ -156,8 +152,7 @@ int leave_channel(int connection, int chan){
     //null the channel slot
     clients.client[connection].chan[slot]=0;
 
-    snprintf(sql, MAX_SQL_LEN,"UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", slot, chan, clients.client[connection].character_id);
-    push_sql_command(sql);
+    push_sql_command("UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", slot, chan, clients.client[connection].character_id);
 
     // need to echo back to player which channel was just joined and its description etc
     send_text(connection, CHAT_SERVER, "%cyou left channel %s", c_green3+127, channel[chan].channel_name);
@@ -180,8 +175,7 @@ int leave_channel(int connection, int chan){
 
     send_get_active_channels(connection);
 
-    sprintf(sql, "UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
-    push_sql_command(sql);
+    push_sql_command("UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
 
     if(clients.client[connection].active_chan==0){
 

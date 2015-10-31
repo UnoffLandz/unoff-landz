@@ -21,7 +21,7 @@
 
 #include <string.h> //support for memcpy
 #include <stdio.h> //support for sprintf
-#include <SDL/SDL_types.h> //support for Uint16 data type
+#include <stdint.h>  //support for uint_16 data type
 
 #include "global.h"
 #include "colour.h"
@@ -93,7 +93,7 @@ void add_new_character(int connection, const unsigned char *packet){
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
-        Uint16 data_length;
+        uint16_t data_length;
         char char_name_and_password[80];
     }_packet_1;
 

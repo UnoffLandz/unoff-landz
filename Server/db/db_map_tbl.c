@@ -77,9 +77,13 @@ void load_db_maps(){
         strcpy(maps.map[map_id].map_name, (char*)sqlite3_column_text(stmt, 1));
         log_event(EVENT_MAP_LOAD, "Loading map [%i] map_name [%s]", map_id,  maps.map[map_id].map_name);
 
-        //get map elm file and add client map path so that send_change_map protocol tells client where to find the file
-        sprintf(maps.map[map_id].elm_filename, "%s%s", CLIENT_MAP_PATH, (char*)sqlite3_column_text(stmt, 2));
-        log_text(EVENT_MAP_LOAD, "elm file name [%s]", maps.map[map_id].elm_filename);
+        //get map description
+        strcpy(maps.map[map_id].description, (char*)sqlite3_column_text(stmt, 2));
+        log_text(EVENT_MAP_LOAD, "map description [%s]", maps.map[map_id].description);
+
+        //get elm filename
+        sprintf(maps.map[map_id].elm_filename, "%s%s", CLIENT_MAP_PATH, (char*)sqlite3_column_text(stmt, 3));
+        log_text(EVENT_MAP_LOAD, "elm filename [%s]", maps.map[map_id].elm_filename);
 
         //get map axis
         maps.map[map_id].map_axis=sqlite3_column_int(stmt, 4);
@@ -91,6 +95,22 @@ void load_db_maps(){
         //get height map
         int height_map_size=sqlite3_column_bytes(stmt, 6);
         memcpy(maps.map[map_id].height_map, (unsigned char*)sqlite3_column_blob(stmt, 6), (size_t)height_map_size);
+
+        //get map author
+        strcpy(maps.map[map_id].author, (char*)sqlite3_column_text(stmt, 7));
+        log_text(EVENT_MAP_LOAD, "map author [%s]", maps.map[map_id].author);
+
+        //get map author email
+        strcpy(maps.map[map_id].author_email, (char*)sqlite3_column_text(stmt, 8));
+        log_text(EVENT_MAP_LOAD, "map author email[%s]", maps.map[map_id].author_email);
+
+        //get map status
+        maps.map[map_id].development_status=sqlite3_column_int(stmt, 9);
+        log_text(EVENT_MAP_LOAD, "map status[%i]", maps.map[map_id].development_status);
+
+        //get map upload date
+        maps.map[map_id].upload_date=sqlite3_column_int(stmt, 10);
+        log_text(EVENT_MAP_LOAD, "map upload date[%i]", maps.map[map_id].upload_date);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", map_id, maps.map[map_id].map_name);
 
@@ -172,7 +192,8 @@ int get_db_map_exists(int map_id) {
 }
 
 
-void add_db_map(int map_id, char *map_name, char *elm_filename){
+void add_db_map(int map_id, char *elm_filename, char *map_name, char *map_description, char *map_author,
+    char *map_author_email, int status){
 
     /** public function - see header */
 
@@ -426,11 +447,16 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
     char sql[MAX_SQL_LEN]="INSERT INTO MAP_TABLE("  \
                 "MAP_ID," \
                 "MAP_NAME,"  \
-                "ELM_FILENAME," \
+                "MAP_DESCRIPTION," \
+                "ELM_FILE_NAME, " \
                 "MAP_AXIS," \
                 "TILE_MAP," \
-                "HEIGHT_MAP" \
-                ") VALUES(?, ?, ?, ?, ?, ?)";
+                "HEIGHT_MAP, " \
+                "MAP_AUTHOR, " \
+                "MAP_AUTHOR_EMAIL, " \
+                "MAP_UPLOAD_DATE, " \
+                "MAP_STATUS"
+                ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
@@ -440,10 +466,15 @@ void add_db_map(int map_id, char *map_name, char *elm_filename){
 
     sqlite3_bind_int(stmt, 1, map_id);
     sqlite3_bind_text(stmt, 2, map_name, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, elm_filename, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 4, map_axis);
-    sqlite3_bind_blob(stmt, 5, tile_map_byte, tile_map_size, NULL);
-    sqlite3_bind_blob(stmt, 6, height_map_byte, height_map_size, NULL);
+    sqlite3_bind_text(stmt, 3, map_description, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, elm_filename, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 5, map_axis);
+    sqlite3_bind_blob(stmt, 6, tile_map_byte, tile_map_size, NULL);
+    sqlite3_bind_blob(stmt, 7, height_map_byte, height_map_size, NULL);
+    sqlite3_bind_text(stmt, 8, map_author, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 9, map_author_email, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 10, status);
+    sqlite3_bind_int(stmt, 11, time(NULL));
 
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {

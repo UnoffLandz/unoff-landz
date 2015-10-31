@@ -101,9 +101,7 @@ bool add_to_inventory(int connection, int object_id, int amount, int slot){
     send_get_new_inventory_item( connection, object_id, clients.client[connection].inventory[slot].amount, slot);
 
     //update_database
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[slot].amount, clients.client[connection].character_id, slot);
-    push_sql_command(sql);
+    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[slot].amount, clients.client[connection].character_id, slot);
 
     return true;
 }
@@ -132,9 +130,7 @@ int remove_from_inventory(int connection, int object_id, int amount, int slot){
     send_get_new_inventory_item( connection, object_id, clients.client[connection].inventory[slot].amount, slot);
 
     //update_database
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[slot].amount, clients.client[connection].character_id, slot);
-    push_sql_command(sql);
+    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[slot].amount, clients.client[connection].character_id, slot);
 
     return amount;
 }
@@ -158,12 +154,8 @@ void move_inventory_item(int connection, int from_slot, int to_slot){
     send_get_new_inventory_item(connection, object_id, amount, to_slot);
 
     //update_database
-    char sql[MAX_SQL_LEN]="";
+    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[from_slot].amount, clients.client[connection].character_id, from_slot);
+    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[to_slot].amount, clients.client[connection].character_id, to_slot);
 
-    snprintf(sql, MAX_SQL_LEN, "UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[from_slot].amount, clients.client[connection].character_id, from_slot);
-    push_sql_command(sql);
-
-    snprintf(sql, MAX_SQL_LEN, "UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[to_slot].amount, clients.client[connection].character_id, to_slot);
-    push_sql_command(sql);
 }
 

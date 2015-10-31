@@ -25,7 +25,7 @@ int Uint32_to_dec( unsigned char byte1, unsigned char byte2, unsigned char byte3
 }
 
 
-int Uint16_to_dec( unsigned char byte1, unsigned char byte2){
+int uint16_t_to_dec( unsigned char byte1, unsigned char byte2){
 
     /** public function - see header */
 

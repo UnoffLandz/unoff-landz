@@ -440,40 +440,25 @@ void create_database(const char *db_filename){
     add_db_e3d(11, "branch4.e3d", 140);
     add_db_e3d(12, "branch5.e3d", 140);
     add_db_e3d(13, "branch6.e3d", 140);
-    add_db_e3d(15, "flowerorange1.e3d", 29);
-    add_db_e3d(16, "flowerorange2.e3d", 29);
-    add_db_e3d(17, "flowerorange3.e3d", 29);
+    //add_db_e3d(14, "log1.e3d", 408);
+    //add_db_e3d(15, "log2.e3d", 408);
+    add_db_e3d(16, "flowerorange1.e3d", 29);
+    add_db_e3d(17, "flowerorange2.e3d", 29);
+    add_db_e3d(18, "flowerorange3.e3d", 29);
+    add_db_e3d(19, "flowerpink1.e3d", 28);
+    add_db_e3d(20, "flowerwhite1.e3d", 29);
+    add_db_e3d(21, "flowerwhite2.e3d", 29);
+    add_db_e3d(22, "flowerwhite3.e3d", 29);
 
     add_db_object(405, "cabbage", 1, 1, 2);
     add_db_object(407, "tomato", 1, 1, 2);
     add_db_object(408, "carrot", 1, 1, 2);
     add_db_object(140, "stick", 1, 0, 2);
     add_db_object(29, "tiger lily", 1, 0, 1);
+    add_db_object(28, "chrysanthemum", 1, 0, 1);
+    //add_db_object(29, "impatiens", 1, 0, 1);
 
-/*
-    add_db_object(1, "cabbage.e3d", "cabbage", 405, 1, 1);
-    add_db_object(2, "tomatoeplant1.e3d", "tomato", 407, 1, 1);
-    add_db_object(3, "tomatoeplant2.e3d", "tomato", 407, 1, 1);
-    add_db_object(4, "foodtomatoe.e3d", "tomato", 407, 1, 1);
-    add_db_object(5, "food_carrot.e3d", "carrot", 408, 1, 1);
-    add_db_object(6, "log1.e3d", "log", 408, 1, 0);
-    add_db_object(7, "log2.e3d", "log", 408, 1, 0);
-    add_db_object(8, "flowerpink1.e3d", "Chrysanthemum", 28, 1, 0);
-    add_db_object(9, "branch1.e3d", "stick", 140, 1, 0);
-    add_db_object(10, "branch2.e3d", "stick", 140, 1, 0);
-    add_db_object(11, "branch3.e3d", "stick", 140, 1, 0);
-    add_db_object(12, "branch4.e3d", "stick", 140, 1, 0);
-    add_db_object(13, "branch5.e3d", "stick", 140, 1, 0);
-    add_db_object(14, "branch6.e3d", "stick", 140, 1, 0);
-    add_db_object(15, "flowerorange1.e3d", "Tiger Lily", 29, 1, 0);
-    add_db_object(16, "flowerorange2.e3d", "Tiger Lily", 29, 1, 0);
-    add_db_object(17, "flowerorange3.e3d", "Tiger Lily", 29, 1, 0);
-    add_db_object(18, "flowerwhite1.e3d", "Impatiens", 29, 1, 0);
-    add_db_object(19, "flowerwhite2.e3d", "Impatiens", 29, 1, 0);
-    add_db_object(20, "flowerwhite3.e3d", "Impatiens", 29, 1, 0);
-*/
-
-    add_db_map(1, "Isla Prima", "startmap.elm");
+    add_db_map(1, "startmap.elm", "Isla Prima", "The start map", "Eternal Lands map", "n/a", 2);
 
     add_db_guild("Operators", "OPS", c_grey3, "The server operators guild", PERMISSION_3, GUILD_ACTIVE);
 
@@ -729,8 +714,10 @@ void _create_database(const char *db_scriptfile){
             parse_line(line, output);
 
             int map_id=atoi(output[0]);
+            int status=atoi(output[6]);
+            int upload_date=atoi(output[7]);
 
-            //add_db_map(map_id, output[1], output[2]);
+            add_db_map(map_id, output[1], output[2], output[3], output[4], output[5], status, upload_date);
         }
 
         //ADD_GUILD

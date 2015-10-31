@@ -29,7 +29,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         4    Uint8               channel
         5-   (null terminated    text
              char array)
@@ -40,8 +40,8 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
-        3-4  Uint16              character-id (=same as socket connection number)
+        2-3  uint16_t              data-length (=packet length-2)
+        3-4  uint16_t              character-id (=same as socket connection number)
         5    Uint8               move command
 */
     YOU_ARE=3,
@@ -49,8 +49,8 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
-        3-4  Uint16              character id (same as client sock number)
+        2-3  uint16_t              data-length (=packet length-2)
+        3-4  uint16_t              character id (same as client sock number)
 */
 
     SYNC_CLOCK=4,
@@ -59,9 +59,9 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
-        3-4  Uint16              character-id (=same as socket connection number)
-        4-5  Uint16              minutes since midnight
+        2-3  uint16_t              data-length (=packet length-2)
+        3-4  uint16_t              character-id (=same as socket connection number)
+        4-5  uint16_t              minutes since midnight
 */
 
     REMOVE_ACTOR=6,
@@ -69,8 +69,8 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
-        3-4  Uint16              character-id (=same as socket connection number)
+        2-3  uint16_t              data-length (=packet length-2)
+        3-4  uint16_t              character-id (=same as socket connection number)
 */
 
     CHANGE_MAP=7,
@@ -78,7 +78,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         3-   (null terminated    map elm file name
              char array)
 */
@@ -90,11 +90,11 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         4    Uint8               slot count
 
         REPEAT FOR EACH SLOT...
-        5-6 { Uint16              object id
+        5-6 { uint16_t              object id
         7-11{ Uint32              amount
         12  { Uint8               slot
         13  { Uint8               flags
@@ -107,11 +107,11 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         4    Uint8               slot count
 
         REPEAT FOR EACH SLOT...
-        5-6 { Uint16              object id
+        5-6 { uint16_t              object id
         7-11{ Uint32              amount
         12  { Uint8               slot
 */
@@ -123,7 +123,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
 */
 
     GET_NEW_BAG=27, //creates empty bag
@@ -131,9 +131,9 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
-        4-5  Uint16              x-pos on map
-        6-7  Uint16              y-pos on map
+        2-3  uint16_t              data-length (=packet length-2)
+        4-5  uint16_t              x-pos on map
+        6-7  uint16_t              y-pos on map
         8    Uint8               bag list number
 */
 
@@ -144,12 +144,12 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
-        3-4  Uint16              character-id (=same as socket connection number)
-        4-5  Uint16              x-position on map
-        5-6  Uint16              y-position on map
-        6-7  Uint16              z-position on map
-        7-8  Uint16              rotation angle
+        2-3  uint16_t              data-length (=packet length-2)
+        3-4  uint16_t              character-id (=same as socket connection number)
+        4-5  uint16_t              x-position on map
+        5-6  uint16_t              y-position on map
+        6-7  uint16_t              z-position on map
+        7-8  uint16_t              rotation angle
         9    Uint8               character type (ie male human)
         10   Uint8               unused
         11   Uint8               skin type
@@ -163,8 +163,8 @@ enum { // server to client protocol
         19   Uint8               cape type
         20   Uint8               helmet type
         21   Uint8               frame type
-        22   Uint16              max health
-        23   Uint16              current health
+        22   uint16_t              max health
+        23   uint16_t              current health
         24   Uint8               player type (human player=1, NPC=??)
         25-  (null terminated    character and guild name separated by a space and 127+colour codename
              char array)
@@ -180,7 +180,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         4    Unit8               active channel slot
 
         REPEAT FOR EACH SLOT...
@@ -192,7 +192,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
 */
 
     LOG_IN_OK=250,
@@ -200,7 +200,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
 */
 
     LOG_IN_NOT_OK=251,
@@ -208,7 +208,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
 */
 
     CREATE_CHAR_OK=252,
@@ -216,7 +216,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
 */
 
     CREATE_CHAR_NOT_OK=253
@@ -224,7 +224,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
 */
 
 };

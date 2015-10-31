@@ -37,7 +37,7 @@ enum { // client to server protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         4    Uint8               slot number
 */
 
@@ -46,7 +46,7 @@ enum { // client to server protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         4    Uint8               from slot number
         5    Uint8               to slot number
 
@@ -58,7 +58,7 @@ enum { // client to server protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         4-8  Uint32              position of resource in map 3d object list
 */
 
@@ -67,7 +67,7 @@ enum { // client to server protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         3-   Uint8               inventory slot
         4-8  Uint32              amount
 */
@@ -81,7 +81,7 @@ enum { // client to server protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  Uint16              data-length (=packet length-2)
+        2-3  uint16_t              data-length (=packet length-2)
         4-8  Uint32              position of object in the map 3d object list
 */
 

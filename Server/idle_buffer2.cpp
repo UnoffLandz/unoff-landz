@@ -56,6 +56,7 @@ struct data_{
     int connection;
     int process_type;
     char char_name[80];
+    int guild_id;
 };
 
 // command storage typedef
@@ -98,7 +99,7 @@ void push_idle_buffer2(int connection, int process_type, const unsigned char *pa
 }
 
 
-void push_command(int connection, int process_type, char *char_name){
+void push_command(int connection, int process_type, char *char_name, int guild_id){
 
     /** public function - see header **/
 
@@ -116,6 +117,7 @@ void push_command(int connection, int process_type, char *char_name){
     entry.connection=connection;
     entry.process_type=process_type;
     strcpy(entry.char_name, char_name);
+    entry.guild_id=guild_id;
 
     idle_buffer2.push_back(entry);
 }
@@ -153,24 +155,6 @@ void push_sql_command(const char *fmt, ...){
     va_end(args);
 }
 
-/*
-void push_sql_command(const char *sql){
-
-    if(idle_buffer2.size()>=IDLE_BUFFER2_MAX) {
-
-        //buffer overflow
-        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-        stop_server();
-        return;
-    }
-    data_ entry;
-
-    entry.sql = sql;
-    entry.process_type=IDLE_BUFFER_PROCESS_SQL;
-
-    idle_buffer2.push_back(entry);
-}
-*/
 
 void process_idle_buffer2(){
 
@@ -241,6 +225,13 @@ void process_idle_buffer2(){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_LIST_GUILD_BY_TIME\n");
         list_guild_members(connection, GUILD_ORDER_TIME);
+    }
+    /**********************************************************************************************/
+
+    else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_GUILD_DETAILS){
+
+        D_PRINT("IDLE_BUFFER2_PROCESS_LIST_GUILD_BY_TIME\n");
+        send_guild_details(connection, command.guild_id);
     }
     /**********************************************************************************************/
 

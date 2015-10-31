@@ -40,10 +40,19 @@ struct guild_member_list_type guild_member_list;
 
 void update_guild_details(int character_id, int guild_id, time_t joined_guild, int guild_rank){
 
+    /** RESULT   : sends a list of guild members to a character
+
+        RETURNS  : void
+
+        PURPOSE  : used by function hash_change_guild_permission
+
+        NOTES    : used by functions kick_guild_member
+                                     change_guild_rank
+                                     join_guild
+    **/
+
     //update database
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "UPDATE CHARACTER_TABLE SET GUILD_ID=%i, JOINED_GUILD=%i, GUILD_RANK=%i WHERE CHAR_ID=%i", guild_id, (int)joined_guild, guild_rank, character_id);
-    push_sql_command(sql);
+    push_sql_command("UPDATE CHARACTER_TABLE SET GUILD_ID=%i, JOINED_GUILD=%i, GUILD_RANK=%i WHERE CHAR_ID=%i", guild_id, (int)joined_guild, guild_rank, character_id);
 
     //if char in game then update client data
     for(int i=0; i<MAX_CLIENTS; i++){
@@ -69,14 +78,7 @@ void update_guild_details(int character_id, int guild_id, time_t joined_guild, i
 
 int get_guild_id(char *guild_tag){
 
-    /** RESULT   : finds the guild id from the guild tag
-
-        RETURNS  : guild id
-
-        PURPOSE  : used by function apply_guild
-
-        NOTES    :
-    **/
+    /** public function - see header **/
 
     for(int i=0; i<MAX_GUILDS; i++){
 
@@ -178,9 +180,7 @@ void create_guild(int connection, char *guild_name, char *guild_description, cha
 
             send_text(connection, CHAT_SERVER, "%cyou have created guild %s", c_green3+127, guild_tag);
 
-            char sql[MAX_SQL_LEN]="";
-
-            snprintf(sql, MAX_SQL_LEN, "INSERT INTO GUILD_TABLE (GUILD_ID, GUILD_NAME, GUILD_TAG, GUILD_TAG_COLOUR, GUILD_DESCRIPTION, DATE_GUILD_CREATED, PERMISSION_LEVEL, STATUS) VALUES(%i, '%s', '%s', %i, '%s', %i, %i, %i)", \
+            push_sql_command("INSERT INTO GUILD_TABLE (GUILD_ID, GUILD_NAME, GUILD_TAG, GUILD_TAG_COLOUR, GUILD_DESCRIPTION, DATE_GUILD_CREATED, PERMISSION_LEVEL, STATUS) VALUES(%i, '%s', '%s', %i, '%s', %i, %i, %i)", \
                 i, \
                 guilds.guild[i].guild_name, \
                 guilds.guild[i].guild_tag, \
@@ -189,8 +189,6 @@ void create_guild(int connection, char *guild_name, char *guild_description, cha
                 (int)guilds.guild[i].date_guild_created, \
                 guilds.guild[i].permission_level, \
                 guilds.guild[i].status);
-
-            push_sql_command(sql);
 
             return;
         }
@@ -357,9 +355,7 @@ void change_guild_permission(int connection, char *guild_tag, int permission_lev
     }
 
     //update database
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "UPDATE GUILD_TABLE SET PERMISSION_LEVEL=%i WHERE GUILD_ID=%i", permission_level, guild_id);
-    push_sql_command(sql);
+    push_sql_command("UPDATE GUILD_TABLE SET PERMISSION_LEVEL=%i WHERE GUILD_ID=%i", permission_level, guild_id);
 
     send_text(connection, CHAT_SERVER, "%cyou have changed the permission level for guild %s to %i", c_green3+127, guild_tag, permission_level);
 }
@@ -386,5 +382,67 @@ void list_guild_members(int connection, int order){
             date_stamp_str,
             time_stamp_str,
             guild_member_list.guild_member[i].guild_rank);
+    }
+}
+
+
+void send_guild_details(int connection, int guild_id){
+
+    /** public function - see header */
+
+    if(guild_id==0){
+
+        send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "you are a guildless player");
+        return;
+    }
+
+    send_text(connection, CHAT_SERVER, "%cGuild       :%s", c_green3+127, guilds.guild[guild_id].guild_name);
+    send_text(connection, CHAT_SERVER, "%cTag         :%c%s", c_green3+127, guilds.guild[guild_id].guild_tag_colour+127, guilds.guild[guild_id].guild_tag);
+    send_text(connection, CHAT_SERVER, "%cDescription :%s", c_green3+127, guilds.guild[guild_id].guild_description);
+
+    char time_stamp_str[9]="";
+    char date_stamp_str[11]="";
+    get_time_stamp_str(guilds.guild[guild_id].date_guild_created, time_stamp_str);
+    get_date_stamp_str(guilds.guild[guild_id].date_guild_created, date_stamp_str);
+    send_text(connection, CHAT_SERVER, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+
+    //list count members and list guild masters
+    sqlite3_stmt *stmt;
+    char sql[MAX_SQL_LEN]="";
+
+    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE GUILD_ID=%i", guild_id);
+
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    int member_count=0;
+    char guild_masters[1024]="";
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        //list the guild masters (chars with rank 20)
+        if(sqlite3_column_int(stmt, 13)==20){
+
+            sprintf(guild_masters, "%s %s", guild_masters, sqlite3_column_text(stmt, 1));
+        }
+
+        member_count++;
+    }
+
+    send_text(connection, CHAT_SERVER, "%cGuild Masters:%s", c_green3+127, guild_masters);
+    send_text(connection, CHAT_SERVER, "%cMember Count :%i", c_green3+127, member_count);
+
+    if (rc != SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    rc=sqlite3_finalize(stmt);
+    if (rc != SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_finalize", __func__, __FILE__, __LINE__, rc, sql);
     }
 }
