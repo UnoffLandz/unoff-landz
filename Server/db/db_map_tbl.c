@@ -474,7 +474,7 @@ void add_db_map(int map_id, char *elm_filename, char *map_name, char *map_descri
     sqlite3_bind_text(stmt, 8, map_author, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 9, map_author_email, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 10, status);
-    sqlite3_bind_int(stmt, 11, time(NULL));
+    sqlite3_bind_int(stmt, 11, (int)time(NULL));
 
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
