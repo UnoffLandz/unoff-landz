@@ -418,7 +418,8 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
     if(EV_READ & revents){
 
         //wrapping recv in this macro prevents connection reset by peer errors
-        ssize_t read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
+        //read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
+        ssize_t read=recv(watcher->fd, buffer, 512, 0);
 
         if (read <0) {
 
@@ -447,7 +448,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
                 return;
             }
 
-            else
+            else{
 
                 log_event(EVENT_ERROR, "read registered fatal error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
                 log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... closing", watcher->fd, errnum, strerror(errnum));
