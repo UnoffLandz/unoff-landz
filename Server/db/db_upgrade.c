@@ -363,8 +363,8 @@ void upgrade_database(const char *dbname) {
         return;
     }
 
-    int old_version = current_database_version();
-    int new_version = CURRENT_DB_VERSION;
+    int old_version = get_database_version();
+    int new_version = REQUIRED_DATABASE_VERSION;
 
     if(old_version>new_version) {
 

@@ -65,7 +65,7 @@ void load_db_guilds(){
         guilds.guild[id].permission_level=sqlite3_column_int(stmt, 6);
         guilds.guild[id].status=sqlite3_column_int(stmt, 7);
 
-        log_event(EVENT_INITIALISATION, "loaded [%i]", id);
+        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", id, guilds.guild[id].guild_tag);
 
         i++;
     }

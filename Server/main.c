@@ -24,6 +24,12 @@ To compile server, set the following compiler flags :
 
     -std=c99                - target c99 compliance
     -Wconversion            - 64bit compliance
+    -wall                   - all common compiler warnings
+    -wextra                 - extra compiler warnings
+    -pendantic              - strict iso c/c++ warnings
+    -std=C++11              - target c++ 11 compliance
+    -Wunreachable-code      - warn on unreachable code
+    -Wredundant-decis       - warn on duplicate declarations
 
                                     LINKING INFORMATION
 
@@ -37,25 +43,35 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-DONE convert uint16_t to uint16_t (remove sdl library)
-DONE convert elm_file field in MAP TABLE to description
-DONE implement map_author, map_author_email, map_status, map_upload_date in MAP_TABLE
-DONE #map uploaded date implemented
-DONE finish making push_sql the same as send_text
-DONE #guild_details command (equiv of #char_details)
+DONE fixed bug which resulted in chat tabs that are closed following loss of server not being
+reopened when client relogs back into server
+DONE #GM functionality (including ~ short tag
+DONE guild chan join/leave notifications
 
+BUG server goes down when not fully logged on and client issues sit down command
+BUG server time up not correct - reset at midnight
+BUG why can only root start server ???
+
+test guild chan join/leave notifications
+test multiple chat channel handling
 test multiple guild application handling
+
+NEW add map axis to get_proximity
+NEW add customisable colours to guild chan join/leave notifications
 finish script loading
 widen distance that new/beamed chars are from other chars
-need #GM guild channel functionality
-need #IG guild channel functionality
-need OPS #command to #pm all active players (surely this is mod channel???)
-need guild channel hello/goodbye messages
+#IG guild channel functionality
+NEW OPS #command to #letter all chars
+NEW #command to #letter all members of a guild
+NEW OPS #command to system message all active players
+
 need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
 need #command to change guild tag colour
+need #command to change guild chan join/leave notification colours
 need #command to change guild description
 need #leave_guild
 need #command to withdraw application to join guild
+NEW transfer server welcome message to the database
 
 walk to towards bag when clicked on if char is not standing on bag
 extend add_client_to_map function so that existing bags are shown to new client
@@ -131,6 +147,8 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include "harvesting.h"
 #include "gender.h"
 #include "character_type.h"
+#include "colour.h"
+#include "broadcast_actor_functions.h"
 
 #define DEBUG_MAIN 1
 #define VERSION "4"
@@ -168,26 +186,18 @@ void start_server(){
 
     int sd;
 
-    //set server start time
-    game_data.server_start_time=time(NULL);
-
-    //display console message
-    char time_stamp_str[9]="";
-    char verbose_date_stamp_str[50]="";
-    get_time_stamp_str(game_data.server_start_time, time_stamp_str);
-    get_verbose_date_str(game_data.server_start_time, verbose_date_stamp_str);
-    printf("SERVER START at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
-
     //check database version
-    int old_version = current_database_version();
+    int database_version = get_database_version();
 
-    if(old_version != CURRENT_DB_VERSION) {
+    if(database_version != REQUIRED_DATABASE_VERSION) {
 
-        printf("Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", old_version, CURRENT_DB_VERSION);
+        printf("Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", database_version, REQUIRED_DATABASE_VERSION);
         return;
     }
 
     //load data from database into memory
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
     load_db_e3ds();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
@@ -297,6 +307,7 @@ void start_server(){
     }
 }
 
+
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents) {
 
     /** RESULT   : handles socket accept event
@@ -397,7 +408,6 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 
     unsigned char buffer[1024];
     unsigned char packet[1024];
-    ssize_t read;
 
     if (EV_ERROR & revents) {
 
@@ -408,31 +418,53 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
     if(EV_READ & revents){
 
         //wrapping recv in this macro prevents connection reset by peer errors
-        read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
+        ssize_t read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
 
         if (read <0) {
 
             int errnum=errno;
 
-            log_event(EVENT_ERROR, "read failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-            log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]", watcher->fd, errnum, strerror(errnum));
+            if(errno == EINTR){
 
-            #if DEBUG_MAIN==1
-            printf("read failed for client [%i] with error [%i] [%s]\n", watcher->fd, errnum, strerror(errnum));
-            #endif
+                log_event(EVENT_ERROR, "read registered EINTR in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
 
-            log_event(EVENT_SESSION, "closing client [%i] following read error", watcher->fd);
+            }
 
-            close_connection_slot(watcher->fd);
+            if(errno == EAGAIN){
 
-            ev_io_stop(loop, libevlist[watcher->fd]);
-            free(libevlist[watcher->fd]);
-            libevlist[watcher->fd] = NULL;
+                log_event(EVENT_ERROR, "read registered EAGAIN in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
 
-            //clear the struct
-            memset(&clients.client[watcher->fd], '\0', sizeof(clients.client[watcher->fd]));
+                return;
+            }
 
-            return;
+            if(errno == EWOULDBLOCK){
+
+                log_event(EVENT_ERROR, "read registered EWOULDBLOCK in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
+
+                return;
+            }
+
+            else
+
+                log_event(EVENT_ERROR, "read registered fatal error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... closing", watcher->fd, errnum, strerror(errnum));
+
+                log_event(EVENT_SESSION, "closing client [%i] following read error", watcher->fd);
+
+                close_connection_slot(watcher->fd);
+
+                ev_io_stop(loop, libevlist[watcher->fd]);
+                free(libevlist[watcher->fd]);
+                libevlist[watcher->fd] = NULL;
+
+                //clear the struct
+                memset(&clients.client[watcher->fd], '\0', sizeof(clients.client[watcher->fd]));
+
+                return;
+            }
         }
 
         if (read == 0) {
@@ -442,6 +474,17 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
             #endif
 
             if (libevlist[watcher->fd]!= NULL) {
+
+                //notify guild that char has logged off
+                int guild_id=clients.client[watcher->fd].guild_id;
+
+                if(guild_id>0){
+
+                    char text_out[80]="";
+
+                    sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[watcher->fd].char_name);
+                    broadcast_guild_chat(guild_id, watcher->fd, text_out);
+                }
 
                 close_connection_slot(watcher->fd);
 
@@ -673,20 +716,25 @@ int main(int argc, char *argv[]){
 
         const char *db_filename = (argc>2) ? argv[2] : DEFAULT_DATABASE_FILE_NAME;
 
-        //clear logs
-        initialise_logs();
+        //set server start time
+        game_data.server_start_time=time(NULL);
 
-        //prepare time stamp
+        //prepare start time for console and log message
         char time_stamp_str[9]="";
         char verbose_date_stamp_str[50]="";
         get_time_stamp_str(game_data.server_start_time, time_stamp_str);
         get_verbose_date_str(game_data.server_start_time, verbose_date_stamp_str);
+
+        //clear logs
+        initialise_logs();
 
         switch(argv[1][1]) {
 
             case 'S': {//start server
 
                 printf("start server\n");
+
+                printf("SERVER START at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
 
                 log_text(EVENT_INITIALISATION, "SERVER START at %s on %s", time_stamp_str, verbose_date_stamp_str);
                 log_text(EVENT_INITIALISATION, "");// insert logical separator

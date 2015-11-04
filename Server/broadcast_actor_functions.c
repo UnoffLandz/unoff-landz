@@ -283,6 +283,28 @@ void broadcast_local_chat(int connection, char *text_in){
 }
 
 
+void broadcast_guild_chat(int guild_id, int connection, char *text_in){
+
+    /** public function - see header */
+
+    for(int i=0; i<MAX_CLIENTS; i++){
+
+        if(clients.client[i].client_status==LOGGED_IN){
+
+            //don't echo to self
+            if(connection!=i){
+
+                //filter out players who are not in this guild
+                if(clients.client[i].guild_id!=guild_id){
+
+                    send_text(i, CHAT_GM, "%c[%s]: %s", c_blue1+127, clients.client[connection].char_name, text_in);
+                }
+            }
+        }
+    }
+}
+
+
 void broadcast_channel_chat(int chan, int connection, char *text_in){
 
     /** public function - see header */

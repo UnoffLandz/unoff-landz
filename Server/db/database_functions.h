@@ -27,13 +27,11 @@
 //                    +    GENDER_TABLE           max_pickpoints             attribute_value
 //                    +--> gender_id
 //                         gender_name
-//
-// ** attribute_type_id is required because ???
 
 #ifndef DATABASE_FUNCTIONS_H_INCLUDED
 #define DATABASE_FUNCTIONS_H_INCLUDED
 
-#define CURRENT_DB_VERSION 2
+#define REQUIRED_DATABASE_VERSION 2
 #define DEFAULT_DATABASE_FILE_NAME "unoff.sqlite"
 #define MAX_SQL_LEN 1024
 
@@ -127,5 +125,16 @@ void create_database(const char *db_filename);
     NOTES    :
 **/
 bool table_exists(const char *table_name);
+
+
+/** RESULT   : gets the version of the sqlite database
+
+    RETURNS  : the sqlite version number
+
+    PURPOSE  : used to check if the sqlite database matches the current codebase
+
+    NOTES    :
+**/
+int get_database_version();
 
 #endif // DATABASE_FUNCTIONS_H_INCLUDED

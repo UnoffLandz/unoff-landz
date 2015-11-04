@@ -42,6 +42,7 @@
 #include "guilds.h"
 #include "db/db_map_tbl.h"
 #include "idle_buffer2.h"
+#include "broadcast_actor_functions.h"
 
 static int hash_jc(int connection, char *text) {
 
@@ -771,7 +772,35 @@ static int hash_guild_details(int connection, char *text) {
 
     push_command(connection, IDLE_BUFFER_PROCESS_GUILD_DETAILS , "", guild_id);
 
-    // send_guild_details(connection, guild_id);
+    return 0;
+}
+
+
+static int hash_guild_message(int connection, char *text) {
+
+    /** RESULT  : handles guild message hash command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
+
+    char message[1024]="";
+    int guild_id=clients.client[connection].guild_id;
+
+    if(sscanf(text, "%*s %[^\n]", message)!=1){
+
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #GUILD_MESSAGE [message] or #GM [message]", c_red3+127);
+        return 0;
+    }
+
+    //broadcast to self
+    send_text(connection, CHAT_GM, "%c[%s]: %s", c_blue1+127, clients.client[connection].char_name, message);
+
+    //broadcast to others
+    broadcast_guild_chat(guild_id, connection, message);
     return 0;
 }
 
@@ -842,6 +871,7 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#OPS_APPOINT_GUILD_MEMBER", true,  0,     PERMISSION_3, hash_ops_appoint_guild_member},
     {"#CR",                      true,  18,     PERMISSION_1, hash_change_rank},
     {"#CHANGE_RANK",             true,  18,     PERMISSION_1, hash_change_rank},
+    {"#OPS_APPOINT_GUILD_MEMBER", true, 0,      PERMISSION_3, hash_ops_appoint_guild_member},
     {"#OPS_CHANGE_GUILD_MEMBER_RANK", true, 0,  PERMISSION_3, hash_ops_change_guild_member_rank},
     {"#OPS_CHANGE_GUILD_PERMISSION",true, 20,   PERMISSION_3, hash_ops_change_guild_permission},
     {"#LA",                      true,   18,    PERMISSION_1, hash_list_applicants},
@@ -859,6 +889,8 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#MAP",                     false,  0,     PERMISSION_1, hash_map},
     {"#GUILD_DETAILS",           false,  0,     PERMISSION_1, hash_guild_details},
     {"#GD",                      false,  0,     PERMISSION_1, hash_guild_details},
+    {"#GUILD_MESSAGE",           true,   0,     PERMISSION_1, hash_guild_message},
+    {"#GM",                      true,   0,     PERMISSION_1, hash_guild_message},
     {"#CLEAR_INVENTORY",         false,  0,     PERMISSION_3, hash_clear_inventory},
     {"", false, 0, 0, 0}
 };

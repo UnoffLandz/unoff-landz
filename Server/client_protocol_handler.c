@@ -84,7 +84,7 @@ void process_packet(int connection, unsigned char *packet){
             text[strlen(text)-1]='\0';
 
             // check if char has an active channel
-            if(clients.client[connection].active_chan==0){
+            if(chat_chan_open(connection)==false){
 
                 send_text(connection, CHAT_SERVER, "%cyou have not joined a channel yet", c_red3+127);
                 return;
@@ -97,10 +97,24 @@ void process_packet(int connection, unsigned char *packet){
             int chan=clients.client[connection].chan[active_chan_slot-1];
 
             //broadcast to self
-            send_text(connection, CHAT_CHANNEL_0 + active_chan_slot, "%c[%s]: %s", c_grey1+127, clients.client[connection].char_name, text);
+            send_text(connection, CHAT_CHANNEL_0 + active_chan_slot, "%c[%s @ %i]: %s", c_grey1+127, clients.client[connection].char_name, CHAT_CHANNEL_0+active_chan_slot, text);
 
             //broadcast to others
             broadcast_channel_chat(chan, connection, text);
+        }
+
+        //guild chat
+        else if(text[0]=='~'){
+
+            //remove the ~ from text string and add null terminator
+            memcpy(text, text+1, strlen(text)-1);
+            text[strlen(text)-1]='\0';
+
+            //broadcast to self
+            send_text(connection, CHAT_GM, "%c[%s]: %s", c_blue1+127, clients.client[connection].char_name, text);
+
+            //broadcast to others
+            broadcast_guild_chat(clients.client[connection].guild_id, connection, text);
         }
 
         //hash commands

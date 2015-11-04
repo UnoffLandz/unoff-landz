@@ -74,7 +74,7 @@ struct client_node_type{
     }char_status;
 
     int active_chan;
-    int chan[MAX_CHAN_SLOTS];       // chan0, chan1, chan2  (chan3 used for guild chat)
+    int chan[MAX_CHAN_SLOTS];       // chan0, chan1, chan2
 
     int gm_permission;
     int ig_permission;

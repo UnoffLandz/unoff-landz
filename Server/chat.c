@@ -48,6 +48,18 @@ int player_in_chan(int connection, int chan){
     return -1;
 }
 
+bool chat_chan_open(int connection){
+
+    /** public function - see header */
+
+    for(int i=0; i<MAX_CHAN_SLOTS; i++){
+
+        if(clients.client[connection].chan[i]>0) return true;
+    }
+
+    return false;
+}
+
 
 int join_channel(int connection, int chan){
 
@@ -76,12 +88,6 @@ int join_channel(int connection, int chan){
         return CHANNEL_NOT_JOINED;
     }
 
-    //stop players from joining guild channels
-    else if(channel[chan].chan_type==CHAN_GUILD){
-
-        send_text(connection, CHAT_SERVER, "%cThat channel is for a guild", c_red3+127);
-        return CHANNEL_NOT_JOINED;
-    }
 
     //check if player is already in chan
     if(player_in_chan(connection, chan)!=-1){
@@ -104,17 +110,14 @@ int join_channel(int connection, int chan){
             push_sql_command("UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", i, chan, clients.client[connection].character_id);
 
             clients.client[connection].active_chan=i;
-            send_get_active_channels(connection);
+
+            send_client_channels(connection);
 
             push_sql_command("UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
 
             //echo back to player which channel was just joined and its description etc
             send_text(connection, CHAT_SERVER, "%cYou joined channel %s", c_green3+127, channel[chan].channel_name);
             send_text(connection, CHAT_SERVER, "%cDescription : %s", c_green2+127, channel[chan].description);
-
-            //THE FOLLOWING IS COMMENTED OUT AS ITS TOO RESOURCE HEAVY...
-            //send_text(connection, CHAT_SERVER, %cIn channel :", c_green1+127);
-            //list_characters_in_chan(connection, chan);
 
             //tell other in chan that player has joined
             sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, clients.client[connection].char_name, channel[chan].channel_name);
@@ -173,7 +176,8 @@ int leave_channel(int connection, int chan){
         }
     }
 
-    send_get_active_channels(connection);
+    //send channel info to client
+    send_client_channels(connection);
 
     push_sql_command("UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[connection].active_chan, clients.client[connection].character_id);
 
@@ -187,6 +191,8 @@ int leave_channel(int connection, int chan){
 
 
 void send_pm(int connection, char *target_name, char *message) {
+
+    /** public function - see header */
 
     // echo message back to sender
     send_text(connection, CHAT_PERSONAL, "%c[PM to %s: %s]", c_orange1+127, target_name, message);
@@ -203,4 +209,31 @@ void send_pm(int connection, char *target_name, char *message) {
     send_text(target_connection, CHAT_PERSONAL, "%c[PM from %s: %s]", c_orange1+127, target_name, message);
 
     return;
+}
+
+
+void send_client_channels(int connection){
+
+    /** public function - see header */
+
+    int chan_slot[MAX_CHAN_SLOTS];
+
+    for(int i=0; i<MAX_CHAN_SLOTS; i++){
+
+        chan_slot[i]=clients.client[connection].chan[i];
+    }
+
+    send_get_active_channels(connection, (unsigned char)clients.client[connection].active_chan, chan_slot);
+}
+
+
+void clear_client_channels(int connection){
+
+    /** public function - see header */
+
+    //send zeros to clear all client chat tabs
+    unsigned char active_chan=0;
+    int chan_slot[MAX_CHAN_SLOTS]={0};
+
+    send_get_active_channels(connection, active_chan, chan_slot);
 }

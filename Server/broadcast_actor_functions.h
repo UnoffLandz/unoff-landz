@@ -75,6 +75,17 @@ void broadcast_channel_event(int chan, int connection, char *text_in);
 void broadcast_channel_chat(int chan, int connection, char *text_in);
 
 
+/** RESULT  : broadcasts guild chat to all clients in the guild
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_guild_chat(int guild_id, int connection, char *text_in);
+
+
 /** RESULT  : broadcasts local chat to all characters in the vicinity
 
     RETURNS : void

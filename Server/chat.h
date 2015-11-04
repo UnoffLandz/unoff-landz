@@ -23,12 +23,12 @@
 #include <stdbool.h> //support for bool data type
 
 #define MAX_CHANNELS 10
-#define MAX_CHAN_SLOTS 4
+#define MAX_CHAN_SLOTS 3
 #define LOCAL_CHAT_RANGE 10
 
 struct channel_node_type{
 
-    enum {CHAN_VACANT, CHAN_SYSTEM, CHAN_PERMANENT, CHAN_GUILD, CHAN_CHAT} chan_type;
+    enum {CHAN_VACANT, CHAN_SYSTEM, CHAN_PERMANENT, CHAN_UNUSED, CHAN_CHAT} chan_type;
     char channel_name[80];
     int owner_id; // could be char or guild depending on chan_type
     char password[80];
@@ -97,6 +97,56 @@ int leave_channel(int connection, int chan);
     NOTES   :
 **/
 void send_pm(int connection, char *receiver_name, char *message);
+
+
+/** RESULT  : sends chat channel data to client
+
+    RETURNS : void
+
+    PURPOSE : wrapper for send_get_active_channels
+
+    NOTES   : when the client is disconnected from server, it still allows chat chan tabs to
+              be closed. However, if the client reconnects, the chan tabs are not automatically
+              reopened, leading to a situation in which the client remains connected to a
+              chat channel but without a corresponding chan tab.
+
+              The solution to this appears to be to send a copy of the get_active_channels
+              protocol to the client with all channel data set to zero, then, resend the
+              protocol with the required channel data. This is achieved using the
+              clear_client_channels and send_client_channels functions
+**/
+void send_client_channels(int connection);
+
+
+/** RESULT  : clears chat channel tabs on client
+
+    RETURNS : void
+
+    PURPOSE : wrapper for send_get_active_channels
+
+    NOTES   : when the client is disconnected from server, it still allows chat chan tabs to
+              be closed. However, if the client reconnects, the chan tabs are not automatically
+              reopened, leading to a situation in which the client remains connected to a
+              chat channel but without a corresponding chan tab.
+
+              The solution to this appears to be to send a copy of the get_active_channels
+              protocol to the client with all channel data set to zero, then, resend the
+              protocol with the required channel data. This is achieved using the
+              clear_client_channels and send_client_channels functions
+
+**/
+void clear_client_channels(int connection);
+
+
+/** RESULT  : Determines if a client has any open chat chans
+
+    RETURNS : true / false
+
+    PURPOSE : wrapper for send_get_active_channels
+
+    NOTES   : used in function process_packet
+**/
+bool chat_chan_open(int connection);
 
 
 #endif // CHAT_H_INCLUDED

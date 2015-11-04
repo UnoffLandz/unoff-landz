@@ -407,7 +407,7 @@ void send_close_bag(int connection){
 }
 
 
-void send_get_active_channels(int connection){
+void send_get_active_channels(int connection, unsigned char active_chan, int *chan_slot){
 
     /** public function - see header */
 
@@ -415,9 +415,8 @@ void send_get_active_channels(int connection){
 
         unsigned char protocol;
         uint16_t data_length;
-        unsigned char active_channel;
-        int chan_slot[MAX_CHAN_SLOTS];
-
+        unsigned char _active_chan;
+        int _chan_slot[MAX_CHAN_SLOTS];
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -430,11 +429,11 @@ void send_get_active_channels(int connection){
     int data_length=(int)packet_length-2;
     packet.data_length=(uint16_t)data_length;
 
-    packet.active_channel=(unsigned char)clients.client[connection].active_chan;
+    packet._active_chan=active_chan;
 
     for(int i=0; i<MAX_CHAN_SLOTS; i++){
 
-        packet.chan_slot[i]=clients.client[connection].chan[i];
+        packet._chan_slot[i]=chan_slot[i];
     }
 
     send_packet(connection, &packet, packet_length);

@@ -277,7 +277,7 @@ void process_sql(const char *sql_str){
 }
 
 
-int current_database_version() {
+int get_database_version() {
 
     sqlite3_stmt *selectStmt;
     const char *sql_str = "SELECT DB_VERSION FROM GAME_DATA_TABLE";
@@ -349,7 +349,7 @@ void create_database(const char *db_filename){
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");
 
-    add_db_game_data(1, 27225, 1, 27225, 360, CURRENT_DB_VERSION);
+    add_db_game_data(1, 27225, 1, 27225, 360, REQUIRED_DATABASE_VERSION);
 
     add_db_channel(1, 0, CHAN_PERMANENT, "", "Main Channel", "A channel for chatting", 1);
 

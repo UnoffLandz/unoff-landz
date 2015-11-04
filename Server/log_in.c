@@ -34,6 +34,7 @@
 #include "server_start_stop.h"
 #include "game_data.h"
 #include "packet.h"
+#include "broadcast_actor_functions.h"
 
 
 void process_log_in(int connection, const unsigned char *packet){
@@ -132,26 +133,39 @@ void process_log_in(int connection, const unsigned char *packet){
             clients.client[connection].client_status=LOGGED_IN;
             log_event(EVENT_SESSION, "login accepted");
 
-            /*
-            // notify guild that char has logged on
-            int guild_id=clients.client[connection].guild_id;
-
-            if(guild_id>0) {
-
-                chan_colour=guilds.guild[guild_id]->log_on_notification_colour;
-                sprintf(text_out, "%c%s JOINED THE GAME", chan_colour, clients.client[connection].char_name);
-                broadcast_guild_channel_chat(guild_id, text_out);
-            }
-            */
-
             //record when session commenced so we can calculate time in-game
             clients.client[connection].session_commenced=time(NULL);
 
             send_login_ok(connection);
             send_you_are(connection);
-            send_get_active_channels(connection);
             send_here_your_stats(connection);
             send_here_your_inventory(connection);
+
+            /* when the client is disconnected from server, it still allows chat chan tabs to
+            be closed. However, if the client reconnects, the chan tabs are not automatically
+            reopened, leading to a situation in which the client remains connected to a
+            chat channel but without a corresponding chan tab. The solution to this
+            appears to be to send a copy of the get_active_channels protocol to the client
+            with all channel data set to zero */
+            clear_client_channels(connection);
+
+            /*Now resend the get_active_channels protocol with the required channel data and
+            this will ensure that any closed chan tabs are reopened */
+            send_client_channels(connection);
+
+            int guild_id=clients.client[connection].guild_id;
+
+            if(guild_id>0){
+
+                //if char is a member of a guild, send blank #gm to open GM chat tab on client
+                send_raw_text(connection, CHAT_GM, " ");
+
+                // notify guild that char has logged on
+                char text_out[80]="";
+                sprintf(text_out, "%c%s JOINED THE GAME", c_blue3+127, clients.client[connection].char_name);
+                broadcast_guild_chat(guild_id, connection, text_out);
+             }
+
             break;
         }
 

@@ -20,6 +20,7 @@
 #ifndef SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED
 #define SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED
 
+#include "chat.h" //support for MAX_CHAN_SLOTS
 
 /** RESULT  : sends packet from the server
 
@@ -141,7 +142,8 @@ void send_here_your_ground_items(int connection, int bag_id);
 
     NOTES   :
 */
-void send_get_active_channels(int connection);
+//void send_get_active_channels(int connection);
+void send_get_active_channels(int connection, unsigned char active_chan, int *chan_slot);
 
 
 /** RESULT  : sends the here_your_stats packet to client
