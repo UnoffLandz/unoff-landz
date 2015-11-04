@@ -96,7 +96,10 @@ void close_database(){
     int rc=sqlite3_close(db);
     if( rc !=SQLITE_OK ){
 
-        log_sqlite_error("sqlite3_close", __func__ , __FILE__, __LINE__, rc, "");
+        //don't use log_sqlite_error function as this already contains a call to close_database
+        //and therefore creates an infinite loop
+        log_event(EVENT_ERROR, "sqlite3_close failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_text(EVENT_ERROR, "error code %i", rc);
     }
 
     printf("database file closed\n");
