@@ -707,13 +707,17 @@ int main(int argc, char *argv[]){
         printf("-S optional [""database file name""]      ...start server\n");
         printf("-U optional [""database file name""]      ...upgrade database\n");
         printf("-M [map id] [""elm filename""] [""map name""] [""author name""] [""author email""] [""development status code""] optional [""database file name""]    ...load map\n");
-        printf("development status codes 0=development 1=testing 2=final");
+        printf("development status codes 0=development 1=testing 2=final\n");
         printf("-L optional [""database file name""]      ...list maps\n");
 
-        exit(EXIT_FAILURE);
+        exit(EXIT_SUCCESS);
     }
 
-    if (argc==2 && argv[1][0] == '-') {
+    printf("command tail count[%i] [%s][%s]\n", argc, argv[0], argv[1]);
+
+    char option=argv[1][0];
+
+    if (option == '-') {
 
         const char *db_filename = (argc>2) ? argv[2] : DEFAULT_DATABASE_FILE_NAME;
 
@@ -729,9 +733,9 @@ int main(int argc, char *argv[]){
         //clear logs
         initialise_logs();
 
-        printf("command tail [%c]\n", argv[1][1]);
+        option=argv[1][1];
 
-        switch(argv[1][1]) {
+        switch(option) {
 
             case 'S': {//start server
 
@@ -743,7 +747,7 @@ int main(int argc, char *argv[]){
                 log_text(EVENT_INITIALISATION, "");// insert logical separator
 
                 open_database(db_filename);
-                start_server(db_filename);
+                start_server();
                 break;
             }
 

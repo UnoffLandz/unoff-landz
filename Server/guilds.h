@@ -32,20 +32,20 @@
 enum{//guild status
 
     GUILD_ACTIVE,
-    GUILD_CLOSED,
+    GUILD_CLOSED
 };
 
 enum{// guild permissions
 
     PERMISSION_1=1, //player
     PERMISSION_2=2, //developer
-    PERMISSION_3=3, //operator
+    PERMISSION_3=3 //operator
 };
 
 enum{// order in which list of guild members is displayed
 
     GUILD_ORDER_RANK, //list by char rank
-    GUILD_ORDER_TIME, //list by date char joined guild
+    GUILD_ORDER_TIME //list by date char joined guild
 };
 
 struct guild_node_type {
