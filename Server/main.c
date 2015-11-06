@@ -700,119 +700,161 @@ int main(int argc, char *argv[]){
 
     printf("UnoffLandz Server - version %s\n\n", VERSION);
 
-    if(argc==1){
+    struct{
 
-        printf("command line options...\n");
-        printf("-C optional [""database file name""]      ...create database\n");
-        printf("-S optional [""database file name""]      ...start server\n");
-        printf("-U optional [""database file name""]      ...upgrade database\n");
-        printf("-M [map id] [""elm filename""] [""map name""] [""author name""] [""author email""] [""development status code""] optional [""database file name""]    ...load map\n");
-        printf("development status codes 0=development 1=testing 2=final\n");
-        printf("-L optional [""database file name""]      ...list maps\n");
+        bool start_server;
+        bool create_database;
+        bool upgrade_database;
+        bool load_map;
+        bool list_maps;
+        bool help;
+    }option;
 
-        exit(EXIT_SUCCESS);
-    }
+    //clear struct
+    memset(&option, 0, sizeof(option));
 
-    printf("command tail count[%i] [%s][%s]\n", argc, argv[0], argv[1]);
+    bool option_set=false;
+    char db_filename[80]=DEFAULT_DATABASE_FILE_NAME;
 
-    char option=argv[1][0];
+    for(int i=1; i<argc; i++){
 
-    if (option == '-') {
+        if (option_set==false){
 
-        const char *db_filename = (argc>2) ? argv[2] : DEFAULT_DATABASE_FILE_NAME;
+            if (strcmp(argv[i], "-S") == 0)option.start_server=true;
+            if (strcmp(argv[i], "-C") == 0)option.create_database=true;
+            if (strcmp(argv[i], "-U") == 0)option.upgrade_database=true;
+            if (strcmp(argv[i], "-M") == 0)option.load_map=true;
+            if (strcmp(argv[i], "-L") == 0)option.list_maps=true;
+            if (strcmp(argv[i], "-H") == 0)option.help=true;
 
-        //set server start time
-        game_data.server_start_time=time(NULL);
-
-        //prepare start time for console and log message
-        char time_stamp_str[9]="";
-        char verbose_date_stamp_str[50]="";
-        get_time_stamp_str(game_data.server_start_time, time_stamp_str);
-        get_verbose_date_str(game_data.server_start_time, verbose_date_stamp_str);
-
-        //clear logs
-        initialise_logs();
-
-        option=argv[1][1];
-
-        switch(option) {
-
-            case 'S': {//start server
-
-                printf("start server\n");
-
-                printf("SERVER START at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
-
-                log_text(EVENT_INITIALISATION, "SERVER START at %s on %s", time_stamp_str, verbose_date_stamp_str);
-                log_text(EVENT_INITIALISATION, "");// insert logical separator
-
-                open_database(db_filename);
-                start_server();
-                break;
-            }
-
-            case 'M': {//load map
-
-                printf("load map\n");
-
-                log_text(EVENT_INITIALISATION, "LOAD MAP at %s on %s", time_stamp_str, verbose_date_stamp_str);
-                log_text(EVENT_INITIALISATION, "");// insert logical separator
-
-                open_database(db_filename);
-
-                //use intptr_t to prevent int truncation issues when compiled as 64bit
-                long int map_id=(intptr_t)argv[2];
-                long int map_status=(intptr_t)argv[8];
-
-                add_db_map((int) map_id, (char*)argv[3], (char*)argv[4], (char*)argv[5], (char*)argv[6], (char*)argv[7], (int)map_status);
-                break;
-            }
-
-            case  'L': {//list maps
-
-                printf("list maps\n");
-
-                log_text(EVENT_INITIALISATION, "LIST MAPS at %s on %s", time_stamp_str, verbose_date_stamp_str);
-                log_text(EVENT_INITIALISATION, "");// insert logical separator
-
-                open_database(db_filename);
-                list_db_maps();
-                break;
-            }
-
-            case 'C': { // create database
-
-                printf("create database\n");
-
-                log_text(EVENT_INITIALISATION, "CREATE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
-                log_text(EVENT_INITIALISATION, "");// insert logical separator
-
-                create_database(db_filename);
-                //_create_database("load_script.txt");
-                break;
-            }
-
-            case 'U': { // upgrade database
-
-                printf("upgrade database\n");
-
-                log_text(EVENT_INITIALISATION, "UPGRADE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
-                log_text(EVENT_INITIALISATION, "");// insert logical separator
-
-                open_database(db_filename);
-                upgrade_database(db_filename);
-                break;
-            }
-
-            default: { //unknown command line option
-
-                printf("unknown command line option [%s]\n", (char*)argv[1]);
-            }
+            option_set=true;
         }
     }
 
-    printf("unknown command line format\n");
+    //set server start time
+    game_data.server_start_time=time(NULL);
 
-    return 0; //otherwise we get 'control reaches end of non-void function
+    //prepare start time for console and log message
+    char time_stamp_str[9]="";
+    char verbose_date_stamp_str[50]="";
+    get_time_stamp_str(game_data.server_start_time, time_stamp_str);
+    get_verbose_date_str(game_data.server_start_time, verbose_date_stamp_str);
+
+    //clear logs
+    initialise_logs();
+
+
+    if(option.start_server==true){
+
+        if(argc>2) strcpy(db_filename, argv[2]);
+
+        printf("SERVER START at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
+
+        log_text(EVENT_INITIALISATION, "SERVER START at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+        open_database(db_filename);
+        start_server();
+
+        return 0;
+    }
+
+    else if(option.create_database==true){
+
+        if(argc>2) strcpy(db_filename, argv[2]);
+
+        printf("CREATE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+
+        log_text(EVENT_INITIALISATION, "CREATE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+        create_database(db_filename);
+        //_create_database("load_script.txt");
+
+        return 0;
+    }
+
+    else if(option.upgrade_database==true){
+
+        if(argc>2) strcpy(db_filename, argv[2]);
+
+        printf("UPGRADE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+
+        log_text(EVENT_INITIALISATION, "UPGRADE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+        open_database(db_filename);
+        upgrade_database(db_filename);
+
+        return 0;
+    }
+
+    else if(option.load_map==true){
+
+        printf("LOAD MAP at %s on %s", time_stamp_str, verbose_date_stamp_str);
+
+        log_text(EVENT_INITIALISATION, "LOAD MAP at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+        open_database(db_filename);
+
+        if(argc==9 || argc==10){
+
+            int map_id=atoi(argv[2]);
+
+            char elm_filename[80]="";
+            strcpy(elm_filename, argv[3]);
+
+            char map_name[80]="";
+            strcpy(map_name, argv[4]);
+
+            char map_description[80]="";
+            strcpy(map_description, argv[5]);
+
+            char author_name[80]="";
+            strcpy(author_name, argv[6]);
+
+            char author_email[80]="";
+            strcpy(author_email, argv[7]);
+
+            int development_status=atoi(argv[8]);
+
+            if(argc==10) strcpy(db_filename, argv[9]);
+
+            open_database(db_filename);
+
+            add_db_map(map_id, elm_filename, map_name, author_name, map_description, author_email, development_status);
+
+            return 0;
+        }
+
+        //if wrong number of args, flow will fallthrough here and display command line options
+    }
+
+    else if(option.list_maps==true){
+
+        if(argc>2) strcpy(db_filename, argv[2]);
+
+        printf("LIST MAPS at %s on %s", time_stamp_str, verbose_date_stamp_str);
+
+        log_text(EVENT_INITIALISATION, "LIST MAPS at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+        open_database(db_filename);
+        list_db_maps();
+
+        return 0;
+    }
+
+
+    printf("command line options...\n");
+    printf("-C optional [""database file name""]      ...create database\n");
+    printf("-S optional [""database file name""]      ...start server\n");
+    printf("-U optional [""database file name""]      ...upgrade database\n");
+    printf("-M [map id] [""elm filename""] [""map name""] [""author name""] [""author email""] [""development status code""] optional [""database file name""]    ...load map\n");
+    printf("development status codes 0=development 1=testing 2=final\n");
+    printf("-L optional [""database file name""]      ...list maps\n");
+
+    return 0;//otherwise we get 'control reached end of non void function'
 }
 
