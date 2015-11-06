@@ -713,7 +713,7 @@ int main(int argc, char *argv[]){
         exit(EXIT_FAILURE);
     }
 
-    if (argv[1][0] == '-') {
+    if (argc==2 && argv[1][0] == '-') {
 
         const char *db_filename = (argc>2) ? argv[2] : DEFAULT_DATABASE_FILE_NAME;
 
@@ -728,6 +728,8 @@ int main(int argc, char *argv[]){
 
         //clear logs
         initialise_logs();
+
+        printf("command tail [%c]\n", argv[1][1]);
 
         switch(argv[1][1]) {
 
@@ -755,11 +757,14 @@ int main(int argc, char *argv[]){
                 open_database(db_filename);
 
                 //use intptr_t to prevent int truncation issues when compiled as 64bit
-                add_db_map((intptr_t)argv[2], (char*)argv[3], (char*)argv[4], (char*)argv[5], (char*)argv[6], (char*)argv[7], (intptr_t)argv[8]);
+                long int map_id=(intptr_t)argv[2];
+                long int map_status=(intptr_t)argv[8];
+
+                add_db_map((int) map_id, (char*)argv[3], (char*)argv[4], (char*)argv[5], (char*)argv[6], (char*)argv[7], (int)map_status);
                 break;
             }
 
-            case  'L': {// list maps
+            case  'L': {//list maps
 
                 printf("list maps\n");
 
@@ -801,6 +806,8 @@ int main(int argc, char *argv[]){
             }
         }
     }
+
+    printf("unknown command line format\n");
 
     return 0; //otherwise we get 'control reaches end of non-void function
 }

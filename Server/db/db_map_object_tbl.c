@@ -17,7 +17,7 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 #include <stdio.h> //support snprintf
-#include <stdbool.h> // supports true/false
+#include <stdbool.h> // supports bool data type
 #include <stdlib.h> //support EXIT_FAILURE
 #include <string.h> //support memcpy
 
