@@ -848,3 +848,29 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
 
     memcpy(packet, &_packet, sizeof(_packet));
 }
+
+
+void send_destroy_bag(int connection, int bag_id){
+
+    /** public function - see header */
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        uint16_t data_length;
+        uint16_t bag_id;
+    }packet;
+
+    size_t packet_length=sizeof(packet);
+
+    //clear the struct
+    memset(&packet, '0', packet_length);
+
+    //add data
+    packet.protocol=DESTROY_BAG;
+    int data_length=(int)packet_length-2;
+    packet.data_length=(uint16_t)data_length;
+    packet.bag_id=(uint16_t)bag_id;
+
+    send_packet(connection, &packet, packet_length);
+}

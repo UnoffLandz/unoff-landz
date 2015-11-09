@@ -27,13 +27,10 @@
 #include "logging.h"
 #include "string_functions.h"
 #include "numeric_functions.h"
-#include "global.h"
 #include "colour.h"
 #include "server_messaging.h"
 #include "server_protocol_functions.h"
 #include "characters.h"
-#include "character_race.h"
-#include "db/db_character_tbl.h"
 #include "game_data.h"
 #include "log_in.h"
 #include "map_object.h"
@@ -43,7 +40,6 @@
 #include "chat.h"
 #include "hash_commands.h"
 #include "server_start_stop.h"
-#include "db/database_functions.h"
 #include "idle_buffer2.h"
 #include "season.h"
 #include "e3d.h"
@@ -142,8 +138,11 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==MOVE_TO) {
 
         //get destination tile
-        int x_dest=uint16_t_to_dec(packet[3], packet[4]);
-        int y_dest=uint16_t_to_dec(packet[5], packet[6]);
+        //int x_dest=uint16_t_to_dec(packet[3], packet[4]);
+        //int y_dest=uint16_t_to_dec(packet[5], packet[6]);
+        int x_dest=*((int16_t*)(packet+3));
+        int y_dest=*((int16_t*)(packet+5));
+
         int tile_dest=get_tile(x_dest, y_dest, clients.client[connection].map_id);
 
         //move the char
@@ -207,7 +206,7 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==GET_PLAYER_INFO){
 
         //extract integer from packet
-        int other_connection=*((int*)(packet+3));
+        int other_connection=*((int32_t*)(packet+3));
 
         send_text(connection, CHAT_SERVER, "You see %s", clients.client[other_connection].char_name);
    }
@@ -315,7 +314,8 @@ void process_packet(int connection, unsigned char *packet){
 
         //returns a 16bit integer corresponding to the order of the object in the map 3d object list
 
-        int threed_object_list_pos=uint16_t_to_dec(packet[3], packet[4]);
+        //int threed_object_list_pos=uint16_t_to_dec(packet[3], packet[4]);
+        int threed_object_list_pos=*((int16_t*)(packet+3));
 
         log_event(EVENT_SESSION, "protocol HARVEST - started, char [%s], threed object list position [%i], map [%i]", clients.client[connection].char_name, threed_object_list_pos, clients.client[connection].map_id);
 
@@ -334,8 +334,9 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==DROP_ITEM){
 
         //returns a byte indicating the slot number followed by a 32bit integer indicating the amount to be dropped
+
         int inventory_slot=packet[3];
-        int withdraw_amount=*((int*)(packet+4));
+        int withdraw_amount=*((int32_t*)(packet+4));
 
         //determine the item to be dropped
         int object_id=clients.client[connection].inventory[inventory_slot].object_id;
@@ -357,7 +358,6 @@ void process_packet(int connection, unsigned char *packet){
                 send_text(connection, CHAT_SERVER, "%cthere are no slots left in this bag", c_red3+127);
                 return;
             }
-
         }
         else {// create a new bag
 
@@ -406,20 +406,28 @@ void process_packet(int connection, unsigned char *packet){
 /***************************************************************************************************/
 
     else if(protocol==PICK_UP_ITEM){
-/*
-        //returns a 4byte integer indicating quantity followed by 1 byte indicating bag slot position
 
-        bag_slot=data[0];
-        amount=Uint32_to_dec(data[1], data[2], data[3], data[4]);
+        //returns 1 byte indicating slot and a 4byte integer indicating quantity
 
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("PICK_UP_ITEM lsb [%i] msb [%i] amount [%i] slot [%i]\n", lsb, msb, amount, bag_slot);
-        #endif
+        int amount=*((int32_t*)(packet+4));
+        int slot=packet[3];
+        int bag_id=clients.client[connection].open_bag_id;
 
-        //pick_up_from_bag(connection, bag_slot, loop);
+        if(is_bag_empty(bag_id)==true){
 
-        log_event(EVENT_SESSION, "Protocol PICK_UP_ITEM by [%s]...", clients.client[connection].char_name);
-*/
+            // destroy bag
+            send_destroy_bag(connection, clients.client[connection].open_bag_id);
+            clients.client[connection].open_bag_id=0;
+            clients.client[connection].bag_open=false;
+
+            memset(&bag[bag_id], 0, sizeof(bag[bag_id]));
+
+            //need to broadcast bag poof
+        }
+
+        bag[bag_id].inventory[slot].amount-=amount;
+        send_here_your_ground_items(connection, bag_id);
+        //use REMOVE_ITEM_FROM_GROUND
     }
 /***************************************************************************************************/
 
@@ -429,38 +437,32 @@ void process_packet(int connection, unsigned char *packet){
 
         int bag_id=packet[3];
 
-        //find bag at the chars current position
-        bool bag_found=false;
-        int i=0;
+        //check if char is standing on bag
+        for(int i=0; i<MAX_BAGS; i++){
 
-        for(i=0; i<MAX_BAGS; i++){
-
+           //if char is standing on bag then open it
            if(bag[i].tile==clients.client[connection].map_tile){
 
-                bag_found=true;
-                break;
+                send_here_your_ground_items(connection, bag_id);
+
+                clients.client[connection].bag_open=true;
+                clients.client[connection].open_bag_id=i;
+                return;
            }
         }
 
-        //if there is no bag then abort
-        if(bag_found==false){
-
-            send_text(connection, CHAT_SERVER, "%cthere is no bag at this location", c_red3+127);
-            return;
-        }
-
-        //if there is a bag then open it
-        send_here_your_ground_items(connection, bag_id);
-
-        clients.client[connection].bag_open=true;
-        clients.client[connection].open_bag_id=i;
+        //if char is not standing on bag then walk towards it
+        start_char_move(connection, bag[bag_id].tile);
+        return;
     }
 /***************************************************************************************************/
 
     else if(protocol==LOOK_AT_MAP_OBJECT){
 
         //returns a Uint32 indicating the position of the object in the map 3d object list
-        int threed_object_list_pos=Uint32_to_dec(packet[3], packet[4], packet[5], packet[6]);
+
+        //int threed_object_list_pos=Uint32_to_dec(packet[3], packet[4], packet[5], packet[6]);
+        int threed_object_list_pos=*((int32_t*)(packet+3));
 
         //get the object item id
         int object_id=get_object_id(clients.client[connection].map_id, threed_object_list_pos);
@@ -543,10 +545,6 @@ void process_packet(int connection, unsigned char *packet){
 /***************************************************************************************************/
 
     else {
-
-        #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("UNKNOWN PROTOCOL %i %i \n", packet[1], packet[2]);
-        #endif
 
         // catch unknown protocols
         log_event(EVENT_SESSION, "unknown protocol [%i]", protocol);

@@ -20,6 +20,10 @@
 #ifndef COLOUR_H_INCLUDED
 #define COLOUR_H_INCLUDED
 
+
+#define MIN_COLOUR_CODE 0
+#define MAX_COLOUR_CODE 27
+
 enum {// colours
     c_red1,
     c_orange1,
@@ -50,5 +54,18 @@ enum {// colours
     c_purple4,
     c_grey4
 };
+
+
+/** RESULT  : gives the colour code for a colour name
+
+    RETURNS : colour code or -1 if colour does not exist
+
+    PURPOSE :
+
+    NOTES   :
+*/
+int get_colour_code( char *colour_name);
+
+
 
 #endif // COLOUR_H_INCLUDED

@@ -64,7 +64,6 @@ void process_char_move(int connection, time_t current_utime);
 
     PURPOSE : makes the character move
 **/
-//void start_char_move(int connection, int destination, struct ev_loop *loop);
 void start_char_move(int connection, int destination);
 
 #endif // CHARACTER_MOVEMENT_H_INCLUDED

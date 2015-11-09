@@ -21,6 +21,8 @@
 #ifndef MOVEMENT_H_INCLUDED
 #define MOVEMENT_H_INCLUDED
 
+#include <stdbool.h> //support for bool datatype
+
 #define MAX_UNOCCUPIED_TILE_SEARCH 10
 
 struct vector_type{
@@ -39,5 +41,17 @@ extern struct vector_type vector[8];
 
 */
 int get_nearest_unoccupied_tile(int map_id, int map_tile);
+
+
+/** RESULT  : indicates if moving from one tile to the next will cross lateral bounds
+
+    RETURNS : true/false
+
+    PURPOSE : to prevent path crossing lateral bounds
+
+    USAGE   : functions get_astar_path, add_ajacent_tiles, get_nearest_unoccupied_tile
+*/
+bool tile_in_lateral_bounds(int tile, int next_tile, int map_id);
+
 
 #endif // MOVEMENT_H_INCLUDED

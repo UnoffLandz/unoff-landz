@@ -107,4 +107,17 @@ void broadcast_local_chat(int connection, char *text_in);
 */
 void broadcast_get_new_bag_packet(int connection, int bag_list_number);
 
+
+/** RESULT  : broadcasts server message to all connected clients
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_server_message(char *text_in);
+
+
+
 #endif // BROADCAST_ACTOR_FUNCTIONS_H_INCLUDED

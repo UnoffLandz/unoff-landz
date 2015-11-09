@@ -43,44 +43,58 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-DONE fixed bug which resulted in chat tabs that are closed following loss of server not being
-reopened when client relogs back into server
-DONE #GM functionality (including ~ short tag
+DONE fixed bug which resulted in chat tabs that are closed following loss of server not being reopened when client relogs back into server
+DONE #GM functionality (including ~ short tag)
 DONE guild chan join/leave notifications
+DONE walk to towards bag when clicked on if char is not standing on bag
+DONE NEW convert look_at_map_object in client protocol handler to use pointers rather than uint32_to_dec function
+DONE NEW convert harvest in client protocol handler to use pointers rather than uint16_t_to_dec function
+DONE NEW convert move_to in client protocol handler to use pointers rather than uint16_t_to_dec function
+DONE #command to change guild description
+DONE NEW separate module for guild #commands
+DONE #command to change guild tag colour
+DONE #leave_guild
+DONE NEW #command to system message all active players
+DONE refactor get_nearest_unoccupied_tile
 
-BUG server goes down when not fully logged on and client issues sit down command
-BUG server time up not correct - reset at midnight
-BUG why can only root start server ???
 
-test guild chan join/leave notifications
-test multiple chat channel handling
-test multiple guild application handling
+NEW BUG function get_nearest_unoccupied_tile searches in star rather than grid
+NEW BUG check that ~[message] can't be used by guildless players or to bypass rank/permission restrictions
+NEW BUG server goes down when not fully logged on and client issues sit down command
+NEW BUG server time up resets at midnight
+NEW BUG why can only root start server ???
+NEW BUG pick_up_item causing machine crash
+NEW BUG destroy bag not working
 
-NEW add map axis to get_proximity
-NEW add customisable colours to guild chan join/leave notifications
+
+NEW TEST multiple chat channel handling
+TEST multiple guild application handling
+NEW TEST #set_guild_description
+NEW TEST #set_guild_tag_colour
+NEW TEST #leave_guild
+NEW TEST #server_message
+
+need #command to withdraw application to join guild
+
+extend add_client_to_map function so that existing bags are shown to new client
+NEW broadcast bags to other clients
+implement pick up bag
+implement move item between slots in bag
+implement bag poof (include reset poof time on add/drop from bag)
+
+need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
+NEW separate module for chat #commands
+NEW separate module for ops #commands
+NEW transfer server welcome message to the database
+NEW #command to change guild chan join/leave notification colours
+remove character_type_name field from CHARACTER_TYPE_TABLE
+map object reserve respawn
+NEW #command to #letter all members of a guild
 finish script loading
 widen distance that new/beamed chars are from other chars
 #IG guild channel functionality
 NEW OPS #command to #letter all chars
-NEW #command to #letter all members of a guild
-NEW OPS #command to system message all active players
-
-need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
-need #command to change guild tag colour
-need #command to change guild chan join/leave notification colours
-need #command to change guild description
-need #leave_guild
-need #command to withdraw application to join guild
-NEW transfer server welcome message to the database
-
-walk to towards bag when clicked on if char is not standing on bag
-extend add_client_to_map function so that existing bags are shown to new client
-implement pick up bag
-implement move item between slots in bag
-implement bag poof (include reset poof time on add/drop from bag)
-remove character_type_name field from CHARACTER_TYPE_TABLE
-map object reserve respawn
-
+NEW add map axis to get_proximity
 need #command to #letter all guild members (guild master only)
 implement guild stats
 Table to separately record all drops/pick ups in db
@@ -101,7 +115,7 @@ document new database/struct relationships
 finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 
 ***************************************************************************************************/
-#define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
+
 #include <stdio.h>      //supports printf function
 #include <stdlib.h>     //supports free function
 #include <string.h>     //supports memset and strcpy functions
@@ -150,8 +164,9 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include "colour.h"
 #include "broadcast_actor_functions.h"
 
+#define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
 #define DEBUG_MAIN 1
-#define VERSION "4"
+#define VERSION "4.1"
 
 struct ev_io *libevlist[MAX_CLIENTS] = {NULL};
 
@@ -700,6 +715,8 @@ int main(int argc, char *argv[]){
 
     printf("UnoffLandz Server - version %s\n\n", VERSION);
 
+    char db_filename[80]=DEFAULT_DATABASE_FILE_NAME;
+
     struct{
 
         bool start_server;
@@ -710,26 +727,8 @@ int main(int argc, char *argv[]){
         bool help;
     }option;
 
-    //clear struct
+    //clear struct to prevent garbage
     memset(&option, 0, sizeof(option));
-
-    bool option_set=false;
-    char db_filename[80]=DEFAULT_DATABASE_FILE_NAME;
-
-    for(int i=1; i<argc; i++){
-
-        if (option_set==false){
-
-            if (strcmp(argv[i], "-S") == 0)option.start_server=true;
-            if (strcmp(argv[i], "-C") == 0)option.create_database=true;
-            if (strcmp(argv[i], "-U") == 0)option.upgrade_database=true;
-            if (strcmp(argv[i], "-M") == 0)option.load_map=true;
-            if (strcmp(argv[i], "-L") == 0)option.list_maps=true;
-            if (strcmp(argv[i], "-H") == 0)option.help=true;
-
-            option_set=true;
-        }
-    }
 
     //set server start time
     game_data.server_start_time=time(NULL);
@@ -743,14 +742,32 @@ int main(int argc, char *argv[]){
     //clear logs
     initialise_logs();
 
+    //parse command line
+    log_text(EVENT_INITIALISATION, "Command line option count [%i]", argc);
+    log_text(EVENT_INITIALISATION, "Parse command line...");
 
+    for(int i=0; i<argc; i++){
+
+        if (strcmp(argv[i], "-S") == 0)option.start_server=true;
+        if (strcmp(argv[i], "-C") == 0)option.create_database=true;
+        if (strcmp(argv[i], "-U") == 0)option.upgrade_database=true;
+        if (strcmp(argv[i], "-M") == 0)option.load_map=true;
+        if (strcmp(argv[i], "-L") == 0)option.list_maps=true;
+        if (strcmp(argv[i], "-H") == 0)option.help=true;
+
+        log_text(EVENT_INITIALISATION, "%i [%s]", i, argv[i]);// log each command line option
+    }
+
+    log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+    //execute start server
     if(option.start_server==true){
 
-        if(argc>2) strcpy(db_filename, argv[2]);
+        if(argc==3) strcpy(db_filename, argv[2]);
 
-        printf("SERVER START at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
+        printf("SERVER START using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
-        log_text(EVENT_INITIALISATION, "SERVER START at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "SERVER START using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
         log_text(EVENT_INITIALISATION, "");// insert logical separator
 
         open_database(db_filename);
@@ -759,13 +776,14 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
+    //execute create database
     else if(option.create_database==true){
 
-        if(argc>2) strcpy(db_filename, argv[2]);
+        if(argc==3) strcpy(db_filename, argv[2]);
 
-        printf("CREATE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        printf("CREATE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
-        log_text(EVENT_INITIALISATION, "CREATE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "CREATE DATABASE using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
         log_text(EVENT_INITIALISATION, "");// insert logical separator
 
         create_database(db_filename);
@@ -774,13 +792,14 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
+    //execute upgrade database
     else if(option.upgrade_database==true){
 
-        if(argc>2) strcpy(db_filename, argv[2]);
+        if(argc==3) strcpy(db_filename, argv[2]);
 
-        printf("UPGRADE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        printf("UPGRADE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
-        log_text(EVENT_INITIALISATION, "UPGRADE DATABASE at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "UPGRADE DATABASE using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
         log_text(EVENT_INITIALISATION, "");// insert logical separator
 
         open_database(db_filename);
@@ -789,55 +808,49 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
-    else if(option.load_map==true){
+    //execute load map
+    else if(option.load_map==true && argc>=9){
 
-        printf("LOAD MAP at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        printf("LOAD MAP using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
-        log_text(EVENT_INITIALISATION, "LOAD MAP at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "LOAD MAP using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
         log_text(EVENT_INITIALISATION, "");// insert logical separator
 
+        if(argc==10) strcpy(db_filename, argv[9]);
+
+        int map_id=atoi(argv[2]);
+
+        char elm_filename[80]="";
+        strcpy(elm_filename, argv[3]);
+
+        char map_name[80]="";
+        strcpy(map_name, argv[4]);
+
+        char map_description[80]="";
+        strcpy(map_description, argv[5]);
+
+        char author_name[80]="";
+        strcpy(author_name, argv[6]);
+
+        char author_email[80]="";
+        strcpy(author_email, argv[7]);
+
+        int development_status=atoi(argv[8]);
+
         open_database(db_filename);
+        add_db_map(map_id, elm_filename, map_name, author_name, map_description, author_email, development_status);
 
-        if(argc==9 || argc==10){
-
-            int map_id=atoi(argv[2]);
-
-            char elm_filename[80]="";
-            strcpy(elm_filename, argv[3]);
-
-            char map_name[80]="";
-            strcpy(map_name, argv[4]);
-
-            char map_description[80]="";
-            strcpy(map_description, argv[5]);
-
-            char author_name[80]="";
-            strcpy(author_name, argv[6]);
-
-            char author_email[80]="";
-            strcpy(author_email, argv[7]);
-
-            int development_status=atoi(argv[8]);
-
-            if(argc==10) strcpy(db_filename, argv[9]);
-
-            open_database(db_filename);
-
-            add_db_map(map_id, elm_filename, map_name, author_name, map_description, author_email, development_status);
-
-            return 0;
-        }
-
-        //if wrong number of args, flow will fallthrough here and display command line options
+        return 0;
     }
 
+    //execute list maps
     else if(option.list_maps==true){
 
         if(argc>2) strcpy(db_filename, argv[2]);
 
-        printf("LIST MAPS at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        printf("LIST MAPS using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
-        log_text(EVENT_INITIALISATION, "LIST MAPS at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "LIST MAPS using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
         log_text(EVENT_INITIALISATION, "");// insert logical separator
 
         open_database(db_filename);
@@ -846,14 +859,15 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
-
-    printf("command line options...\n");
-    printf("-C optional [""database file name""]      ...create database\n");
-    printf("-S optional [""database file name""]      ...start server\n");
-    printf("-U optional [""database file name""]      ...upgrade database\n");
-    printf("-M [map id] [""elm filename""] [""map name""] [""author name""] [""author email""] [""development status code""] optional [""database file name""]    ...load map\n");
-    printf("development status codes 0=development 1=testing 2=final\n");
-    printf("-L optional [""database file name""]      ...list maps\n");
+    //display command line options if no command line options are found or command line options are not recognised
+    printf("Command line options...\n");
+    printf("create database  -C optional [""database file name""]\n");
+    printf("start server     -S optional [""database file name""]\n");
+    printf("upgrade database -U optional [""database file name""]\n");
+    printf("list loaded maps -L optional [""database file name""]\n");
+    printf("load map         -M [map id] [""elm filename""] [""map name""] [""author name""]...");
+    printf("                             [""author email""] [""development status code""]...");
+    printf("                                     optional [""database file name""]\n");
 
     return 0;//otherwise we get 'control reached end of non void function'
 }

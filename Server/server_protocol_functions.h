@@ -282,6 +282,17 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
 void send_close_bag(int connection);
 
 
+/** RESULT  : sends the destroy_bag packet
+
+    RETURNS : void
+
+    PURPOSE : destroys a bag
+
+    NOTES   :
+*/
+void send_destroy_bag(int connection, int bag_id);
+
+
 void send_display_client_window(int connection);
 
 /*****************************************************************************************************

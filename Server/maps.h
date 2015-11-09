@@ -41,17 +41,6 @@
 
 #include "clients.h"
 
-enum{//tile bounds returned from check_tile_bounds function
-    TILE_OUTSIDE_BOUNDS=-2,
-    TILE_NON_TRAVERSABLE=-1,
-    TILE_TRAVERSABLE=0
-};
-
-enum {// return values for is_map_tile_occupied
-    TILE_OCCUPIED,
-    TILE_UNOCCUPIED
-};
-
 enum { //return values from add_char_to_map / remove_char_from_map
     LEGAL_MAP=0,
     ILLEGAL_MAP=-1

@@ -61,4 +61,14 @@ int find_bag_slot(int connection, int object_id);
 int add_to_bag(int bag_id, int object_id, int amount, int slot);
 
 
+/** RESULT  : determines if bag is empty
+
+    RETURNS : true/false
+
+    PURPOSE :
+
+    NOTES   :
+*/
+bool is_bag_empty(int bag_id);
+
 #endif // BAGS_H_INCLUDED

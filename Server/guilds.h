@@ -98,7 +98,7 @@ extern struct guild_member_list_type guild_member_list;
 
     NOTES    :
 **/
-void create_guild(int connection, char *guild_name, char *guild_description, char *guild_tag, int permission_level);
+void create_guild(int connection, char *guild_name, char *guild_tag, int permission_level);
 
 
 /** RESULT   : application from a char for membership of a guild

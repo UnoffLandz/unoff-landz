@@ -140,7 +140,7 @@ void apply_guild(int connection, char *guild_tag){
 }
 
 
-void create_guild(int connection, char *guild_name, char *guild_description, char *guild_tag, int permission_level){
+void create_guild(int connection, char *guild_name, char *guild_tag, int permission_level){
 
     /** public function - see header **/
 
@@ -170,7 +170,6 @@ void create_guild(int connection, char *guild_name, char *guild_description, cha
 
             strcpy(guilds.guild[i].guild_name, guild_name);
             strcpy(guilds.guild[i].guild_tag, guild_tag);
-            strcpy(guilds.guild[i].guild_description, guild_description);
             guilds.guild[i].guild_tag_colour=c_grey1;
             guilds.guild[i].date_guild_created=time(NULL);
             guilds.guild[i].permission_level=permission_level;
@@ -180,12 +179,11 @@ void create_guild(int connection, char *guild_name, char *guild_description, cha
 
             send_text(connection, CHAT_SERVER, "%cyou have created guild %s", c_green3+127, guild_tag);
 
-            push_sql_command("INSERT INTO GUILD_TABLE (GUILD_ID, GUILD_NAME, GUILD_TAG, GUILD_TAG_COLOUR, GUILD_DESCRIPTION, DATE_GUILD_CREATED, PERMISSION_LEVEL, STATUS) VALUES(%i, '%s', '%s', %i, '%s', %i, %i, %i)", \
+            push_sql_command("INSERT INTO GUILD_TABLE (GUILD_ID, GUILD_NAME, GUILD_TAG, GUILD_TAG_COLOUR, DATE_GUILD_CREATED, PERMISSION_LEVEL, STATUS) VALUES(%i, '%s', '%s', %i, '%s', %i, %i, %i)", \
                 i, \
                 guilds.guild[i].guild_name, \
                 guilds.guild[i].guild_tag, \
                 guilds.guild[i].guild_tag_colour, \
-                guilds.guild[i].guild_description, \
                 (int)guilds.guild[i].date_guild_created, \
                 guilds.guild[i].permission_level, \
                 guilds.guild[i].status);

@@ -137,20 +137,6 @@ int bag_count(int connection){
 }
 
 
-void send_destroy_bag(int connection, int bag_id){
-
-    unsigned char packet[11];
-
-    packet[0]=DESTROY_BAG;
-
-    packet[1]=3;
-    packet[2]=0;
-
-    packet[3]=bag_id % 256;
-    packet[4]=bag_id / 256;
-
-    send(connection, packet, 5, 0);
-}
 
 int bag_exists(int map_id, int tile_pos){
 
@@ -163,67 +149,33 @@ int bag_exists(int map_id, int tile_pos){
 
     return -1;
 }
+*/
+
+bool is_bag_empty(int bag_id){
 
 
-int bag_is_empty(int bag_id){
+    for(int i=0; i<MAX_BAG_SLOTS; i++){
 
-    int i;
-
-    for(i=0; i<MAX_BAG_SLOTS; i++){
-
-        if(bag_list[bag_id].inventory[i].amount>0) return FALSE;
+        if(bag[bag_id].inventory[i].amount>0) return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 
-int add_item_to_bag(int bag_id, int image_id, int amount, int *bag_slot){
-
-    //adds items to bag without resetting bag timers or sending updated inventory to client
-
-    //find bag slot that already contains item (returns -1 if none)
-    *bag_slot=get_used_bag_slot(bag_id, image_id);
-
-    //if the bag doesn't have an existing slot for the item, create a new one
-    if(*bag_slot==-1) {
-
-        //find a free slot for the item
-        *bag_slot=get_unused_bag_slot(bag_id);
-
-        //if there are no free slots then abort function
-        if(*bag_slot==-1) return FALSE;
-
-        //place the item in the free slot
-        bag_list[bag_id].inventory[*bag_slot].image_id=image_id;
-    }
-
-    //add amount to bag
-    bag_list[bag_id].inventory[*bag_slot].amount+=amount;
-
-    return TRUE;
-}
-
-int remove_item_from_bag(int bag_id, int image_id, int amount, int *bag_slot){
+void remove_item_from_bag(int bag_id, int amount, int bag_slot){
 
     //removes items from bag without resetting bag timers or sending updated inventory to client
 
-    //find an existing slot for this item in the bag inventory (returns -1 if there are no existing slots with this item)
-    *bag_slot=get_used_bag_slot(bag_id, image_id);
+    //check amount to be taken from slot doesn't exceed slot contents
+    int slot_amount = bag[bag_id].inventory[bag_slot].amount;
+    if(slot_amount<amount) amount=slot_amount;
 
-    //abort function if there is an attempt to remove a non existent item from the bag
-    if(*bag_slot==-1) return FALSE;
+    bag[bag_id].inventory[bag_slot].amount-=amount;
 
-    //ensure that the amount being removed from the bag doesn't exceed whats actually in the bag inventory
-    if(bag_list[bag_id].inventory[*bag_slot].amount < amount) amount=bag_list[bag_id].inventory[*bag_slot].amount;
-
-    //remove the item from the bag
-    bag_list[bag_id].inventory[*bag_slot].amount-=amount;
-
-    return TRUE;
 }
 
-
+/*
 int get_bag_inventory_emu(int bag_id){
 
     int i=0;
