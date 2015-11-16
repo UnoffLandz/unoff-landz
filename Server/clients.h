@@ -35,12 +35,12 @@ struct client_node_type{
     enum{
 
         LOGGED_OUT=0,
-        LOGGED_IN=1,
-        CONNECTED=2
+        CONNECTED=1,
+        LOGGED_IN=2,
     }client_status;
 
-    int packet_buffer[1024];
-    int packet_buffer_length;
+    unsigned char packet_buffer[1024];
+    size_t packet_buffer_length;
 
     time_t char_created;
     int character_id; //database id for char

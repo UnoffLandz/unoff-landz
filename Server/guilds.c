@@ -40,7 +40,7 @@ struct guild_member_list_type guild_member_list;
 
 void update_guild_details(int character_id, int guild_id, time_t joined_guild, int guild_rank){
 
-    /** RESULT   : sends a list of guild members to a character
+    /** RESULT   :
 
         RETURNS  : void
 

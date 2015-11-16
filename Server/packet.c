@@ -28,6 +28,7 @@ Packets received by and sent to the server conform to a common format:
 */
 
 #include <string.h> //support for memcpy
+#include <stdlib.h>//support for ssize_t datatype
 
 #include "packet.h"
 #include "logging.h"

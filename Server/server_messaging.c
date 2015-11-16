@@ -38,16 +38,22 @@ void send_motd_header(int connection){
     char verbose_date_stamp_str[50]="";
     char chars_in_game_str[1024]="";
     int chars_in_game_count=0;
-    long int server_up_time=0;
-    char time_up_str[50]="";
+    //long int server_up_time=0;
+    //char time_up_str[50]="";
 
     //send separator line so MOTD is distinct from previous text
     send_text(connection, CHAT_SERVER, " ");
 
     //prepare and send server 'up' time
-    server_up_time=time(NULL)-game_data.server_start_time;
-    get_time_up_str(server_up_time, time_up_str);
-    send_text(connection, CHAT_SERVER, "%cServer up                  : %s", c_blue2+127, time_up_str);
+    long time_diff=time(NULL)-game_data.server_start_time;
+    int time_days=time_diff/(24*60*60);
+    time_diff=time_diff-(time_days*24*60*60);
+    int time_hrs=time_diff/(60*60);
+    time_diff=time_diff-(time_hrs*60*60);
+    int time_mins=time_diff/60;
+
+    //get_time_up_str(server_up_time, time_up_str);
+    send_text(connection, CHAT_SERVER, "%cServer up                  : %i days %i hrs %i mins", c_blue2+127, time_days, time_hrs, time_mins);
 
     //prepare and send server start time
     get_time_stamp_str(game_data.server_start_time, time_stamp_str);

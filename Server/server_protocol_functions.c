@@ -667,11 +667,11 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
 
         //create a char array carrying the banner (char name and guild name separated by a space and
     //127+colour character)
-    int guild_tag_colour=guilds.guild[clients.client[connection].guild_id].guild_tag_colour;
+    int guild_tag_colour=127+guilds.guild[clients.client[connection].guild_id].guild_tag_colour;
 
     size_t banner_length=(size_t)sprintf(_packet1.banner, "%s %c%s",
         clients.client[connection].char_name,
-        127+guild_tag_colour,
+        guild_tag_colour,
         guilds.guild[clients.client[connection].guild_id].guild_tag);
 
     //calculate the total packet length

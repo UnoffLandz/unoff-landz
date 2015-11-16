@@ -102,15 +102,19 @@ void process_packet(int connection, unsigned char *packet){
         //guild chat
         else if(text[0]=='~'){
 
-            //remove the ~ from text string and add null terminator
+            //need to convert to a hash command and pass through the process_hash_command function
+            //otherwise non-guild chars will be able to use command
+
+            //remove ~ and replace with #gm then process as hash command
             memcpy(text, text+1, strlen(text)-1);
             text[strlen(text)-1]='\0';
 
-            //broadcast to self
-            send_text(connection, CHAT_GM, "%c[%s]: %s", c_blue1+127, clients.client[connection].char_name, text);
+            char text_out[1024]="#GM ";
+            strcat(text_out, text);
+            strcpy(text, text_out);
 
-            //broadcast to others
-            broadcast_guild_chat(clients.client[connection].guild_id, connection, text);
+            process_hash_commands(connection, text_out);
+            return;
         }
 
         //hash commands
@@ -138,8 +142,6 @@ void process_packet(int connection, unsigned char *packet){
     else if(protocol==MOVE_TO) {
 
         //get destination tile
-        //int x_dest=uint16_t_to_dec(packet[3], packet[4]);
-        //int y_dest=uint16_t_to_dec(packet[5], packet[6]);
         int x_dest=*((int16_t*)(packet+3));
         int y_dest=*((int16_t*)(packet+5));
 
@@ -148,7 +150,7 @@ void process_packet(int connection, unsigned char *packet){
         //move the char
         start_char_move(connection, tile_dest);
 
-        log_event(EVENT_SESSION, "Move [%s] Map [%s] x[%i] y[%i]", clients.client[connection].char_name, maps.map[clients.client[connection].map_id].map_name, x_dest, y_dest);
+        log_event(EVENT_SESSION, "Move [%s] Map [%s] x[%i] y[%i] tile [%i]", clients.client[connection].char_name, maps.map[clients.client[connection].map_id].map_name, x_dest, y_dest, tile_dest);
     }
 /***************************************************************************************************/
 
@@ -177,7 +179,19 @@ void process_packet(int connection, unsigned char *packet){
         //ADD_ENHANCED_ACTOR packet. When using the ADD_ACTOR packet, command 13=sit down and command 14=stand up. When
         //using the ADD_ENHANCED_ACTOR packet, command 12=sit, command 13=stand and command 14=stand idle.
 
-        if(packet[3]==SIT){//make the char stand
+        //The client automatically issues a SIT_DOWN packet after a few minutes inactivity.
+        //However, for some strange reason it even does so if left open before a char has been
+        //logged in, and which then causes the server to seg fault and crash. Hence, we have
+        //to exclude processing of the SIT_DOWN command where the client status is CONNECTED
+        //but not yet LOGGED_IN
+
+        printf("status %i\n", clients.client[connection].client_status);
+        if(clients.client[connection].client_status!=LOGGED_IN) return;
+
+        //determine if the char should sit or stand
+        int sitstand=packet[3];
+
+        if(sitstand==SIT){//make the char stand
 
             clients.client[connection].frame=frame_stand;
             broadcast_actor_packet(connection, actor_cmd_stand_up, clients.client[connection].map_tile);

@@ -18,6 +18,7 @@
 *******************************************************************************************************************/
 
 #include <stdio.h>      //support sprintf function
+#include <string.h>    //support strcmp function
 
 #include "logging.h"
 #include "clients.h"
@@ -72,8 +73,8 @@ int get_move_command(int tile_pos, int tile_dest, int map_axis){
     else if(move==-1) i=6;
 
     else {
-        log_event(EVENT_MOVE_ERROR, "illegal move in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-        log_text(EVENT_MOVE_ERROR, "current tile [%i] destination tile [%i] move distance [%i]", tile_pos, tile_dest, move);
+        log_event(EVENT_ERROR, "illegal move in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_text(EVENT_ERROR, "current tile [%i] destination tile [%i] move distance [%i]", tile_pos, tile_dest, move);
         stop_server();
     }
 
@@ -137,16 +138,14 @@ void remove_char_from_map(int connection){
 
     int map_id=clients.client[connection].map_id;
 
-    //if map is outside bounds something awful has happened so stop server
-    if(map_id>MAX_MAPS || map_id<1){
-
-        log_event(EVENT_ERROR, "attempt to remove char from illegal map (id[%i] map name [%s]) in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
-        stop_server();
-    }
+    //check bounds
+    if(map_id>MAX_MAPS || map_id<1) return;
 
     //broadcast actor removal to other chars on map
     broadcast_remove_actor_packet(connection);
     log_event(EVENT_SESSION, "char %s removed from map %s", clients.client[connection].char_name, maps.map[map_id].map_name);
+
+    return;
 }
 
 
@@ -176,8 +175,6 @@ void send_actors_to_client(int connection){
 
                 //send actors within visual proximity to this char
                 add_new_enhanced_actor_packet(i, packet, &packet_length);
-
-                //send(connection, packet, packet_length, 0);
                 send_packet(connection, packet, packet_length);
             }
         }
@@ -192,30 +189,39 @@ bool add_char_to_map(int connection, int map_id, int map_tile){
     //if map is outside bounds then abort map move and alert client
     if(map_id>MAX_MAPS || map_id<0) {
 
-        log_event(EVENT_MOVE_ERROR, "illegal map (id[%i] name [%s]) in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "illegal map id[%i] name %s])in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
 
-        send_text(connection, CHAT_SERVER, "%cnew map is outside bounds", c_red1+127);
-
+        send_text(connection, CHAT_SERVER, "%cmap %i is outside bounds", c_red1+127, map_id);
         return false;
     }
 
-    //get nearest unoccupied tile on the map
-    int unoccupied_tile=get_nearest_unoccupied_tile(map_id, map_tile);
+    //check that map exists
+    if(strcmp(maps.map[map_id].elm_filename, "")==0){
 
-    //if unable to find unoccupied tile then abort
-    if(unoccupied_tile==0){
-
-        log_event(EVENT_MOVE_ERROR, "Unable to find unoccupied tile within [%i] tiles on map (id[%i] name [%s]) in function %s: module %s: line %i", MAX_UNOCCUPIED_TILE_SEARCH, map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
-
-        send_text(connection, CHAT_SERVER, "%cunable to find unoccupied tile in new map", c_red1+127);
-
+        send_text(connection, CHAT_SERVER, "%cmap %i doesn't exist", c_red3+127, map_id);
         return false;
     }
 
-    clients.client[connection].map_tile=unoccupied_tile;
+    //if char is moving then cancel rest of path
+    clients.client[connection].path_count=0;
+
+    //ensure map tile is walkable
+    if(tile_walkable(map_id, map_tile)==false){
+
+        send_text(connection, CHAT_SERVER, "%ctile %i of map %s is not walkable", c_red3+127, map_tile, maps.map[map_id].map_name);
+        return false;
+    }
+
+    clients.client[connection].map_id=map_id;
+    clients.client[connection].map_tile=map_tile;
 
     //send map to client
     send_change_map(connection, maps.map[map_id].elm_filename);
+
+    //clients.client[connection].map_tile=27025;
+    //clients.client[connection].map_id=2;
+    //send_change_map(connection, "./maps/NewPlattsdale.elm");
+    //mm 28278
 
     //make scene visible to this client
     send_actors_to_client(connection);
@@ -226,23 +232,41 @@ bool add_char_to_map(int connection, int map_id, int map_tile){
     //show this char to other connected clients on this map
     broadcast_add_new_enhanced_actor_packet(connection);
 
+    //update_database
+    push_sql_command("UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", clients.client[connection].map_tile, clients.client[connection].map_id, clients.client[connection].character_id);
+
     log_event(EVENT_SESSION, "char [%s] added to map [%s] at tile [%i]", clients.client[connection].char_name, maps.map[map_id].map_name, clients.client[connection].map_tile);
 
     return true;
 }
 
 
-void move_char_between_maps(int connection, int new_map_id, int new_map_tile){
+bool move_char_between_maps(int connection, int map_id, int map_tile){
 
     /** public function - see header */
 
     remove_char_from_map(connection);
 
-    //if move to new map is successful update database
-    if(add_char_to_map(connection, new_map_id, new_map_tile)==true){
+    if(add_char_to_map(connection, map_id, map_tile)==false){
 
-        push_sql_command("UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", new_map_tile, new_map_id, clients.client[connection].character_id);
+        //return char to original map if jump to new map fails
+        if(add_char_to_map(connection, clients.client[connection].map_id, clients.client[connection].map_tile)==false){
+
+            log_event(EVENT_ERROR, "cannot return char to orignal map in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+             stop_server();
+        }
+
+        return false;
     }
+
+    //update client struct with new map data
+    clients.client[connection].map_id=map_id;
+    clients.client[connection].map_tile=map_tile;
+
+    //update database
+    push_sql_command("UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", clients.client[connection].map_tile, clients.client[connection].map_id, clients.client[connection].character_id);
+
+    return true;
 }
 
 

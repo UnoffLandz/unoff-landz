@@ -42,11 +42,11 @@ bool add_char_to_map(int connection, int new_map_id, int map_tile);
 
 /** RESULT  : moves a character between maps
 
-    RETURNS : void
+    RETURNS : true/false
 
     PURPOSE : supports map jumps
 **/
-void move_char_between_maps(int connection, int new_map_id, int new_map_tile);
+bool move_char_between_maps(int connection, int new_map_id, int new_map_tile);
 
 
 /** RESULT  : moves a character one step along the path

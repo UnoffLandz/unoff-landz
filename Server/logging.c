@@ -375,7 +375,7 @@ void get_event_log_file(int event_type, char *file_name){
         case EVENT_ERROR: strcpy(file_name, ERROR_LOG_FILE_NAME); break;
         case EVENT_SESSION: strcpy(file_name, SESSION_LOG_FILE_NAME); break;
         case EVENT_CHAT: strcpy(file_name, CHAT_LOG_FILE_NAME); break;
-        case EVENT_MOVE_ERROR: strcpy(file_name, MOVE_LOG_FILE_NAME); break;
+        //case EVENT_MOVE_ERROR: strcpy(file_name, MOVE_LOG_FILE_NAME); break;
         case EVENT_INITIALISATION: strcpy(file_name, INITIALISATION_LOG_FILE_NAME); break;
         case EVENT_MAP_LOAD:strcpy(file_name, MAP_LOAD_LOG_FILE_NAME); break;
         case EVENT_PACKET:strcpy(file_name, PACKET_LOG_FILE_NAME); break;
@@ -458,11 +458,11 @@ void log_event(int event_type, const char *fmt, ...){
         case EVENT_CHAT:
             sprintf(text_out, "[%s][%s] Event - %s", date_stamp_str, time_stamp_str, text_in);
         break;
-
+/*
         case EVENT_MOVE_ERROR:
             sprintf(text_out, "[%s][%s] Move-error - %s", date_stamp_str, time_stamp_str, text_in);
         break;
-
+*/
         case EVENT_INITIALISATION:
             sprintf(text_out, "[%s][%s] %s", date_stamp_str, time_stamp_str, text_in);
         break;

@@ -55,7 +55,7 @@ bool tile_walkable(int map_id, int tile){
 }
 
 
-bool tile_unoccupied(int map_id, int map_tile){
+bool tile_unoccupied(int connection, int map_id, int map_tile){
 
     /** RESULT  : determines if tile is unoccupied
 
@@ -67,9 +67,9 @@ bool tile_unoccupied(int map_id, int map_tile){
     */
 
     //now check through clients and see if any have characters occupying that tile
-    for(int i=0; i<clients.client_count; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
-        if(clients.client[i].map_tile==map_tile && clients.client[i].map_id==map_id) return false;
+        if(i!=connection && clients.client[i].map_tile==map_tile && clients.client[i].map_id==map_id) return false;
     }
 
     return true;
@@ -99,7 +99,7 @@ bool tile_in_lateral_bounds(int tile, int next_tile, int map_id){
 }
 
 
-int get_nearest_unoccupied_tile(int map_id, int map_tile){
+int get_nearest_unoccupied_tile(int connection, int map_id, int map_tile){
 
     /** public function - see header */
 
@@ -107,9 +107,10 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile){
     int map_axis=maps.map[map_id].map_axis;
 
     //check target tile to see if it is walkable and unoccupied
-    if(tile_walkable(map_id, map_tile)==true && tile_unoccupied(map_id, map_tile)==true) return map_tile;
+    if(tile_walkable(map_id, map_tile)==true && tile_unoccupied(connection, map_id, map_tile)==true) return map_tile;
 
-    //if target tile is not walkable and unoccupied then  search adjacent tiles
+
+    //if target tile is not walkable and unoccupied then search adjacent tiles
     do{
 
         //examine all adjacent tiles
@@ -124,7 +125,7 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile){
                 if(next_tile>0 && next_tile<maps.map[map_id].height_map_size) {
 
                     //check next best tile
-                    if(tile_walkable(map_id, next_tile)==true && tile_unoccupied(map_id, next_tile)==true) return next_tile;
+                    if(tile_walkable(map_id, next_tile)==true && tile_unoccupied(connection, map_id, next_tile)==true) return next_tile;
                 }
             }
         }
@@ -134,5 +135,5 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile){
 
     } while(j<MAX_UNOCCUPIED_TILE_SEARCH);
 
-    return 0; //return 0 if an unoccupied tile cannot be found
+    return -1; //return -1 if an unoccupied tile cannot be found
 }

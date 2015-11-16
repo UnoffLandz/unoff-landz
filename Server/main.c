@@ -43,58 +43,49 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-DONE fixed bug which resulted in chat tabs that are closed following loss of server not being reopened when client relogs back into server
-DONE #GM functionality (including ~ short tag)
-DONE guild chan join/leave notifications
-DONE walk to towards bag when clicked on if char is not standing on bag
-DONE NEW convert look_at_map_object in client protocol handler to use pointers rather than uint32_to_dec function
-DONE NEW convert harvest in client protocol handler to use pointers rather than uint16_t_to_dec function
-DONE NEW convert move_to in client protocol handler to use pointers rather than uint16_t_to_dec function
-DONE #command to change guild description
-DONE NEW separate module for guild #commands
-DONE #command to change guild tag colour
-DONE #leave_guild
-DONE NEW #command to system message all active players
-DONE refactor get_nearest_unoccupied_tile
+DONE fixed bug which meant only root can start server
+DONE NEW fixed bug in #beam me (removed #beam_me option)
+DONE fixed bug server time up resets at midnight
+DONE fixed bug server goes down when not fully logged on and client issues sit down command
+DONE fixed bug ~[message] can be used by players or to bypass rank/permission restrictions
+DONE tested #server_message
+DONE tested #set_guild_description
+DONE tested #set_guild_tag_colour
+DONE tested #leave_guild
 
+NEW BUG can't jump to NewPlattsdale
+NEW BUG Player chat in dark gray even when active
+NEW BUG Player chat shows chan 32
+NEW BUG Bingo chat shows chan -30
+BUG pick_up_item causing machine crash
+BUG destroy bag not working
+NEW BUG can't change existing map using -M (prevented by db unique constraint)
 
-NEW BUG function get_nearest_unoccupied_tile searches in star rather than grid
-NEW BUG check that ~[message] can't be used by guildless players or to bypass rank/permission restrictions
-NEW BUG server goes down when not fully logged on and client issues sit down command
-NEW BUG server time up resets at midnight
-NEW BUG why can only root start server ???
-NEW BUG pick_up_item causing machine crash
-NEW BUG destroy bag not working
-
-
-NEW TEST multiple chat channel handling
+TEST multiple chat channel handling
 TEST multiple guild application handling
-NEW TEST #set_guild_description
-NEW TEST #set_guild_tag_colour
-NEW TEST #leave_guild
-NEW TEST #server_message
 
+NEW reimplement function get_nearest_unoccupied_tile
+NEW need #command for developers to list available maps
 need #command to withdraw application to join guild
-
 extend add_client_to_map function so that existing bags are shown to new client
-NEW broadcast bags to other clients
+broadcast bags to other clients
 implement pick up bag
 implement move item between slots in bag
 implement bag poof (include reset poof time on add/drop from bag)
 
 need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
-NEW separate module for chat #commands
-NEW separate module for ops #commands
-NEW transfer server welcome message to the database
-NEW #command to change guild chan join/leave notification colours
+separate module for chat #commands
+separate module for ops #commands
+transfer server welcome message to the database
+#command to change guild chan join/leave notification colours
 remove character_type_name field from CHARACTER_TYPE_TABLE
 map object reserve respawn
-NEW #command to #letter all members of a guild
+#command to #letter all members of a guild
 finish script loading
 widen distance that new/beamed chars are from other chars
 #IG guild channel functionality
-NEW OPS #command to #letter all chars
-NEW add map axis to get_proximity
+OPS #command to #letter all chars
+add map axis to get_proximity
 need #command to #letter all guild members (guild master only)
 implement guild stats
 Table to separately record all drops/pick ups in db
@@ -117,7 +108,6 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 ***************************************************************************************************/
 
 #include <stdio.h>      //supports printf function
-#include <stdlib.h>     //supports free function
 #include <string.h>     //supports memset and strcpy functions
 #include <errno.h>      //supports errno function
 #include <arpa/inet.h>  //supports recv and accept function
@@ -163,10 +153,12 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include "character_type.h"
 #include "colour.h"
 #include "broadcast_actor_functions.h"
+#include "packet.h"
+#include "maps.h" //testing
 
 #define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
 #define DEBUG_MAIN 1
-#define VERSION "4.1"
+#define VERSION "4.2"
 
 struct ev_io *libevlist[MAX_CLIENTS] = {NULL};
 
@@ -520,9 +512,9 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
             log_event(EVENT_SESSION, "bytes received [%i]", read);
 
             //copy new bytes to client packet buffer(memcpy doesn't work)
-            int j=0;
-            for(j=0; j<read; j++){
-                clients.client[watcher->fd].packet_buffer[clients.client[watcher->fd].packet_buffer_length]=buffer[j];
+            for(int i=0; i<read; i++){
+
+                clients.client[watcher->fd].packet_buffer[clients.client[watcher->fd].packet_buffer_length]=buffer[i];
                 clients.client[watcher->fd].packet_buffer_length++;
             }
 
@@ -531,10 +523,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 
                 do {
 
-                    int lsb=clients.client[watcher->fd].packet_buffer[1];
-                    int msb=clients.client[watcher->fd].packet_buffer[2];
-
-                    int packet_length=lsb+(msb*256)+2;
+                    size_t packet_length=get_packet_length(clients.client[watcher->fd].packet_buffer);
 
                     //update heartbeat
                     clients.client[watcher->fd].time_of_last_heartbeat=time_check.tv_sec;
@@ -542,20 +531,21 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
                     //if insufficient data received then wait for more data
                     if(clients.client[watcher->fd].packet_buffer_length<packet_length) break;
 
-                    //copy packet from buffer
-                    for(j=0; j<packet_length; j++){
+                    //copy a packet from buffer
+                    for(int i=0; i<(int)packet_length; i++){
 
-                        packet[j]=(unsigned char)clients.client[watcher->fd].packet_buffer[j];
+                        packet[i]=(unsigned char)clients.client[watcher->fd].packet_buffer[i];
                     }
 
-                    //process packet
+                    //process the packet
                     process_packet(watcher->fd, packet);
 
                     // remove packet from buffer
                     clients.client[watcher->fd].packet_buffer_length=clients.client[watcher->fd].packet_buffer_length-packet_length;
 
-                    for(j=0; j<=clients.client[watcher->fd].packet_buffer_length; j++){
-                        clients.client[watcher->fd].packet_buffer[j]=clients.client[watcher->fd].packet_buffer[j+packet_length];
+                    for(int i=0; i<=(int)clients.client[watcher->fd].packet_buffer_length; i++){
+
+                        clients.client[watcher->fd].packet_buffer[i]=clients.client[watcher->fd].packet_buffer[i+(int)packet_length];
                     }
 
                 } while(1);
@@ -865,10 +855,9 @@ int main(int argc, char *argv[]){
     printf("start server     -S optional [""database file name""]\n");
     printf("upgrade database -U optional [""database file name""]\n");
     printf("list loaded maps -L optional [""database file name""]\n");
-    printf("load map         -M [map id] [""elm filename""] [""map name""] [""author name""]...");
-    printf("                             [""author email""] [""development status code""]...");
-    printf("                                     optional [""database file name""]\n");
+    printf("load map         -M [map id] [""elm filename""] [""map name""] [""author name""]...\n");
+    printf("                             [""author email""] [""development status code""]...\n");
+    printf("                             optional [""database file name""]\n");
 
     return 0;//otherwise we get 'control reached end of non void function'
 }
-

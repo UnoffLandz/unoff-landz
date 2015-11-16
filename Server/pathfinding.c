@@ -89,7 +89,7 @@ int add_tile_to_explore_stack(int new_value, int new_tile, int *explore_stack_co
     if(*explore_stack_count>HEIGHT_MAP_MAX-1){
 
         //if stack array is exceeded then pass message to calling function to recover gracefully rather than crash
-        log_event(EVENT_MOVE_ERROR, "explore stack array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "explore stack array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
     }
 
@@ -161,7 +161,6 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
 
     for(i=0; i<8; i++){
 
-        //adj_tile=target_tile+vector_x[i]+(map_axis*vector_y[i]);
         adj_tile=target_tile+vector[i].x+(map_axis*vector[i].y);
 
         //ensure adjacent tile is within lateral bounds
@@ -178,7 +177,6 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
                     //if something went wrong in the last function then abort this function
                     return ADD_TILE_ABORT;
                 }
-
             }
         }
     }
@@ -218,7 +216,7 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
     if(add_tile_to_explore_stack(heuristic_value, start_tile, &explore_stack_count, explore_stack)==ADD_TILE_ABORT) {
 
         //if something went wrong in sub function then pass message to calling function to recover gracefully rather than crash
-        log_event(EVENT_MOVE_ERROR, "abort in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "abort in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         return NOT_FOUND;
     }
 
@@ -230,7 +228,7 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
 
         if(add_adjacent_tiles_to_explore_stack(explore_stack[node][TILE], destination_tile, map_id, &explore_stack_count, explore_stack)==ADD_TILE_ABORT){
 
-            log_event(EVENT_MOVE_ERROR, "abort in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "abort in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
             return NOT_FOUND;
         }
 
@@ -250,7 +248,7 @@ int explore_path(int connection, int destination_tile, int *path_stack_count, in
         if(found==false) {
 
             send_text(connection, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
-            log_event(EVENT_MOVE_ERROR, "destination unreachable - no explorable tiles left in stack in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "destination unreachable - no explorable tiles left in stack in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
 
             return NOT_FOUND;
         }
@@ -337,7 +335,7 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
 
         if(clients.client[connection].path_count>PATH_MAX-1) {
 
-            log_event(EVENT_MOVE_ERROR, "client path array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "client path array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
             stop_server();
         }
 

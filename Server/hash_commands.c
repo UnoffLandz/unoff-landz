@@ -220,27 +220,19 @@ static int hash_beam_me(int connection, char *text) {
         NOTES   :
     */
 
-    char command[80];
     char tail[80];
 
-    if(sscanf(text, "%s %s", command, tail)>2){
+    if(sscanf(text, "%*s %s", tail)!=1){
 
-        send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM ME", c_red3+127);
         return 0;
     }
 
-    str_conv_upper(command);
     str_conv_upper(tail);
 
-    if(strcmp(command, "BEAM_ME")!=1){
+    if(strcmp(tail, "ME")!=0){
 
-        send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
-        return 0;
-    }
-
-    if(strcmp(command, "BEAM")!=0 || strcmp(tail, "ME")!=0){
-
-        send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM_ME or #BEAM ME", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #BEAM ME", c_red3+127);
         return 0;
     }
 
@@ -248,7 +240,7 @@ static int hash_beam_me(int connection, char *text) {
     clients.client[connection].path_count=0;
 
     //ensure char doesn't beam on top of another char
-    int new_map_tile=get_nearest_unoccupied_tile(game_data.beam_map_id, game_data.beam_map_tile);
+    int new_map_tile=get_nearest_unoccupied_tile(connection, game_data.beam_map_id, game_data.beam_map_tile);
 
     //beam the char
     move_char_between_maps(connection, game_data.beam_map_id, new_map_tile);
@@ -303,22 +295,14 @@ static int hash_jump(int connection, char *text) {
         return 0;
     }
 
-    //if char is moving when protocol arrives, cancel rest of path
-    clients.client[connection].path_count=0;
+    if(move_char_between_maps(connection, map_id, map_tile)==false){
 
-    if(strcmp(maps.map[map_id].elm_filename, "")==0){
-
-        send_text(connection, CHAT_SERVER, "%cmap %i doesn't exist", c_red3+127, map_id);
+        send_text(connection, CHAT_SERVER, "%cjump failed", c_red3+127);
         return 0;
     }
 
-    //ensure char doesn't beam on top of another char
-    int new_map_tile=get_nearest_unoccupied_tile(map_id, map_tile);
+    send_text(connection, CHAT_SERVER, "%cYou jumped to map %s tile %i", c_green3+127, maps.map[map_id].map_name, map_tile);
 
-    //send char to new map
-    move_char_between_maps(connection, map_id, new_map_tile);
-
-    send_text(connection, CHAT_SERVER, "%cYou jumped to map %s tile %i", c_green3+127, maps.map[map_id].map_name, new_map_tile);
     return 0;
 }
 
@@ -585,7 +569,6 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#CHANNEL_PARTICIPANTS",   false, 0,       PERMISSION_1, hash_cp},
     {"#CHAR_DETAILS",           false, 0,       PERMISSION_1, hash_char_details},
     {"#CD",                     false, 0,       PERMISSION_1, hash_char_details},
-    {"#BEAM_ME",                false, 0,       PERMISSION_1, hash_beam_me},
     {"#BEAM",                   false, 0,       PERMISSION_1, hash_beam_me},
     {"#PM",                     false, 0,       PERMISSION_1, hash_pm},
     {"#PRIVATE_MESSAGE",        false, 0,       PERMISSION_1, hash_pm},

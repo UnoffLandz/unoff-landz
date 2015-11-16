@@ -102,6 +102,7 @@ void get_map_details(int connection, int map_id){
     send_text(connection, CHAT_SERVER, "%cIt is (%i x %i) steps wide", c_green3+127, maps.map[map_id].map_axis, maps.map[map_id].map_axis);
 }
 
+
 void get_map_developer_details(int connection, int map_id){
 
     /** public function - see header */
@@ -134,4 +135,101 @@ void get_map_developer_details(int connection, int map_id){
         send_text(connection, CHAT_SERVER, "%cStatus: FINAL", c_green3+127);
         break;
     }
+}
+
+
+void read_elm_header(char *elm_filename){
+
+    //open elm file
+    FILE *file;
+
+    if((file=fopen(elm_filename, "r"))==NULL) {
+
+        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //read the header
+    unsigned char header_byte[ELM_FILE_HEADER]= {0};
+    if(fread(header_byte, ELM_FILE_HEADER, 1, file)!=1) {
+
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    fclose(file);
+
+    //copy bytes to header struct so we can extract data
+    memcpy(&elm_header, header_byte, ELM_FILE_HEADER);
+
+    //check the magic number
+    if(elm_header.magic_number[0]!='e' ||
+            elm_header.magic_number[1]!='l' ||
+            elm_header.magic_number[2]!='m' ||
+            elm_header.magic_number[3]!='f') {
+
+        log_event(EVENT_ERROR, "elm file magic number [%c%c%c%] != [elmf] in function %s: module %s: line %i",
+                  elm_header.magic_number[0],
+                  elm_header.magic_number[1],
+                  elm_header.magic_number[2],
+                  elm_header.magic_number[3],
+                  __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //check the vertical and horizontal tile counts are equal
+    if(elm_header.h_tiles!=elm_header.v_tiles) {
+
+        log_event(EVENT_ERROR, "horizontal tile count [%i] and vertical tile count [%i] are unequal in function %s: module %s: line %i", elm_header.h_tiles, elm_header.v_tiles, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //check the header length
+    if(elm_header.tile_map_offset!=ELM_FILE_HEADER) {
+
+        log_event(EVENT_ERROR, "elm file header [%i] is not equal to [%i] in function %s: module %s: line %i", elm_header.tile_map_offset, ELM_FILE_HEADER, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+}
+
+
+void read_height_map(char *elm_filename, unsigned char *height_map, int *height_map_size, int *map_axis){
+
+    read_elm_header(elm_filename);
+
+    FILE *file;
+
+    if((file=fopen(elm_filename, "r"))==NULL) {
+
+        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    *height_map_size=elm_header.threed_object_offset-elm_header.height_map_offset;
+    *map_axis=elm_header.h_tiles * 6;
+
+    //bounds check the height map size
+    if(*height_map_size>HEIGHT_MAP_MAX){
+
+        log_event(EVENT_ERROR, "height map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", *height_map_size, HEIGHT_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //read data proceding the height map
+    unsigned char dummy[100000];
+
+    if(fread(dummy, (size_t)elm_header.height_map_offset, 1, file)!=1) {
+
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //read the height map
+    if(fread(height_map, (size_t) *height_map_size, 1, file)!=1) {
+
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    fclose(file);
 }

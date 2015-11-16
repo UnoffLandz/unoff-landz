@@ -43,7 +43,6 @@ void process_log_in(int connection, const unsigned char *packet){
 
     char text[80]="";
     int map_id=0;
-    //int chan_colour=0;
 
     size_t packet_length=get_packet_length(packet);
 

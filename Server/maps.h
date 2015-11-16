@@ -20,14 +20,12 @@
 #ifndef MAPS_H_INCLUDED
 #define MAPS_H_INCLUDED
 
+#include <stdint.h> //supports int32_t datatype
+
 #define MAX_MAPS 10
-
 #define ELM_FILE_HEADER 124
-
 #define MIN_MAP_AXIS 10 //used to bounds check maps
-
 #define ELM_FILE_VERSION 1
-
 #define MAX_ELM_FILE_SIZE 1000000
 #define TILE_MAP_MAX 50000
 #define HEIGHT_MAP_MAX 150000
@@ -36,15 +34,9 @@
 //#define START_MAP_TILE 27225 // tile_pos at which characters are created
 
 #define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
-
 #define CLIENT_MAP_PATH "./maps/" //the path that needs to be sent with the send_map packet
 
 #include "clients.h"
-
-enum { //return values from add_char_to_map / remove_char_from_map
-    LEGAL_MAP=0,
-    ILLEGAL_MAP=-1
-};
 
 struct map_node_type{
 
@@ -79,11 +71,56 @@ struct map_node_type{
 };
 
 struct map_list_type {
-    //int count;
+
     struct map_node_type map[MAX_MAPS];
 };
 extern struct map_list_type maps;
 
+struct __attribute__((__packed__)){
+
+    unsigned char magic_number[4];
+    int32_t h_tiles;
+    int32_t v_tiles;
+    int32_t tile_map_offset;
+    int32_t height_map_offset;
+
+    int32_t threed_object_hash_len;
+    int32_t threed_object_count;
+    int32_t threed_object_offset;
+
+    int32_t twod_object_hash_len;
+    int32_t twod_object_count;
+    int32_t twod_object_offset;
+
+    int32_t lights_object_hash_len;
+    int32_t lights_object_count;
+    int32_t lights_object_offset;
+
+    unsigned char dungeon_flag;
+    unsigned char version_flag;
+    unsigned char reserved1;
+    unsigned char reserved2;
+
+    int32_t ambient_red;
+    int32_t ambient_green;
+    int32_t ambient_blue;
+
+    int32_t particles_object_hash_len;
+    int32_t particles_object_count;
+    int32_t particles_object_offset;
+
+    int32_t clusters_offset;
+
+    int32_t reserved_9;
+    int32_t reserved_10;
+    int32_t reserved_11;
+    int32_t reserved_12;
+    int32_t reserved_13;
+    int32_t reserved_14;
+    int32_t reserved_15;
+    int32_t reserved_16;
+    int32_t reserved_17;
+} elm_header;
 
 /** RESULT  : calculates the distance between two entities on a map
 
@@ -160,6 +197,10 @@ void get_map_details(int connection, int map_id);
     NOTES   :
 */
 void get_map_developer_details(int connection, int map_id);
+
+void read_elm_header(char *elm_filename);
+void read_height_map(char *elm_filename, unsigned char *height_map, int *height_map_size, int *map_axis);
+
 
 
 #endif // MAPS_H_INCLUDED

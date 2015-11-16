@@ -40,7 +40,7 @@ extern struct vector_type vector[8];
     PURPOSE : To support map jumps
 
 */
-int get_nearest_unoccupied_tile(int map_id, int map_tile);
+int get_nearest_unoccupied_tile(int connection, int map_id, int map_tile);
 
 
 /** RESULT  : indicates if moving from one tile to the next will cross lateral bounds
@@ -53,5 +53,7 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile);
 */
 bool tile_in_lateral_bounds(int tile, int next_tile, int map_id);
 
+bool tile_walkable(int map_id, int map_tile);
+bool tile_unoccupied(int connection, int map_id, int map_tile);
 
 #endif // MOVEMENT_H_INCLUDED

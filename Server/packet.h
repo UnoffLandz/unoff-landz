@@ -20,6 +20,9 @@
 #ifndef PACKET_H_INCLUDED
 #define PACKET_H_INCLUDED
 
+#include <unistd.h> //support for ssize_t datatype
+
+
 struct packet_element_type{
 
     enum {  PROTOCOL=1,     //a uint8
@@ -70,5 +73,6 @@ void read_packet(struct packet_element_type *element, int element_count, const u
     NOTES   :
 */
 size_t get_packet_length(const unsigned char *packet);
+
 
 #endif // PACKET_H_INCLUDED

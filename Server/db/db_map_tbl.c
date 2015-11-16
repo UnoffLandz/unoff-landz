@@ -20,6 +20,7 @@
 #include <stdio.h>  //support for NULL
 #include <string.h> //support for strcpy and memcpy
 #include <stdlib.h> //testing only
+#include <stdint.h> //support for int32_t datatype
 
 #include "database_functions.h"
 #include "db_map_tbl.h"
@@ -34,6 +35,8 @@
 #include "../numeric_functions.h"
 #include "../e3d.h"
 
+#define DEBUG_MAPS 1
+
 void load_db_maps(){
 
     /** public function - see header */
@@ -42,6 +45,7 @@ void load_db_maps(){
 
     sqlite3_stmt *stmt;
     int i=0;
+    char raw_elm_filename[80]="";
 
     char sql[MAX_SQL_LEN]="SELECT * FROM MAP_TABLE";
 
@@ -83,6 +87,7 @@ void load_db_maps(){
 
         //get elm filename
         sprintf(maps.map[map_id].elm_filename, "%s%s", CLIENT_MAP_PATH, (char*)sqlite3_column_text(stmt, 3));
+        strcpy(raw_elm_filename, (char*)sqlite3_column_text(stmt, 3));
         log_text(EVENT_MAP_LOAD, "elm filename [%s]", maps.map[map_id].elm_filename);
 
         //get map axis
@@ -90,11 +95,17 @@ void load_db_maps(){
 
         //get tile map
         int tile_map_size=sqlite3_column_bytes(stmt, 5);
+        maps.map[map_id].tile_map_size=tile_map_size;
         memcpy(maps.map[map_id].tile_map, (unsigned char*)sqlite3_column_blob(stmt, 5), (size_t)tile_map_size);
 
         //get height map
+/*
         int height_map_size=sqlite3_column_bytes(stmt, 6);
+        maps.map[map_id].height_map_size=height_map_size;
         memcpy(maps.map[map_id].height_map, (unsigned char*)sqlite3_column_blob(stmt, 6), (size_t)height_map_size);
+*/
+
+        read_height_map(raw_elm_filename, maps.map[map_id].height_map, &maps.map[map_id].height_map_size, &maps.map[map_id].map_axis);
 
         //get map author
         strcpy(maps.map[map_id].author, (char*)sqlite3_column_text(stmt, 7));
@@ -200,6 +211,11 @@ void add_db_map(int map_id, char *elm_filename, char *map_name, char *map_descri
     //check map id is unused
     if(get_db_map_exists(map_id)==true){
 
+        //load all maps into the map struct so that, when we can log the name of the map that
+        //is being replaced
+        load_db_maps();
+        log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
         log_event(EVENT_ERROR, "map [%i] [%s] replaced", map_id, maps.map[map_id].map_name);
     }
 
@@ -208,52 +224,52 @@ void add_db_map(int map_id, char *elm_filename, char *map_name, char *map_descri
     struct __attribute__((__packed__)){
 
         unsigned char magic_number[4];
-        int h_tiles;
-        int v_tiles;
-        int tile_map_offset;
-        int height_map_offset;
+        int32_t h_tiles;
+        int32_t v_tiles;
+        int32_t tile_map_offset;
+        int32_t height_map_offset;
 
-        int threed_object_hash_len;
-        int threed_object_count;
-        int threed_object_offset;
+        int32_t threed_object_hash_len;
+        int32_t threed_object_count;
+        int32_t threed_object_offset;
 
-        int twod_object_hash_len;
-        int twod_object_count;
-        int twod_object_offset;
+        int32_t twod_object_hash_len;
+        int32_t twod_object_count;
+        int32_t twod_object_offset;
 
-        int lights_object_hash_len;
-        int lights_object_count;
-        int lights_object_offset;
+        int32_t lights_object_hash_len;
+        int32_t lights_object_count;
+        int32_t lights_object_offset;
 
         unsigned char dungeon_flag;
         unsigned char version_flag;
         unsigned char reserved1;
         unsigned char reserved2;
 
-        int ambient_red;
-        int ambient_green;
-        int ambient_blue;
+        int32_t ambient_red;
+        int32_t ambient_green;
+        int32_t ambient_blue;
 
-        int particles_object_hash_len;
-        int particles_object_count;
-        int particles_object_offset;
+        int32_t particles_object_hash_len;
+        int32_t particles_object_count;
+        int32_t particles_object_offset;
 
-        int clusters_offset;
+        int32_t clusters_offset;
 
-        int reserved_9;
-        int reserved_10;
-        int reserved_11;
-        int reserved_12;
-        int reserved_13;
-        int reserved_14;
-        int reserved_15;
-        int reserved_16;
-        int reserved_17;
+        int32_t reserved_9;
+        int32_t reserved_10;
+        int32_t reserved_11;
+        int32_t reserved_12;
+        int32_t reserved_13;
+        int32_t reserved_14;
+        int32_t reserved_15;
+        int32_t reserved_16;
+        int32_t reserved_17;
 
     } elm_header;
 
     //bounds check the map_id
-    if(map_id>MAX_MAPS) {
+    if(map_id>MAX_MAPS || map_id<1) {
 
         log_event(EVENT_ERROR, "map id [%i] exceeds range [%i] in function load_maps: module database.c", map_id, MAX_MAPS);
         stop_server();
@@ -306,6 +322,8 @@ void add_db_map(int map_id, char *elm_filename, char *map_name, char *map_descri
         log_event(EVENT_ERROR, "horizontal tile count [%i] and vertical tile count [%i] are unequal in function %s: module %s: line %i", elm_header.h_tiles, elm_header.v_tiles, __func__, __FILE__, __LINE__);
         stop_server();
     }
+
+    //calculate the map axis in steps (multiply tile axis by 6)
     int map_axis=elm_header.h_tiles * 6;
 
     //check the threed object hash structure length
@@ -316,8 +334,14 @@ void add_db_map(int map_id, char *elm_filename, char *map_name, char *map_descri
     }
 
     //extract the tile map from the elm file
-    unsigned char tile_map_byte[TILE_MAP_MAX]= {0};
+    unsigned char tile_map_byte[TILE_MAP_MAX]={0};
     int tile_map_size=elm_header.height_map_offset - elm_header.tile_map_offset;
+
+    if(tile_map_size>TILE_MAP_MAX){
+
+        log_event(EVENT_ERROR, "tile map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", tile_map_size, TILE_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
 
     if(fread(tile_map_byte, (size_t)tile_map_size, 1, file)!=1) {
 
@@ -328,6 +352,12 @@ void add_db_map(int map_id, char *elm_filename, char *map_name, char *map_descri
     //extract the height map from the elm file
     unsigned char height_map_byte[HEIGHT_MAP_MAX]= {0};
     int height_map_size=elm_header.threed_object_offset - elm_header.height_map_offset;
+
+    if(height_map_size>HEIGHT_MAP_MAX){
+
+        log_event(EVENT_ERROR, "height map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", height_map_size, HEIGHT_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
 
     if(fread(height_map_byte, (size_t)height_map_size, 1, file)!=1) {
 

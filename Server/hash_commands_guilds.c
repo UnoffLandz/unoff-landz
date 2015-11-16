@@ -40,6 +40,7 @@
 #include "guilds.h"
 #include "idle_buffer2.h"
 #include "broadcast_actor_functions.h"
+#include "server_start_stop.h"
 
 int hash_set_guild_tag_colour(int connection, char *text) {
 
@@ -64,10 +65,26 @@ int hash_set_guild_tag_colour(int connection, char *text) {
     int guild_id=clients.client[connection].guild_id;
     guilds.guild[guild_id].guild_tag_colour=colour_code;
 
-    //update database
-    push_sql_command("UPDATE GUILD_TABLE SET GUILD_TAG_COLOUR=%i WHERE GUILD_ID=%i", guilds.guild[guild_id].guild_tag_colour);
+    printf("%i\n", guilds.guild[guild_id].guild_tag_colour);
 
-    send_text(connection, CHAT_SERVER, "%cyou have changed the guild tag_colour to %c%s", c_green3+127, guilds.guild[guild_id].guild_tag_colour, guilds.guild[guild_id].guild_tag);
+    //update database
+    push_sql_command("UPDATE GUILD_TABLE SET GUILD_TAG_COLOUR=%i WHERE GUILD_ID=%i", guilds.guild[guild_id].guild_tag_colour, guild_id);
+
+    send_text(connection, CHAT_SERVER, "%cyou have changed the guild tag_colour to %c%s", c_green3+127, 127+guilds.guild[guild_id].guild_tag_colour, guilds.guild[guild_id].guild_tag);
+
+    //if char in game then update guild tag
+    for(int i=0; i<MAX_CLIENTS; i++){
+
+        if(clients.client[i].guild_id==guild_id){
+
+            //re-add char to map so that guild tag changes are immediately visible
+            if(add_char_to_map(i, clients.client[i].map_id, clients.client[i].map_tile)==false){
+
+               log_event(EVENT_ERROR, "unable to add char[%s] to map in function %s: module %s: line %i", clients.client[i].char_name, __func__, __FILE__, __LINE__);
+               stop_server();
+            }
+        }
+    }
 
     return 0;
 }
@@ -79,7 +96,7 @@ int hash_set_guild_description(int connection, char *text) {
 
     char description[160]="";
 
-    if(sscanf(text, "%*s %s", description)!=1){
+    if(sscanf(text, "%*s %[^\n]", description)!=1){
 
         send_text(connection, CHAT_SERVER, "%cyou need to use the format #SET_GUILD_DESCRIPTION [description] or #SD [description]", c_red3+127);
 
@@ -91,7 +108,7 @@ int hash_set_guild_description(int connection, char *text) {
     strcpy(guilds.guild[guild_id].guild_description, description);
 
     //update database
-    push_sql_command("UPDATE GUILD_TABLE SET DESCRIPTION='%s' WHERE GUILD_ID=%i", guilds.guild[guild_id].guild_description, guild_id);
+    push_sql_command("UPDATE GUILD_TABLE SET GUILD_DESCRIPTION='%s' WHERE GUILD_ID=%i", guilds.guild[guild_id].guild_description, guild_id);
 
     send_text(connection, CHAT_SERVER, "%cyou have changed the guild description", c_green3+127);
 
@@ -338,9 +355,20 @@ int hash_leave_guild(int connection, char *text) {
     int guild_id=clients.client[connection].guild_id;
 
     //update database
-    push_sql_command("UPDATE CHARACTER_TABLE SET GUILD_ID=0, GUILD_RANK=0, DATE_JOINED_GUILD=0 WHERE GUILD_ID=%i", guilds.guild[guild_id].guild_description, guild_id);
+    push_sql_command("UPDATE CHARACTER_TABLE SET GUILD_ID=0, GUILD_RANK=0, JOINED_GUILD=0 WHERE CHAR_ID=%i", clients.client[connection].character_id);
 
     send_text(connection, CHAT_SERVER, "%cyou have left %s guild", c_green3+127, guilds.guild[guild_id].guild_tag);
+
+    clients.client[connection].guild_id=0;
+    clients.client[connection].guild_rank=0;
+    clients.client[connection].joined_guild=0;
+
+    //re-add char to map so that guild tag changes are immediately visible
+    if(add_char_to_map(connection, clients.client[connection].map_id, clients.client[connection].map_tile)==false){
+
+       log_event(EVENT_ERROR, "unable to add char[%s] to map in function %s: module %s: line %i", clients.client[connection].char_name, __func__, __FILE__, __LINE__);
+       stop_server();
+    }
 
     return 0;
 }
