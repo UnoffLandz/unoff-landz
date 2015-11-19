@@ -46,11 +46,11 @@ void send_motd_header(int connection){
 
     //prepare and send server 'up' time
     long time_diff=time(NULL)-game_data.server_start_time;
-    int time_days=time_diff/(24*60*60);
+    long int time_days=time_diff/(24*60*60);
     time_diff=time_diff-(time_days*24*60*60);
-    int time_hrs=time_diff/(60*60);
+    long int time_hrs=time_diff/(60*60);
     time_diff=time_diff-(time_hrs*60*60);
-    int time_mins=time_diff/60;
+    long int time_mins=time_diff/60;
 
     //get_time_up_str(server_up_time, time_up_str);
     send_text(connection, CHAT_SERVER, "%cServer up                  : %i days %i hrs %i mins", c_blue2+127, time_days, time_hrs, time_mins);
