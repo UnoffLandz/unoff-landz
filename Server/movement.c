@@ -49,7 +49,7 @@ bool tile_walkable(int map_id, int tile){
     */
 
     //check the height map and see if tile is walkable
-    if(maps.map[map_id].height_map[tile]<MIN_TRAVERSABLE_VALUE) return false;
+    if(maps.map[map_id].height_map[tile]==NON_TRAVERSABLE_TILE) return false;
 
     return true;
 }

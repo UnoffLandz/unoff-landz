@@ -102,7 +102,7 @@ void add_db_map(int map_id, char *map_name, char *elm_file, char *map_descriptio
 
     NOTES   :
 **/
-int get_db_map_exists(int map_id);
+bool get_db_map_exists(int map_id);
 
 
 /** RESULT  : lists maps in database
@@ -115,5 +115,17 @@ int get_db_map_exists(int map_id);
     NOTES   :
 **/
 void list_db_maps();
+
+
+/** RESULT  : deletes a map from the database
+
+    RETURNS : void
+
+    PURPOSE : enables an existing map to be replaced
+
+    NOTES   :
+**/
+void delete_map(int map_id);
+
 
 #endif // DB_MAP_TBL_H_INCLUDED

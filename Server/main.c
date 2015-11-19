@@ -43,29 +43,23 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-DONE fixed bug which meant only root can start server
-DONE NEW fixed bug in #beam me (removed #beam_me option)
-DONE fixed bug server time up resets at midnight
-DONE fixed bug server goes down when not fully logged on and client issues sit down command
-DONE fixed bug ~[message] can be used by players or to bypass rank/permission restrictions
-DONE tested #server_message
-DONE tested #set_guild_description
-DONE tested #set_guild_tag_colour
-DONE tested #leave_guild
+DONE NEW replace packet handling loops with memcpy and memmove
+FIXED change existing map using -M
+PASSED NEW TEST change existing map using -M
+FIXED jump to NewPlattsdale
 
-NEW BUG can't jump to NewPlattsdale
-NEW BUG Player chat in dark gray even when active
-NEW BUG Player chat shows chan 32
-NEW BUG Bingo chat shows chan -30
+BUG Player chat in dark gray even when active
+BUG Player chat shows chan 32
+BUG Bingo chat shows chan -30
 BUG pick_up_item causing machine crash
 BUG destroy bag not working
-NEW BUG can't change existing map using -M (prevented by db unique constraint)
 
 TEST multiple chat channel handling
 TEST multiple guild application handling
 
-NEW reimplement function get_nearest_unoccupied_tile
-NEW need #command for developers to list available maps
+NEW make separate function to extract 3d object list from elm file
+reimplement function get_nearest_unoccupied_tile
+need #command for developers to list available maps
 need #command to withdraw application to join guild
 extend add_client_to_map function so that existing bags are shown to new client
 broadcast bags to other clients
@@ -531,22 +525,28 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
                     //if insufficient data received then wait for more data
                     if(clients.client[watcher->fd].packet_buffer_length<packet_length) break;
 
+/*
                     //copy a packet from buffer
                     for(int i=0; i<(int)packet_length; i++){
 
                         packet[i]=(unsigned char)clients.client[watcher->fd].packet_buffer[i];
                     }
+*/
+                    memcpy(packet, clients.client[watcher->fd].packet_buffer, packet_length);
 
                     //process the packet
                     process_packet(watcher->fd, packet);
 
-                    // remove packet from buffer
+                    //remove packet from buffer
                     clients.client[watcher->fd].packet_buffer_length=clients.client[watcher->fd].packet_buffer_length-packet_length;
 
+/*
                     for(int i=0; i<=(int)clients.client[watcher->fd].packet_buffer_length; i++){
 
                         clients.client[watcher->fd].packet_buffer[i]=clients.client[watcher->fd].packet_buffer[i+(int)packet_length];
                     }
+*/
+                    memmove(clients.client[watcher->fd].packet_buffer, clients.client[watcher->fd].packet_buffer + packet_length, clients.client[watcher->fd].packet_buffer_length);
 
                 } while(1);
             }
@@ -801,14 +801,22 @@ int main(int argc, char *argv[]){
     //execute load map
     else if(option.load_map==true && argc>=9){
 
-        printf("LOAD MAP using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
-
-        log_text(EVENT_INITIALISATION, "LOAD MAP using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
-
         if(argc==10) strcpy(db_filename, argv[9]);
 
         int map_id=atoi(argv[2]);
+
+        printf("LOAD MAP %i on %s at %s on %s\n", map_id, db_filename, time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "LOAD MAP %i on %s at %s on %s", map_id, db_filename, time_stamp_str, verbose_date_stamp_str);
+
+        open_database(db_filename);
+
+        if(get_db_map_exists(map_id)==true){
+
+            log_text(EVENT_INITIALISATION, "Remove existing map %i", map_id);
+            delete_map(map_id);
+         }
+
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
 
         char elm_filename[80]="";
         strcpy(elm_filename, argv[3]);
@@ -827,7 +835,6 @@ int main(int argc, char *argv[]){
 
         int development_status=atoi(argv[8]);
 
-        open_database(db_filename);
         add_db_map(map_id, elm_filename, map_name, author_name, map_description, author_email, development_status);
 
         return 0;
@@ -855,8 +862,9 @@ int main(int argc, char *argv[]){
     printf("start server     -S optional [""database file name""]\n");
     printf("upgrade database -U optional [""database file name""]\n");
     printf("list loaded maps -L optional [""database file name""]\n");
-    printf("load map         -M [map id] [""elm filename""] [""map name""] [""author name""]...\n");
-    printf("                             [""author email""] [""development status code""]...\n");
+    printf("load map         -M [map id] [""elm filename""] [""map name""] [""map description""]...\n");
+    printf("                             [""author name""] [""author email""]...\n");
+    printf("                             [""development status code""]...\n");
     printf("                             optional [""database file name""]\n");
 
     return 0;//otherwise we get 'control reached end of non void function'

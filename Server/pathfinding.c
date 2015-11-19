@@ -167,7 +167,7 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
         if(tile_in_lateral_bounds(target_tile, adj_tile, map_id)==true){
 
             //ensure adjacent tile is traversable
-            if(maps.map[map_id].height_map[adj_tile]>=MIN_TRAVERSABLE_VALUE) {
+            if(maps.map[map_id].height_map[adj_tile]!=NON_TRAVERSABLE_TILE) {
 
                 //calculate heuristic distance from adjacent tile to destination
                 heuristic_value=get_heuristic_value(adj_tile, dest_tile, map_id);

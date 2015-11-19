@@ -99,12 +99,13 @@ void load_db_maps(){
         memcpy(maps.map[map_id].tile_map, (unsigned char*)sqlite3_column_blob(stmt, 5), (size_t)tile_map_size);
 
         //get height map
-/*
+
+/* This old code pulls the height map from the database
         int height_map_size=sqlite3_column_bytes(stmt, 6);
         maps.map[map_id].height_map_size=height_map_size;
         memcpy(maps.map[map_id].height_map, (unsigned char*)sqlite3_column_blob(stmt, 6), (size_t)height_map_size);
 */
-
+// This new code pulls the height map from the elm file
         read_height_map(raw_elm_filename, maps.map[map_id].height_map, &maps.map[map_id].height_map_size, &maps.map[map_id].map_axis);
 
         //get map author
@@ -148,7 +149,7 @@ void load_db_maps(){
     }
 }
 
-int get_db_map_exists(int map_id) {
+bool get_db_map_exists(int map_id) {
 
     /** public function - see header */
 
@@ -200,6 +201,42 @@ int get_db_map_exists(int map_id) {
     if(map_id_count==0) return false;
 
     return true;
+}
+
+void delete_map(int map_id){
+
+    /** public function - see header */
+
+    char sql[MAX_SQL_LEN]="DELETE FROM MAP_TABLE WHERE MAP_ID=?";
+
+    sqlite3_stmt *stmt;
+
+    //prepare the sql statement
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    //bind value to sql statement
+    rc = sqlite3_bind_int(stmt, 1, map_id);
+    if(rc!=SQLITE_OK) {
+        log_sqlite_error("sqlite3_bind_int failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    //process sql statement
+    rc = sqlite3_step(stmt);
+    if (rc!= SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    //destroy sql statement
+    rc=sqlite3_finalize(stmt);
+    if(rc!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
 }
 
 

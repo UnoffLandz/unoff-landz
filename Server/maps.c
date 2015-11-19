@@ -140,6 +140,8 @@ void get_map_developer_details(int connection, int map_id){
 
 void read_elm_header(char *elm_filename){
 
+    /** public function - see header */
+
     //open elm file
     FILE *file;
 
@@ -150,17 +152,26 @@ void read_elm_header(char *elm_filename){
     }
 
     //read the header
+/*
     unsigned char header_byte[ELM_FILE_HEADER]= {0};
     if(fread(header_byte, ELM_FILE_HEADER, 1, file)!=1) {
 
         log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
+*/
 
+    if(fread(&elm_header, sizeof(elm_header), 1, file)!=1){
+
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //close the elm file
     fclose(file);
 
     //copy bytes to header struct so we can extract data
-    memcpy(&elm_header, header_byte, ELM_FILE_HEADER);
+    //memcpy(&elm_header, header_byte, ELM_FILE_HEADER);
 
     //check the magic number
     if(elm_header.magic_number[0]!='e' ||
@@ -195,6 +206,8 @@ void read_elm_header(char *elm_filename){
 
 void read_height_map(char *elm_filename, unsigned char *height_map, int *height_map_size, int *map_axis){
 
+    /** public function - see header */
+
     read_elm_header(elm_filename);
 
     FILE *file;
@@ -216,11 +229,18 @@ void read_height_map(char *elm_filename, unsigned char *height_map, int *height_
     }
 
     //read data proceding the height map
+/*
     unsigned char dummy[100000];
 
     if(fread(dummy, (size_t)elm_header.height_map_offset, 1, file)!=1) {
 
         log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+*/
+    if(fseek(file, elm_header.height_map_offset, SEEK_SET)!=0){
+
+        log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
 

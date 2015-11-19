@@ -33,7 +33,7 @@
 //#define START_MAP_ID 1       // map_id of the map on which characters are created
 //#define START_MAP_TILE 27225 // tile_pos at which characters are created
 
-#define MIN_TRAVERSABLE_VALUE 1 //lowest value on height map that is traversable
+#define NON_TRAVERSABLE_TILE 0
 #define CLIENT_MAP_PATH "./maps/" //the path that needs to be sent with the send_map packet
 
 #include "clients.h"

@@ -198,6 +198,8 @@ bool add_char_to_map(int connection, int map_id, int map_tile){
     //check that map exists
     if(strcmp(maps.map[map_id].elm_filename, "")==0){
 
+        log_event(EVENT_ERROR, "map id[%i] doesn't exist in function %s: module %s: line %i", map_id, __func__, __FILE__, __LINE__);
+
         send_text(connection, CHAT_SERVER, "%cmap %i doesn't exist", c_red3+127, map_id);
         return false;
     }
@@ -208,6 +210,8 @@ bool add_char_to_map(int connection, int map_id, int map_tile){
     //ensure map tile is walkable
     if(tile_walkable(map_id, map_tile)==false){
 
+        log_event(EVENT_ERROR, "tile [%i] of map [%i] is not walkable in function %s: module %s: line %i", map_tile, map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+
         send_text(connection, CHAT_SERVER, "%ctile %i of map %s is not walkable", c_red3+127, map_tile, maps.map[map_id].map_name);
         return false;
     }
@@ -215,11 +219,10 @@ bool add_char_to_map(int connection, int map_id, int map_tile){
     clients.client[connection].map_id=map_id;
     clients.client[connection].map_tile=map_tile;
 
-    //send map to client
+    //send change map to client
     send_change_map(connection, maps.map[map_id].elm_filename);
 
-    //clients.client[connection].map_tile=27025;
-    //clients.client[connection].map_id=2;
+    //clients.client[connection].map_tile=18059; //27025;
     //send_change_map(connection, "./maps/NewPlattsdale.elm");
     //mm 28278
 
@@ -247,10 +250,13 @@ bool move_char_between_maps(int connection, int map_id, int map_tile){
 
     remove_char_from_map(connection);
 
+    int old_map_id=clients.client[connection].map_id;
+    int old_map_tile=clients.client[connection].map_tile;
+
     if(add_char_to_map(connection, map_id, map_tile)==false){
 
         //return char to original map if jump to new map fails
-        if(add_char_to_map(connection, clients.client[connection].map_id, clients.client[connection].map_tile)==false){
+        if(add_char_to_map(connection, old_map_id, old_map_tile)==false){
 
             log_event(EVENT_ERROR, "cannot return char to orignal map in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
              stop_server();
@@ -258,13 +264,6 @@ bool move_char_between_maps(int connection, int map_id, int map_tile){
 
         return false;
     }
-
-    //update client struct with new map data
-    clients.client[connection].map_id=map_id;
-    clients.client[connection].map_tile=map_tile;
-
-    //update database
-    push_sql_command("UPDATE CHARACTER_TABLE SET MAP_TILE=%i, MAP_ID=%i WHERE CHAR_ID=%i", clients.client[connection].map_tile, clients.client[connection].map_id, clients.client[connection].character_id);
 
     return true;
 }
@@ -293,7 +292,7 @@ void start_char_move(int connection, int destination){
     }
 
     //check if the destination is walkable
-    if(maps.map[map_id].height_map[destination]<MIN_TRAVERSABLE_VALUE){
+    if(maps.map[map_id].height_map[destination]==NON_TRAVERSABLE_TILE){
 
         send_text(connection, CHAT_SERVER, "%cThe tile you clicked on can't be walked on", c_red3+127);
         return;
