@@ -134,12 +134,11 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include "colour.h"
 #include "broadcast_actor_functions.h"
 #include "packet.h"
-#include "maps.h" //testing
 #include "bags.h"
 
 #define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
 #define DEBUG_MAIN 1
-#define VERSION "4.2"
+#define VERSION "4.3"
 
 struct ev_io *libevlist[MAX_CLIENTS] = {NULL};
 
