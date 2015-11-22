@@ -71,24 +71,11 @@ int find_inventory_slot(int connection, int object_id);
 
     RETURNS : true if item is added / false if not added
 
-    PURPOSE : used in function: process_char_harvest
+    PURPOSE : used in function: process_char_harvest / pick_up_from_bag_to_inventory
 
     NOTES   :
 */
 bool add_to_inventory(int connection, int object_id, int amount, int slot);
-
-
-/** RESULT  : removes objects to the char inventory
-
-    RETURNS : amount removed from inventory
-
-    PURPOSE : used in function: process_packet (DROP_ITEM)
-
-    NOTES   : the removal amount passed by the client takes no account of whether there is
-              sufficient in the inventory. Hence, the amount returned by the function indicates
-              what was actually removed
-*/
-int remove_from_inventory(int connection, int object_id, int amount, int slot);
 
 
 /** RESULT  : moves objects between slots in the char inventory
@@ -102,7 +89,7 @@ int remove_from_inventory(int connection, int object_id, int amount, int slot);
 void move_inventory_item(int connection, int from_slot, int to_slot);
 
 
-/** RESULT  : broadcasts a new bag to connected clients
+/** RESULT  : drops item from char inventory to a bag
 
     RETURNS : void
 
@@ -110,7 +97,18 @@ void move_inventory_item(int connection, int from_slot, int to_slot);
 
     NOTES   :
 */
-void broadcast_drop_item_packet(int connection);
+void drop_from_inventory_to_bag(int connection, int inventory_slot, int amount);
+
+
+/** RESULT  : picks up from a bag to the char inventory
+
+    RETURNS : void
+
+    PURPOSE : supports the PICK_UP_ITEM protocol
+
+    NOTES   :
+*/
+void pick_up_from_bag_to_inventory(int connection, int bag_slot, int amount, int bag_id);
 
 #endif // CHARACTER_INVENTORY_H_INCLUDED
 

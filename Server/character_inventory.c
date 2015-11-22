@@ -31,6 +31,8 @@
 #include "idle_buffer2.h"
 #include "logging.h"
 #include "server_start_stop.h"
+#include "bags.h"
+#include "broadcast_actor_functions.h"
 
 struct client_inventory_type client_inventory;
 
@@ -110,7 +112,16 @@ bool add_to_inventory(int connection, int object_id, int amount, int slot){
 
 int remove_from_inventory(int connection, int object_id, int amount, int slot){
 
-    /** public function - see header */
+    /** RESULT  : removes objects to the char inventory
+
+        RETURNS : amount removed from inventory
+
+        PURPOSE : used in function: process_packet (DROP_ITEM)
+
+        NOTES   : the removal amount passed by the client takes no account of whether there is
+                  sufficient in the inventory. Hence, the amount returned by the function indicates
+                  what was actually removed
+    */
 
     //ensure we don't remove more than is in slot
     if(amount>clients.client[connection].inventory[slot].amount) {
@@ -157,5 +168,100 @@ void move_inventory_item(int connection, int from_slot, int to_slot){
     //update_database
     push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[from_slot].amount, clients.client[connection].character_id, from_slot);
     push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[to_slot].amount, clients.client[connection].character_id, to_slot);
+}
 
+
+void drop_from_inventory_to_bag(int connection, int inventory_slot, int withdraw_amount){
+
+    /** public function - see header */
+
+    //determine the item to be dropped
+    int item_id=clients.client[connection].inventory[inventory_slot].object_id;
+
+    int bag_id;
+    int bag_slot=-1;
+
+    if(clients.client[connection].bag_open==true){//use existing bag
+
+        //find the existing bag id
+        bag_id=clients.client[connection].open_bag_id;
+
+        //find a slot in which to place the item
+        bag_slot=find_bag_slot(bag_id, item_id);
+
+        //check if max bag slots exceeded
+        if(bag_slot==-1){
+
+            send_text(connection, CHAT_SERVER, "%cthere are no slots left in this bag", c_red3+127);
+            return;
+        }
+    }
+    else {// create a new bag
+
+        // get new bag id
+        bag_id=create_bag(clients.client[connection].map_id, clients.client[connection].map_tile);
+
+        //check if max bags permitted by server has been exceeded
+        if(bag_id==-1){
+
+            send_text(connection, CHAT_SERVER, "%cThe server has reached the maximum number of bags. Wait for one to poof! ", c_red3+127);
+            return;
+        }
+
+        //broadcast the bag drop
+        broadcast_get_new_bag_packet(connection, bag_id);
+
+        //place item in first slot of new bag
+        bag_slot=0;
+    }
+
+    //update char to show that it is standing on an open bag
+    clients.client[connection].bag_open=true;
+    clients.client[connection].open_bag_id=bag_id;
+
+    //remove item from char inventory
+    int amount_withdrawn=remove_from_inventory(connection, item_id, withdraw_amount, inventory_slot);
+
+    // add to bag
+    int amount_added=add_to_bag(bag_id, item_id, amount_withdrawn, bag_slot);
+
+    //catch if amount added to bag is less than amount withdrawn from inventory
+    if(amount_added != amount_withdrawn){
+
+        log_event(EVENT_ERROR, "char [%s] error dropping item from inventory", clients.client[connection].char_name);
+        log_text(EVENT_ERROR, "item [%s]", object[item_id].object_name);
+        log_text(EVENT_ERROR, "amount withdrawn from inventory [%i]", amount_withdrawn);
+        log_text(EVENT_ERROR, "amount added to bag [%i]", amount_added);
+
+        stop_server();
+    }
+
+    //send revised char inventory and bag inventory to client
+    send_here_your_inventory(connection);
+    send_here_your_ground_items(connection, bag_id);
+}
+
+void pick_up_from_bag_to_inventory(int connection, int bag_slot, int amount, int bag_id){
+
+    /** public function - see header */
+
+    //adds item to char inventory
+    int object_id=bag[bag_id].inventory[bag_slot].object_id;
+    int inventory_slot=find_inventory_slot(connection, object_id);
+
+    if(add_to_inventory(connection, object_id, amount, inventory_slot)==false){
+
+        send_text(connection, CHAT_SERVER, "%cyour maximum carry capacity has been exceeded", c_red1+127);
+        return;
+    }
+
+    //removes item from bag
+    remove_item_from_bag(bag_id, amount, bag_slot);
+    send_here_your_ground_items(connection, bag_id);
+
+    if(bag_empty(bag_id)==true){
+
+       // destroy bag
+       broadcast_destroy_bag_packet(bag_id);
+    }
 }

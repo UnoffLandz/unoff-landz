@@ -108,10 +108,10 @@ bool bag_empty(int bag_id){
 
     for( int i=0; i<MAX_BAG_SLOTS; i++){
 
-        if(bag[bag_id].inventory[i].amount>0) return true;
+        if(bag[bag_id].inventory[i].amount>0) return false;
     }
 
-    return 0;
+    return true;
 }
 
 

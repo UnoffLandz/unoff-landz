@@ -359,6 +359,9 @@ void process_packet(int connection, unsigned char *packet){
         int inventory_slot=packet[3];
         int withdraw_amount=*((int32_t*)(packet+4));
 
+        drop_from_inventory_to_bag(connection, inventory_slot, withdraw_amount);
+
+/*
         //determine the item to be dropped
         int object_id=clients.client[connection].inventory[inventory_slot].object_id;
 
@@ -423,6 +426,7 @@ void process_packet(int connection, unsigned char *packet){
         //send revised char inventory and bag inventory to client
         send_here_your_inventory(connection);
         send_here_your_ground_items(connection, bag_id);
+*/
     }
 /***************************************************************************************************/
 
@@ -430,6 +434,12 @@ void process_packet(int connection, unsigned char *packet){
 
         //returns 1 byte indicating slot and a 4byte integer indicating quantity
 
+        int bag_slot=packet[3];
+        int amount=*((int32_t*)(packet+4));
+        int bag_id=clients.client[connection].open_bag_id;
+
+        pick_up_from_bag_to_inventory(connection, bag_slot, amount, bag_id);
+/*
         int bag_slot=packet[3];
         int amount=*((int32_t*)(packet+4));
         int bag_id=clients.client[connection].open_bag_id;
@@ -453,6 +463,7 @@ void process_packet(int connection, unsigned char *packet){
            // destroy bag
            broadcast_destroy_bag_packet(bag_id);
         }
+*/
      }
 /***************************************************************************************************/
 
