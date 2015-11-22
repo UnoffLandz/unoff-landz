@@ -91,7 +91,8 @@ bool add_to_inventory(int connection, int object_id, int amount, int slot){
 
     //check inventory max emu not exceeded
     int inventory_emu=get_inventory_emu(connection);
-    if(inventory_emu+(amount * object[object_id].emu)>get_max_inventory_emu(connection)) return false;
+    int max_inventory_emu=get_max_inventory_emu(connection);
+    if(inventory_emu+(amount * object[object_id].emu)>max_inventory_emu) return false;
 
     //add the item to the inventory
     clients.client[connection].inventory[slot].amount+=amount;
@@ -158,4 +159,3 @@ void move_inventory_item(int connection, int from_slot, int to_slot){
     push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[connection].inventory[to_slot].amount, clients.client[connection].character_id, to_slot);
 
 }
-

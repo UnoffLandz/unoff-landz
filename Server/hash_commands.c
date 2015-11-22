@@ -277,7 +277,7 @@ static int hash_pm(int connection, char *text) {
 
 static int hash_jump(int connection, char *text) {
 
-    /** RESULT  : jumps char to a new map and map tile
+    /** RESULT  : jumps char to a new map at (x/y)cartesian coordinates
 
         RETURNS : void
 
@@ -286,15 +286,26 @@ static int hash_jump(int connection, char *text) {
         NOTES   :
     */
 
-    int map_id=0;
-    int map_tile=0;
+    int map_id, x, y;
 
-    if(sscanf(text, "%*s %i %i", &map_id, &map_tile)!=2){
+    if(sscanf(text, "%*s %i %i %i", &map_id, &x, &y)!=3){
 
-        send_text(connection, CHAT_SERVER, "%cyou need to use the format #JUMP [map id] [tile]", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #JUMPC [map id] [x] [y]", c_red3+127);
         return 0;
     }
 
+    //check that coordinates are in bounds
+    int map_axis=maps.map[map_id].map_axis;
+    if(x>map_axis || y>map_axis || x<0 || y<0){
+
+        send_text(connection, CHAT_SERVER, "%ccordinates must be between 0 and %i", c_red3+127, map_axis);
+        return 0;
+    }
+
+    //calculate map tile
+    int map_tile=get_tile(x, y, map_id);
+
+    //move char
     if(move_char_between_maps(connection, map_id, map_tile)==false){
 
         send_text(connection, CHAT_SERVER, "%cjump failed", c_red3+127);
@@ -472,6 +483,32 @@ static int hash_where_am_i(int connection, char *text) {
     return 0;
 }
 
+
+static int hash_list_maps(int connection, char *text) {
+
+    /** RESULT  : lists available maps
+
+        RETURNS : void
+
+        PURPOSE :
+
+        NOTES   :
+    */
+
+    (void)(text);
+
+    for(int i=0; i<MAX_MAPS; i++){
+
+        if(strlen(maps.map[i].elm_filename)>0){
+
+            send_text(connection, CHAT_SERVER, "%c%i %s", c_green3+127, i, maps.map[i].elm_filename);
+        }
+    }
+
+    return 0;
+}
+
+
 static int hash_map(int connection, char *text) {
 
     /** RESULT  : extended map information
@@ -595,6 +632,7 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#LG",                      true,   0,     PERMISSION_1, hash_list_guild},
     {"#WHERE_AM_I",              false,  0,     PERMISSION_1, hash_where_am_i},
     {"#MAP",                     false,  0,     PERMISSION_1, hash_map},
+    {"#LIST_MAPS",               false,  0,     PERMISSION_2, hash_list_maps},
     {"#GUILD_DETAILS",           false,  0,     PERMISSION_1, hash_guild_details},
     {"#GD",                      false,  0,     PERMISSION_1, hash_guild_details},
     {"#GUILD_MESSAGE",           true,   0,     PERMISSION_1, hash_guild_message},

@@ -99,7 +99,11 @@ void get_map_details(int connection, int map_id){
         maps.map[map_id].map_name,
         maps.map[map_id].description);
 
-    send_text(connection, CHAT_SERVER, "%cIt is (%i x %i) steps wide", c_green3+127, maps.map[map_id].map_axis, maps.map[map_id].map_axis);
+    int tile=clients.client[connection].map_tile;
+    int x=tile / maps.map[map_id].map_axis;
+    int y=tile % maps.map[map_id].map_axis;
+
+    send_text(connection, CHAT_SERVER, "%cAt coordinates x %i y %i (tile %i)", c_green3+127, x, y, tile);
 }
 
 
@@ -107,13 +111,13 @@ void get_map_developer_details(int connection, int map_id){
 
     /** public function - see header */
 
-   send_text(connection, CHAT_SERVER, "%cMap     :'%s' %s", c_green3+127,
+    send_text(connection, CHAT_SERVER, "%cMap     :'%s' %s", c_green3+127,
         maps.map[map_id].map_name,
         maps.map[map_id].description);
 
-    send_text(connection, CHAT_SERVER, "%cArea   :  %i x %i", c_green3+127, maps.map[map_id].map_axis, maps.map[map_id].map_axis);
-    send_text(connection, CHAT_SERVER, "%cAuthor : %s", c_green3+127, maps.map[map_id].author);
-    send_text(connection, CHAT_SERVER, "%cEmail  : %s", c_green3+127, maps.map[map_id].author_email);
+    send_text(connection, CHAT_SERVER, "%cSize     : %i x %i", c_green3+127, maps.map[map_id].map_axis, maps.map[map_id].map_axis);
+    send_text(connection, CHAT_SERVER, "%cAuthor   : %s", c_green3+127, maps.map[map_id].author);
+    send_text(connection, CHAT_SERVER, "%cEmail    : %s", c_green3+127, maps.map[map_id].author_email);
 
     char time_stamp_str[9]="";
     char verbose_date_stamp_str[50]="";
@@ -229,15 +233,6 @@ void read_height_map(char *elm_filename, unsigned char *height_map, int *height_
     }
 
     //read data proceding the height map
-/*
-    unsigned char dummy[100000];
-
-    if(fread(dummy, (size_t)elm_header.height_map_offset, 1, file)!=1) {
-
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
-        stop_server();
-    }
-*/
     if(fseek(file, elm_header.height_map_offset, SEEK_SET)!=0){
 
         log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);

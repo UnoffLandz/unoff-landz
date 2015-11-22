@@ -105,7 +105,18 @@ void broadcast_local_chat(int connection, char *text_in);
 
     NOTES   :
 */
-void broadcast_get_new_bag_packet(int connection, int bag_list_number);
+void broadcast_get_new_bag_packet(int connection, int bag_id);
+
+
+/** RESULT  : broadcasts bag destroy to all characters in the vicinity
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_destroy_bag_packet(int bag_id);
 
 
 /** RESULT  : broadcasts server message to all connected clients
@@ -119,5 +130,12 @@ void broadcast_get_new_bag_packet(int connection, int bag_list_number);
 void broadcast_server_message(char *text_in);
 
 
+/** RESULT  : reveal/conceal bags to this client
+
+    RETURNS : void
+
+    PURPOSE :
+**/
+void broadcast_bags_to_client(int connection, int last_tile);
 
 #endif // BROADCAST_ACTOR_FUNCTIONS_H_INCLUDED

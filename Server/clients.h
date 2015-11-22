@@ -22,6 +22,7 @@
 
 #include <time.h>                   //support for time_t data type
 #include <stdbool.h>                //support for boolean data type
+#include <unistd.h>                 //support for ssize_t data type
 
 #include "chat.h"                   //contains definition of MAX_CHAN_SLOTS
 #include "character_inventory.h"    //contains definition of MAX_INVENTORY_SLOTS

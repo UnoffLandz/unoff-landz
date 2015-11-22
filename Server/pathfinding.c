@@ -336,6 +336,8 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
         if(clients.client[connection].path_count>PATH_MAX-1) {
 
             log_event(EVENT_ERROR, "client path array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+
+            send_text(connection, CHAT_PERSONAL, "%cThe server can't find a walkable route to that destination", c_red1+127);
             stop_server();
         }
 

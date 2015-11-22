@@ -26,6 +26,7 @@
 #define MAX_INVENTORY_SLOTS 36
 
 struct client_inventory_type {
+
         int object_id;
         int amount;
         int flags;

@@ -51,14 +51,14 @@ struct protocol_type protocol[] = {
     {"HERE_YOUR_STATS", ""},//18
     {"HERE_YOUR_INVENTORY", "LOOK_AT_INVENTORY_ITEM"}, //19
     {"", "MOVE_INVENTORY_ITEM"},//20
-    {"GET_NEW_INVENTORY_ITEM", "HARVESnT"},//21
+    {"GET_NEW_INVENTORY_ITEM", "HARVEST"},//21
     {"", "DROP_ITEM"}, //22
     {"HERE_YOUR_GROUND_ITEMS", "PICK_UP_ITEM"},//23
     {"GET_NEW_GROUND_ITEM", ""},//24
     {"", "INSPECT_BAG"}, //25
     {"CLOSE_BAG", ""},//26
     {"GET_NEW_BAG", "LOOK_AT_MAP_OBJECT"},//27
-    {"", ""}, //28
+    {"GET_BAGS_LIST", ""}, //28
     {"DESTROY_BAG", ""},//29
     {"", ""}, //30
     {"", ""}, //31

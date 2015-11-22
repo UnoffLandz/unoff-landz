@@ -42,6 +42,18 @@ struct packet_element_type{
 };
 
 
+/** RESULT  : sends packet from the server
+
+    RETURNS : void
+
+    PURPOSE : groups all server communications so as packets sent from server can be monitored
+              from a single source
+
+    NOTES   :
+*/
+void send_packet(int connection, void *packet, size_t packet_length);
+
+
 /** RESULT  : creates a packet
 
     RETURNS : packet length

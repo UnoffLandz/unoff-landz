@@ -70,7 +70,6 @@ void process_log_in(int connection, const unsigned char *packet){
 
     //get the char_id corresponding to the char name
     int char_id=get_db_char_data(char_name, 0);
-
     if(char_id==NOT_FOUND) {
 
         send_you_dont_exist(connection);
@@ -98,28 +97,32 @@ void process_log_in(int connection, const unsigned char *packet){
         return;
     }
 
-    //prevent concurrent login on same char
-    for(int i=1; i<MAX_CLIENTS; i++){
-
-        if(clients.client[connection].character_id==clients.client[i].character_id \
-           && clients.client[connection].client_status==LOGGED_IN \
-           && i!=connection){
-
-            send_login_not_ok(connection);
-            log_event(EVENT_SESSION, "concurrent login attempt for char [%s]", char_name);
-
-            return;
-        }
-    }
-
     //add char to map (makes scene visible in client). We need to do this before we inform
     //client if char is dead or banned, otherwise client will not display that message
     map_id=clients.client[connection].map_id;
-
     if(add_char_to_map(connection, map_id, clients.client[connection].map_tile)==false){
 
         log_event(EVENT_ERROR, "cannot add char [%s] to map [%s] in function %s: module %s: line %i", char_name, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
         stop_server();
+    }
+
+    //send this otherwise warning messages will not be sent to the client screen
+    send_you_are(connection);
+
+    //prevent concurrent login on same char
+    for(int i=1; i<MAX_CLIENTS; i++){
+
+        if(clients.client[connection].character_id==clients.client[i].character_id && clients.client[i].client_status==LOGGED_IN){
+
+            send_login_not_ok(connection);
+            remove_char_from_map(connection);
+
+            log_event(EVENT_SESSION, "concurrent login attempt for char [%s]", char_name);
+            send_text(connection, CHAT_SERVER, "%cYou've been kicked from the server because that character is already logged in!", c_red3+127);
+
+            close_connection_slot(connection);
+            return;
+        }
     }
 
     //when reconnecting to the client after a disconnect, this closes any open bag inventory.
@@ -136,7 +139,6 @@ void process_log_in(int connection, const unsigned char *packet){
             clients.client[connection].session_commenced=time(NULL);
 
             send_login_ok(connection);
-            send_you_are(connection);
             send_here_your_stats(connection);
             send_here_your_inventory(connection);
 
@@ -171,6 +173,8 @@ void process_log_in(int connection, const unsigned char *packet){
         case CHAR_DEAD:{
 
             send_login_not_ok(connection);
+            remove_char_from_map(connection);
+
             log_event(EVENT_SESSION, "login rejected - dead char");
 
             send_text(connection, CHAT_SERVER, "%cThat character is dead!", c_red1+127);
@@ -182,6 +186,8 @@ void process_log_in(int connection, const unsigned char *packet){
         case CHAR_BANNED:{
 
             send_login_not_ok(connection);
+            remove_char_from_map(connection);
+
             log_event(EVENT_SESSION, "login rejected - banned char");
 
             send_text(connection, CHAT_SERVER, "%cThat character is banned!", c_red1+127);
@@ -193,6 +199,8 @@ void process_log_in(int connection, const unsigned char *packet){
         default:{
 
             send_login_not_ok(connection);
+            remove_char_from_map(connection);
+
             log_event(EVENT_ERROR, "login rejected - unknown char status [%i]", clients.client[connection].char_status);
 
             close_connection_slot(connection);

@@ -20,6 +20,10 @@
 #ifndef CLIENT_PROTOCOL_H_INCLUDED
 #define CLIENT_PROTOCOL_H_INCLUDED
 
+#define EL_SEND_VERSION_LEN 17
+#define OL_SEND_VERSION_LEN 21
+
+
 enum { // client to server protocol
     RAW_TEXT=0,
     MOVE_TO=1,

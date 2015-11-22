@@ -21,6 +21,7 @@
 #include <string.h> //support for memcpy strlen strcpy
 #include <stdint.h> //support for int16_t data type
 #include <stdlib.h> // testing only
+#include <byteswap.h> // support for __bswap32 function
 
 #include "client_protocol.h"
 #include "clients.h"
@@ -50,7 +51,8 @@
 #include "bags.h"
 #include "packet.h"
 
-#define DEBUG_CLIENT_PROTOCOL_HANDLER 1//set debug mode
+
+//#define DEBUG_CLIENT_PROTOCOL_HANDLER 1//set debug mode
 
 void process_packet(int connection, unsigned char *packet){
 
@@ -185,7 +187,6 @@ void process_packet(int connection, unsigned char *packet){
         //to exclude processing of the SIT_DOWN command where the client status is CONNECTED
         //but not yet LOGGED_IN
 
-        printf("status %i\n", clients.client[connection].client_status);
         if(clients.client[connection].client_status!=LOGGED_IN) return;
 
         //determine if the char should sit or stand
@@ -240,22 +241,29 @@ void process_packet(int connection, unsigned char *packet){
 
         int first_digit=*((int16_t*)(packet+3));
         int second_digit=*((int16_t*)(packet+5));
+        int major=packet[7];
+        int minor=packet[8];
+        int release=packet[9];
+        int patch=packet[10];
 
-        int major=(int)packet[7];
-        int minor=(int)packet[8];
+        unsigned char ip_address[4]={0};
+        memcpy(ip_address, packet+11, 4);
 
-        int release=(int)packet[9];
+        int port=__bswap_16(*((int16_t*)(packet+15))); //bytes are in network order which is big endian, so convert to little endian
 
-        int patch=(int)packet[10];
+        log_text(EVENT_SESSION, "first digit [%i] second digit [%i] major [%i] minor [%i] release [%i] patch [%i] host [%i.%i.%i.%i] port [%i]",
+        first_digit, second_digit, major, minor, release, patch, ip_address[0], ip_address[1], ip_address[2], ip_address[3], port);
 
-        int host1=(int)packet[11];
-        int host2=(int)packet[12];
-        int host3=(int)packet[13];
-        int host4=(int)packet[14];
+        if(get_packet_length(packet)==OL_SEND_VERSION_LEN){
 
-        int port=((int)packet[15] *256)+(int)packet[16];
+            //get OL extra data
+            int ol_os_version=packet[16];
+            int ol_unused=packet[17];
+            //int ol_lsb_verflag=packet[18];
+            //int ol_msb_verflag=packet[19];
 
-        log_text(EVENT_SESSION, "first digit [%i] second digit [%i] major [%i] minor [%i] release [%i] patch [%i] host [%i.%i.%i.%i] port [%i]", first_digit, second_digit, major, minor, release, patch, host1, host2, host3, host4, port);
+            log_text(EVENT_SESSION, "additional OL version data: OL o/s version [%i] OL unused byte [%i]", ol_os_version, ol_unused);
+        }
     }
 /***************************************************************************************************/
 
@@ -328,7 +336,6 @@ void process_packet(int connection, unsigned char *packet){
 
         //returns a 16bit integer corresponding to the order of the object in the map 3d object list
 
-        //int threed_object_list_pos=uint16_t_to_dec(packet[3], packet[4]);
         int threed_object_list_pos=*((int16_t*)(packet+3));
 
         log_event(EVENT_SESSION, "protocol HARVEST - started, char [%s], threed object list position [%i], map [%i]", clients.client[connection].char_name, threed_object_list_pos, clients.client[connection].map_id);
@@ -385,7 +392,7 @@ void process_packet(int connection, unsigned char *packet){
                 return;
             }
 
-           //broadcast the bag drop
+            //broadcast the bag drop
             broadcast_get_new_bag_packet(connection, bag_id);
 
             //place item in first slot of new bag
@@ -423,26 +430,30 @@ void process_packet(int connection, unsigned char *packet){
 
         //returns 1 byte indicating slot and a 4byte integer indicating quantity
 
+        int bag_slot=packet[3];
         int amount=*((int32_t*)(packet+4));
-        int slot=packet[3];
         int bag_id=clients.client[connection].open_bag_id;
 
-        if(is_bag_empty(bag_id)==true){
+        //adds item to char inventory
+        int object_id=bag[bag_id].inventory[bag_slot].object_id;
+        int inventory_slot=find_inventory_slot(connection, object_id);
 
-            // destroy bag
-            send_destroy_bag(connection, clients.client[connection].open_bag_id);
-            clients.client[connection].open_bag_id=0;
-            clients.client[connection].bag_open=false;
+        if(add_to_inventory(connection, object_id, amount, inventory_slot)==false){
 
-            memset(&bag[bag_id], 0, sizeof(bag[bag_id]));
-
-            //need to broadcast bag poof
+            send_text(connection, CHAT_SERVER, "%cyour maximum carry capacity has been exceeded", c_red1+127);
+            return;
         }
 
-        bag[bag_id].inventory[slot].amount-=amount;
+        //removes item from bag
+        remove_item_from_bag(bag_id, amount, bag_slot);
         send_here_your_ground_items(connection, bag_id);
-        //use REMOVE_ITEM_FROM_GROUND
-    }
+
+        if(bag_empty(bag_id)==true){
+
+           // destroy bag
+           broadcast_destroy_bag_packet(bag_id);
+        }
+     }
 /***************************************************************************************************/
 
     else if(protocol==INSPECT_BAG){
@@ -475,7 +486,6 @@ void process_packet(int connection, unsigned char *packet){
 
         //returns a Uint32 indicating the position of the object in the map 3d object list
 
-        //int threed_object_list_pos=Uint32_to_dec(packet[3], packet[4], packet[5], packet[6]);
         int threed_object_list_pos=*((int32_t*)(packet+3));
 
         //get the object item id

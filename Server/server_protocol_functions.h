@@ -22,18 +22,6 @@
 
 #include "chat.h" //support for MAX_CHAN_SLOTS
 
-/** RESULT  : sends packet from the server
-
-    RETURNS : void
-
-    PURPOSE : groups all server communications so as packets sent from server can be monitored
-              from a single source
-
-    NOTES   :
-*/
-void send_packet(int connection, void *packet, size_t packet_length);
-
-
 
 /** RESULT  : sends the log_in_ok packet to the client
 
@@ -142,7 +130,6 @@ void send_here_your_ground_items(int connection, int bag_id);
 
     NOTES   :
 */
-//void send_get_active_channels(int connection);
 void send_get_active_channels(int connection, unsigned char active_chan, int *chan_slot);
 
 
@@ -180,17 +167,6 @@ void send_change_map(int connection, char *elm_filename);
 void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t *packet_length);
 
 
-/** RESULT  : sends an add_new_enhanced_actor_packet
-
-    RETURNS : void
-
-    PURPOSE : enables logging and local debugging of protocol
-
-    NOTES   :
-*/
-//void send_add_new_enhanced_actor_packet(int connection, unsigned char *packet, int packet_length);
-
-
 /** RESULT  : creates the remove actor_packet to client
 
     RETURNS : void
@@ -203,17 +179,6 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
 void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_length);
 
 
-/** RESULT  : sends a remove_actor_packet
-
-    RETURNS : void
-
-    PURPOSE : enables logging and local debugging of protocol
-
-    NOTES   :
-*/
-//void send_remove_actor_packet(int connection, unsigned char *packet, int packet_length);
-
-
 /** RESULT  : creates the add_actor_packet
 
     RETURNS : void
@@ -224,17 +189,6 @@ void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_l
               and leave the broadcast function to send
 */
 void add_actor_packet(int connection, unsigned char move, unsigned char *packet, size_t *packet_length);
-
-
-/** RESULT  : sends an add_actor_packet
-
-    RETURNS : void
-
-    PURPOSE : enables logging and local debugging of protocol
-
-    NOTES   :
-*/
-//void send_add_actor_packet(int connection, unsigned char *packet, int packet_length);
 
 
 /** RESULT  : sends the new_minute packet
@@ -286,11 +240,22 @@ void send_close_bag(int connection);
 
     RETURNS : void
 
-    PURPOSE : destroys a bag
+    PURPOSE : poofs a bag
 
     NOTES   :
 */
 void send_destroy_bag(int connection, int bag_id);
+
+
+/** RESULT  : sends the get_bags_list_packet
+
+    RETURNS : void
+
+    PURPOSE : sends client a list of bags
+
+    NOTES   :
+*/
+void send_get_bags_list(int connection);
 
 
 void send_display_client_window(int connection);
@@ -317,11 +282,5 @@ void send_text(int connection, int channel_type, const char *fmt, ...);
 #ifdef __cplusplus
 }
 #endif
-
-
-
-
-
-
 
 #endif // SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED

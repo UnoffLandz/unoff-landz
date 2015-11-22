@@ -18,7 +18,6 @@
 *******************************************************************************************************************/
 
 #include <string.h>     //support for memcpy and strlen
-#include <sys/socket.h> //support for send function
 #include <stdio.h>      //support for sprintf
 #include <stdint.h>     //support uint16_t data type
 #include <stdarg.h>     //support for args
@@ -36,16 +35,6 @@
 #include "server_start_stop.h"
 
 #define DEBUG_SERVER_PROTOCOL_FUNCTIONS 0
-
-void send_packet(int connection, void *packet, size_t packet_length){
-
-    /** public function - see header */
-
-    log_packet(connection, packet, SEND);
-
-    send(connection, packet, packet_length, 0);
-}
-
 
 void send_new_minute(int connection, int minute){
 
@@ -310,7 +299,7 @@ void send_here_your_inventory(int connection){
         struct __attribute__((__packed__)){
 
             uint16_t object_id;
-            int amount;
+            uint32_t amount;
             unsigned char slot;
             unsigned char flags;
         }inventory[MAX_INVENTORY_SLOTS];
@@ -332,7 +321,7 @@ void send_here_your_inventory(int connection){
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
         packet.inventory[i].object_id=(uint16_t)clients.client[connection].inventory[i].object_id;
-        packet.inventory[i].amount=clients.client[connection].inventory[i].amount;
+        packet.inventory[i].amount=(uint32_t)clients.client[connection].inventory[i].amount;
         packet.inventory[i].slot=(unsigned char)i;
         packet.inventory[i].flags=0;
     }
@@ -354,7 +343,7 @@ void send_here_your_ground_items(int connection, int bag_id){
         struct __attribute__((__packed__)){
 
             uint16_t object_id;
-            int amount;
+            uint32_t amount;
             unsigned char slot;
         }inventory[MAX_BAG_SLOTS];
 
@@ -375,7 +364,7 @@ void send_here_your_ground_items(int connection, int bag_id){
     for(int i=0; i<MAX_BAG_SLOTS; i++){
 
         packet.inventory[i].object_id=(uint16_t)bag[bag_id].inventory[i].object_id;
-        packet.inventory[i].amount=bag[bag_id].inventory[i].amount;
+        packet.inventory[i].amount=(uint32_t)bag[bag_id].inventory[i].amount;
         packet.inventory[i].slot=(unsigned char)i;
     }
 
@@ -416,7 +405,7 @@ void send_get_active_channels(int connection, unsigned char active_chan, int *ch
         unsigned char protocol;
         uint16_t data_length;
         unsigned char _active_chan;
-        int _chan_slot[MAX_CHAN_SLOTS];
+        uint32_t _chan_slot[MAX_CHAN_SLOTS];
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -433,7 +422,7 @@ void send_get_active_channels(int connection, unsigned char active_chan, int *ch
 
     for(int i=0; i<MAX_CHAN_SLOTS; i++){
 
-        packet._chan_slot[i]=chan_slot[i];
+        packet._chan_slot[i]=(uint32_t)chan_slot[i];
     }
 
     send_packet(connection, &packet, packet_length);
@@ -502,21 +491,21 @@ void send_here_your_stats(int connection){
         uint16_t elapsed_book_time;
         uint16_t unused;
 
-        int manufacture_exp;
-        int max_manufacture_exp;
-        int harvest_exp;
-        int max_harvest_exp;
-        int alchemy_exp;
-        int overall_exp;
-        int max_overall_exp;
-        int attack_exp;
-        int max_attack_exp;
-        int defence_exp;
-        int max_defence_exp;
-        int magic_exp;
-        int max_magic_exp;
-        int potion_exp;
-        int max_potion_exp;
+        uint32_t manufacture_exp;
+        uint32_t max_manufacture_exp;
+        uint32_t harvest_exp;
+        uint32_t max_harvest_exp;
+        uint32_t alchemy_exp;
+        uint32_t overall_exp;
+        uint32_t max_overall_exp;
+        uint32_t attack_exp;
+        uint32_t max_attack_exp;
+        uint32_t defence_exp;
+        uint32_t max_defence_exp;
+        uint32_t magic_exp;
+        uint32_t max_magic_exp;
+        uint32_t potion_exp;
+        uint32_t max_potion_exp;
         uint16_t book_id;
         uint16_t max_book_time;
     }packet;
@@ -567,21 +556,21 @@ void send_here_your_stats(int connection){
     packet.elapsed_book_time=(uint16_t)clients.client[connection].elapsed_book_time;
     packet.unused=0;
 
-    packet.manufacture_exp=clients.client[connection].manufacture_exp;
-    packet.max_manufacture_exp=clients.client[connection].max_manufacture_exp;
-    packet.harvest_exp=clients.client[connection].harvest_exp;
-    packet.max_harvest_exp=clients.client[connection].max_harvest_exp;
-    packet.alchemy_exp=clients.client[connection].alchemy_exp;
-    packet.overall_exp=clients.client[connection].overall_exp;
-    packet.max_overall_exp=clients.client[connection].max_overall_exp;
-    packet.attack_exp=clients.client[connection].attack_exp;
-    packet.max_attack_exp=clients.client[connection].max_attack_exp;
-    packet.defence_exp=clients.client[connection].defence_exp;
-    packet.max_defence_exp=clients.client[connection].max_defence_exp;
-    packet.magic_exp=clients.client[connection].magic_exp;
-    packet.max_magic_exp=clients.client[connection].max_magic_exp;
-    packet.potion_exp=clients.client[connection].potion_exp;
-    packet.max_potion_exp=clients.client[connection].max_potion_exp;
+    packet.manufacture_exp=(uint32_t)clients.client[connection].manufacture_exp;
+    packet.max_manufacture_exp=(uint32_t)clients.client[connection].max_manufacture_exp;
+    packet.harvest_exp=(uint32_t)clients.client[connection].harvest_exp;
+    packet.max_harvest_exp=(uint32_t)clients.client[connection].max_harvest_exp;
+    packet.alchemy_exp=(uint32_t)clients.client[connection].alchemy_exp;
+    packet.overall_exp=(uint32_t)clients.client[connection].overall_exp;
+    packet.max_overall_exp=(uint32_t)clients.client[connection].max_overall_exp;
+    packet.attack_exp=(uint32_t)clients.client[connection].attack_exp;
+    packet.max_attack_exp=(uint32_t)clients.client[connection].max_attack_exp;
+    packet.defence_exp=(uint32_t)clients.client[connection].defence_exp;
+    packet.max_defence_exp=(uint32_t)clients.client[connection].max_defence_exp;
+    packet.magic_exp=(uint32_t)clients.client[connection].magic_exp;
+    packet.max_magic_exp=(uint32_t)clients.client[connection].max_magic_exp;
+    packet.potion_exp=(uint32_t)clients.client[connection].potion_exp;
+    packet.max_potion_exp=(uint32_t)clients.client[connection].max_potion_exp;
     packet.book_id=(uint16_t)clients.client[connection].book_id;
     packet.max_book_time=(uint16_t)clients.client[connection].max_book_time;
 
@@ -688,8 +677,11 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
     int map_id=clients.client[connection].map_id;
     int map_axis=maps.map[map_id].map_axis;
 
-    _packet1.x_pos=(uint16_t)clients.client[connection].map_tile % (uint16_t)map_axis;
-    _packet1.y_pos=(uint16_t)clients.client[connection].map_tile / (uint16_t)map_axis;
+    int x=clients.client[connection].map_tile % map_axis;
+    int y=clients.client[connection].map_tile / map_axis;
+    _packet1.x_pos=(uint16_t)x;
+    _packet1.y_pos=(uint16_t)y;
+
     _packet1.z_pos=0; //z position (set to 0 pending further development)
     _packet1.rot=45; //rotation angle (set to 45 pending further development)
 
@@ -792,7 +784,7 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
         unsigned char protocol;
         uint16_t data_length;
         uint16_t object_id;
-        int amount;
+        uint32_t amount;
         unsigned char slot;
         unsigned char flags;
     }packet;
@@ -809,7 +801,7 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
     packet.data_length=(uint16_t)data_length;
 
     packet.object_id=(uint16_t)object_id;
-    packet.amount=amount;
+    packet.amount=(uint32_t)amount;
     packet.slot=(unsigned char)slot;
     packet.flags=0;
 
@@ -841,7 +833,6 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
     int data_length=(int)*packet_length-2;
     _packet.data_length=(uint16_t)data_length;
 
-    //_packet.data_length=*packet_length-2;
     _packet.x_pos=(uint16_t)get_x_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
     _packet.y_pos=(uint16_t)get_y_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
     _packet.bag_list_number=(unsigned char)bag_list_number;
@@ -873,4 +864,59 @@ void send_destroy_bag(int connection, int bag_id){
     packet.bag_id=(uint16_t)bag_id;
 
     send_packet(connection, &packet, packet_length);
+}
+
+
+void send_get_bags_list(int connection){
+
+  struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        uint16_t data_length;
+        unsigned char bag_count;
+
+        struct __attribute__((__packed__)){
+
+            uint16_t x;
+            uint16_t y;
+            unsigned char bag_id;
+        }bag_list[MAX_BAGS];
+
+    }packet;
+
+    //clear the struct
+    memset(&packet, '0', sizeof(packet));
+
+    //add data
+    packet.protocol=GET_BAGS_LIST;
+
+    int map_id=clients.client[connection].map_id;
+    int map_axis=maps.map[map_id].map_axis;
+
+    int j=0;
+
+    for(uint8_t i=0; i<MAX_BAGS; i++){
+
+        if(bag[i].map_id==clients.client[connection].map_id){
+
+            packet.bag_list[j].x=(uint16_t)(bag[i].tile % map_axis);
+            packet.bag_list[j].y=(uint16_t)(bag[i].tile / map_axis);
+
+            packet.bag_list[j].bag_id=(unsigned char)j;
+
+            j++;
+        }
+    }
+
+    packet.bag_count=(unsigned char)j;
+
+    if(j>0){
+
+        size_t packet_length=(size_t)(4+(j*5));
+
+        int data_length=(int)packet_length-2;
+        packet.data_length=(uint16_t)data_length;
+
+        send_packet(connection, &packet, packet_length);
+    }
 }

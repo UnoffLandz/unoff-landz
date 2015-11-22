@@ -43,33 +43,22 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-DONE NEW replace packet handling loops with memcpy and memmove
-FIXED change existing map using -M
-PASSED NEW TEST change existing map using -M
-FIXED jump to NewPlattsdale
-
 BUG Player chat in dark gray even when active
 BUG Player chat shows chan 32
 BUG Bingo chat shows chan -30
-BUG pick_up_item causing machine crash
-BUG destroy bag not working
 
 TEST multiple chat channel handling
 TEST multiple guild application handling
 
-NEW make separate function to extract 3d object list from elm file
+#jump to default to first walkable tile
+make separate function to extract 3d object list from elm file
 reimplement function get_nearest_unoccupied_tile
-need #command for developers to list available maps
-need #command to withdraw application to join guild
-extend add_client_to_map function so that existing bags are shown to new client
-broadcast bags to other clients
-implement pick up bag
-implement move item between slots in bag
-implement bag poof (include reset poof time on add/drop from bag)
 
+need #command to withdraw application to join guild
 need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
 separate module for chat #commands
 separate module for ops #commands
+separate module for devs #commands
 transfer server welcome message to the database
 #command to change guild chan join/leave notification colours
 remove character_type_name field from CHARACTER_TYPE_TABLE
@@ -79,7 +68,6 @@ finish script loading
 widen distance that new/beamed chars are from other chars
 #IG guild channel functionality
 OPS #command to #letter all chars
-add map axis to get_proximity
 need #command to #letter all guild members (guild master only)
 implement guild stats
 Table to separately record all drops/pick ups in db
@@ -90,11 +78,9 @@ convert attribute struct so as attribute type can be addressed programatically
 identify cause of stall after login (likely to be loading of inventory from db)
 identify cause of char bobbing
 put inventory slots in a binary blob (may solve stall on log in)
-log illegal use of #jump and other developer #commands
 improve error handling on upgrade_database function
 refactor function current_database_version
 create circular buffer for receiving packets
-cope with send not sending all the bytes at once
 need #function to describe char and what it is wearing)
 document new database/struct relationships
 finish char_race_stats and char_gender_stats functions in db_char_tbl.c
@@ -107,7 +93,7 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include <arpa/inet.h>  //supports recv and accept function
 #include <ev.h>         //supports ev event library
 #include <fcntl.h>      //supports fcntl
-#include <unistd.h>     //supports close function and TEMP_FAILURE_RETRY
+#include <unistd.h>     //supports close function, ssize_t data type and TEMP_FAILURE_RETRY
 
 #include "server_parameters.h"
 #include "global.h"
@@ -149,6 +135,7 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include "broadcast_actor_functions.h"
 #include "packet.h"
 #include "maps.h" //testing
+#include "bags.h"
 
 #define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
 #define DEBUG_MAIN 1
@@ -161,9 +148,12 @@ extern int current_database_version();
 //declare prototypes
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
+void socket_write_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 void timeout_cb(EV_P_ struct ev_timer* timer, int revents);
 void timeout_cb2(EV_P_ struct ev_timer* timer, int revents);
 void idle_cb(EV_P_ struct ev_idle *watcher, int revents);
+
+int sd;
 
 void start_server(){
 
@@ -179,13 +169,11 @@ void start_server(){
     struct ev_loop *loop = ev_default_loop(0);
 
     struct ev_io *socket_watcher = (struct ev_io*)malloc(sizeof(struct ev_io));
-    struct ev_idle *idle_watcher=(struct ev_idle*)malloc(sizeof(struct ev_idle));
+    struct ev_idle *idle_watcher = (struct ev_idle*)malloc(sizeof(struct ev_idle));
     struct ev_timer *timeout_watcher = (struct ev_timer*)malloc(sizeof(struct ev_timer));
     struct ev_timer *timeout_watcher2 = (struct ev_timer*)malloc(sizeof(struct ev_timer));
 
     struct sockaddr_in server_addr;
-
-    int sd;
 
     //check database version
     int database_version = get_database_version();
@@ -195,6 +183,9 @@ void start_server(){
         printf("Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", database_version, REQUIRED_DATABASE_VERSION);
         return;
     }
+
+    //clears garbage from the struct
+    memset(&clients, '\0', sizeof(clients));
 
     //load data from database into memory
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
@@ -304,6 +295,7 @@ void start_server(){
     log_event(EVENT_INITIALISATION, "server initialisation complete");
 
     while(1) {
+
         ev_run(loop, 0);
     }
 }
@@ -383,15 +375,18 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
     send_text(client_sd, CHAT_SERVER, "\nHit any key to continue...\n");
 }
 
-/*
-TEST CODE TO SUPPORT WRITE CALLBACK
 
+//TEST CODE TO SUPPORT WRITE CALLBACK
+/*
 void socket_write_callback(struct ev_loop *loop, struct ev_io *watcher, int revents) {
 
     if(revents & EV_WRITE){
 
         printf("write\n");
         ev_io_stop(loop, watcher);
+
+        ev_io_init(socket_watcher, socket_accept_callback, sd, EV_READ);
+        ev_io_start(loop, socket_watcher);
     }
 }
 */
@@ -408,7 +403,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
     **/
 
     unsigned char buffer[1024];
-    unsigned char packet[1024];
+    //unsigned char packet[1024];
 
     if (EV_ERROR & revents) {
 
@@ -420,6 +415,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 
         //wrapping recv in this macro prevents connection reset by peer errors
         //read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
+
         ssize_t read=recv(watcher->fd, buffer, 512, 0);
 
         if (read <0) {
@@ -430,7 +426,6 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 
                 log_event(EVENT_ERROR, "read registered EINTR in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
                 log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
-
             }
 
             if(errno == EAGAIN){
@@ -504,60 +499,50 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         if(read>0){
 
             log_event(EVENT_SESSION, "bytes received [%i]", read);
-
-            //copy new bytes to client packet buffer(memcpy doesn't work)
-            for(int i=0; i<read; i++){
+/*
+             for(int i=0; i<read; i++){
 
                 clients.client[watcher->fd].packet_buffer[clients.client[watcher->fd].packet_buffer_length]=buffer[i];
                 clients.client[watcher->fd].packet_buffer_length++;
             }
+*/
+            //copy new bytes to client packet buffer
+            memcpy(clients.client[watcher->fd].packet_buffer+clients.client[watcher->fd].packet_buffer_length, &buffer, (size_t)read);
+            clients.client[watcher->fd].packet_buffer_length+=(size_t)read;
 
-            //if data is in the buffer then read it
+            //if data is in the buffer then process it
             if(clients.client[watcher->fd].packet_buffer_length>0) {
 
                 do {
 
-                    size_t packet_length=get_packet_length(clients.client[watcher->fd].packet_buffer);
-
                     //update heartbeat
                     clients.client[watcher->fd].time_of_last_heartbeat=time_check.tv_sec;
 
-                    //if insufficient data received then wait for more data
+                    //if insufficient data to complete  a packet then wait for more data
+                    size_t packet_length=get_packet_length(clients.client[watcher->fd].packet_buffer);
                     if(clients.client[watcher->fd].packet_buffer_length<packet_length) break;
 
-/*
-                    //copy a packet from buffer
-                    for(int i=0; i<(int)packet_length; i++){
-
-                        packet[i]=(unsigned char)clients.client[watcher->fd].packet_buffer[i];
-                    }
-*/
-                    memcpy(packet, clients.client[watcher->fd].packet_buffer, packet_length);
-
-                    //process the packet
-                    process_packet(watcher->fd, packet);
+                    //grab packet for processing  and remove from buffer
+                    //memcpy(packet, clients.client[watcher->fd].packet_buffer, packet_length);
 
                     //remove packet from buffer
-                    clients.client[watcher->fd].packet_buffer_length=clients.client[watcher->fd].packet_buffer_length-packet_length;
-
-/*
-                    for(int i=0; i<=(int)clients.client[watcher->fd].packet_buffer_length; i++){
-
-                        clients.client[watcher->fd].packet_buffer[i]=clients.client[watcher->fd].packet_buffer[i+(int)packet_length];
-                    }
-*/
+                    clients.client[watcher->fd].packet_buffer_length-=packet_length;
                     memmove(clients.client[watcher->fd].packet_buffer, clients.client[watcher->fd].packet_buffer + packet_length, clients.client[watcher->fd].packet_buffer_length);
+
+                    //process the packet
+                    //process_packet(watcher->fd, packet);
+                    process_packet(watcher->fd, clients.client[watcher->fd].packet_buffer);
 
                 } while(1);
             }
         }
-/*
-        TEST CODE TO SUPPORT WRITE CALLBACK
 
+        //TEST CODE TO SUPPORT WRITE CALLBACK
+        /*
         ev_io_stop(loop, watcher);
         ev_io_init(watcher, socket_write_callback, watcher->fd, EV_WRITE);
         ev_io_start(loop, watcher);
-*/
+        */
     }
 }
 
@@ -582,9 +567,9 @@ void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
         stop_server();
     }
 
+    //update game time
     game_data.game_minutes++;
 
-    //update game time
     if(game_data.game_minutes>360){
 
         game_data.game_minutes=0;
@@ -663,6 +648,16 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                 //process any harvesting
                 process_char_harvest(i, time_check.tv_sec); //use seconds
             }
+        }
+    }
+
+    // check bags for poof time
+    for(int i=0; i<MAX_BAGS; i++){
+
+         if(bag[i].bag_refreshed>0 && bag[i].bag_refreshed+BAG_POOF_INTERVAL<time_check.tv_sec){
+
+            //poof the bag
+            broadcast_destroy_bag_packet(i);
         }
     }
 }

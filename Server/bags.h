@@ -4,6 +4,7 @@
 #define MAX_BAGS 50
 #define MAX_PLAYER_BAGS 10
 #define MAX_BAG_SLOTS 50
+#define BAG_POOF_INTERVAL 100
 
 #include <time.h>
 
@@ -16,11 +17,12 @@ struct bag_inventory_type{
 struct bag_type {
 
     int character_id;
-    time_t bag_created;
+    time_t bag_refreshed;
     int bag_type_id;
     int tile;
     int map_id;
     bool bag_in_use;
+    int bag_emu;
 
     struct bag_inventory_type inventory[MAX_BAG_SLOTS];
 };
@@ -69,6 +71,30 @@ int add_to_bag(int bag_id, int object_id, int amount, int slot);
 
     NOTES   :
 */
-bool is_bag_empty(int bag_id);
+bool bag_empty(int bag_id);
+
+
+/** RESULT  : removes item from a bag
+
+    RETURNS : true/false
+
+    PURPOSE :
+
+    NOTES   : doesn't reset bag poof time
+*/
+void remove_item_from_bag(int bag_id, int amount, int bag_slot);
+
+
+/** RESULT  : calculates the emu of a bag
+
+    RETURNS : bag emu
+
+    PURPOSE :
+
+    NOTES   : function is unused but reserved for future development
+*/
+
+int get_bag_inventory_emu(int bag_id);
+
 
 #endif // BAGS_H_INCLUDED

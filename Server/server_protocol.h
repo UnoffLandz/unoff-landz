@@ -107,16 +107,18 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  uint16_t              data-length (=packet length-2)
+        2-3  uint16_t            data-length (=packet length-2)
         4    Uint8               slot count
 
         REPEAT FOR EACH SLOT...
-        5-6 { uint16_t              object id
+        5-6 { uint16_t            object id
         7-11{ Uint32              amount
         12  { Uint8               slot
 */
 
     GET_NEW_GROUND_ITEM=24,
+
+    REMOVE_ITEM_FROM_GROUND=25,
 
     CLOSE_BAG=26, //closes bag inventory grid
 /*
@@ -131,10 +133,23 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  uint16_t              data-length (=packet length-2)
-        4-5  uint16_t              x-pos on map
-        6-7  uint16_t              y-pos on map
+        2-3  uint16_t            data-length (=packet length-2)
+        4-5  uint16_t            x-pos on map
+        6-7  uint16_t            y-pos on map
         8    Uint8               bag list number
+*/
+    GET_BAGS_LIST=28, //sends list of bags to client
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  uint16_t            data-length (=packet length-2)
+        4    uint8_t             bag count
+
+        for each bag in list:
+            uint16_t            x-pos on map
+            uint16_t            y-pos on map
+            Uint8               bag list number
 */
 
     DESTROY_BAG=29,

@@ -39,6 +39,8 @@
 #include "game_data.h"
 #include "idle_buffer2.h"
 #include "harvesting.h"
+#include "bags.h"
+#include "packet.h"
 
 #define DEBUG_MOVEMENT 0
 
@@ -222,16 +224,36 @@ bool add_char_to_map(int connection, int map_id, int map_tile){
     //send change map to client
     send_change_map(connection, maps.map[map_id].elm_filename);
 
-    //clients.client[connection].map_tile=18059; //27025;
-    //send_change_map(connection, "./maps/NewPlattsdale.elm");
-    //mm 28278
-
-    //make scene visible to this client
+    //send other chars to client
     send_actors_to_client(connection);
 
-    //send existing bags on map to client
-    //send_bags_to_client(connection);
+    //send existing map bags to client
+/*
+    bag[0].bag_in_use=true;
+    gettimeofday(&time_check, NULL);
+    bag[0].bag_refreshed=time_check.tv_sec;
+    bag[0].tile=27225;
+    bag[0].map_id=1;
+    bag[0].bag_type_id=0;
+*/
+    send_get_bags_list(connection);
 
+/*
+    for(int i=0; i<MAX_BAGS; i++){
+
+        //restrict to bags on the same map
+        if(map_id==bag[i].map_id){
+
+            //display bag to client
+            unsigned char packet[1024]={0};
+            size_t packet_length;
+            get_new_bag_packet(connection, i, packet, &packet_length);
+
+            send_packet(connection, packet, packet_length);
+
+        }
+    }
+*/
     //show this char to other connected clients on this map
     broadcast_add_new_enhanced_actor_packet(connection);
 
@@ -258,11 +280,12 @@ bool move_char_between_maps(int connection, int map_id, int map_tile){
         //return char to original map if jump to new map fails
         if(add_char_to_map(connection, old_map_id, old_map_tile)==false){
 
-            log_event(EVENT_ERROR, "cannot return char to orignal map in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-             stop_server();
+            log_event(EVENT_ERROR, "cannot return char to original map in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            stop_server();
         }
 
         return false;
+
     }
 
     return true;
@@ -333,4 +356,3 @@ void start_char_move(int connection, int destination){
     //reset time of last move to zero so the movement is processed without delay
     clients.client[connection].time_of_last_move=0;
 }
-

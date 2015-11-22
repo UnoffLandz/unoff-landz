@@ -27,13 +27,42 @@ Packets received by and sent to the server conform to a common format:
         Byte  3 onwards - The packet data
 */
 
-#include <string.h> //support for memcpy
+#include <string.h> //support for memcpy function
 #include <stdlib.h>//support for ssize_t datatype
+#include <sys/socket.h>// support for send function
 
 #include "packet.h"
 #include "logging.h"
 #include "server_start_stop.h"
 #include "string_functions.h"
+
+void send_packet(int connection, void *packet, size_t packet_length){
+
+    /** public function - see header */
+
+    log_packet(connection, packet, SEND);
+
+    size_t total_bytes_sent=0;
+
+    //make multiple attempts to send data if not everything is sent first attempt
+    do{
+
+        int bytes_sent=(int)send(connection, packet, packet_length, 0);
+
+        if(bytes_sent==-1){
+
+            log_event(EVENT_ERROR, "send failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            stop_server();
+        }
+
+        total_bytes_sent+=(size_t)bytes_sent;
+
+        if(total_bytes_sent==packet_length) break;
+
+        log_event(EVENT_SESSION, "partial packet send %i of %i", bytes_sent, packet_length);
+    }while(1);
+}
+
 
 size_t get_packet_length(const unsigned char *packet){
 
