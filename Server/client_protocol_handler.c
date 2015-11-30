@@ -51,8 +51,7 @@
 #include "bags.h"
 #include "packet.h"
 
-
-//#define DEBUG_CLIENT_PROTOCOL_HANDLER 1//set debug mode
+#define DEBUG_CLIENT_PROTOCOL_HANDLER 1
 
 void process_packet(int connection, unsigned char *packet){
 
@@ -275,19 +274,23 @@ void process_packet(int connection, unsigned char *packet){
 
     else if(protocol==USE_OBJECT){
 
-/*
         //returns a 4byte integer indicating the threed object id, followed by a 4byte integer indicating ????
 
-        map_object_id=Uint32_to_dec(data[0], data[1], data[2], data[3]);
-        use_with_position=Uint32_to_dec(data[4], data[5], data[6], data[7]);
+        int threed_object_id=*((int32_t*)(packet+3));
+        int use_with_position=*((int32_t*)(packet+7));
 
         #if DEBUG_CLIENT_PROTOCOL_HANDLER==1
-        printf("USE_OBJECT - map object [%i] position [%i]\n", map_object_id, use_with_position);
+        printf("USE_OBJECT - map object [%i] position [%i]\n", threed_object_id, use_with_position);
         #endif
 
         //if char is moving when protocol arrives, cancel rest of path
         clients.client[connection].path_count=0;
 
+/* click on banner - Add to boat queue */
+/* on timer must be within x tiles of banner */
+/* transfer to boat map */
+
+/*
         //travel from IP to Ravens Isle
         if(map_object_id==520 && clients.client[connection].map_id==1) move_char_between_maps(connection, 2, 64946);
 
@@ -360,73 +363,6 @@ void process_packet(int connection, unsigned char *packet){
         int withdraw_amount=*((int32_t*)(packet+4));
 
         drop_from_inventory_to_bag(connection, inventory_slot, withdraw_amount);
-
-/*
-        //determine the item to be dropped
-        int object_id=clients.client[connection].inventory[inventory_slot].object_id;
-
-        int bag_id;
-        int bag_slot=-1;
-
-        if(clients.client[connection].bag_open==true){//use existing bag
-
-            //find the existing bag id
-            bag_id=clients.client[connection].open_bag_id;
-
-            //find a slot in which to place the item
-            bag_slot=find_bag_slot(bag_id, object_id);
-
-            //check if max bag slots exceeded
-            if(bag_slot==-1){
-
-                send_text(connection, CHAT_SERVER, "%cthere are no slots left in this bag", c_red3+127);
-                return;
-            }
-        }
-        else {// create a new bag
-
-            // get new bag id
-            bag_id=create_bag(clients.client[connection].map_id, clients.client[connection].map_tile);
-
-            //check if max bags permitted by server has been exceeded
-            if(bag_id==-1){
-
-                send_text(connection, CHAT_SERVER, "%cThe server has reached the maximum number of bags. Wait for one to poof! ", c_red3+127);
-                return;
-            }
-
-            //broadcast the bag drop
-            broadcast_get_new_bag_packet(connection, bag_id);
-
-            //place item in first slot of new bag
-            bag_slot=0;
-         }
-
-        //update char to show that it is standing on an open bag
-        clients.client[connection].bag_open=true;
-        clients.client[connection].open_bag_id=bag_id;
-
-        //remove item from char inventory
-        int amount_withdrawn=remove_from_inventory(connection, object_id, withdraw_amount, inventory_slot);
-
-        // add to bag
-        int amount_added=add_to_bag(bag_id, object_id, amount_withdrawn, bag_slot);
-
-        //catch if amount added to bag is less than amount withdrawn from inventory
-        if(amount_added != amount_withdrawn){
-
-            log_event(EVENT_ERROR, "char [%s] error dropping item from inventory", clients.client[connection].char_name);
-            log_text(EVENT_ERROR, "item [%s]", object[object_id].object_name);
-            log_text(EVENT_ERROR, "amount withdrawn from inventory [%i]", amount_withdrawn);
-            log_text(EVENT_ERROR, "amount added to bag [%i]", amount_added);
-
-            stop_server();
-        }
-
-        //send revised char inventory and bag inventory to client
-        send_here_your_inventory(connection);
-        send_here_your_ground_items(connection, bag_id);
-*/
     }
 /***************************************************************************************************/
 
@@ -439,31 +375,6 @@ void process_packet(int connection, unsigned char *packet){
         int bag_id=clients.client[connection].open_bag_id;
 
         pick_up_from_bag_to_inventory(connection, bag_slot, amount, bag_id);
-/*
-        int bag_slot=packet[3];
-        int amount=*((int32_t*)(packet+4));
-        int bag_id=clients.client[connection].open_bag_id;
-
-        //adds item to char inventory
-        int object_id=bag[bag_id].inventory[bag_slot].object_id;
-        int inventory_slot=find_inventory_slot(connection, object_id);
-
-        if(add_to_inventory(connection, object_id, amount, inventory_slot)==false){
-
-            send_text(connection, CHAT_SERVER, "%cyour maximum carry capacity has been exceeded", c_red1+127);
-            return;
-        }
-
-        //removes item from bag
-        remove_item_from_bag(bag_id, amount, bag_slot);
-        send_here_your_ground_items(connection, bag_id);
-
-        if(bag_empty(bag_id)==true){
-
-           // destroy bag
-           broadcast_destroy_bag_packet(bag_id);
-        }
-*/
      }
 /***************************************************************************************************/
 
@@ -488,6 +399,7 @@ void process_packet(int connection, unsigned char *packet){
         }
 
         //if char is not standing on bag then walk towards it
+        //start_char_move(connection, bag[bag_id].tile);
         start_char_move(connection, bag[bag_id].tile);
         return;
     }

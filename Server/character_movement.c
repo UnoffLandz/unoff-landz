@@ -123,6 +123,11 @@ void process_char_move(int connection, time_t current_utime){
                 move_cmd=get_move_command(current_tile, next_tile, map_axis);
                 broadcast_actor_packet(connection, (unsigned char)move_cmd, next_tile);
 
+                if(clients.client[connection].track==true){
+
+                    send_text(connection, CHAT_SERVER, "%cPosition x=%i y=%i", c_green3+127, next_tile % map_axis, next_tile / map_axis);
+                 }
+
                 //update char current position and save
                 clients.client[connection].map_tile=next_tile;
 
@@ -324,17 +329,13 @@ void start_char_move(int connection, int destination){
     //check for zero length path
     if(current_tile==destination){
 
-        #if DEBUG_MOVEMENT==1
-        printf("current tile = destination (ignored)\n");
-        #endif
-
         return;
     }
 
     //get path
-    if(get_astar_path(connection, current_tile, destination)==NOT_FOUND){
+    if(get_astar_path(connection, current_tile, destination)==false){
 
-        log_event(EVENT_ERROR, "path not found in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        return;
     }
 
     //if standing on a bag, close the bag grid

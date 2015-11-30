@@ -23,6 +23,8 @@
 #define MOTD_FILE "motd.msg"
 #define SERVER_WELCOME_MSG "\nWELCOME TO THE UNOFF SERVER\n--------------------------------------------------------------------------------------------"
 
+#include <stdbool.h>
+
 //#define CHAT_CHANNEL_START 5
 
 enum { // channel types
@@ -50,13 +52,13 @@ void send_motd_header(int connection);
 
 /** RESULT  : sends the content of the motd file to connection
 
-    RETURNS : void
+    RETURNS : true/false
 
     PURPOSE : used by send_motd function and process_hash_commands
 
     NOTES   :
 **/
-int send_motd_file(int connection);
+bool send_motd_file(int connection);
 
 
 /** RESULT  : sends the motd header and contents of the motd file to a connected client

@@ -245,17 +245,6 @@ void add_db_map(int map_id, char *elm_filename, char *map_name, char *map_descri
 
     /** public function - see header */
 
-    //check map id is unused
-    if(get_db_map_exists(map_id)==true){
-
-        //load all maps into the map struct so that, when we can log the name of the map that
-        //is being replaced
-        load_db_maps();
-        log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-        log_event(EVENT_ERROR, "map [%i] [%s] replaced", map_id, maps.map[map_id].map_name);
-    }
-
     sqlite3_stmt *stmt;
 
     struct __attribute__((__packed__)){

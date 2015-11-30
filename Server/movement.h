@@ -24,6 +24,7 @@
 #include <stdbool.h> //support for bool datatype
 
 #define MAX_UNOCCUPIED_TILE_SEARCH 10
+#define MAX_VECTORS 8
 
 struct vector_type{
     int x;

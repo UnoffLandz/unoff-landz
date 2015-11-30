@@ -90,7 +90,7 @@ int char_in_game(char *char_name){
         }
     }
 
-    return NOT_FOUND;
+    return -1;
 }
 
 

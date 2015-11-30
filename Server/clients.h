@@ -82,6 +82,8 @@ struct client_node_type{
 
     int map_id;
     int map_tile;
+    bool track; //displays coordinates as char moves
+    bool debug_explore_path; // displays ascii representation of explore path
 
     int guild_id;
     time_t joined_guild;

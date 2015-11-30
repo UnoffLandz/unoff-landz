@@ -20,7 +20,7 @@
 #ifndef CHARACTER_MOVEMENT_H_INCLUDED
 #define CHARACTER_MOVEMENT_H_INCLUDED
 
-#define PATH_MAX 100    // maximum tiles of precalculated character movement
+#define PATH_MAX 1000    // maximum tiles of precalculated character movement
 
 /** RESULT  : Removes actor from map
 

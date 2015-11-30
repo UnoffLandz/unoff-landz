@@ -70,7 +70,8 @@ void process_log_in(int connection, const unsigned char *packet){
 
     //get the char_id corresponding to the char name
     int char_id=get_db_char_data(char_name, 0);
-    if(char_id==NOT_FOUND) {
+
+    if(char_id==-1) {
 
         send_you_dont_exist(connection);
 
@@ -110,9 +111,9 @@ void process_log_in(int connection, const unsigned char *packet){
     send_you_are(connection);
 
     //prevent concurrent login on same char
-    for(int i=1; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_CLIENTS; i++){
 
-        if(clients.client[connection].character_id==clients.client[i].character_id && clients.client[i].client_status==LOGGED_IN){
+        if(i!=connection && clients.client[i].client_status==LOGGED_IN){
 
             send_login_not_ok(connection);
             remove_char_from_map(connection);

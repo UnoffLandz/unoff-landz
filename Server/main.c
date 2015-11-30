@@ -135,10 +135,12 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include "broadcast_actor_functions.h"
 #include "packet.h"
 #include "bags.h"
+#include "string_functions.h"
+#include "maps.h"
 
 #define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
-#define DEBUG_MAIN 1
-#define VERSION "4.3"
+#define DEBUG_MAIN 0
+#define VERSION "4.4"
 
 struct ev_io *libevlist[MAX_CLIENTS] = {NULL};
 
@@ -184,7 +186,7 @@ void start_server(){
     }
 
     //clears garbage from the struct
-    memset(&clients, '\0', sizeof(clients));
+    memset(&clients, 0, sizeof(clients));
 
     //load data from database into memory
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
@@ -804,11 +806,31 @@ int main(int argc, char *argv[]){
 
         open_database(db_filename);
 
+        //load maps so we can find out if a map exists
+        load_db_maps();
+
         if(get_db_map_exists(map_id)==true){
 
-            log_text(EVENT_INITIALISATION, "Remove existing map %i", map_id);
-            delete_map(map_id);
-         }
+            printf( "Do you wish to replace map [%i] [%s] Y/N: ", map_id, maps.map[map_id].map_name);
+
+            //get decision from stdin
+            char decision[1]={0};
+            if(fgets(decision, sizeof(decision), stdin)!=NULL){
+
+                log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                stop_server();
+            }
+
+            //convert decision to upper case and determine if map replacement should proceed
+            str_conv_upper(decision);
+            if(strcmp(decision, "Y")==0){
+
+                log_text(EVENT_INITIALISATION, "Remove existing map %i", map_id);
+                delete_map(map_id);
+            }
+
+            printf("\n");
+        }
 
         log_text(EVENT_INITIALISATION, "");// insert logical separator
 

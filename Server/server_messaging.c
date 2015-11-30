@@ -107,14 +107,14 @@ void send_motd_header(int connection){
     send_text(connection, CHAT_SERVER, " ");
 }
 
-int send_motd_file(int connection){
+bool send_motd_file(int connection){
 
     /** public function - see header */
 
     FILE *file;
     char line_in[1024]="";
 
-    if((file=fopen(MOTD_FILE, "r"))==NULL) return NOT_FOUND;
+    if((file=fopen(MOTD_FILE, "r"))==NULL) return false;
 
     while( fgets(line_in, 80, file) != NULL){
 
@@ -127,7 +127,7 @@ int send_motd_file(int connection){
 
     fclose(file);
 
-    return FOUND;
+    return true;
 }
 
 void send_motd(int connection){
@@ -137,7 +137,8 @@ void send_motd(int connection){
     send_motd_header(connection);
 
     //if there's an motd file then send to client otherwise log that no motd file was found
-    if(send_motd_file(connection)!=FOUND){
+    if(send_motd_file(connection)!=true){
+
         log_event(EVENT_SESSION, "no motd file available for connection [%i]", connection);
     }
 }

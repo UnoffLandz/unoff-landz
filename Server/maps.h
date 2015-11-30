@@ -202,5 +202,4 @@ void read_elm_header(char *elm_filename);
 void read_height_map(char *elm_filename, unsigned char *height_map, int *height_map_size, int *map_axis);
 
 
-
 #endif // MAPS_H_INCLUDED

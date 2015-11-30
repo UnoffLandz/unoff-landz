@@ -290,7 +290,7 @@ static int hash_jump(int connection, char *text) {
 
     if(sscanf(text, "%*s %i %i %i", &map_id, &x, &y)!=3){
 
-        send_text(connection, CHAT_SERVER, "%cyou need to use the format #JUMPC [map id] [x] [y]", c_red3+127);
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #JUMP [map id] [x] [y]", c_red3+127);
         return 0;
     }
 
@@ -551,6 +551,137 @@ static int hash_map(int connection, char *text) {
 }
 
 
+static int hash_track(int connection, char *text) {
+
+    /** RESULT  : ops kicks a member from a a guild
+
+        RETURNS : void
+
+        PURPOSE :
+
+        NOTES   :
+    */
+
+    char on_off[4]="";
+
+    if(sscanf(text, "%*s %s", on_off)!=1){
+
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #TRACK [ON / OFF]", c_red3+127);
+        return 0;
+    }
+
+    str_conv_upper(on_off);
+
+    if(strcmp(on_off, "ON")==0) {
+
+        send_text(connection, CHAT_SERVER, "%cposition tracking 'on'", c_green3+127);
+        clients.client[connection].track=true;
+    }
+
+    else if(strcmp(on_off, "OFF")==0) {
+
+        send_text(connection, CHAT_SERVER, "%cposition tracking 'off'", c_green3+127);
+        clients.client[connection].track=false;
+    }
+
+    else {
+
+        send_text(connection, CHAT_SERVER, "%cyou need to use the format #TRACK [ON / OFF]", c_red3+127);
+        return 0;
+    }
+
+    return 0;
+}
+
+
+static int hash_trace(int connection, char *text) {
+
+    /** RESULT  : trace walkable tiles
+
+        RETURNS : void
+
+        PURPOSE :
+
+        NOTES   :
+    */
+
+    (void)(text);
+
+    int map_id=clients.client[connection].map_id;
+    int map_axis=maps.map[map_id].map_axis;
+
+    int pos_x=clients.client[connection].map_tile % map_axis;
+    int pos_y=clients.client[connection].map_tile / map_axis;
+
+    send_text(connection, CHAT_SERVER, "%cwalkable tile trace (@=%i/%i)", c_green3+127, pos_x, pos_y);
+
+    for(int x=pos_x-20; x<pos_x+20; x++){
+
+        char str[81]="";
+
+        for(int y=pos_y-40; y<pos_y+40; y++){
+
+            int z=(y * map_axis) + x;
+
+            if(z==clients.client[connection].map_tile){
+
+                printf("@");
+                strcat(str, "@");
+            }
+            else {
+
+                if(y>=0 && y<map_axis && x>=0 && x<map_axis){
+
+                    if(maps.map[map_id].height_map[z]==NON_TRAVERSABLE_TILE){
+
+                        printf("#");
+                        strcat(str, "#");
+                    }
+                    else{
+
+                        printf(".");
+                        strcat(str, ".");
+                    }
+                }
+                else{
+                    printf(":");
+                    strcat(str, ":");
+                }
+            }
+        }
+
+        send_text(connection, CHAT_SERVER, "%c%s", c_grey1+127, str);
+        printf("\n");
+    }
+
+    return 0;
+}
+
+static int hash_trace_explore(int connection, char *text) {
+
+    /** RESULT  : trace walkable tiles
+
+        RETURNS : void
+
+        PURPOSE :
+
+        NOTES   :
+    */
+
+    (void)(text);
+
+    int map_id=clients.client[connection].map_id;
+    int map_axis=maps.map[map_id].map_axis;
+    int pos_x=clients.client[connection].map_tile % map_axis;
+    int pos_y=clients.client[connection].map_tile / map_axis;
+
+    send_text(connection, CHAT_SERVER, "%cexplorable tile trace (@=%i/%i)", c_green3+127, pos_x, pos_y);
+
+    clients.client[connection].debug_explore_path=true;
+
+    return 0;
+}
+
 static int hash_clear_inventory(int connection, char *text) {
 
     /** RESULT  : clears char inventory
@@ -609,7 +740,7 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#BEAM",                   false, 0,       PERMISSION_1, hash_beam_me},
     {"#PM",                     false, 0,       PERMISSION_1, hash_pm},
     {"#PRIVATE_MESSAGE",        false, 0,       PERMISSION_1, hash_pm},
-    {"#JUMP",                   false, 0,       PERMISSION_2, hash_jump},
+    {"#JUMP",                   true, 0,       PERMISSION_2, hash_jump},
     {"#AG",                     false, 0,       PERMISSION_1, hash_apply_guild},
     {"#APPLY_GUILD",            false, 0,       PERMISSION_1, hash_apply_guild},
     {"#OPS_CREATE_GUILD",       true,  0,       PERMISSION_3, hash_ops_create_guild},
@@ -646,6 +777,9 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#LG",                      true,   0,     PERMISSION_1, hash_leave_guild},
     {"#SERVER_MESSAGE",          true,   0,     PERMISSION_2, hash_server_message},
     {"#SM",                      true,   0,     PERMISSION_2, hash_server_message},
+    {"#TRACK",                   true,   0,     PERMISSION_2, hash_track},
+    {"#TRACE",                   true,   0,     PERMISSION_2, hash_trace},
+    {"#TRACE_EXPLORE",           true,   0,     PERMISSION_2, hash_trace_explore},
 
     {"", false, 0, 0, 0}
 };

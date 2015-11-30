@@ -52,7 +52,8 @@ void send_packet(int connection, void *packet, size_t packet_length){
         if(bytes_sent==-1){
 
             log_event(EVENT_ERROR, "send failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-            stop_server();
+            //stop server()
+            return;
         }
 
         total_bytes_sent+=(size_t)bytes_sent;

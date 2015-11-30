@@ -50,14 +50,11 @@ void send_new_minute(int connection, int minute){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=NEW_MINUTE;
-
-
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
     packet.minute=(uint16_t)minute;
 
     send_packet(connection, &packet, packet_length);
@@ -77,12 +74,11 @@ void send_login_ok(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=LOG_IN_OK;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
     send_packet(connection, &packet, packet_length);
 }
@@ -101,12 +97,11 @@ void send_display_client_window(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=DISPLAY_CLIENT_WINDOW;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
     send_packet(connection, &packet, packet_length);
 }
@@ -125,7 +120,7 @@ void send_login_not_ok(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=LOG_IN_NOT_OK;
@@ -174,12 +169,11 @@ void send_you_are(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', (size_t)packet_length);
+    memset(&packet, 0, (size_t)packet_length);
 
     //add data
     packet.protocol=YOU_ARE;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
     packet.connection=(uint16_t)connection;
 
     send_packet(connection, &packet, packet_length);
@@ -199,12 +193,11 @@ void send_create_char_ok(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', (size_t)packet_length);
+    memset(&packet, 0, (size_t)packet_length);
 
     //add data
     packet.protocol=CREATE_CHAR_OK;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
     send_packet(connection, &packet, packet_length);
 }
@@ -243,22 +236,18 @@ void send_raw_text(int connection, int channel, char *text){
         unsigned char protocol;
         uint16_t data_length;
         unsigned char channel;
-        char text[1024];
+        char text[SEND_TEXT_MAX];
     }packet;
 
     //clear the struct
     memset(&packet, '0', sizeof(packet));
 
-    //The struct size includes a reserve of 1024 for the text message.
-    //We therefore calculate the actual packet length by taking the
-    //struct size less the 1024 reserved for the message and then
-    //add on the actual message length
-    size_t packet_length=sizeof(packet)- 1024 + strlen(text)+1;
+    //calculate the size of the packet length
+    size_t packet_length=4 + strlen(text)+1;
 
     //add data
     packet.protocol=RAW_TEXT;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2); //subtract 2 from the packet length to calculate the data length
     packet.channel=(unsigned char)channel;
     strcpy(packet.text, text);
 

@@ -200,7 +200,7 @@ void send_pm(int connection, char *target_name, char *message) {
     //check if message recipient is in game
     int target_connection=char_in_game(target_name);
 
-    if(target_connection==NOT_FOUND){
+    if(target_connection==-1){
 
         log_text(EVENT_CHAT, "target character not logged in");
         return;

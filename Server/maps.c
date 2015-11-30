@@ -47,6 +47,7 @@ int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
     if(x_diff>y_diff) return x_diff; else return y_diff;
 }
 
+
 int get_tile(int x_pos, int y_pos, int map_id){
 
      /** public function - see header */
@@ -248,3 +249,4 @@ void read_height_map(char *elm_filename, unsigned char *height_map, int *height_
 
     fclose(file);
 }
+

@@ -19,8 +19,8 @@
 
 #include <stdio.h> //support for sprintf function
 #include <stdlib.h> //support for exit function
+#include <string.h> // support for memset
 
-#include "global.h"
 #include "pathfinding.h"
 #include "client_protocol.h"
 #include "maps.h"
@@ -31,69 +31,195 @@
 #include "server_protocol_functions.h"
 #include "server_start_stop.h"
 
-int add_tile_to_explore_stack(int new_value, int new_tile, int *explore_stack_count, int explore_stack[][3]){
+#define DEBUG_PATHFINDING 0
+
+struct{
+
+    int tile;
+    int value;
+    bool explored;
+
+}explore_stack[HEIGHT_MAP_MAX];
+
+int explore_stack_count;
+
+struct{
+
+    int tile;
+    int value;
+    bool explored;
+
+}path_stack[HEIGHT_MAP_MAX];
+
+int path_stack_count;
+
+
+void debug_explore_path(int connection, int destination){
+
+    unsigned char height_map[HEIGHT_MAP_MAX]={0};
+
+    int map_id=clients.client[connection].map_id;
+    int map_axis=maps.map[map_id].map_axis;
+
+    int pos_x=clients.client[connection].map_tile % map_axis;
+    int pos_y=clients.client[connection].map_tile / map_axis;
+
+    memcpy(height_map, maps.map[map_id].height_map, sizeof(maps.map[map_id].height_map));
+
+    //append the explore path to the height map
+    for(int i=0; i<explore_stack_count; i++){
+
+        int z=explore_stack[i].tile;
+        height_map[z]=99;
+    }
+
+    //print the height map
+    for(int x=pos_x-20; x<pos_x+20; x++){
+
+        char str[81]="";
+
+        for(int y=pos_y-40; y<pos_y+40; y++){
+
+            int z=(y * map_axis) + x;
+
+            if(z==clients.client[connection].map_tile){
+
+                #if DEBUG_PATHFINDING==1
+                printf("@");
+                #endif // DEBUG_PATHFINDING
+
+                strcat(str, "@");
+            }
+
+            else if(z==destination){
+
+                #if DEBUG_PATHFINDING==1
+                printf("+");
+                #endif // DEBUG_PATHFINDING
+
+                strcat(str, "+");
+            }
+            else {
+
+                if(y>=0 && y<map_axis && x>=0 && x<map_axis){
+
+                    if(height_map[z]==NON_TRAVERSABLE_TILE){
+
+                        #if DEBUG_PATHFINDING==1
+                        printf("#");
+                        #endif // DEBUG_PATHFINDING
+
+                        strcat(str, "#");
+                    }
+                    else if (height_map[z]!=99){
+
+                        #if DEBUG_PATHFINDING==1
+                        printf(".");
+                        #endif // DEBUG_PATHFINDING
+
+                        strcat(str, ".");
+                    }
+                    else{
+
+                        if(height_map[z]==destination){
+
+                            #if DEBUG_PATHFINDING==1
+                            printf("*");
+                            #endif // DEBUG_PATHFINDING
+
+                            strcat(str, "*");
+                        }
+                        else {
+
+                            #if DEBUG_PATHFINDING==1
+                            printf("X");
+                            #endif // DEBUG_PATHFINDING
+
+                            strcat(str, "X");
+                        }
+                    }
+                }
+                else{
+
+                    #if DEBUG_PATHFINDING==1
+                    printf(":");
+                    #endif // DEBUG_PATHFINDING
+
+                    strcat(str, ":");
+                }
+            }
+        }
+
+        send_text(connection, CHAT_SERVER, "%c%s", c_grey1+127, str);
+
+        #if DEBUG_PATHFINDING==1
+        printf("\n");
+        #endif // DEBUG_PATHFINDING
+    }
+}
+
+
+void add_tile_to_explore_stack(int new_value, int new_tile){
 
     /** RESULT  : adds a unique tile to the a-star stack
 
-        RETURNS : DUPLICATE_TILE - tile not added as its already in the stack
-                  NEW_TILE       - tile added as stack
-                  ABORT          - explore stack exceeded
+        RETURNS : void
 
         PURPOSE : add's tiles to the a-star stack
 
         USAGE   : pathfinding.c add_adjacent_tiles_to_path_stack explore_path
     */
 
-    int i=0, j=0;
-    int insert_value=0;
-    int insert_tile=0;
-    int insert_status=0;
-    int new_status=UNEXPLORED;
-
     //parse the stack
-    for(i=0; i<*explore_stack_count; i++){
+    for(int i=0; i<explore_stack_count; i++){
 
         //if we already have that tile in the stack then exit function without adding tile to stack
-        if(explore_stack[i][TILE]==new_tile) return ADD_TILE_COMPLETE;
+        if(explore_stack[i].tile==new_tile) return;
 
-        //insert the new tile in order of its distance value
-        if(explore_stack[i][VALUE]>new_value){
+        if(explore_stack[i].value>new_value){
 
-            //move the rest of the stack to make room for the new tile
-            for(j=i; j<*explore_stack_count; j++){
+            //insert the new tile is lower than others on the stack, insert the new tile in
+            //order of its value
+            for(int j=explore_stack_count+1; j>i; j--){
 
-                insert_value=explore_stack[j][VALUE];
-                insert_tile=explore_stack[j][TILE];
-                insert_status=explore_stack[j][STATUS];
-
-                explore_stack[j][VALUE]=new_value;
-                explore_stack[j][TILE]=new_tile;
-                explore_stack[j][STATUS]=new_status;
-
-                new_value=insert_value;
-                new_tile=insert_tile;
-                new_status=insert_status;
+                explore_stack[j]=explore_stack[j-1];
             }
 
-            break;
+            explore_stack[i].value=new_value;
+            explore_stack[i].tile=new_tile;
+            explore_stack[i].explored=false;
+
+            explore_stack_count++;
+
+            #if DEBUG_PATHFINDING==1
+            printf("add tile %i to explore stack %i\n", new_tile, explore_stack_count);
+            #endif
+
+            //catch if explore stack array is exceeded
+            if(explore_stack_count>HEIGHT_MAP_MAX-1){
+
+                log_event(EVENT_ERROR, "explore stack array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                stop_server();
+            }
+
+            return;
         }
     }
 
-    explore_stack[*explore_stack_count][VALUE]=new_value;
-    explore_stack[*explore_stack_count][TILE]=new_tile;
-    explore_stack[*explore_stack_count][STATUS]=new_status;
+    //if the new tile value is greater than any existing tile, add the new tile to the
+    //end of the stack
+    explore_stack[explore_stack_count].value=new_value;
+    explore_stack[explore_stack_count].tile=new_tile;
+    explore_stack[explore_stack_count].explored=false;
 
-    *explore_stack_count=*explore_stack_count+1;
+    explore_stack_count++;
 
     //catch if explore stack array is exceeded
-    if(*explore_stack_count>HEIGHT_MAP_MAX-1){
+    if(explore_stack_count>HEIGHT_MAP_MAX-1){
 
-        //if stack array is exceeded then pass message to calling function to recover gracefully rather than crash
         log_event(EVENT_ERROR, "explore stack array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
     }
-
-    return ADD_TILE_COMPLETE;
 }
 
 
@@ -105,12 +231,14 @@ int get_heuristic_value(int tile, int dest_tile, int map_id){
 
         PURPOSE : to enable a-star path to determine tiles to be explored
 
-        USAGE   : pathfinding.c add_adjacent_tiles_to_path explore_path
+        NOTES   : pathfinding.c add_adjacent_tiles_to_path explore_path
     */
 
     int map_axis=maps.map[map_id].map_axis;
+
     int tile_x=tile % map_axis;
     int tile_y=tile / map_axis;
+
     int dest_tile_x=dest_tile % map_axis;
     int dest_tile_y=dest_tile / map_axis;
 
@@ -118,32 +246,34 @@ int get_heuristic_value(int tile, int dest_tile, int map_id){
 }
 
 
-int tile_adjacent(int tile, int test_tile, int map_id){
+bool tile_adjacent(int tile, int test_tile, int map_id){
 
     /** RESULT  : indicates if one tile is adjacent to another
 
-        RETURNS : TRUE / FALSE
+        RETURNS : true/false
 
         PURPOSE : to enable a-star path to find a path from the list of explored tiles
 
-        USAGE   : pathfinding.c get_astar_path
+        NOTES   : pathfinding.c get_astar_path
     */
 
-    int adj_tile=0;
     int map_axis=maps.map[map_id].map_axis;
 
-    for(int i=0; i<8; i++){
+    for(int i=0; i<MAX_VECTORS; i++){
 
-        adj_tile=tile+vector[i].x+(map_axis*vector[i].y);
+        int adj_tile=tile+vector[i].x + (map_axis*vector[i].y);
 
-        if(adj_tile==test_tile && tile_in_lateral_bounds(tile, adj_tile, map_id)==true) return true;
+        if(tile_in_lateral_bounds(tile, adj_tile, map_id)==true){
+
+            if(adj_tile==test_tile) return true;
+        }
     }
 
     return false;
 }
 
 
-int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_id, int *explore_stack_count, int explore_stack[][3]){
+void add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_id){
 
     /** RESULT  : adds all tiles adjacent to the target tile to the a-star stack, together with a heuristic value
 
@@ -151,17 +281,15 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
 
         PURPOSE : to provide a single function to add adjacent tiles to the a-star stack
 
-        USAGE   : pathfinding.c explore_path
+        NOTES   : pathfinding.c explore_path
+
     */
 
-    int i=0;
-    int adj_tile=0;
     int map_axis=maps.map[map_id].map_axis;
-    int heuristic_value=0;
 
-    for(i=0; i<8; i++){
+    for(int i=0; i<MAX_VECTORS; i++){
 
-        adj_tile=target_tile+vector[i].x+(map_axis*vector[i].y);
+        int adj_tile=target_tile + vector[i].x + (map_axis * vector[i].y);
 
         //ensure adjacent tile is within lateral bounds
         if(tile_in_lateral_bounds(target_tile, adj_tile, map_id)==true){
@@ -170,130 +298,158 @@ int add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_
             if(maps.map[map_id].height_map[adj_tile]!=NON_TRAVERSABLE_TILE) {
 
                 //calculate heuristic distance from adjacent tile to destination
-                heuristic_value=get_heuristic_value(adj_tile, dest_tile, map_id);
+                int heuristic_value=get_heuristic_value(adj_tile, dest_tile, map_id);
 
-                if(add_tile_to_explore_stack(heuristic_value, adj_tile, explore_stack_count, explore_stack)==ADD_TILE_ABORT) {
-
-                    //if something went wrong in the last function then abort this function
-                    return ADD_TILE_ABORT;
-                }
+                add_tile_to_explore_stack(heuristic_value, adj_tile);
             }
         }
     }
-
-    return ADD_TILE_COMPLETE;
 }
 
 
-int explore_path(int connection, int destination_tile, int *path_stack_count, int path_stack[][3]){
+int get_next_unexplored_tile(){
+
+    /** RESULT  : finds next unexplored tile in the explore_stack
+
+        RETURNS : the vector of the next unexplored tile in the explore stack or -1
+
+        PURPOSE : code readability
+
+        NOTES   : pathfinding.c explore_path
+
+    */
+
+    for(int i=0; i<explore_stack_count; i++){
+
+        if(explore_stack[i].explored==false){
+
+            explore_stack[i].explored=true;
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+
+bool explore_path(int connection, int destination_tile){
 
     /** RESULT  : fills array path_stack with a list of tiles explored between start and destination
 
-        RETURNS : EXPLORE_ABORT       - the explore stack was exceeded
-                  EXPLORE_UNREACHABLE - could not explore to destination
-                  EXPLORE_REACHABLE   - explored to destination
+        RETURNS : true if path was explored from start to destination, otherwise false
 
         PURPOSE : to provide a list of explored tiles from which a path can be determined
 
-        USAGE   : pathfinding.c get_astar_path
+        NOTES   : pathfinding.c get_astar_path
     */
 
-    int i=0, j=0;
-    int explore_stack[HEIGHT_MAP_MAX][3];
-    int explore_stack_count=0;
-    int node=0;
-    int heuristic_value=0;
-    int found=false;
     int start_tile=clients.client[connection].map_tile;
     int map_id=clients.client[connection].map_id;
 
+    #if DEBUG_PATHFINDING==1
+    printf("explore path from %i to %i\n", start_tile, destination_tile);
+    #endif
+
     //filter out paths where start = destination
-    if(start_tile==destination_tile) return NOT_FOUND;
+    if(start_tile==destination_tile) {
 
-    //add start tile to stack
-    heuristic_value=get_heuristic_value(start_tile, destination_tile, map_id);
+        #if DEBUG_PATHFINDING==1
+        printf("cancel explore as start is the same as destination\n");
+        #endif
 
-    if(add_tile_to_explore_stack(heuristic_value, start_tile, &explore_stack_count, explore_stack)==ADD_TILE_ABORT) {
-
-        //if something went wrong in sub function then pass message to calling function to recover gracefully rather than crash
-        log_event(EVENT_ERROR, "abort in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-        return NOT_FOUND;
+        return false;
     }
 
-    explore_stack[node][STATUS]=EXPLORED;
+    //add first tile to the explore stack
+    int node=0;
+
+    explore_stack[node].tile=start_tile;
+    explore_stack[node].value=get_heuristic_value(start_tile, destination_tile, map_id);
+    explore_stack[node].explored=true;
+
+    #if DEBUG_PATHFINDING==1
+    printf("cancel explore as start is the same as destination\n");
+    #endif
+
     explore_stack_count=1;
 
     //explore from start to destination
     do{
 
-        if(add_adjacent_tiles_to_explore_stack(explore_stack[node][TILE], destination_tile, map_id, &explore_stack_count, explore_stack)==ADD_TILE_ABORT){
-
-            log_event(EVENT_ERROR, "abort in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-            return NOT_FOUND;
-        }
+        add_adjacent_tiles_to_explore_stack(explore_stack[node].tile, destination_tile, map_id);
 
         //get next unexplored tile
-        found=false;
+        node=get_next_unexplored_tile();
 
-        for(i=0; i<explore_stack_count; i++){
-
-            if(explore_stack[i][STATUS]==UNEXPLORED){
-                explore_stack[i][STATUS]=EXPLORED;
-                node=i;
-                found=true;
-                break;
-            }
-        }
-
-        if(found==false) {
+        if(node==-1 ) {
 
             send_text(connection, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
-            log_event(EVENT_ERROR, "destination unreachable - no explorable tiles left in stack in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "no explorable tiles remain in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
 
-            return NOT_FOUND;
+            return false;
         }
 
-    } while(explore_stack[node][TILE]!=destination_tile);
+        #if DEBUG_PATHFINDING==1
+        printf("get unexplored tile %i\n", explore_stack[node].tile);
+        #endif
 
-    //filter the list of explored tiles that will be used to create the path
-    for(i=0; i<explore_stack_count; i++) {
+    } while(explore_stack[node].tile!=destination_tile);
 
-        if(explore_stack[i][STATUS]==EXPLORED){
+    #if DEBUG_PATHFINDING==1
+    printf("found destination %i\n", explore_stack[node].tile);
+    #endif
 
-            path_stack[j][TILE]=explore_stack[i][TILE];
-            path_stack[j][STATUS]=UNEXPLORED;
+    //transfer explore stack into the path stack
+    for(int i=0; i<explore_stack_count; i++) {
+
+        if(explore_stack[i].explored==true){
+
+            path_stack[path_stack_count].tile=explore_stack[i].tile;
+            path_stack[path_stack_count].explored=false;
 
              //reverse the heuristic value so we get distance from tile to start tile
-            path_stack[j][VALUE]=get_heuristic_value(path_stack[j][TILE], start_tile, map_id);
+            path_stack[path_stack_count].value=get_heuristic_value(path_stack[path_stack_count].tile, start_tile, map_id);
 
-            j++;
+            path_stack_count++;
+
+            //catch if explore stack array is exceeded
+            if(path_stack_count==HEIGHT_MAP_MAX-1){
+
+                log_event(EVENT_ERROR, "path stack array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                stop_server();
+            }
         }
     }
 
-    *path_stack_count=j;
-
-    return FOUND;
+    return true;
 }
 
 
-int get_astar_path(int connection, int start_tile, int destination_tile){
+bool get_astar_path(int connection, int start_tile, int destination_tile){
 
     /** public function - see header */
 
     int j=0;
 
-    int path_stack[PATH_MAX][3];
-    int path_stack_count=0;
+    path_stack_count=0;
 
     int lowest_value=0;
     int next_tile=0;
     int map_id=clients.client[connection].map_id;
 
-    if(explore_path(connection, destination_tile, &path_stack_count, path_stack)==NOT_FOUND) return NOT_FOUND;
+    if(explore_path(connection, destination_tile)==false) return false;
+
+    //if #EXPLORE_TRACE command has been set then send ascii representation of the
+    //local area to the client
+    if(clients.client[connection].debug_explore_path==true){
+
+        debug_explore_path(connection, destination_tile);
+        clients.client[connection].debug_explore_path=false;
+    }
 
     //start path at destination tile
     next_tile=destination_tile;
-    path_stack[0][STATUS]=EXPLORED;
+    path_stack[0].explored=true;
 
     //load destination tile to the path
     clients.client[connection].path_count=1;
@@ -306,14 +462,14 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
 
         for(int i=0; i<path_stack_count; i++){
 
-            if(tile_adjacent(next_tile, path_stack[i][TILE], map_id)==true){
+            if(tile_adjacent(next_tile, path_stack[i].tile, map_id)==true){
 
-                if(path_stack[i][VALUE]<lowest_value && path_stack[i][STATUS]==UNEXPLORED){
+                if(path_stack[i].value<lowest_value && path_stack[i].explored==false){
 
                     //ensure path doesn't cross lateral bounds
-                    if(tile_in_lateral_bounds(next_tile, path_stack[i][TILE], map_id)==true){
+                    if(tile_in_lateral_bounds(next_tile, path_stack[i].tile, map_id)==true){
 
-                        lowest_value=path_stack[i][VALUE];
+                        lowest_value=path_stack[i].value;
                         j=i;
                         found=true;
                     }
@@ -325,19 +481,17 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
         if(found==false) {
 
             send_text(connection, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
-            return NOT_FOUND;
+            return false;
         }
 
-        next_tile=path_stack[j][TILE];
-        path_stack[j][STATUS]=EXPLORED;
+        next_tile=path_stack[j].tile;
+        path_stack[j].explored=true;
 
         clients.client[connection].path_count++;
 
         if(clients.client[connection].path_count>PATH_MAX-1) {
 
             log_event(EVENT_ERROR, "client path array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-
-            send_text(connection, CHAT_PERSONAL, "%cThe server can't find a walkable route to that destination", c_red1+127);
             stop_server();
         }
 
@@ -345,5 +499,5 @@ int get_astar_path(int connection, int start_tile, int destination_tile){
 
     }while(clients.client[connection].path[clients.client[connection].path_count-1]!=start_tile);
 
-    return FOUND;
+    return true;
 }
