@@ -117,7 +117,7 @@ void log_sqlite_error(char *error_type, const char *function_name, const char *m
 
     NOTES   :
 */
-void log_packet(int connection, unsigned char *packet, int direction);
+void log_packet(int socket, unsigned char *packet, int direction);
 
 
 #endif // LOGGING_H_INCLUDED

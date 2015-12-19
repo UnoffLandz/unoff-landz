@@ -40,20 +40,20 @@
 
 struct client_node_type character;
 
-int get_char_visual_range(int connection){
+int get_char_visual_range(int actor_node){
 
     /** public function - see header */
 
-    int race_id=get_char_race_id(connection);
+    int race_id=get_char_race_id(actor_node);
     int visual_proximity=0;
 
-    if(game_data.game_minutes<180){
+    if(game_data.game_minutes < 180){// TODO (themuntdregger#1#): replace hard coded value for number of minutes in game day
 
-        visual_proximity = attribute[race_id].day_vision[clients.client[connection].vitality_pp];
+        visual_proximity = attribute[race_id].day_vision[clients.client[actor_node].vitality_pp];
     }
     else {
 
-        visual_proximity = attribute[race_id].night_vision[clients.client[connection].instinct_pp];
+        visual_proximity = attribute[race_id].night_vision[clients.client[actor_node].instinct_pp];
     }
 
     //prevents problems that arise where visual range attributes are zero
@@ -74,9 +74,11 @@ int char_in_game(char *char_name){
 
     char compare_name[80]="";
 
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].client_status==LOGGED_IN){
+        //restrict to actors who are players
+        if(clients.client[i].node_status==CLIENT_NODE_USED &&
+            clients.client[i].player_type==PLAYER){
 
             //convert compare name to upper case
             strcpy(compare_name, clients.client[i].char_name);
@@ -94,62 +96,63 @@ int char_in_game(char *char_name){
 }
 
 
-int char_age(int connection){
+int char_age(int actor_node){
 
     /** public function - see header */
 
-    int age=( (int) clients.client[connection].time_of_last_minute - (int) clients.client[connection].char_created) / (60*60*24);
+    int age=( (int) clients.client[actor_node].time_of_last_minute - (int) clients.client[actor_node].char_created) / (60*60*24);
 
     return age;
 }
 
 
-void send_char_details(int connection, const char *char_name){
+void send_char_details(int actor_node, const char *char_name){
 
     /** public function - see header */
 
+    int socket=clients.client[actor_node].socket;
+
     if(get_db_char_data(char_name, -1)==false){
 
-        send_text(connection, CHAT_SERVER, "%c%s", c_red3+127, "character does not exist");
+        send_text(socket, CHAT_SERVER, "%c%s", c_red3+127, "character does not exist");
         return;
     }
 
-    send_text(connection, CHAT_SERVER, "%cCharacter    :%s", c_green3+127, character.char_name);
+    send_text(socket, CHAT_SERVER, "%cCharacter    :%s", c_green3+127, character.char_name);
 
     int race_id=character_type[character.char_type].race_id;
-    send_text(connection, CHAT_SERVER, "%cRace         :%s", c_green3+127, race[race_id].race_name);
+    send_text(socket, CHAT_SERVER, "%cRace         :%s", c_green3+127, race[race_id].race_name);
 
     int gender_id=character_type[character.char_type].gender_id;
-    send_text(connection, CHAT_SERVER, "%cGender       :%s", c_green3+127, gender[gender_id].gender_name);
+    send_text(socket, CHAT_SERVER, "%cGender       :%s", c_green3+127, gender[gender_id].gender_name);
 
     char time_stamp_str[9]="";
     char date_stamp_str[11]="";
     get_time_stamp_str(character.char_created, time_stamp_str);
     get_date_stamp_str(character.char_created, date_stamp_str);
 
-    send_text(connection, CHAT_SERVER, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+    send_text(socket, CHAT_SERVER, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
 
-    send_text(connection, CHAT_SERVER, "%cCharacter Age:%i", c_green3+127, char_age(connection));
+    send_text(socket, CHAT_SERVER, "%cCharacter Age:%i", c_green3+127, char_age(actor_node));
 
     if(character.guild_id==0){
 
-        send_text(connection, CHAT_SERVER, "%cGuild        :guildless player", c_green3+127);
-        send_text(connection, CHAT_SERVER, "%cRank         :n/a", c_green3+127);
-        send_text(connection, CHAT_SERVER, "%cJoined       :n/a", c_green3+127);
+        send_text(socket, CHAT_SERVER, "%cGuild        :guildless player", c_green3+127);
+        send_text(socket, CHAT_SERVER, "%cRank         :n/a", c_green3+127);
+        send_text(socket, CHAT_SERVER, "%cJoined       :n/a", c_green3+127);
     }
     else {
 
         int guild_id=character.guild_id;
 
-        send_text(connection, CHAT_SERVER, "%cGuild        :%s", c_green3+127, guilds.guild[guild_id].guild_name);
-        send_text(connection, CHAT_SERVER, "%cGuild tag    :%s", c_green3+127, guilds.guild[guild_id].guild_tag );
+        send_text(socket, CHAT_SERVER, "%cGuild        :%s", c_green3+127, guilds.guild[guild_id].guild_name);
+        send_text(socket, CHAT_SERVER, "%cGuild tag    :%s", c_green3+127, guilds.guild[guild_id].guild_tag );
 
-        send_text(connection, CHAT_SERVER, "%cRank         :%i", c_green3+127, character.guild_rank);
+        send_text(socket, CHAT_SERVER, "%cRank         :%i", c_green3+127, character.guild_rank);
 
         get_time_stamp_str(character.joined_guild, time_stamp_str);
         get_date_stamp_str(character.joined_guild, date_stamp_str);
 
-        send_text(connection, CHAT_SERVER, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
+        send_text(socket, CHAT_SERVER, "%cJoined       :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
     }
-
 }

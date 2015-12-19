@@ -37,6 +37,6 @@ extern struct gender_type gender[MAX_GENDER];
 
     NOTES   :
 **/
-int get_char_gender_id(int connection);
+int get_char_gender_id(int actor_node);
 
 #endif // CHARACTER_GENDER_H_INCLUDED

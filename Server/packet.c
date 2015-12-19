@@ -30,28 +30,34 @@ Packets received by and sent to the server conform to a common format:
 #include <string.h> //support for memcpy function
 #include <stdlib.h>//support for ssize_t datatype
 #include <sys/socket.h>// support for send function
+#include <errno.h>      //supports errno function
+#include <stdio.h> // support sprintf function
 
 #include "packet.h"
 #include "logging.h"
 #include "server_start_stop.h"
 #include "string_functions.h"
 
-void send_packet(int connection, void *packet, size_t packet_length){
+void send_packet(int socket, void *packet, size_t packet_length){
 
     /** public function - see header */
 
-    log_packet(connection, packet, SEND);
+    log_packet(socket, packet, SEND);
 
     size_t total_bytes_sent=0;
 
     //make multiple attempts to send data if not everything is sent first attempt
     do{
 
-        int bytes_sent=(int)send(connection, packet, packet_length, 0);
+        int bytes_sent=(int)send(socket, packet, packet_length, 0);
 
         if(bytes_sent==-1){
 
+            int errnum=errno;
+
             log_event(EVENT_ERROR, "send failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
+
             //stop server()
             return;
         }
@@ -139,7 +145,7 @@ int build_packet(struct packet_element_type *element, int element_count, unsigne
     return count;
 }
 
-*/
+
 void read_packet(struct packet_element_type *element, int element_count, const unsigned char *packet){
 
     size_t packet_length = get_packet_length(packet);
@@ -211,4 +217,4 @@ void read_packet(struct packet_element_type *element, int element_count, const u
         }
     }
 }
-
+*/

@@ -185,7 +185,7 @@ int get_map_id(char *map_name);
 
     NOTES   :
 */
-void get_map_details(int connection, int map_id);
+void get_map_details(int actor_node, int map_id);
 
 
 /** RESULT  : sends map developer details to client
@@ -196,10 +196,30 @@ void get_map_details(int connection, int map_id);
 
     NOTES   :
 */
-void get_map_developer_details(int connection, int map_id);
+void get_map_developer_details(int actor_node, int map_id);
 
+
+/** RESULT  : reads an elm file header into the global elm_header struct so that it can
+              then be processed by other functions
+
+    RETURNS : void
+
+    PURPOSE : used in functions: read_height_map
+
+    NOTES   :
+*/
 void read_elm_header(char *elm_filename);
-void read_height_map(char *elm_filename, unsigned char *height_map, int *height_map_size, int *map_axis);
 
+
+/** RESULT  : reads the height map data from an elm file header into an array so that
+              it can then be processed by other functions
+
+    RETURNS : void
+
+    PURPOSE : used in functions: load_db_maps
+
+    NOTES   :
+*/
+void read_height_map(char *elm_filename, unsigned char *height_map, int *height_map_size, int *map_axis);
 
 #endif // MAPS_H_INCLUDED

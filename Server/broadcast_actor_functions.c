@@ -36,28 +36,31 @@
 #define DEBUG_BROADCAST_ACTOR_FUNCTIONS 0
 
 
-void broadcast_add_new_enhanced_actor_packet(int connection){
+void broadcast_add_new_enhanced_actor_packet(int actor_node){
 
     /** public function - see header */
 
-    int map_id=clients.client[connection].map_id;
-    int char_tile=clients.client[connection].map_tile;
+    int socket=clients.client[actor_node].socket;
+    int map_id=clients.client[actor_node].map_id;
+    int char_tile=clients.client[actor_node].map_tile;
     int map_axis=maps.map[map_id].map_axis;
 
     //pre-create the add_new_enhanced_actor packet so we don't have to repeat this on each occasion when
     //it needs to sent to other actors
-    unsigned char packet[1024];
+    unsigned char packet[1024]={0};
     size_t packet_length=0;
-    add_new_enhanced_actor_packet(connection, packet, &packet_length);
 
-    //cycle through all the clients
-    for(int i=0; i<MAX_CLIENTS; i++){
+    add_new_enhanced_actor_packet(socket, packet, &packet_length);
 
-        //restrict to clients that are logged in
-        if(clients.client[i].client_status==LOGGED_IN){
+    //cycle through all the actors
+    for(int i=0; i<MAX_ACTORS; i++){
+
+        //restrict to used nodes
+        if(clients.client[i].node_status==CLIENT_NODE_USED
+        && clients.client[i].player_type==PLAYER){
 
             //exclude the broadcasting char
-            if(i!=connection){
+            if(i!=actor_node){
 
                 //restrict to chars on the same map as broadcasting char
                 if(map_id==clients.client[i].map_id){
@@ -66,14 +69,10 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
                     int receiver_char_visual_range=get_char_visual_range(i);
                     int receiver_char_tile=clients.client[i].map_tile;
 
-                    #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                    printf("add_new_enhanced_actor packet connection %i proximity %i visual range %i\n", i, receiver_char_visual_range, get_proximity(char_tile, receiver_char_tile, map_axis));
-                    #endif
-
                     //restrict to those chars that can see the broadcasting char
                     if(get_proximity(char_tile, receiver_char_tile, map_axis) < receiver_char_visual_range){
 
-                        send_packet(i, packet, packet_length);
+                        send_packet(clients.client[i].socket, packet, packet_length);
                     }
                 }
             }
@@ -82,28 +81,29 @@ void broadcast_add_new_enhanced_actor_packet(int connection){
 }
 
 
-void broadcast_remove_actor_packet(int connection) {
+void broadcast_remove_actor_packet(int actor_node){
 
     /** public function - see header */
 
-    int map_id=clients.client[connection].map_id;
-    int char_tile=clients.client[connection].map_tile;
+    int map_id=clients.client[actor_node].map_id;
+    int char_tile=clients.client[actor_node].map_tile;
     int map_axis=maps.map[map_id].map_axis;
+    int socket=clients.client[actor_node].socket;
 
     //pre-create the remove char packet so we don't have to repeat this on each occasion when it needs to
     //sent to other actors
-    unsigned char packet[1024];
+    unsigned char packet[1024]={0};
     size_t packet_length=0;
-    remove_actor_packet(connection, packet, &packet_length);
+    remove_actor_packet(socket, packet, &packet_length);
 
-    //cycle through all the clients
-    for(int i=0; i<MAX_CLIENTS; i++){
+    //cycle through all the actors
+    for(int i=0; i<MAX_ACTORS; i++){
 
         //restrict to clients that are logged in
-        if(clients.client[i].client_status==LOGGED_IN){
+        if(clients.client[i].node_status==CLIENT_NODE_USED){
 
             //exclude the broadcasting char
-            if(i!=connection){
+            if(i!=actor_node){
 
                 //restrict to chars on the same map as broadcasting char
                 if(map_id==clients.client[i].map_id){
@@ -111,14 +111,10 @@ void broadcast_remove_actor_packet(int connection) {
                     int receiver_char_visual_range=get_char_visual_range(i);
                     int receiver_char_tile=clients.client[i].map_tile;
 
-                    #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                    printf("remove actor packet connection %i proximity %i visual range %i\n", i, receiver_char_visual_range, get_proximity(char_tile, receiver_char_tile, map_axis));
-                    #endif
-
                     //restrict to those chars that can see the broadcasting char
                     if(get_proximity(char_tile, receiver_char_tile, map_axis) < receiver_char_visual_range){
 
-                        send_packet(i, packet, packet_length);
+                        send_packet(clients.client[i].socket, packet, packet_length);
                     }
                 }
             }
@@ -127,7 +123,7 @@ void broadcast_remove_actor_packet(int connection) {
 }
 
 
-void broadcast_actor_packet(int connection, unsigned char move, int sender_destination_tile){
+void broadcast_actor_packet(int actor_node, unsigned char move, int sender_destination_tile){
 
     /** public function - see header */
 
@@ -143,26 +139,28 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
     unsigned char packet3[1024];// receiving char remove_actor packet
     size_t packet3_length=0;
 
-    int sender_current_tile=clients.client[connection].map_tile;
-    int sender_visual_range=get_char_visual_range(connection);
+    int sender_current_tile=clients.client[actor_node].map_tile;
+    int sender_visual_range=get_char_visual_range(actor_node);
 
-    int map_id=clients.client[connection].map_id;
+    int map_id=clients.client[actor_node].map_id;
     int map_axis=maps.map[map_id].map_axis;
 
     int proximity_before_move=0;
     int proximity_after_move=0;
 
+    int socket=clients.client[actor_node].socket;
+
     // pre-create packets that will be sent more than once in order to save time
-    add_actor_packet(connection, move, packet1, &packet1_length);
-    add_new_enhanced_actor_packet(connection, packet2, &packet2_length);
-    remove_actor_packet(connection, packet3, &packet3_length);
+    add_actor_packet(socket, move, packet1, &packet1_length);
+    add_new_enhanced_actor_packet(socket, packet2, &packet2_length);
+    remove_actor_packet(socket, packet3, &packet3_length);
 
     // broadcast sender char move to all receiver clients
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].client_status==LOGGED_IN){
+        if(clients.client[i].node_status==CLIENT_NODE_USED){
 
-            if(clients.client[i].map_id==clients.client[connection].map_id){
+            if(clients.client[i].map_id==clients.client[actor_node].map_id){
 
                 int receiver_tile=clients.client[i].map_tile;
                 int receiver_visual_range=get_char_visual_range(i);
@@ -171,38 +169,26 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                 proximity_after_move=get_proximity(sender_destination_tile, receiver_tile, map_axis);
 
                 //This block deals with receiving char vision
-                if(i!=connection){
+                if(i!=actor_node){
 
                     if(proximity_before_move>receiver_visual_range && proximity_after_move<=receiver_visual_range){
 
                         //sending char moves into visual proximity of receiving char
-                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                        printf("char [%i] sees sending char [%i] added\n", i, connection);
-                        #endif
-
-                        send_packet(i, packet2, packet2_length);
+                        send_packet(clients.client[i].socket, packet2, packet2_length);
                     }
                     else if(proximity_before_move<=receiver_visual_range && proximity_after_move>receiver_visual_range){
 
                         //sending char moves out of visual proximity of receiving char
-                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                        printf("char [%i] sees sending char [%i] removed\n", i, connection);
-                        #endif
-
-                        send_packet(i, packet3, packet3_length);
+                        send_packet(clients.client[i].socket, packet3, packet3_length);
                     }
                     else if(proximity_before_move<=receiver_visual_range && proximity_after_move<=receiver_visual_range){
 
                         //sending char moving within visual proximity of receiving char
-                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                        printf("char [%i] sees sending char [%i] move\n", i, connection);
-                        #endif
-
-                        send_packet(i, packet1, packet1_length);
+                        send_packet(clients.client[i].socket, packet1, packet1_length);
                     }
                     else {
                         #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                        printf("char [%i] can't see sending char [%i]\n", i, connection);
+                        printf("char [%i] can't see sending char [%i]\n", i, actor_node);
                         #endif
                     }
                 }
@@ -211,48 +197,32 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
                 if(proximity_before_move>sender_visual_range && proximity_after_move<=sender_visual_range){
 
                     //sending char moves into visual proximity of receiving char
-                    #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                    printf("sending char [%i] sees another char [%i] added\n", connection, i);
-                    #endif
+                    add_new_enhanced_actor_packet(clients.client[i].socket, packet, &packet_length);
 
-                    add_new_enhanced_actor_packet(i, packet, &packet_length);
-
-                    send_packet(connection, packet, packet_length);
+                    send_packet(socket, packet, packet_length);
                 }
                 else if(proximity_before_move<=sender_visual_range && proximity_after_move>sender_visual_range){
 
                     //sending char moves out of visual proximity of receiving char
-                    #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                    printf("sending char [%i] sees another char [%i] removed\n", connection, i);
-                    #endif
+                    remove_actor_packet(clients.client[i].socket, packet, &packet_length);
 
-                    remove_actor_packet(i, packet, &packet_length);
-
-                    send_packet(connection, packet, packet_length);
+                    send_packet(socket, packet, packet_length);
                 }
                 else if(proximity_before_move<=sender_visual_range && proximity_after_move<=sender_visual_range){
 
                     //sending char moves within visual proximity of receiving char
-                    if(i==connection) {
+                    if(i==actor_node) {
 
                         // sending char sees itself move
-                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                        printf("sending char [%i] sees itself move\n", i);
-                        #endif
-
-                        add_actor_packet(i, move, packet, &packet_length);
+                        add_actor_packet(clients.client[i].socket, move, packet, &packet_length);
                    }
                     else{
 
                         // sending char sees itself stationery
-                        #if DEBUG_BROADCAST_ACTOR_FUNCTIONS==1
-                        printf("sending char [%i] sees itself stationary\n", i);
-                        #endif
-
-                        add_actor_packet(i, 0, packet, &packet_length);
+                        add_actor_packet(clients.client[i].socket, 0, packet, &packet_length);
                     }
 
-                    send_packet(connection, packet, packet_length);
+                    send_packet(socket, packet, packet_length);
                 }
             }
         }
@@ -260,25 +230,34 @@ void broadcast_actor_packet(int connection, unsigned char move, int sender_desti
 }
 
 
-void broadcast_local_chat(int connection, char *text_in){
+void broadcast_local_chat(int actor_node, char *text_in){
 
     /** public function - see header */
 
-    int map_id=clients.client[connection].map_id;
+    int map_id=clients.client[actor_node].map_id;
     int map_axis=maps.map[map_id].map_axis;
 
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].client_status==LOGGED_IN){
+        if(clients.client[i].node_status==CLIENT_NODE_USED){
 
             if(map_id==clients.client[i].map_id) {
 
-                if(get_proximity(clients.client[connection].map_tile, clients.client[i].map_tile, map_axis)<LOCAL_CHAT_RANGE){
+                int socket=clients.client[i].socket;
 
-                    if(connection!=i) {
+                //broadcast to receiving chars
+                if(i!=actor_node){
 
-                        send_text(i, CHAT_LOCAL, text_in);
+                    if(get_proximity(clients.client[actor_node].map_tile, clients.client[i].map_tile, map_axis)<LOCAL_CHAT_RANGE){
+
+                        send_text(socket, CHAT_LOCAL, text_in);
                     }
+                }
+
+                //broadcast to sending char
+                else {
+
+                    send_text(socket, CHAT_LOCAL,"%c%s: %s", c_grey1+127, clients.client[i].char_name, text_in);
                 }
             }
         }
@@ -286,22 +265,21 @@ void broadcast_local_chat(int connection, char *text_in){
 }
 
 
-void broadcast_guild_chat(int guild_id, int connection, char *text_in){
+void broadcast_guild_chat(int guild_id, int actor_node, char *text_in){
 
     /** public function - see header */
 
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].client_status==LOGGED_IN){
+        //restrict to actors who are players
+        if(clients.client[i].node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
 
-            //don't echo to self
-            if(connection!=i){
+            //filter players who are in this guild
+            if(clients.client[i].guild_id==guild_id){
 
-                //filter players who are in this guild
-                if(clients.client[i].guild_id==guild_id){
+                int socket=clients.client[i].socket;
 
-                    send_text(i, CHAT_GM, "%c[%s]: %s", c_blue1+127, clients.client[connection].char_name, text_in);
-                }
+                send_text(socket, CHAT_GM, "%c[%s]: %s", c_blue1+127, clients.client[actor_node].char_name, text_in);
             }
         }
     }
@@ -312,10 +290,10 @@ void broadcast_server_message(char *text_in){
 
     /** public function - see header */
 
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].client_status==LOGGED_IN){
-
+        //restrict to actors who are players
+        if(clients.client[i].node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
 
             send_text(i, CHAT_SERVER, "%cSERVER MESSAGE: %s", c_red1+127, text_in);
         }
@@ -323,26 +301,38 @@ void broadcast_server_message(char *text_in){
 }
 
 
-void broadcast_channel_chat(int chan, int connection, char *text_in){
+void broadcast_channel_chat(int chan, int actor_node, char *text_in){
 
     /** public function - see header */
 
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].client_status==LOGGED_IN){
+        //restrict to actors who are players
+        if(clients.client[i].node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
 
-            //don't echo to self
-            if(connection!=i){
+            int socket=clients.client[i].socket;
 
-                //filter out players who are not in this chan
-                if(player_in_chan(i,chan)!=-1){
+            //filter out players who are not in this chan
+            if(player_in_chan(i,chan)!=-1){
 
-                    int active_chan_slot=clients.client[i].active_chan;
-                    int active_chan=clients.client[i].chan[active_chan_slot-1];
+                int active_chan_slot=clients.client[i].active_chan;
+                int active_chan=clients.client[i].chan[active_chan_slot-1];
 
-                    //show non-active chan in darker grey
-                    int text_colour = (active_chan==chan) ? c_grey1+127 : c_grey2+127;
-                    send_text(i, CHAT_CHANNEL_0, "%c[%s]: %s", text_colour, clients.client[connection].char_name, text_in);
+                //show non-active chan in darker grey
+                int text_colour = (active_chan==chan) ? c_grey1+127 : c_grey2+127;
+
+                if(i!=actor_node){
+
+                    //broadcast to receiving chars
+                    send_text(socket, CHAT_CHANNEL_0, "%c[%s]: %s", text_colour, clients.client[actor_node].char_name, text_in);
+                }
+                else {
+
+                    //broadcast to sending char
+                    send_text(socket, CHAT_CHANNEL_0 + active_chan_slot,
+                    "%c[%s @ %i]: %s", c_grey1+127,
+                    clients.client[actor_node].char_name,
+                    CHAT_CHANNEL_0 + active_chan_slot, text_in);
                 }
             }
         }
@@ -350,16 +340,17 @@ void broadcast_channel_chat(int chan, int connection, char *text_in){
 }
 
 
-void broadcast_channel_event(int chan, int connection, char *text_in){
+void broadcast_channel_event(int chan, int actor_node, char *text_in){
 
     /** public function - see header */
 
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].client_status==LOGGED_IN){
+        //restrict to actors who are players
+        if(clients.client[i].node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
 
             //filter out self and players who are not in this chan
-            if(connection!=i || player_in_chan(i,chan)!=-1){
+            if(actor_node!=i || player_in_chan(i,chan)!=-1){
 
                 send_text(i, CHAT_CHANNEL_0 + clients.client[i].active_chan, text_in);
             }
@@ -368,7 +359,7 @@ void broadcast_channel_event(int chan, int connection, char *text_in){
 }
 
 
-void broadcast_get_new_bag_packet(int connection, int bag_id) {
+void broadcast_get_new_bag_packet(int actor_node, int bag_id) {
 
     /** public function - see header */
 
@@ -376,18 +367,20 @@ void broadcast_get_new_bag_packet(int connection, int bag_id) {
     //sent to other actors
     unsigned char packet[1024]={0};
     size_t packet_length=0;
-    get_new_bag_packet(connection, bag_id, packet, &packet_length);
+    int socket=clients.client[actor_node].socket;
+
+    get_new_bag_packet(socket, bag_id, packet, &packet_length);
 
     //cycle through all the clients
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        //restrict to clients that are logged in
-        if(clients.client[i].client_status==LOGGED_IN){
+        //restrict to actors who are players
+        if(clients.client[i].node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
 
             //restrict to chars on the same map as broadcasting char
             if(bag[bag_id].map_id==clients.client[i].map_id){
 
-                send_packet(i, packet, packet_length);
+                send_packet(clients.client[i].socket, packet, packet_length);
             }
         }
     }
@@ -399,10 +392,10 @@ void broadcast_destroy_bag_packet(int bag_id) {
     /** public function - see header */
 
     //cycle through all the clients
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        //restrict to clients that are logged in
-        if(clients.client[i].client_status==LOGGED_IN){
+        //restrict to actors who are players
+        if(clients.client[i].node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
 
             //restrict to chars on the same map as bag
             if(bag[bag_id].map_id==clients.client[i].map_id){

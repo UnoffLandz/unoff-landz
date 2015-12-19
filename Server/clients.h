@@ -23,32 +23,75 @@
 #include <time.h>                   //support for time_t data type
 #include <stdbool.h>                //support for boolean data type
 #include <unistd.h>                 //support for ssize_t data type
+#include <stdint.h>                 //support for uint16_t data type
 
 #include "chat.h"                   //contains definition of MAX_CHAN_SLOTS
 #include "character_inventory.h"    //contains definition of MAX_INVENTORY_SLOTS
 #include "character_movement.h"     //contains definition of PATH_MAX
 
-#define MAX_CLIENTS 100
-#define BAG_LIST_MAX 10
+#define MAX_ACTORS 100
+#define MAX_SOCKETS 50
 
-struct client_node_type{
+struct client_socket_type{
 
-    enum{
+    int actor_node;
 
-        LOGGED_OUT=0,
-        CONNECTED=1,
-        LOGGED_IN=2,
-    }client_status;
+    enum {
 
+        SOCKET_UNUSED=0,
+        CLIENT_CONNECTED=1,
+        CLIENT_LOGGED_IN=2,
+    }socket_status;
+
+    bool kill_connection;
     unsigned char packet_buffer[1024];
     size_t packet_buffer_length;
+    time_t time_of_last_heartbeat;
+    char ip_address[16];
+
+    //client version data
+    int client_version_first_digit;
+    int client_version_second_digit;
+    int client_version_major;
+    int client_version_minor;
+    int client_version_release;
+    int client_version_patch;
+    int client_version_port;
+    unsigned char client_version_ip_address[4];
+    //OL extra packet data
+    int client_version_os_type;
+    uint16_t client_version_ol_ver_flag;
+
+};
+extern struct client_socket_type client_socket[MAX_SOCKETS];
+
+
+struct client_node_type{// TODO (themuntdregger#1#): convert struct name to reflect actors rather than clients
+
+    enum{//describes if this node is available or being used.
+
+        CLIENT_NODE_UNUSED=0,
+        CLIENT_NODE_USED=1,
+    }node_status;
+
+    enum{//describes the actor controller
+
+        ACTOR_NONE=0,
+        PLAYER=1,
+        NPC=2,
+        //ACTOR_COMPUTER_NON_PK
+        //ACTOR_HUMAN_PK
+        //ACTOR_COMPUTER_PK
+    }player_type;
+
+    int socket;
+    int npc_node;
 
     time_t char_created;
     int character_id; //database id for char
     int char_age;//aggregate in-game time (measured in game minutes) for this character
 
     time_t session_commenced;
-    time_t time_of_last_heartbeat;
     time_t time_of_last_minute;
 
     int path[PATH_MAX];
@@ -61,8 +104,6 @@ struct client_node_type{
     int harvest_interval;  //interval between each harvest
     int harvest_inventory_slot;
     time_t time_of_last_harvest;
-
-    char ip_address[16];
 
     char char_name[80];
     char password[80];
@@ -82,6 +123,7 @@ struct client_node_type{
 
     int map_id;
     int map_tile;
+
     bool track; //displays coordinates as char moves
     bool debug_explore_path; // displays ascii representation of explore path
 
@@ -178,14 +220,31 @@ struct client_node_type{
 
     bool bag_open;
     int open_bag_id;
+
+    int portrait_id; //npc portraite
+
+    bool boat_ticket;
+    bool on_boat;
+    int boat_schedule_node;
 };
 
 struct client_list_type {
 
     int client_count;
-    struct client_node_type client[MAX_CLIENTS];
+    struct client_node_type client[MAX_ACTORS];
 };
 extern struct client_list_type clients;
+
+
+/** RESULT   : finds next free node in the actor struct
+
+    RETURNS  : void
+
+    PURPOSE  : enables decoupling of actor nodes and client socket numbers
+
+    NOTES    :
+**/
+int get_next_free_actor_node();
 
 
 /** RESULT   : closes a client connection
@@ -196,6 +255,6 @@ extern struct client_list_type clients;
 
     NOTES    :
 **/
-void close_connection_slot(int connection);
+void close_connection_slot(int actor_node);
 
 #endif // CLIENTS_H_INCLUDED

@@ -67,7 +67,7 @@ bool tile_unoccupied(int connection, int map_id, int map_tile){
     */
 
     //now check through clients and see if any have characters occupying that tile
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
         if(i!=connection && clients.client[i].map_tile==map_tile && clients.client[i].map_id==map_id) return false;
     }

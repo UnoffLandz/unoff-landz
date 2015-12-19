@@ -57,7 +57,7 @@ void get_time_up_str(time_t raw_time, char *buffer);
 
     NOTES   :
 **/
-void send_verbose_date(int connection, int game_days);
+void send_verbose_date(int actor_node, int game_days);
 
 
 /** RESULT  : sends the verbose time to the client
@@ -68,7 +68,7 @@ void send_verbose_date(int connection, int game_days);
 
     NOTES   :
 **/
-void send_verbose_time(int connection, int game_minutes);
+void send_verbose_time(int actor_node, int game_minutes);
 
 
 /*****************************************************************************************************

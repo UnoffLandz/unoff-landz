@@ -62,8 +62,12 @@ enum { // client to server protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  uint16_t              data-length (=packet length-2)
-        4-8  Uint32              position of resource in map 3d object list
+        2-3  uint16_t            data-length (=packet length-2)
+        4-6  Uint16_t            image id
+        6-10 Uint32              Quantity
+        11   Uint8               slot
+        12   Uint8               flags
+
 */
 
     DROP_ITEM=22,
@@ -85,9 +89,21 @@ enum { // client to server protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  uint16_t              data-length (=packet length-2)
+        2-3  uint16_t            data-length (=packet length-2)
         4-8  Uint32              position of object in the map 3d object list
 */
+
+    TOUCH_PLAYER=28,
+
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  uint16_t            data-length (=packet length-2)
+        4-8  Uint32              actor id
+*/
+
+    RESPOND_TO_NPC=29,
 
     SEND_PARTIAL_STATS=49,
     PING_RESPONSE=60,

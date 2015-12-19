@@ -63,7 +63,7 @@ enum { //return values for leave channel
 
     NOTES   :
 **/
-int player_in_chan(int connection, int chan);
+int player_in_chan(int actor_node, int chan);
 
 
 /** RESULT  : joins a chat_channel
@@ -74,7 +74,7 @@ int player_in_chan(int connection, int chan);
 
     NOTES   :
 **/
-int join_channel(int connection, int chan);
+int join_channel(int actor_node, int chan);
 
 
 /** RESULT  : leaves a chat_channel
@@ -85,7 +85,7 @@ int join_channel(int connection, int chan);
 
     NOTES   :
 **/
-int leave_channel(int connection, int chan);
+int leave_channel(int actor_node, int chan);
 
 
 /** RESULT  : send a private message
@@ -96,7 +96,7 @@ int leave_channel(int connection, int chan);
 
     NOTES   :
 **/
-void send_pm(int connection, char *receiver_name, char *message);
+void send_pm(int actor_node, char *receiver_name, char *message);
 
 
 /** RESULT  : sends chat channel data to client
@@ -115,7 +115,7 @@ void send_pm(int connection, char *receiver_name, char *message);
               protocol with the required channel data. This is achieved using the
               clear_client_channels and send_client_channels functions
 **/
-void send_client_channels(int connection);
+void send_client_channels(int actor_node);
 
 
 /** RESULT  : clears chat channel tabs on client
@@ -135,18 +135,18 @@ void send_client_channels(int connection);
               clear_client_channels and send_client_channels functions
 
 **/
-void clear_client_channels(int connection);
+void clear_client_channels(int actor_node);
 
 
 /** RESULT  : Determines if a client has any open chat chans
 
     RETURNS : true / false
 
-    PURPOSE : wrapper for send_get_active_channels
+    PURPOSE :
 
     NOTES   : used in function process_packet
 **/
-bool chat_chan_open(int connection);
+bool chat_chan_open(int actor_node);
 
 
 #endif // CHAT_H_INCLUDED

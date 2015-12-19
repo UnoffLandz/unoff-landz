@@ -30,7 +30,7 @@
 #include "server_protocol_functions.h"
 #include "logging.h"
 
-void send_motd_header(int connection){
+void send_motd_header(int socket){
 
     /** public function - see header */
 
@@ -38,11 +38,9 @@ void send_motd_header(int connection){
     char verbose_date_stamp_str[50]="";
     char chars_in_game_str[1024]="";
     int chars_in_game_count=0;
-    //long int server_up_time=0;
-    //char time_up_str[50]="";
 
     //send separator line so MOTD is distinct from previous text
-    send_text(connection, CHAT_SERVER, " ");
+    send_text(socket, CHAT_SERVER, " ");
 
     //prepare and send server 'up' time
     long time_diff=time(NULL)-game_data.server_start_time;
@@ -52,18 +50,18 @@ void send_motd_header(int connection){
     time_diff=time_diff-(time_hrs*60*60);
     long int time_mins=time_diff/60;
 
-    //get_time_up_str(server_up_time, time_up_str);
-    send_text(connection, CHAT_SERVER, "%cServer up                  : %i days %i hrs %i mins", c_blue2+127, time_days, time_hrs, time_mins);
+    send_text(socket, CHAT_SERVER, "%cServer up                  : %i days %i hrs %i mins", c_blue2+127, time_days, time_hrs, time_mins);
 
     //prepare and send server start time
     get_time_stamp_str(game_data.server_start_time, time_stamp_str);
     get_verbose_date_str(game_data.server_start_time, verbose_date_stamp_str);
-    send_text(connection, CHAT_SERVER, "%cServer started at          : %s on %s", c_blue2+127, time_stamp_str, verbose_date_stamp_str);
+    send_text(socket, CHAT_SERVER, "%cServer started at          : %s on %s", c_blue2+127, time_stamp_str, verbose_date_stamp_str);
 
     //prepare list of names for characters in game
-    for(int i=0; i<MAX_CLIENTS; i++){
+    for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].client_status==LOGGED_IN){
+        if(clients.client[i].node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
+
             sprintf(chars_in_game_str, "%s %s",  chars_in_game_str, clients.client[i].char_name);
             chars_in_game_count++;
         }
@@ -71,14 +69,14 @@ void send_motd_header(int connection){
 
     if(chars_in_game_count==0) {
 
-        send_text(connection, CHAT_SERVER, "%cCharacters in game         : [0] None", c_blue2+127);
+        send_text(socket, CHAT_SERVER, "%cCharacters in game         : [0] None", c_blue2+127);
     }
     else {
 
-        send_text(connection, CHAT_SERVER, "%cCharacters in game         : [%i] %s", c_blue2+127, chars_in_game_count, chars_in_game_str);
+        send_text(socket, CHAT_SERVER, "%cCharacters in game         : [%i] %s", c_blue2+127, chars_in_game_count, chars_in_game_str);
     }
 
-    send_text(connection, CHAT_SERVER, "%cCharacters created to date : %i", c_blue2+127, game_data.char_count);
+    send_text(socket, CHAT_SERVER, "%cCharacters created to date : %i", c_blue2+127, game_data.char_count);
 
     if(game_data.char_count>0){
 
@@ -93,21 +91,21 @@ void send_motd_header(int connection){
         strcpy(game_data.name_last_char_created, "None");
     }
 
-    send_text(connection, CHAT_SERVER, "%cLast character created     : %s at %s %s", c_blue2+127, game_data.name_last_char_created, time_stamp_str, verbose_date_stamp_str);
+    send_text(socket, CHAT_SERVER, "%cLast character created     : %s at %s %s", c_blue2+127, game_data.name_last_char_created, time_stamp_str, verbose_date_stamp_str);
 
     //prepare and send time and date of this connection
     get_time_stamp_str(time(NULL), time_stamp_str);
     get_verbose_date_str(time(NULL), verbose_date_stamp_str);
-    send_text(connection, CHAT_SERVER, "%cConnection at              : %s on %s", c_blue2+127, time_stamp_str, verbose_date_stamp_str);
+    send_text(socket, CHAT_SERVER, "%cConnection at              : %s on %s", c_blue2+127, time_stamp_str, verbose_date_stamp_str);
 
     //prepare and send connection ip address
-    send_text(connection, CHAT_SERVER, "%cConnection IP address      : %s", c_blue2+127, clients.client[connection].ip_address);
+    send_text(socket, CHAT_SERVER, "%cConnection IP address      : %s", c_blue2+127, client_socket[socket].ip_address);
 
     //send separator line so MOTD is distinct from subsequent text
-    send_text(connection, CHAT_SERVER, " ");
+    send_text(socket, CHAT_SERVER, " ");
 }
 
-bool send_motd_file(int connection){
+bool send_motd_file(int socket){
 
     /** public function - see header */
 
@@ -122,7 +120,7 @@ bool send_motd_file(int connection){
 
         if(strcmp(line_in, "")==0) strcpy(line_in, " ");
 
-        send_text(connection, CHAT_SERVER, line_in);
+        send_text(socket, CHAT_SERVER, line_in);
     }
 
     fclose(file);

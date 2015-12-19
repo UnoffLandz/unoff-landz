@@ -53,7 +53,7 @@ struct data_{
     std::string sql;
     unsigned char packet[MAX_PROTOCOL_PACKET_SIZE2];
     size_t packet_len;
-    int connection;
+    int actor_node;
     int process_type;
     char char_name[80];
     int guild_id;
@@ -64,7 +64,7 @@ typedef std::deque<data_> buffer_list_type;
 
 buffer_list_type idle_buffer2;
 
-void push_idle_buffer2(int connection, int process_type, const unsigned char *packet, size_t packet_len){
+void push_idle_buffer2(int actor_node, int process_type, const unsigned char *packet, size_t packet_len){
 
     /** public function - see header **/
 
@@ -73,13 +73,12 @@ void push_idle_buffer2(int connection, int process_type, const unsigned char *pa
         //buffer overflow
         log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
-        return;
     }
 
     data_ entry;
 
     entry.sql.clear();
-    entry.connection=connection;
+    entry.actor_node=actor_node;
     entry.process_type=process_type;
     entry.packet_len=packet_len;
 
@@ -99,7 +98,7 @@ void push_idle_buffer2(int connection, int process_type, const unsigned char *pa
 }
 
 
-void push_command(int connection, int process_type, char *char_name, int guild_id){
+void push_command(int actor_node, int process_type, char *char_name, int guild_id){
 
     /** public function - see header **/
 
@@ -108,13 +107,12 @@ void push_command(int connection, int process_type, char *char_name, int guild_i
         //buffer overflow
         log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
-        return;
     }
 
     data_ entry;
 
     entry.sql.clear();
-    entry.connection=connection;
+    entry.actor_node=actor_node;
     entry.process_type=process_type;
     strcpy(entry.char_name, char_name);
     entry.guild_id=guild_id;
@@ -143,8 +141,8 @@ void push_sql_command(const char *fmt, ...){
         //buffer overflow
         log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
-        return;
     }
+
     data_ entry;
 
     entry.sql = sql;
@@ -166,7 +164,7 @@ void process_idle_buffer2(){
 
     const data_ &command(idle_buffer2.front());
 
-    int connection=command.connection;
+    int actor_node=command.actor_node;
 
     //use else if structure rather than switch, as this allows us to encapsulate
     //variables within each if statement
@@ -181,21 +179,21 @@ void process_idle_buffer2(){
         //the database at the next idle event
 
         D_PRINT("IDLE_BUFFER2_PROCESS_CHECK_NEWCHAR\n");
-        check_new_character(connection, command.packet);
+        check_new_character(actor_node, command.packet);
     }
     /**********************************************************************************************/
 
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_ADD_NEWCHAR){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_ADD_NEWCHAR\n");
-        add_new_character(connection, command.packet);
+        add_new_character(actor_node, command.packet);
     }
     /**********************************************************************************************/
 
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_LOGIN){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_LOGIN\n");
-        process_log_in(connection, command.packet);
+        process_log_in(actor_node, command.packet);
     }
     /**********************************************************************************************/
 
@@ -209,14 +207,14 @@ void process_idle_buffer2(){
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_HASH_DETAILS){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_HASH_DETAILS\n");
-        send_char_details(connection, command.char_name);
+        send_char_details(actor_node, command.char_name);
     }
     /**********************************************************************************************/
 
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_LIST_GUILD_BY_RANK\n");
-        list_guild_members(connection, GUILD_ORDER_RANK);
+        list_guild_members(actor_node, GUILD_ORDER_RANK);
 
     }
     /**********************************************************************************************/
@@ -224,14 +222,14 @@ void process_idle_buffer2(){
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_LIST_GUILD_BY_TIME){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_LIST_GUILD_BY_TIME\n");
-        list_guild_members(connection, GUILD_ORDER_TIME);
+        list_guild_members(actor_node, GUILD_ORDER_TIME);
     }
     /**********************************************************************************************/
 
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_GUILD_DETAILS){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_LIST_GUILD_BY_TIME\n");
-        send_guild_details(connection, command.guild_id);
+        send_guild_details(actor_node, command.guild_id);
     }
     /**********************************************************************************************/
 

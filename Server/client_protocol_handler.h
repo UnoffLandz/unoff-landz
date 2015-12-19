@@ -21,7 +21,6 @@
 #define CLIENT_PROTOCOL_HANDLER_H_INCLUDED
 
 
-
 enum{ //values for the SIT_DOWN protocol
     SIT=0,
     STAND=1,
@@ -35,6 +34,6 @@ enum{ //values for the SIT_DOWN protocol
 
     NOTES   :
 */
-void process_packet(int connection, unsigned char *packet);
+void process_packet(int actor_node, unsigned char *packet);
 
 #endif // CLIENT_PROTOCOL_HANDLER_H_INCLUDED

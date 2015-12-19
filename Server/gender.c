@@ -23,11 +23,11 @@
 
 struct gender_type gender[MAX_GENDER];
 
-int get_char_gender_id(int connection){
+int get_char_gender_id(int actor_node){
 
     /** public function - see header */
 
-    int char_type_id=clients.client[connection].char_type;
+    int char_type_id=clients.client[actor_node].char_type;
 
     return character_type[char_type_id].gender_id;
 }

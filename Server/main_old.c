@@ -43,15 +43,16 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
+DONE NEW implemented send_inventory_text protocol
+DONE separate module for chat #commands
+
+
 BUG Player chat in dark gray even when active
 BUG Player chat shows chan 32
 BUG Bingo chat shows chan -30
-FIXME (themuntdregger#1#): unknown protocol packets are not being logged in packet log
 
 TEST multiple chat channel handling
 TEST multiple guild application handling
-
-TODO (themuntdregger#1#): On broadcast functions restrict to both node==used and type==player
 
 bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
 #jump to default to first walkable tile
@@ -86,8 +87,6 @@ create circular buffer for receiving packets
 need #function to describe char and what it is wearing)
 document new database/struct relationships
 finish char_race_stats and char_gender_stats functions in db_char_tbl.c
-
-46 48 map 6
 
 ***************************************************************************************************/
 
@@ -141,14 +140,12 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include "bags.h"
 #include "string_functions.h"
 #include "maps.h"
-#include "client_protocol.h"
-#include "npc.h"
-#include "boats.h"
 
+#define _GNU_SOURCE 1   //supports TEMP_FAILURE_RETRY
 #define DEBUG_MAIN 0
-#define VERSION "4.5"
+#define VERSION "4.4"
 
-struct ev_io *libevlist[MAX_ACTORS] = {NULL};
+struct ev_io *libevlist[MAX_CLIENTS] = {NULL};
 
 extern int current_database_version();
 
@@ -157,8 +154,10 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
 void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 void socket_write_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
 void timeout_cb(EV_P_ struct ev_timer* timer, int revents);
-void game_time_cb(EV_P_ struct ev_timer* timer, int revents);
+void timeout_cb2(EV_P_ struct ev_timer* timer, int revents);
 void idle_cb(EV_P_ struct ev_idle *watcher, int revents);
+
+int sd;
 
 void start_server(){
 
@@ -176,7 +175,7 @@ void start_server(){
     struct ev_io *socket_watcher = (struct ev_io*)malloc(sizeof(struct ev_io));
     struct ev_idle *idle_watcher = (struct ev_idle*)malloc(sizeof(struct ev_idle));
     struct ev_timer *timeout_watcher = (struct ev_timer*)malloc(sizeof(struct ev_timer));
-    struct ev_timer *game_time_watcher = (struct ev_timer*)malloc(sizeof(struct ev_timer));
+    struct ev_timer *timeout_watcher2 = (struct ev_timer*)malloc(sizeof(struct ev_timer));
 
     struct sockaddr_in server_addr;
 
@@ -189,11 +188,8 @@ void start_server(){
         return;
     }
 
-    //clear garbage from structs
-    memset(&client_socket, 0, sizeof(client_socket));
+    //clears garbage from the struct
     memset(&clients, 0, sizeof(clients));
-
-    // TODO (themuntdregger#1#): clear other structs, ie maps, e3d etc
 
     //load data from database into memory
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
@@ -234,90 +230,29 @@ void start_server(){
     load_db_guilds();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    /** Experimental NPC code **/
-
-    int actor_node=get_next_free_actor_node();
-
-    clients.client[actor_node].node_status=CLIENT_NODE_USED;
-    clients.client[actor_node].player_type=NPC;
-    strcpy(clients.client[actor_node].char_name, "NPC_1");
-    clients.client[actor_node].map_id=1;
-    clients.client[actor_node].map_tile=27225;
-    clients.client[actor_node].char_type=1;
-    clients.client[actor_node].skin_type=0;
-    clients.client[actor_node].hair_type=0;
-    clients.client[actor_node].shirt_type=0;
-    clients.client[actor_node].pants_type=0;
-    clients.client[actor_node].boots_type=0;
-    clients.client[actor_node].head_type=0;
-    clients.client[actor_node].shield_type=0;
-    clients.client[actor_node].weapon_type=0;
-    clients.client[actor_node].cape_type=0;
-    clients.client[actor_node].helmet_type=0;
-    clients.client[actor_node].frame=0;
-
-    npc_trigger[0].actor_node=actor_node; //npc actor node
-    npc_trigger[0].trigger_type=TOUCHED;
-    npc_trigger[0].action_node=0;
-    //could add time of day or race as trigger criteria
-
-    npc_trigger[1].actor_node=actor_node; //npc actor node
-    npc_trigger[1].trigger_type=SELECT_OPTION;
-    npc_trigger[1].select_option=0;
-    npc_trigger[1].action_node=1;
-    //could add time of day, or race as trigger criteria
-
-    npc_action[0].actor_node=actor_node;
-    npc_action[0].action_type=GIVE_OPTIONS;
-    strcpy(npc_action[0].text, "Hello. what would you like ?");
-    strcpy(npc_action[0].option_list, "ticket to Platts;option 2;boat schedule;");
-
-    npc_action[1].actor_node=actor_node;
-    npc_action[1].action_type=SELL;
-    strcpy(npc_action[1].text_success, "thanks - you just bought a ticket");
-    strcpy(npc_action[1].text_fail, "sorry - you don't have enough for a ticket");
-    npc_action[1].object_id_required=408;
-    npc_action[1].object_amount_required=5;
-    npc_action[1].sell_item=BOAT_TICKET;
-    npc_action[1].boat_schedule_node=0;
-
-    boat_schedule[0].departure_map_id=1;
-    boat_schedule[0].departure_map_tile=4054;
-    boat_schedule[0].destination_map_id=2;
-    boat_schedule[0].destination_map_tile=77969;
-    boat_schedule[0].departure_time=15;
-    strcpy(boat_schedule[0].departure_message, "Welcome aboard Salty Sealines. Please stow your luggage in the hold and enjoy your voyage");
-    boat_schedule[0].arrival_time=20;
-    strcpy(boat_schedule[0].arrival_message, "thank you for sailing with Salty Sealines. We hope you enjoyed your voyage and will sail with us again");
-    boat_schedule[0].boat_map_id=3;
-    boat_schedule[0].boat_map_tile=4651;
-
-    /***************************/
-
     //gather initial stats
     get_db_last_char_created(); //loads details of the last char created from the database into the game_data struct
     game_data.char_count=get_db_char_count();
 
-    //create the master socket
-    int sd;
+    //create server socket & bind it to socket address
     if((sd = socket(AF_INET, SOCK_STREAM, 0))==-1){
 
         int errnum=errno;
 
-        log_event(EVENT_ERROR, "failed to create master socket in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "socket failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
         stop_server();
     }
 
-    //clear master socket struct and fill with data
+    //clear struct and fill with server socket data
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     server_addr.sin_port = htons(PORT);
 
-    log_event(EVENT_INITIALISATION, "master socket established on address [%s]: port [%i]", inet_ntoa(server_addr.sin_addr), PORT);
+    log_event(EVENT_INITIALISATION, "setting up server socket on address [%s]: port [%i]", inet_ntoa(server_addr.sin_addr), PORT);
 
-    //allow the master socket to be immediately reused following a server stop
+    //allow the socket to be immediately reused
     int bReuseaddr = 1;
     if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char*) &bReuseaddr, sizeof(bReuseaddr)) != 0) {
 
@@ -328,9 +263,7 @@ void start_server(){
         stop_server();
     }
 
-    log_event(EVENT_INITIALISATION, "master socket set for reuse");
-
-    //bind the master server socket to an address
+    //bind the server socket to an address
     if(bind(sd, (struct sockaddr*) &server_addr, sizeof(server_addr))==-1){
 
         int errnum=errno;
@@ -340,10 +273,8 @@ void start_server(){
         stop_server();
     }
 
-    log_event(EVENT_INITIALISATION, "master socket bound to address");
-
-    //listen for incoming client connections on master socket
-    if(listen(sd, 5)==-1){// TODO (themuntdregger#1#): convert hardcoded max for incoming clients so as this is specified in the database
+    //listen for incoming client connections
+    if(listen(sd, 5)==-1){
 
         int errnum=errno;
 
@@ -352,38 +283,38 @@ void start_server(){
         stop_server();
     }
 
-    log_event(EVENT_INITIALISATION, "master socket listening for incoming connections");
-    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
     //start the event watchers
-    ev_timer_init(timeout_watcher, timeout_cb, 0.05, 0.05);// TODO (themuntdregger#1#): convert hard coded timeout for watcher to database item
+    ev_timer_init(timeout_watcher, timeout_cb, 0.05, 0.05);
     ev_timer_start(loop, timeout_watcher);
 
-    log_event(EVENT_INITIALISATION, "timeout watcher started");
-
-    ev_timer_init(game_time_watcher, game_time_cb, GAME_MINUTE_INTERVAL, GAME_MINUTE_INTERVAL);
-    ev_timer_start(loop, game_time_watcher);
-
-    log_event(EVENT_INITIALISATION, "game time watcher started");
+    ev_timer_init(timeout_watcher2, timeout_cb2, GAME_MINUTE_INTERVAL, GAME_MINUTE_INTERVAL);
+    ev_timer_start(loop, timeout_watcher2);
 
     ev_io_init(socket_watcher, socket_accept_callback, sd, EV_READ);
     ev_io_start(loop, socket_watcher);
 
-    log_event(EVENT_INITIALISATION, "socket watcher started");
-
     ev_idle_init(idle_watcher, idle_cb);
     ev_idle_start(loop, idle_watcher);
 
-    log_event(EVENT_INITIALISATION, "idle watcher started");
-    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    log_event(EVENT_INITIALISATION, "main loop started");
+    log_event(EVENT_INITIALISATION, "server initialisation complete");
 
     while(1) {
 
         ev_run(loop, 0);
     }
 }
+
+int get_next_free_client_node(){
+
+    for(int i=0; i< MAX_CLIENTS; i++){
+
+        if(clients.client[i].client_status==LOGGED_OUT
+        && clients.client[i].client_type==NONE) return i;
+    }
+
+    return -1;
+}
+
 
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents) {
 
@@ -408,16 +339,90 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
         stop_server();
     }
 
-    //catch errors in libev
     if (EV_ERROR & revents) {
 
         log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
     }
 
-    //accept connection on master socket
+    // socket accept: get file description
     client_sd = accept(watcher->fd, (struct sockaddr*) &client_addr, &client_len);
 
+    if (client_sd ==-1) {
+
+        //catch accept errors
+        int errnum=errno;
+
+        log_event(EVENT_ERROR, "accept failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_text(EVENT_ERROR, "socket [%i] error [%i] [%s]", watcher->fd, errnum, strerror(errnum));
+        stop_server();
+    }
+
+    //get next free node on the client node array
+    int node=get_next_free_client_node();
+
+    if (node==-1) {
+
+        //catch connection bounds exceeded
+        log_event(EVENT_ERROR, "new connection exceeds client node max [%i]", MAX_CLIENTS);
+
+        send_text(client_sd, CHAT_SERVER, "\nSorry but the server is currently full\n");
+        close(client_sd);
+        return;
+    }
+
+    // listen to new client
+    ev_io_init(client_watcher, socket_read_callback, client_sd, EV_READ);
+    ev_io_start(loop, client_watcher);
+
+    libevlist[client_sd] = client_watcher;
+
+    //set up connection data entry in client struct
+    clients.client[node].socket=client_sd;
+    clients.client[node].client_status=CONNECTED;
+    strcpy(clients.client[node].ip_address, inet_ntoa(client_addr.sin_addr));
+
+    //set up heartbeat
+    gettimeofday(&time_check, NULL);
+    clients.client[node].time_of_last_heartbeat=time_check.tv_sec;
+
+    //send welcome message and motd to client
+    send_text(client_sd, CHAT_SERVER, SERVER_WELCOME_MSG);
+    send_motd(client_sd);
+    send_text(client_sd, CHAT_SERVER, "\nHit any key to continue...\n");
+}
+
+
+void socket_accept_callback2(struct ev_loop *loop, struct ev_io *watcher, int revents) {
+
+    /** RESULT   : handles socket accept event
+
+        RETURNS  : void
+
+        PURPOSE  : handles new client connections
+
+        NOTES    :
+    **/
+
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    int client_sd;
+
+    struct ev_io *client_watcher = (struct ev_io*) malloc(sizeof(struct ev_io));
+    if (client_watcher == NULL) {
+
+        log_event(EVENT_ERROR, "malloc failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    if (EV_ERROR & revents) {
+
+        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    // socket accept: get file description
+    client_sd = accept(watcher->fd, (struct sockaddr*) &client_addr, &client_len);
     if (client_sd ==-1) {
 
         int errnum=errno;
@@ -427,57 +432,52 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
         stop_server();
     }
 
-    //get next free node on the actor array
-    int actor_node=get_next_free_actor_node();
+    // too many connections
+    if (client_sd > MAX_CLIENTS) {
 
-    //catch actor bounds
-    if (actor_node==-1) {
+        log_event(EVENT_ERROR, "new connection [%i] exceeds client array max [%i] ", client_sd, MAX_CLIENTS);
 
-        //catch connection bounds exceeded
-        log_event(EVENT_ERROR, "new connection exceeds actor node max [%i]", MAX_ACTORS);
-
+        //send message to client and deny connection
         send_text(client_sd, CHAT_SERVER, "\nSorry but the server is currently full\n");
         close(client_sd);
         return;
     }
 
-    //catch socket bounds
-    if (client_sd>MAX_SOCKETS) {
+    #if DEBUG_MAIN==1
+    printf("client [%i] connected\n", client_sd);
+    #endif
 
-        //catch connection bounds exceeded
-        log_event(EVENT_ERROR, "new connection [%i] exceeds socket node max [%i]", client_sd, MAX_SOCKETS);
-
-        send_text(client_sd, CHAT_SERVER, "\nSorry but the server is currently full\n");
-        close(client_sd);
-        return;
-    }
-
-    //set up listener for the new client
+    // listen to new client
     ev_io_init(client_watcher, socket_read_callback, client_sd, EV_READ);
     ev_io_start(loop, client_watcher);
+
     libevlist[client_sd] = client_watcher;
 
-    //set up entry in client socket array
-    client_socket[client_sd].actor_node=actor_node;
-    client_socket[client_sd].socket_status=CLIENT_CONNECTED;
+    //set up connection data entry in client struct
+    clients.client[client_sd].client_status=CONNECTED;
+    strcpy(clients.client[client_sd].ip_address, inet_ntoa(client_addr.sin_addr));
 
-    //get client ip address
-    strcpy(client_socket[client_sd].ip_address, inet_ntoa(client_addr.sin_addr));
-    log_event(EVENT_SESSION, "client connection from ip address [%s]", client_socket[client_sd].ip_address);
-
-    //start heartbeat
+    //set up heartbeat
     gettimeofday(&time_check, NULL);
-    client_socket[client_sd].time_of_last_heartbeat=time_check.tv_sec;
-
-    //set up entry in actor array
-    clients.client[actor_node].socket=client_sd;
-    clients.client[actor_node].node_status=CLIENT_NODE_USED;
-    clients.client[actor_node].player_type=PLAYER;
+    clients.client[client_sd].time_of_last_heartbeat=time_check.tv_sec;
 
     //send welcome message and motd to client
     send_text(client_sd, CHAT_SERVER, SERVER_WELCOME_MSG);
     send_motd(client_sd);
     send_text(client_sd, CHAT_SERVER, "\nHit any key to continue...\n");
+}
+
+
+int find_client_node(int socket){
+
+    for(int i=0; i< MAX_CLIENTS; i++){
+
+        if(clients.client[i].client_status==LOGGED_IN
+        && clients.client[i].client_type==PLAYER
+        && clients.client[i].socket==socket) return i;
+    }
+
+    return -1;
 }
 
 
@@ -492,153 +492,303 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         NOTES    :
     **/
 
-    unsigned char buffer[1024]={0};
+    unsigned char buffer[1024];
 
-    //catch libev errors
     if (EV_ERROR & revents) {
 
         log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
     }
 
-    //catch libev read events
     if(EV_READ & revents){
 
-        //get the actor node
-        int actor_node=client_socket[watcher->fd].actor_node;
+        //find the client node
+        int node=find_client_node(watcher->fd);
 
-        //check the socket has been registered in the socket array
-        if(client_socket[watcher->fd].socket_status==SOCKET_UNUSED){
+        if(node==-1){
 
-            log_event(EVENT_ERROR, "data received from unregistered socket [%i] in function %s: module %s: line %i", watcher->fd, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "cannot find socket [%i] to close in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
             return;
         }
 
-        //read the receive buffer
+        //wrapping recv in this macro prevents connection reset by peer errors
+        //read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
+
         ssize_t read=recv(watcher->fd, buffer, 512, 0);
 
-        if (read ==-1) {
+        if (read <0) {
 
+            //catch read errors
             int errnum=errno;
 
-            switch(errno){
+            if(errno == EINTR){
 
-                case EINTR: {// non serious error so keep client connection
-
-                    log_event(EVENT_SESSION, "read EINTR in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-                    log_text(EVENT_SESSION, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
-                    break;
-                }
-
-                case EWOULDBLOCK: {// non serious error so keep client connection
-
-                    log_event(EVENT_SESSION, "read EWOULDBLOCK in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-                    log_text(EVENT_SESSION, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
-                    break;
-                }
-
-                default:{// serious error so kill client connection
-
-                    log_event(EVENT_ERROR, "read error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-                    log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... closing", watcher->fd, errnum, strerror(errnum));
-
-                    //close socket and stop watcher
-                    close_connection_slot(watcher->fd);
-                    ev_io_stop(loop, libevlist[watcher->fd]);
-                    free(libevlist[watcher->fd]);
-                    libevlist[watcher->fd] = NULL;
-
-                    //clear the structs
-                    memset(&client_socket, 0, sizeof(client_socket[watcher->fd]));
-                    memset(&clients.client[actor_node], 0, sizeof(clients.client[actor_node]));
-                }
+                log_event(EVENT_ERROR, "read registered EINTR in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
             }
 
-            return;
-        }
+            if(errno == EAGAIN){
 
-        //client closed
-        if (read == 0) {
+                log_event(EVENT_ERROR, "read registered EAGAIN in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
 
-            if (libevlist[watcher->fd]!= NULL) {
+                return;
+            }
 
-                log_event(EVENT_SESSION, "client [%i] logged-off on socket [%i]", actor_node, watcher->fd);
+            if(errno == EWOULDBLOCK){
 
-                //notify guild that char has logged off
-                int guild_id=clients.client[actor_node].guild_id;
+                log_event(EVENT_ERROR, "read registered EWOULDBLOCK in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
 
-                if(guild_id>0){
+                return;
+            }
 
-                    // TODO (themuntdregger#1#): create broadcast_guild_event function to hold this code and to allow ...
-                    //guild master to modify leaving/joining messages and colours
-                    char text_out[80]="";
-                    sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[actor_node].char_name);
-                    broadcast_guild_chat(guild_id, watcher->fd, text_out);
-                }
+            else{
 
-                //close socket and stop watcher
+                log_event(EVENT_ERROR, "read registered fatal error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... closing", watcher->fd, errnum, strerror(errnum));
+
+                log_event(EVENT_SESSION, "closing client [%i] following read error", watcher->fd);
+
                 close_connection_slot(watcher->fd);
+
                 ev_io_stop(loop, libevlist[watcher->fd]);
                 free(libevlist[watcher->fd]);
                 libevlist[watcher->fd] = NULL;
 
-                //clear the structs
-                memset(&client_socket, 0, sizeof(client_socket[watcher->fd]));
-                memset(&clients.client[actor_node], 0, sizeof(clients.client[actor_node]));
-            }
+                //clear the client node entry
+                memset(&clients.client[node], 0, sizeof(clients.client[node]));
 
+                return;
+            }
+        }
+
+        if (read == 0) {
+
+            #if DEBUG_MAIN==1
+            printf("client [%i] disconnected\n", watcher->fd);
+            #endif
+
+            if (libevlist[watcher->fd]!= NULL) {
+
+                //notify guild that char has logged off
+                int guild_id=clients.client[node].guild_id;
+
+                if(guild_id>0){
+
+                    char text_out[80]="";
+
+                    sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[node].char_name);
+                    broadcast_guild_chat(guild_id, watcher->fd, text_out);
+                }
+
+                close_connection_slot(watcher->fd);
+
+                ev_io_stop(loop, libevlist[watcher->fd]);
+                free(libevlist[watcher->fd]);
+                libevlist[watcher->fd] = NULL;
+
+                //clear the struct
+                memset(&clients.client[node], 0, sizeof(clients.client[node]));
+            }
             return;
         }
 
-        //data received from client
+        //check for data received from client
         if(read>0){
 
-            int actor_node=client_socket[watcher->fd].actor_node;
-            char char_name[80]="";
-
-            if(client_socket[watcher->fd].socket_status==CLIENT_LOGGED_IN){
-
-                strcpy(char_name, clients.client[actor_node].char_name);
-            }
-            else {
-
-                sprintf(char_name, "not logged in");
-            }
-
-            log_event(EVENT_PACKET, "bytes [%i] received from socket [%i] for char [%s]", read, watcher->fd, char_name);
+            log_event(EVENT_SESSION, "bytes received [%i]", read);
 
             //copy new bytes to client packet buffer
-            memcpy(client_socket[watcher->fd].packet_buffer + client_socket[watcher->fd].packet_buffer_length, &buffer, (size_t)read);
-            client_socket[watcher->fd].packet_buffer_length += (size_t)read;
+            memcpy(clients.client[node].packet_buffer+clients.client[node].packet_buffer_length, &buffer, (size_t)read);
+            clients.client[node].packet_buffer_length+=(size_t)read;
 
             //if data is in the buffer then process it
-            if(client_socket[watcher->fd].packet_buffer_length>0) {
+            if(clients.client[node].packet_buffer_length>0) {
 
                 do {
 
-                    //update client heartbeat any time data is received
-                    client_socket[watcher->fd].time_of_last_heartbeat=time_check.tv_sec;
+                    //update heartbeat
+                    clients.client[node].time_of_last_heartbeat=time_check.tv_sec;
 
-                    //if insufficient data to complete a packet then break from loop and wait for more data
-                    size_t packet_length=get_packet_length(client_socket[watcher->fd].packet_buffer);
-                    if(client_socket[watcher->fd].packet_buffer_length < packet_length) break;
+                    //if insufficient data to complete  a packet then wait for more data
+                    size_t packet_length=get_packet_length(clients.client[node].packet_buffer);
 
-                    //process packet
-                    process_packet(actor_node, client_socket[watcher->fd].packet_buffer);
+                    if(clients.client[node].packet_buffer_length < packet_length) break;
 
-                    //remove packet from buffer and process
-                    client_socket[watcher->fd].packet_buffer_length-=packet_length;
-                    memmove(client_socket[watcher->fd].packet_buffer, client_socket[watcher->fd].packet_buffer + packet_length, client_socket[watcher->fd].packet_buffer_length);
+                    //remove packet from buffer
+                    clients.client[node].packet_buffer_length-=packet_length;
+                    memmove(clients.client[node].packet_buffer, clients.client[node].packet_buffer + packet_length, clients.client[watcher->fd].packet_buffer_length);
 
-                //continue to process buffer as long as there's data
-                } while(client_socket[watcher->fd].packet_buffer_length>0);
+                    //process the packet
+                    process_packet(watcher->fd, clients.client[node].packet_buffer);
+
+                } while(1);
             }
         }
     }
 }
 
 
-void game_time_cb(EV_P_ struct ev_timer* timer, int revents){
+void socket_read_callback2(struct ev_loop *loop, struct ev_io *watcher, int revents) {
+
+    /** RESULT   : handles socket read event
+
+        RETURNS  : void
+
+        PURPOSE  : handles existing client connections
+
+        NOTES    :
+    **/
+
+    unsigned char buffer[1024];
+
+    if (EV_ERROR & revents) {
+
+        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    if(EV_READ & revents){
+
+        //wrapping recv in this macro prevents connection reset by peer errors
+        //read = TEMP_FAILURE_RETRY(recv(watcher->fd, buffer, 512, 0));
+
+        ssize_t read=recv(watcher->fd, buffer, 512, 0);
+
+        if (read <0) {
+
+            //catch read errors
+            int errnum=errno;
+
+            if(errno == EINTR){
+
+                log_event(EVENT_ERROR, "read registered EINTR in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
+            }
+
+            if(errno == EAGAIN){
+
+                log_event(EVENT_ERROR, "read registered EAGAIN in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
+
+                return;
+            }
+
+            if(errno == EWOULDBLOCK){
+
+                log_event(EVENT_ERROR, "read registered EWOULDBLOCK in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
+
+                return;
+            }
+
+            else{
+
+                log_event(EVENT_ERROR, "read registered fatal error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... closing", watcher->fd, errnum, strerror(errnum));
+
+                log_event(EVENT_SESSION, "closing client [%i] following read error", watcher->fd);
+
+                close_connection_slot(watcher->fd);
+
+                ev_io_stop(loop, libevlist[watcher->fd]);
+                free(libevlist[watcher->fd]);
+                libevlist[watcher->fd] = NULL;
+
+                //clear the struct
+
+
+                memset(&clients.client[watcher->fd], 0, sizeof(clients.client[watcher->fd]));
+
+                return;
+            }
+        }
+
+        if (read == 0) {
+
+            #if DEBUG_MAIN==1
+            printf("client [%i] disconnected\n", watcher->fd);
+            #endif
+
+            if (libevlist[watcher->fd]!= NULL) {
+
+                //notify guild that char has logged off
+                int guild_id=clients.client[watcher->fd].guild_id;
+
+                if(guild_id>0){
+
+                    char text_out[80]="";
+
+                    sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[watcher->fd].char_name);
+                    broadcast_guild_chat(guild_id, watcher->fd, text_out);
+                }
+
+                close_connection_slot(watcher->fd);
+
+                ev_io_stop(loop, libevlist[watcher->fd]);
+                free(libevlist[watcher->fd]);
+                libevlist[watcher->fd] = NULL;
+
+                //clear the struct
+                memset(&clients.client[watcher->fd], '\0', sizeof(clients.client[watcher->fd]));
+            }
+            return;
+        }
+
+        //check for data received from client
+        if(read>0){
+
+            log_event(EVENT_SESSION, "bytes received [%i]", read);
+/*
+             for(int i=0; i<read; i++){
+
+                clients.client[watcher->fd].packet_buffer[clients.client[watcher->fd].packet_buffer_length]=buffer[i];
+                clients.client[watcher->fd].packet_buffer_length++;
+            }
+*/
+            //copy new bytes to client packet buffer
+            memcpy(clients.client[watcher->fd].packet_buffer+clients.client[watcher->fd].packet_buffer_length, &buffer, (size_t)read);
+            clients.client[watcher->fd].packet_buffer_length+=(size_t)read;
+
+            //if data is in the buffer then process it
+            if(clients.client[watcher->fd].packet_buffer_length>0) {
+
+                do {
+
+                    //update heartbeat
+                    clients.client[watcher->fd].time_of_last_heartbeat=time_check.tv_sec;
+
+                    //if insufficient data to complete  a packet then wait for more data
+                    size_t packet_length=get_packet_length(clients.client[watcher->fd].packet_buffer);
+                    if(clients.client[watcher->fd].packet_buffer_length<packet_length) break;
+
+                    //grab packet for processing  and remove from buffer
+                    //memcpy(packet, clients.client[watcher->fd].packet_buffer, packet_length);
+
+                    //remove packet from buffer
+                    clients.client[watcher->fd].packet_buffer_length-=packet_length;
+                    memmove(clients.client[watcher->fd].packet_buffer, clients.client[watcher->fd].packet_buffer + packet_length, clients.client[watcher->fd].packet_buffer_length);
+
+                    //process the packet
+                    //process_packet(watcher->fd, packet);
+                    process_packet(watcher->fd, clients.client[watcher->fd].packet_buffer);
+
+                } while(1);
+            }
+        }
+
+        //TEST CODE TO SUPPORT WRITE CALLBACK
+        /*
+        ev_io_stop(loop, watcher);
+        ev_io_init(watcher, socket_write_callback, watcher->fd, EV_WRITE);
+        ev_io_start(loop, watcher);
+        */
+    }
+}
+
+
+void timeout_cb2(EV_P_ struct ev_timer* timer, int revents){
 
     /**     RESULT   : handles timeout event
 
@@ -661,7 +811,7 @@ void game_time_cb(EV_P_ struct ev_timer* timer, int revents){
     //update game time
     game_data.game_minutes++;
 
-    if(game_data.game_minutes>360){// TODO (themuntdregger#1#): replace hard coded value
+    if(game_data.game_minutes>360){
 
         game_data.game_minutes=0;
         game_data.game_days++;
@@ -687,7 +837,6 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     (void)(timer);//removes unused parameter warning
     (void)(loop);
 
-    //catch evlib error
     if (EV_ERROR & revents) {
 
         log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
@@ -697,153 +846,144 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     //update time_check struct
     gettimeofday(&time_check, NULL);
 
-    //check through all actors and process pending actions
-    for(int i=0; i<MAX_ACTORS; i++){
+    //check through each connect client and process pending actions
+    for(int i=0; i<MAX_CLIENTS; i++){
 
-        //process player related factors
-        if(clients.client[i].player_type==PLAYER){
-
-            int socket=clients.client[i].socket;
+        //restrict to clients that are logged on or connected
+        if((clients.client[i].client_status==LOGGED_IN || clients.client[i].client_status==CONNECTED)
+        && clients.client[i].client_type==PLAYER) {
 
             //check for lagged connection
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
+            if(clients.client[i].time_of_last_heartbeat+HEARTBEAT_INTERVAL<time_check.tv_sec){
 
-                if(client_socket[socket].time_of_last_heartbeat + HEARTBEAT_INTERVAL < time_check.tv_sec){
+                #if DEBUG_MAIN==1
+                printf("Client lagged out [%i] [%s]\n", i, clients.client[i].char_name);
+                #endif
 
-                    log_event(EVENT_SESSION, "client [%i] char [%s] lagged out", i, clients.client[i].char_name);
+                log_event(EVENT_SESSION, "client [%i] char [%s] lagged out", i, clients.client[i].char_name);
 
-                    //close connection and stop watcher
-                    close_connection_slot(clients.client[i].socket);
-                    ev_io_stop(loop, libevlist[clients.client[i].socket]);
-                    free(libevlist[clients.client[i].socket]);
-                    libevlist[clients.client[i].socket] = NULL;
+                close_connection_slot(clients.client[i].socket);
 
-                    //clear structs
-                    memset(&clients.client[i], 0, sizeof(clients.client[i]));
-                    memset(&client_socket[socket], 0, sizeof(client_socket[socket]));
-                }
+                ev_io_stop(loop, libevlist[clients.client[i].socket]);
+                free(libevlist[clients.client[i].socket]);
+                libevlist[clients.client[i].socket] = NULL;
+
+                memset(&clients.client[i], 0, sizeof(clients.client[i]));
             }
 
-            //check for kill flag on connection
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
+            //restrict to clients that are logged on
+            if(clients.client[i].client_status==LOGGED_IN) {
 
-                if(client_socket[i].kill_connection==true){
-
-                    //close socket and stop watcher
-                    close_connection_slot(clients.client[i].socket);
-                    ev_io_stop(loop, libevlist[clients.client[i].socket]);
-                    free(libevlist[clients.client[i].socket]);
-                    libevlist[clients.client[i].socket] = NULL;
-
-                    //clear structs
-                    memset(&clients.client[i], 0, sizeof(clients.client[i]));
-                    memset(&client_socket[socket], 0, sizeof(client_socket[socket]));
-                }
-            }
-
-            //update game time for connection
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
-
+                //update client game time
                 if(clients.client[i].time_of_last_minute+GAME_MINUTE_INTERVAL<time_check.tv_sec){
 
                     clients.client[i].time_of_last_minute=time_check.tv_sec;
-                    send_new_minute(socket, game_data.game_minutes);
+                    send_new_minute(i, game_data.game_minutes);
 
                     //update database with time char was last in game
                     push_sql_command("UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[i].time_of_last_minute, clients.client[i].character_id);
                 }
+
+                //process any char movements
+                process_char_move(i, time_check.tv_usec); //use milliseconds
+
+                //process any harvesting
+                process_char_harvest(i, time_check.tv_sec); //use seconds
             }
-
-            //check for boat departures
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
-
-                if(clients.client[i].boat_ticket==true){
-
-                    //check if it's time for boat to depart
-                    int boat_schedule_node=clients.client[i].boat_schedule_node;
-                    int departure_time=boat_schedule[boat_schedule_node].departure_time;
-
-                    if(game_data.game_minutes>departure_time){
-
-                        //check if close enough to boat
-                        int departure_map_id=boat_schedule[boat_schedule_node].departure_map_id;
-                        int departure_map_tile=boat_schedule[boat_schedule_node].departure_map_tile;
-                        int departure_map_axis=maps.map[departure_map_id].map_axis;
-                        int boat_proximity=get_proximity(clients.client[i].map_tile, departure_map_tile, departure_map_axis);
-
-                        //jump to boat map
-                        // TODO (themuntdregger#1#): replace hard coded value
-                        if(boat_proximity<10 && departure_map_id==clients.client[i].map_id){
-
-                            int boat_map_id=boat_schedule[boat_schedule_node].boat_map_id;
-                            int boat_map_tile=boat_schedule[boat_schedule_node].boat_map_tile;
-
-                            //jump to boat
-                            if(move_char_between_maps(i, boat_map_id, boat_map_tile)==false){
-
-                                log_event(EVENT_ERROR, "invalid map [%i] in function %s: module %s: line %i", boat_map_id, __func__, __FILE__, __LINE__);
-                                stop_server();
-                            }
-
-                            broadcast_local_chat(i, boat_schedule[boat_schedule_node].departure_message);
-                        }
-
-                        clients.client[i].boat_ticket=false;
-                        clients.client[i].on_boat=true;
-                    }
-                }
-            }
-
-            //check for boat arrivals
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
-
-                if(clients.client[i].on_boat==true){
-
-                    //check if it's time for boat to depart
-                    int boat_schedule_node=clients.client[i].boat_schedule_node;
-                    int arrival_time=boat_schedule[boat_schedule_node].arrival_time;
-
-                    if(game_data.game_minutes>arrival_time){
-
-                        int destination_map_id=boat_schedule[boat_schedule_node].destination_map_id;
-                        int destination_map_tile=boat_schedule[boat_schedule_node].destination_map_tile;
-
-                        //jump to destination
-                        if(move_char_between_maps(i, destination_map_id, destination_map_tile)==false){
-
-                            log_event(EVENT_ERROR, "invalid map [%i] in function %s: module %s: line %i", destination_map_id, __func__, __FILE__, __LINE__);
-                            stop_server();
-                        }
-
-                        broadcast_local_chat(i, boat_schedule[boat_schedule_node].arrival_message);
-
-                        clients.client[i].on_boat=false;
-                    }
-                }
-            }
-        }
-
-        //process all actor related factors (NPC and Players)
-        if(clients.client[i].node_status==CLIENT_NODE_USED) {
-
-            //process char movements for actors
-            process_char_move(i, time_check.tv_usec); //use milliseconds
-
-            //process char harvesting for actors
-            process_char_harvest(i, time_check.tv_sec); //use seconds
         }
     }
 
     // check bags for poof time
     for(int i=0; i<MAX_BAGS; i++){
 
-         if(bag[i].bag_refreshed>0 && bag[i].bag_refreshed + BAG_POOF_INTERVAL < time_check.tv_sec){
+         if(bag[i].bag_refreshed>0 && bag[i].bag_refreshed+BAG_POOF_INTERVAL<time_check.tv_sec){
 
             //poof the bag
             broadcast_destroy_bag_packet(i);
         }
     }
 }
+
+void timeout_cb_old(EV_P_ struct ev_timer* timer, int revents){
+
+    /** RESULT   : handles timeout event
+
+        RETURNS  : void
+
+        PURPOSE  : handles fixed interval processing tasks
+
+        NOTES    :
+    **/
+
+    (void)(timer);//removes unused parameter warning
+    (void)(loop);
+
+    if (EV_ERROR & revents) {
+
+        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //update time_check struct
+    gettimeofday(&time_check, NULL);
+
+    //check through each connect client and process pending actions
+    for(int i=0; i<MAX_CLIENTS; i++){
+
+        //restrict to clients that are logged on or connected
+        if(clients.client[i].client_status==LOGGED_IN || clients.client[i].client_status==CONNECTED) {
+
+            //check for lagged connection
+            if(clients.client[i].time_of_last_heartbeat+HEARTBEAT_INTERVAL<time_check.tv_sec){
+
+                #if DEBUG_MAIN==1
+                printf("Client lagged out [%i] [%s]\n", i, clients.client[i].char_name);
+                #endif
+
+                log_event(EVENT_SESSION, "client [%i] char [%s] lagged out", i, clients.client[i].char_name);
+
+                close_connection_slot(i);
+
+                ev_io_stop(loop, libevlist[i]);
+                free(libevlist[i]);
+                libevlist[i] = NULL;
+
+                memset(&clients.client[i], '\0', sizeof(clients.client[i]));
+            }
+
+            //restrict to clients that are logged on
+            if(clients.client[i].client_status==LOGGED_IN) {
+
+                //update client game time
+                if(clients.client[i].time_of_last_minute+GAME_MINUTE_INTERVAL<time_check.tv_sec){
+
+                    clients.client[i].time_of_last_minute=time_check.tv_sec;
+                    send_new_minute(i, game_data.game_minutes);
+
+                    //update database with time char was last in game
+                    push_sql_command("UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[i].time_of_last_minute, clients.client[i].character_id);
+                }
+
+                //process any char movements
+                process_char_move(i, time_check.tv_usec); //use milliseconds
+
+                //process any harvesting
+                process_char_harvest(i, time_check.tv_sec); //use seconds
+            }
+        }
+    }
+
+    // check bags for poof time
+    for(int i=0; i<MAX_BAGS; i++){
+
+         if(bag[i].bag_refreshed>0 && bag[i].bag_refreshed+BAG_POOF_INTERVAL<time_check.tv_sec){
+
+            //poof the bag
+            broadcast_destroy_bag_packet(i);
+        }
+    }
+}
+
 
 
 void idle_cb (struct ev_loop *loop, struct ev_idle *watcher, int revents){
@@ -996,9 +1136,8 @@ int main(int argc, char *argv[]){
             printf( "Do you wish to replace map [%i] [%s] Y/N: ", map_id, maps.map[map_id].map_name);
 
             //get decision from stdin
-            char decision[10]="";
-
-            if(fgets(decision, sizeof(decision), stdin)==NULL){
+            char decision[1]={0};
+            if(fgets(decision, sizeof(decision), stdin)!=NULL){
 
                 log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
                 stop_server();
@@ -1006,15 +1145,10 @@ int main(int argc, char *argv[]){
 
             //convert decision to upper case and determine if map replacement should proceed
             str_conv_upper(decision);
-
-            if(strncmp(decision, "Y", 1)==0 || strncmp(decision, "YES", 3)==0){
+            if(strcmp(decision, "Y")==0){
 
                 log_text(EVENT_INITIALISATION, "Remove existing map %i", map_id);
                 delete_map(map_id);
-            }
-            else {
-
-                return 0;
             }
 
             printf("\n");

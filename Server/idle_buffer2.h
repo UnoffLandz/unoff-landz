@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-void push_idle_buffer2(int connection, int process_type, const unsigned char *packet, size_t packet_len);
+void push_idle_buffer2(int actor_node, int process_type, const unsigned char *packet, size_t packet_len);
 
 
 void push_sql_command(const char *fmt, ...);
@@ -36,7 +36,7 @@ void push_sql_command(const char *fmt, ...);
 void process_idle_buffer2();
 
 
-void push_command(int connection, int process_type, char *char_name, int guild_id);
+void push_command(int actor_node, int process_type, char *char_name, int guild_id);
 
 #ifdef __cplusplus
 }

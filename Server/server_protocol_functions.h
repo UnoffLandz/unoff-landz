@@ -20,7 +20,36 @@
 #ifndef SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED
 #define SERVER_PROTOCOL_FUNCTIONS_H_INCLUDED
 
+#include <stdint.h>
+
 #include "chat.h" //support for MAX_CHAN_SLOTS
+
+#define SEND_TEXT_MAX 1024
+
+struct {// struct used to transfer data to the _add_enhanced_actor_packet function
+
+    int actor_node;
+    char char_name[80];
+    int guild_id;
+    int map_id;
+    int map_tile;
+    int char_type;
+    int skin_type;
+    int hair_type;
+    int shirt_type;
+    int pants_type;
+    int boots_type;
+    int head_type;
+    int shield_type;
+    int weapon_type;
+    int cape_type;
+    int helmet_type;
+    int frame;
+    int max_health;
+    int current_health;
+    int player_type;
+    char banner[80];
+} actor;
 
 
 /** RESULT  : sends the log_in_ok packet to the client
@@ -31,7 +60,7 @@
 
     NOTES   :
 */
-void send_login_ok(int connection);
+void send_login_ok(int socket);
 
 
 /** RESULT  : sends the log_in_not_ok packet to the client
@@ -42,7 +71,7 @@ void send_login_ok(int connection);
 
     NOTES   :
 */
-void send_login_not_ok(int connection);
+void send_login_not_ok(int socket);
 
 
 /** RESULT  : sends the you_dont_exist packet to the client
@@ -53,7 +82,7 @@ void send_login_not_ok(int connection);
 
     NOTES   :
 */
-void send_you_dont_exist(int connection);
+void send_you_dont_exist(int socket);
 
 
 /** RESULT  : sends the create_char_ok packet to the client
@@ -64,7 +93,7 @@ void send_you_dont_exist(int connection);
 
     NOTES   :
 */
-void send_create_char_ok(int sock);
+void send_create_char_ok(int socket);
 
 
 /** RESULT  : sends the create_char_not_ok packet to the client
@@ -75,7 +104,7 @@ void send_create_char_ok(int sock);
 
     NOTES   :
 */
-void send_create_char_not_ok(int sock);
+void send_create_char_not_ok(int socket);
 
 
 /** RESULT  : sends the you_are packet to the client
@@ -86,7 +115,7 @@ void send_create_char_not_ok(int sock);
 
     NOTES   :
 */
-void send_you_are(int connection);
+void send_you_are(int socket);
 
 
 /** RESULT  : sends the raw_text packet to client
@@ -97,7 +126,7 @@ void send_you_are(int connection);
 
     NOTES   :
 */
-void send_raw_text(int connection, int chan_type, char *text);
+void send_raw_text(int socket, int chan_type, char *text);
 
 
 /** RESULT  : sends the here_your_inventory packet to client
@@ -108,7 +137,7 @@ void send_raw_text(int connection, int chan_type, char *text);
 
     NOTES   :
 */
-void send_here_your_inventory(int connection);
+void send_here_your_inventory(int socket);
 
 
 /** RESULT  : sends the here_your_ground_items packet to client
@@ -119,7 +148,7 @@ void send_here_your_inventory(int connection);
 
     NOTES   :
 */
-void send_here_your_ground_items(int connection, int bag_id);
+void send_here_your_ground_items(int socket, int bag_id);
 
 
 /** RESULT  : sends the get_active_channels packet to client
@@ -130,7 +159,7 @@ void send_here_your_ground_items(int connection, int bag_id);
 
     NOTES   :
 */
-void send_get_active_channels(int connection, unsigned char active_chan, int *chan_slot);
+void send_get_active_channels(int socket, unsigned char active_chan, int *chan_slot);
 
 
 /** RESULT  : sends the here_your_stats packet to client
@@ -141,7 +170,7 @@ void send_get_active_channels(int connection, unsigned char active_chan, int *ch
 
     NOTES   :
 */
-void send_here_your_stats(int connection);
+void send_here_your_stats(int socket);
 
 
 /** RESULT  : sends the change_map packet to client
@@ -152,7 +181,19 @@ void send_here_your_stats(int connection);
 
     NOTES   :
 */
-void send_change_map(int connection, char *elm_filename);
+void send_change_map(int socket, char *elm_filename);
+
+
+/** RESULT  : creates an add_new_enhanced_actor_packet
+
+    RETURNS : void
+
+    PURPOSE : wrapper for _add_new_enhanced_actor_packet that automatically transfers details
+              of the char specified in socket
+
+    NOTES   :
+*/
+void add_new_enhanced_actor_packet(int socket, unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : creates an add_new_enhanced_actor_packet
@@ -164,7 +205,7 @@ void send_change_map(int connection, char *elm_filename);
     NOTES   : Because this packet is broadcasted to multiple clients we simply create the packet
               and leave the broadcast function to send
 */
-void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t *packet_length);
+void _add_new_enhanced_actor_packet(unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : creates the remove actor_packet to client
@@ -176,7 +217,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
     NOTES   : Because this packet is broadcasted to multiple clients we simply create the packet
               and leave the broadcast function to send
 */
-void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_length);
+void remove_actor_packet(int socket, unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : creates the add_actor_packet
@@ -188,7 +229,7 @@ void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_l
     NOTES   : Because this packet is broadcasted to multiple clients we simply create the packet
               and leave the broadcast function to send
 */
-void add_actor_packet(int connection, unsigned char move, unsigned char *packet, size_t *packet_length);
+void add_actor_packet(int socket, unsigned char move, unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : sends the new_minute packet
@@ -199,7 +240,7 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
 
     NOTES   : used to set client game time
 */
-void send_new_minute(int connection, int minute);
+void send_new_minute(int socket, int minute);
 
 
 /** RESULT  : sends the get_new_inventory_item packet
@@ -210,7 +251,7 @@ void send_new_minute(int connection, int minute);
 
     NOTES   :
 */
-void send_get_new_inventory_item( int connection, int image_id, int amount, int slot);
+void send_get_new_inventory_item(int socket, int image_id, int amount, int slot);
 
 
 /** RESULT  : creates the get_new_bag_packet
@@ -222,7 +263,7 @@ void send_get_new_inventory_item( int connection, int image_id, int amount, int 
     NOTES   : Because this packet is broadcasted to multiple clients we simply create the packet
               and leave the broadcast function to send
 */
-void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, size_t *packet_length);
+void get_new_bag_packet(int socket, int bag_list_number, unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : sends the close_bag packet
@@ -233,7 +274,7 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
 
     NOTES   :
 */
-void send_close_bag(int connection);
+void send_close_bag(int socket);
 
 
 /** RESULT  : sends the destroy_bag packet
@@ -244,7 +285,7 @@ void send_close_bag(int connection);
 
     NOTES   :
 */
-void send_destroy_bag(int connection, int bag_id);
+void send_destroy_bag(int socket, int bag_id);
 
 
 /** RESULT  : sends the get_bags_list_packet
@@ -255,10 +296,25 @@ void send_destroy_bag(int connection, int bag_id);
 
     NOTES   :
 */
-void send_get_bags_list(int connection);
+void send_get_bags_list(int socket);
 
 
-void send_display_client_window(int connection);
+/** RESULT  : sends inventory text
+
+    RETURNS : void
+
+    PURPOSE : sends inventory text to the client inventory grid
+
+    NOTES   :
+*/
+void send_inventory_item_text(int socket, char *text);
+
+// TODO (themuntdregger#1#): document npc functions
+void send_npc_text(int socket, char *text);
+
+void send_npc_options_list(int socket, int npc_actor_node, char *options);
+
+void send_npc_info(int socket, char *npc_name, int npc_id);
 
 /*****************************************************************************************************
 ***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
@@ -277,7 +333,7 @@ extern "C" {
     NOTES   :
 
 */
-void send_text(int connection, int channel_type, const char *fmt, ...);
+void send_text(int socket, int channel_type, const char *fmt, ...);
 
 #ifdef __cplusplus
 }

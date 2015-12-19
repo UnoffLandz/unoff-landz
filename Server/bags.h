@@ -5,6 +5,7 @@
 #define MAX_PLAYER_BAGS 10
 #define MAX_BAG_SLOTS 50
 #define BAG_POOF_INTERVAL 100
+#define BAG_LIST_MAX 10
 
 #include <time.h>
 
@@ -49,7 +50,7 @@ int create_bag(int map_id, int tile);
 
     NOTES   :
 */
-int find_bag_slot(int connection, int object_id);
+int find_bag_slot(int actor_node, int object_id);
 
 
 /** RESULT  : adds objects to the bag

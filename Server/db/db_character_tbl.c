@@ -438,10 +438,10 @@ void get_db_last_char_created(){
 
 void load_char_race_stats(){
 
-    //TODO
+    //TODO (themuntdregger#1#): add char race stats
 }
 
 void load_char_gender_stats(){
 
-    //TODO
+    //TODO (themuntdregger#1#): add char gender stats
 }

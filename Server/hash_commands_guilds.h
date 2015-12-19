@@ -29,7 +29,7 @@
 
     NOTES   :
 */
-int hash_set_guild_description(int connection, char *text);
+int hash_set_guild_description(int actor_node, char *text);
 
 
 /** RESULT  : handles guild message hash command
@@ -40,7 +40,7 @@ int hash_set_guild_description(int connection, char *text);
 
     NOTES   :
 */
-int hash_guild_message(int connection, char *text);
+int hash_guild_message(int actor_node, char *text);
 
 
 /** RESULT  : guild information
@@ -51,7 +51,7 @@ int hash_guild_message(int connection, char *text);
 
     NOTES   :
 */
-int hash_guild_details(int connection, char *text);
+int hash_guild_details(int actor_node, char *text);
 
 
 /** RESULT  : lists guild members
@@ -62,7 +62,7 @@ int hash_guild_details(int connection, char *text);
 
     NOTES   :
 */
-int hash_list_guild(int connection, char *text);
+int hash_list_guild(int actor_node, char *text);
 
 
 /** RESULT  : kicks a member from a a guild
@@ -73,7 +73,7 @@ int hash_list_guild(int connection, char *text);
 
     NOTES   :
 */
-int hash_kick_guild_member(int connection, char *text);
+int hash_kick_guild_member(int actor_node, char *text);
 
 
 /** RESULT  : accepts a chars application to join a guild
@@ -84,7 +84,7 @@ int hash_kick_guild_member(int connection, char *text);
 
     NOTES   :
 */
-int hash_reject_applicant(int connection, char *text);
+int hash_reject_applicant(int actor_node, char *text);
 
 
 /** RESULT  : accepts a chars application to join a guild
@@ -95,7 +95,7 @@ int hash_reject_applicant(int connection, char *text);
 
     NOTES   :
 */
-int hash_accept_applicant(int connection, char *text);
+int hash_accept_applicant(int actor_node, char *text);
 
 
 /** RESULT  : lists characters who have applied for guild membership
@@ -106,7 +106,7 @@ int hash_accept_applicant(int connection, char *text);
 
     NOTES   :
 */
-int hash_list_applicants(int connection, char *text);
+int hash_list_applicants(int actor_node, char *text);
 
 
 /** RESULT  : change a chars guild rank
@@ -117,7 +117,7 @@ int hash_list_applicants(int connection, char *text);
 
     NOTES   : rank 18+ guild members only
 */
-int hash_change_rank(int connection, char *text);
+int hash_change_rank(int actor_node, char *text);
 
 
 /** RESULT  : application by char to join guild
@@ -128,7 +128,7 @@ int hash_change_rank(int connection, char *text);
 
     NOTES   :
 */
-int hash_apply_guild(int connection, char *text);
+int hash_apply_guild(int actor_node, char *text);
 
 
 /** RESULT  : changes guild tag colour
@@ -139,7 +139,7 @@ int hash_apply_guild(int connection, char *text);
 
     NOTES   :
 */
-int hash_set_guild_tag_colour(int connection, char *text);
+int hash_set_guild_tag_colour(int actor_node, char *text);
 
 
 /** RESULT  : char leaves guild
@@ -150,7 +150,7 @@ int hash_set_guild_tag_colour(int connection, char *text);
 
     NOTES   :
 */
-int hash_leave_guild(int connection, char *text);
+int hash_leave_guild(int actor_node, char *text);
 
 
 #endif // HASH_COMMANDS_GUILDS_H_INCLUDED

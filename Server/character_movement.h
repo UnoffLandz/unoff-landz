@@ -28,7 +28,7 @@
 
     PURPOSE : used at log-out to remove a char from map. Also on map jumps
 **/
-void remove_char_from_map(int connection);
+void remove_char_from_map(int actor_node);
 
 
 /** RESULT  : adds a character to a map
@@ -37,7 +37,7 @@ void remove_char_from_map(int connection);
 
     PURPOSE : used at log-in to add a char to a map. Also by function move_char_between_maps
 **/
-bool add_char_to_map(int connection, int new_map_id, int map_tile);
+bool add_char_to_map(int actor_node, int new_map_id, int map_tile);
 
 
 /** RESULT  : moves a character between maps
@@ -46,7 +46,7 @@ bool add_char_to_map(int connection, int new_map_id, int map_tile);
 
     PURPOSE : supports map jumps
 **/
-bool move_char_between_maps(int connection, int new_map_id, int new_map_tile);
+bool move_char_between_maps(int actor_node, int new_map_id, int new_map_tile);
 
 
 /** RESULT  : moves a character one step along the path
@@ -55,7 +55,7 @@ bool move_char_between_maps(int connection, int new_map_id, int new_map_tile);
 
     PURPOSE : makes the character move
 **/
-void process_char_move(int connection, time_t current_utime);
+void process_char_move(int actor_node, time_t current_utime);
 
 
 /** RESULT  : starts the character moving
@@ -64,6 +64,6 @@ void process_char_move(int connection, time_t current_utime);
 
     PURPOSE : makes the character move
 **/
-void start_char_move(int connection, int destination);
+void start_char_move(int actor_node, int destination);
 
 #endif // CHARACTER_MOVEMENT_H_INCLUDED

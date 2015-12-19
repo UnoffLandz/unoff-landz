@@ -43,7 +43,7 @@
 
 #define DEBUG_CHARACTER_CREATION 0
 
-void check_new_character(int connection, const unsigned char *packet){
+void check_new_character(int actor_node, const unsigned char *packet){
 
     /** public function - see header */
 
@@ -71,22 +71,24 @@ void check_new_character(int connection, const unsigned char *packet){
     if(get_db_char_data(char_name, 0)==true){
 
         //if the char name exists, abort character creation and send warning to client
-        send_text(connection, CHAT_SERVER, "%cSorry, but that character name already exists", c_red1+127);
-        send_create_char_not_ok(connection);
+        int socket=clients.client[actor_node].socket;
+
+        send_text(socket, CHAT_SERVER, "%cSorry, but that character name already exists", c_red1+127);
+        send_create_char_not_ok(socket);
 
         log_event(EVENT_NEW_CHAR, "new character name [%s] rejected", char_name);
     }
     else {
 
         //if char name does not exist, tell idle buffer to create a new character with that name
-        push_idle_buffer2(connection, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet, packet_length);
+        push_idle_buffer2(actor_node, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet, packet_length);
 
         log_event(EVENT_NEW_CHAR, "new character name [%s] accepted. Proceed to add to db", char_name);
     }
 }
 
 
-void add_new_character(int connection, const unsigned char *packet){
+void add_new_character(int actor_node, const unsigned char *packet){
 
     /** public function - see header */
 
@@ -181,8 +183,10 @@ void add_new_character(int connection, const unsigned char *packet){
     gender[gender_id].char_count++;
 
     //notify client that character has been created
-    send_text(connection, CHAT_SERVER, "%cCongratulations. You've created your new game character.", c_green3+127);
-    send_create_char_ok(connection);
+    int socket=clients.client[actor_node].socket;
+
+    send_text(socket, CHAT_SERVER, "%cCongratulations. You've created your new game character.", c_green3+127);
+    send_create_char_ok(socket);
 
     //log character creation event
     log_event(EVENT_NEW_CHAR, "new character created: name [%s] password [%s]", character.char_name, character.password);

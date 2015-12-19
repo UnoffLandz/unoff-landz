@@ -22,7 +22,7 @@
 
 #include <unistd.h> //support for ssize_t datatype
 
-
+/*
 struct packet_element_type{
 
     enum {  PROTOCOL=1,     //a uint8
@@ -40,7 +40,7 @@ struct packet_element_type{
         char string[1024];
     }data;
 };
-
+*/
 
 /** RESULT  : sends packet from the server
 
@@ -73,7 +73,7 @@ void send_packet(int connection, void *packet, size_t packet_length);
 
     NOTES   :
 */
-void read_packet(struct packet_element_type *element, int element_count, const unsigned char *packet);
+//void read_packet(struct packet_element_type *element, int element_count, const unsigned char *packet);
 
 
 /** RESULT  : reads a packet to determine the packet length

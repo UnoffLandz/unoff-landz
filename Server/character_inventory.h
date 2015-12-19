@@ -42,7 +42,7 @@ extern struct client_inventory_type client_inventory;
 
     NOTES   :
 */
-int get_max_inventory_emu(int connection);
+int get_max_inventory_emu(int actor_node);
 
 
 /** RESULT  : calculates the emu of items in an inventory
@@ -53,7 +53,7 @@ int get_max_inventory_emu(int connection);
 
     NOTES   :
 */
-int get_inventory_emu(int connection);
+int get_inventory_emu(int actor_node);
 
 
 /** RESULT  : finds an existing inventory slot with an item or the next free slot
@@ -64,7 +64,7 @@ int get_inventory_emu(int connection);
 
     NOTES   :
 */
-int find_inventory_slot(int connection, int object_id);
+int find_inventory_slot(int actor_node, int object_id);
 
 
 /** RESULT  : adds objects to the char inventory
@@ -75,7 +75,7 @@ int find_inventory_slot(int connection, int object_id);
 
     NOTES   :
 */
-bool add_to_inventory(int connection, int object_id, int amount, int slot);
+bool add_to_inventory(int actor_node, int object_id, int amount, int slot);
 
 
 /** RESULT  : moves objects between slots in the char inventory
@@ -86,7 +86,7 @@ bool add_to_inventory(int connection, int object_id, int amount, int slot);
 
     NOTES   :
 */
-void move_inventory_item(int connection, int from_slot, int to_slot);
+void move_inventory_item(int actor_node, int from_slot, int to_slot);
 
 
 /** RESULT  : drops item from char inventory to a bag
@@ -97,7 +97,7 @@ void move_inventory_item(int connection, int from_slot, int to_slot);
 
     NOTES   :
 */
-void drop_from_inventory_to_bag(int connection, int inventory_slot, int amount);
+void drop_from_inventory_to_bag(int actor_node, int inventory_slot, int amount);
 
 
 /** RESULT  : picks up from a bag to the char inventory
@@ -108,7 +108,23 @@ void drop_from_inventory_to_bag(int connection, int inventory_slot, int amount);
 
     NOTES   :
 */
-void pick_up_from_bag_to_inventory(int connection, int bag_slot, int amount, int bag_id);
+void pick_up_from_bag_to_inventory(int actor_node, int bag_slot, int amount, int bag_id);
+
+
+/** RESULT  : removes objects to the char inventory
+
+    RETURNS : amount removed from inventory
+
+    PURPOSE : used in function: process_packet (DROP_ITEM)
+
+    NOTES   : the removal amount passed by the client takes no account of whether there is
+              sufficient in the inventory. Hence, the amount returned by the function indicates
+              what was actually removed
+*/
+int remove_from_inventory(int actor_node, int object_id, int amount, int slot);
+
+
+
 
 #endif // CHARACTER_INVENTORY_H_INCLUDED
 

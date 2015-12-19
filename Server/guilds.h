@@ -98,7 +98,7 @@ extern struct guild_member_list_type guild_member_list;
 
     NOTES    :
 **/
-void create_guild(int connection, char *guild_name, char *guild_tag, int permission_level);
+void create_guild(int actor_node, char *guild_name, char *guild_tag, int permission_level);
 
 
 /** RESULT   : application from a char for membership of a guild
@@ -109,7 +109,7 @@ void create_guild(int connection, char *guild_name, char *guild_tag, int permiss
 
     NOTES    :
 **/
-void apply_guild(int connection, char *guild_tag);
+void apply_guild(int actor_node, char *guild_tag);
 
 
 /** RESULT   : appoints a char to a guild based on char name and guild tag
@@ -124,7 +124,7 @@ void apply_guild(int connection, char *guild_tag);
                This function also bounds checks the input to establish that both the guild
                and the chat exist, and that the char is not already in a guild.
 **/
-void join_guild(int connection, char *char_name, char *guild_tag);
+void join_guild(int actor_node, char *char_name, char *guild_tag);
 
 
 /** RESULT   : removes a char from a guild
@@ -135,7 +135,7 @@ void join_guild(int connection, char *char_name, char *guild_tag);
 
     NOTES    :
 **/
-void kick_guild_member(int connection, char *guild_tag, char *char_name);
+void kick_guild_member(int actor_node, char *guild_tag, char *char_name);
 
 
 /** RESULT   : changes a chars guild rank
@@ -146,7 +146,7 @@ void kick_guild_member(int connection, char *guild_tag, char *char_name);
 
     NOTES    :
 **/
-void change_guild_rank(int connection, char *char_name, char *guild_tag, int guild_rank);
+void change_guild_rank(int actor_node, char *char_name, char *guild_tag, int guild_rank);
 
 
 /** RESULT   : changes a guild permission level
@@ -157,7 +157,7 @@ void change_guild_rank(int connection, char *char_name, char *guild_tag, int gui
 
     NOTES    : OPS only
 **/
-void change_guild_permission(int connection, char *guild_tag, int permission_level);
+void change_guild_permission(int actor_node, char *guild_tag, int permission_level);
 
 
 /** RESULT   : finds the guild id from the guild tag
@@ -186,7 +186,7 @@ extern "C" {
 
     NOTES    : used by function process_idle_buffer
 **/
-void list_guild_members(int connection, int order);
+void list_guild_members(int actor_node, int order);
 
 
 /** RESULT   : sends details of a guild
@@ -197,7 +197,7 @@ void list_guild_members(int connection, int order);
 
     NOTES    :
 **/
-void send_guild_details(int connection, int guild_id);
+void send_guild_details(int actor_node, int guild_id);
 
 
 #ifdef __cplusplus

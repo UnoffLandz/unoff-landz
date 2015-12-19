@@ -39,7 +39,7 @@ extern struct race_type race[MAX_RACES];
 
     NOTES   :
 **/
-int get_char_race_id(int connection);
+int get_char_race_id(int actor_node);
 
 
 #endif // CHARACTER_RACES_H_INCLUDED

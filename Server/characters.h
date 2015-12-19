@@ -127,7 +127,7 @@ extern struct client_node_type character;
 
     NOTES   :
 */
-int get_char_visual_range(int connection);
+int get_char_visual_range(int socket);
 
 
 /** RESULT  : determines if a char is in-game
@@ -157,7 +157,7 @@ extern "C" {
 
     NOTES   :
 */
-int char_age(int connection);
+int char_age(int socket);
 
 /** RESULT  : sends char details to client in response to #details command
 
@@ -167,7 +167,7 @@ int char_age(int connection);
 
     NOTES   :
 */
-void send_char_details(int connection, const char *char_name);
+void send_char_details(int socket, const char *char_name);
 
 
 #ifdef __cplusplus

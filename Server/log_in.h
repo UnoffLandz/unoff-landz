@@ -32,7 +32,7 @@ extern "C" {
 
     NOTES   :
 */
-void process_log_in(int connection, const unsigned char *packet);
+void process_log_in(int actor_node, const unsigned char *packet);
 
 #ifdef __cplusplus
 }

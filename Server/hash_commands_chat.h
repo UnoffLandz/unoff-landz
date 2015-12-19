@@ -17,12 +17,10 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef HARVESTING_H_INCLUDED
-#define HARVESTING_H_INCLUDED
+#ifndef HASH_COMMANDS_CHAT_H_INCLUDED
+#define HASH_COMMANDS_CHAT_H_INCLUDED
 
-#define MIN_HARVEST_PROXIMITY 2
-
-/** RESULT  : stops a char harvesting
+/** RESULT  : handles join channel hash command
 
     RETURNS : void
 
@@ -30,21 +28,10 @@
 
     NOTES   :
 */
-void stop_harvesting(int actor_node);
+int hash_jc(int actor_node, char *text);
 
 
-/** RESULT  : starts a char harvesting
-
-    RETURNS : void
-
-    PURPOSE : code modularity
-
-    NOTES   :
-*/
-void start_harvesting(int actor_node, int threed_object_list_pos);
-
-
-/** RESULT  : continues char harvesting
+/** RESULT  : handles leave channel hash command
 
     RETURNS : void
 
@@ -52,7 +39,39 @@ void start_harvesting(int actor_node, int threed_object_list_pos);
 
     NOTES   :
 */
-void process_char_harvest(int actor_node, time_t current_time);
+int hash_lc(int actor_node, char *text);
 
 
-#endif // HARVESTING_H_INCLUDED
+/** RESULT  : handles channel list hash command
+
+    RETURNS : void
+
+    PURPOSE : code modularity
+
+    NOTES   :
+*/
+int hash_cl(int actor_node, char *text);
+
+
+/** RESULT  : handles channel participants hash command
+
+    RETURNS : void
+
+    PURPOSE : code modularity
+
+    NOTES   :
+*/
+int hash_cp(int actor_node, char *text);
+
+
+/** RESULT  : handles private message hash command
+
+    RETURNS : void
+
+    PURPOSE : code modularity
+
+    NOTES   :
+*/
+int hash_pm(int actor_node, char *text);
+
+#endif // HASH_COMMANDS_CHAT_H_INCLUDED

@@ -28,7 +28,7 @@
 
     NOTES   :
 */
-void broadcast_add_new_enhanced_actor_packet(int connection);
+void broadcast_add_new_enhanced_actor_packet(int actor_node);
 
 
 /** RESULT  : broadcasts the remove_actor packet to all clients in range
@@ -39,7 +39,7 @@ void broadcast_add_new_enhanced_actor_packet(int connection);
 
     NOTES   :
 */
-void broadcast_remove_actor_packet(int sender_connection);
+void broadcast_remove_actor_packet(int actor_node);
 
 
 /** RESULT  : broadcasts the actor packet to all clients in range
@@ -50,7 +50,7 @@ void broadcast_remove_actor_packet(int sender_connection);
 
     NOTES   :
 */
-void broadcast_actor_packet(int sender_connection, unsigned char move, int sender_destination_tile);
+void broadcast_actor_packet(int actor_node, unsigned char move, int sender_destination_tile);
 
 
 /** RESULT  : broadcasts an event to all clients in the chat channel
@@ -61,7 +61,7 @@ void broadcast_actor_packet(int sender_connection, unsigned char move, int sende
 
     NOTES   :
 */
-void broadcast_channel_event(int chan, int connection, char *text_in);
+void broadcast_channel_event(int chan, int actor_node, char *text_in);
 
 
 /** RESULT  : broadcasts channel chat to all clients in the chat channel
@@ -72,7 +72,7 @@ void broadcast_channel_event(int chan, int connection, char *text_in);
 
     NOTES   :
 */
-void broadcast_channel_chat(int chan, int connection, char *text_in);
+void broadcast_channel_chat(int chan, int actor_node, char *text_in);
 
 
 /** RESULT  : broadcasts guild chat to all clients in the guild
@@ -83,7 +83,7 @@ void broadcast_channel_chat(int chan, int connection, char *text_in);
 
     NOTES   :
 */
-void broadcast_guild_chat(int guild_id, int connection, char *text_in);
+void broadcast_guild_chat(int guild_id, int actor_node, char *text_in);
 
 
 /** RESULT  : broadcasts local chat to all characters in the vicinity
@@ -94,7 +94,7 @@ void broadcast_guild_chat(int guild_id, int connection, char *text_in);
 
     NOTES   :
 */
-void broadcast_local_chat(int connection, char *text_in);
+void broadcast_local_chat(int actor_node, char *text_in);
 
 
 /** RESULT  : broadcasts bag drop to all characters in the vicinity
@@ -105,7 +105,7 @@ void broadcast_local_chat(int connection, char *text_in);
 
     NOTES   :
 */
-void broadcast_get_new_bag_packet(int connection, int bag_id);
+void broadcast_get_new_bag_packet(int actor_node, int bag_id);
 
 
 /** RESULT  : broadcasts bag destroy to all characters in the vicinity
@@ -136,6 +136,6 @@ void broadcast_server_message(char *text_in);
 
     PURPOSE :
 **/
-void broadcast_bags_to_client(int connection, int last_tile);
+void broadcast_bags_to_client(int actor_node, int last_tile);
 
 #endif // BROADCAST_ACTOR_FUNCTIONS_H_INCLUDED

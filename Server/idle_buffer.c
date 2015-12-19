@@ -30,7 +30,7 @@
 
 struct buffer_list_type idle_buffer;
 
-void Xpush_idle_buffer(char *sql, int connection, int process_type, unsigned char *packet){
+void Xpush_idle_buffer(char *sql, int actor_node, int process_type, unsigned char *packet){
 
     /** public function - see header **/
 
@@ -40,7 +40,7 @@ void Xpush_idle_buffer(char *sql, int connection, int process_type, unsigned cha
         idle_buffer.buffer_count++;
 
         strcpy(idle_buffer.buffer[idle_buffer.buffer_count].sql, sql);
-        idle_buffer.buffer[idle_buffer.buffer_count].connection=connection;
+        idle_buffer.buffer[idle_buffer.buffer_count].actor_node=actor_node;
         idle_buffer.buffer[idle_buffer.buffer_count].process_type=process_type;
 
         if(packet!=NULL){
@@ -76,7 +76,7 @@ void Xprocess_idle_buffer(){
     //make sure we have something in the buffer to process
     if(idle_buffer.buffer_count>0){
 
-        int connection=idle_buffer.buffer[1].connection;
+        int actor_node=idle_buffer.buffer[1].actor_node;
         int packet_length=idle_buffer.buffer[1].packet[1] + (idle_buffer.buffer[1].packet[2] * 256) + 2;
 
         unsigned char packet[1024]={0};
@@ -97,19 +97,19 @@ void Xprocess_idle_buffer(){
             //name does not exist, the character creation packet is placed in the idle buffer with
             //an instruction for IDLE_BUFFER_PROCESS_ADD_NEWCHAR so as the new character is added to
             //the database at the next idle event
-            check_new_character(connection, packet);
+            check_new_character(actor_node, packet);
         }
 /**********************************************************************************************/
 
         else if(idle_buffer.buffer[1].process_type==IDLE_BUFFER_PROCESS_ADD_NEWCHAR){
 
-            add_new_character(connection, packet);
+            add_new_character(actor_node, packet);
         }
 /**********************************************************************************************/
 
         else if(idle_buffer.buffer[1].process_type==IDLE_BUFFER_PROCESS_LOGIN){
 
-            process_log_in(connection, packet);
+            process_log_in(actor_node, packet);
          }
 /**********************************************************************************************/
 
@@ -131,7 +131,7 @@ void Xprocess_idle_buffer(){
 
             strcpy(idle_buffer.buffer[i].sql, idle_buffer.buffer[i+1].sql);
 
-            idle_buffer.buffer[i].connection=idle_buffer.buffer[i+1].connection;
+            idle_buffer.buffer[i].actor_node=idle_buffer.buffer[i+1].actor_node;
             idle_buffer.buffer[i].process_type=idle_buffer.buffer[i+1].process_type;
 
             if(idle_buffer.buffer[i+1].packet!=NULL) {

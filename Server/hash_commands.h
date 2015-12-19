@@ -29,6 +29,6 @@
 
     NOTES   :
 */
-void process_hash_commands(int connection, char *text);
+void process_hash_commands(int actor_node, char *text);
 
 #endif // HASH_COMMANDS_H_INCLUDED

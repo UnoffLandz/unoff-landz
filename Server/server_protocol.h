@@ -20,8 +20,6 @@
 #ifndef SERVER_PROTOCOL_H_INCLUDED
 #define SERVER_PROTOCOL_H_INCLUDED
 
-#define SEND_TEXT_MAX 1024
-
 enum { // server to client protocol
 
     RAW_TEXT=0,
@@ -29,7 +27,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  uint16_t              data-length (=packet length-2)
+        2-3  uint16_t            data-length (=packet length-2)
         4    Uint8               channel
         5-   (null terminated    text
              char array)
@@ -100,7 +98,28 @@ enum { // server to client protocol
         13  { Uint8               flags
 */
 
-    GET_NEW_INVENTORY_ITEM=21,
+    INVENTORY_ITEM_TEXT=20,
+/*
+         byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16_t            data-length (=packet length-2)
+        4-   char array          text
+*/
+
+
+   GET_NEW_INVENTORY_ITEM=21, /* NOT IMPLEMENTED AS COVERED BY HERE_YOUR_INVENTORY.....
+
+         byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16_t            data-length (=packet length-2)
+        4-5  Uint16_t            image_id
+        6-10 Uint32_t            quantity
+
+        [on certain items]...
+        11-12 Uint16_t           item uid
+*/
 
     HERE_YOUR_GROUND_ITEMS=23, //opens bag
 /*
@@ -143,16 +162,53 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  uint16_t            data-length (=packet length-2)
-        4    uint8_t             bag count
+        2-3  Uint16_t            data-length (=packet length-2)
+        4    Uint8_t             bag count
 
         for each bag in list:
-            uint16_t            x-pos on map
-            uint16_t            y-pos on map
+            Uint16_t            x-pos on map
+            Uint16_t            y-pos on map
             Uint8               bag list number
 */
 
     DESTROY_BAG=29,
+
+    NPC_TEXT=30, //sends text to an npc dialogue box
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  uint16_t            data-length (=packet length-2)
+        4-   (null terminated    text
+             char array)
+*/
+
+    NPC_OPTIONS_LIST=31, //sends options to an npc dialogue box
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  uint16_t            data-length (=packet length-2)
+
+        array consisting of:
+        Uint16                   length of option text
+        (null terminated         option text
+        char array)
+        Uint16                   response code (0-99)
+        Uint16                   actor id (actor=npc)
+*/
+
+    SEND_NPC_INFO=33, //sends npc name and portrait to an npc dialogue box
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16_t            data-length (=packet length-2)
+
+             (null terminated    npc name
+             char array)
+        +1   Uint8               npc portrait id
+*/
 
     ADD_NEW_ENHANCED_ACTOR=51,
 /*

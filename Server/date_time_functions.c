@@ -109,7 +109,7 @@ void get_game_season(int game_days, char *season_name, char *season_description)
     stop_server();
 }
 
-void send_verbose_date(int connection, int game_days){
+void send_verbose_date(int socket, int game_days){
 
     /** public function - see header */
 
@@ -120,10 +120,10 @@ void send_verbose_date(int connection, int game_days){
     char season_description[160]="";
     get_game_season(year_days, season_name, season_description);
 
-    send_text(connection, CHAT_SERVER, "%cThe day is %02i in the season of %s, year %i", 127+c_purple1, game_days, season_name, game_year);
+    send_text(socket, CHAT_SERVER, "%cThe day is %02i in the season of %s, year %i", 127+c_purple1, game_days, season_name, game_year);
 }
 
-void send_verbose_time(int connection, int game_minutes){
+void send_verbose_time(int socket, int game_minutes){
 
-    send_text(connection, CHAT_SERVER, "%cThe time is %02i:%02i",  127+c_purple1, game_minutes / 60, game_minutes % 60);
+    send_text(socket, CHAT_SERVER, "%cThe time is %02i:%02i",  127+c_purple1, game_minutes / 60, game_minutes % 60);
 }

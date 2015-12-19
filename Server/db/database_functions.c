@@ -161,7 +161,7 @@ static int column_exists(const char *table, const char *column) {
 
     if(name_column_idx==-1) {
         sqlite3_finalize(stmt);
-        return 0; //TODO: log information about strange table_info layout ?
+        return 0; //TODO(themuntdregger#1#): log information about strange table_info layout ?
     }
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {

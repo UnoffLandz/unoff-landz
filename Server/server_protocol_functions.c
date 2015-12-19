@@ -33,10 +33,10 @@
 #include "guilds.h"
 #include "bags.h"
 #include "server_start_stop.h"
+#include "server_protocol_functions.h"
+#include "npc.h"
 
-#define DEBUG_SERVER_PROTOCOL_FUNCTIONS 0
-
-void send_new_minute(int connection, int minute){
+void send_new_minute(int socket, int minute){
 
     /** public function - see header */
 
@@ -57,11 +57,11 @@ void send_new_minute(int connection, int minute){
     packet.data_length=(uint16_t)(packet_length-2);
     packet.minute=(uint16_t)minute;
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_login_ok(int connection){
+void send_login_ok(int socket){
 
     /** public function - see header */
 
@@ -80,34 +80,11 @@ void send_login_ok(int connection){
     packet.protocol=LOG_IN_OK;
     packet.data_length=(uint16_t)(packet_length-2);
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_display_client_window(int connection){
-
-    /** public function - see header */
-
-    struct __attribute__((__packed__)){
-
-        unsigned char protocol;
-        uint16_t data_length;
-    }packet;
-
-    size_t packet_length=sizeof(packet);
-
-    //clear the struct
-    memset(&packet, 0, packet_length);
-
-    //add data
-    packet.protocol=DISPLAY_CLIENT_WINDOW;
-    packet.data_length=(uint16_t)(packet_length-2);
-
-    send_packet(connection, &packet, packet_length);
-}
-
-
-void send_login_not_ok(int connection){
+void send_login_not_ok(int socket){
 
     /** public function - see header */
 
@@ -124,14 +101,13 @@ void send_login_not_ok(int connection){
 
     //add data
     packet.protocol=LOG_IN_NOT_OK;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_you_dont_exist(int connection){
+void send_you_dont_exist(int socket){
 
     /** public function - see header */
 
@@ -144,18 +120,17 @@ void send_you_dont_exist(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', (size_t)packet_length);
+    memset(&packet, 0, (size_t)packet_length);
 
     //add data
     packet.protocol=YOU_DONT_EXIST;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_you_are(int connection){
+void send_you_are(int socket){
 
     /** public function - see header */
 
@@ -163,7 +138,7 @@ void send_you_are(int connection){
 
         unsigned char protocol;
         uint16_t data_length;
-        uint16_t connection;
+        uint16_t socket;
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -174,13 +149,13 @@ void send_you_are(int connection){
     //add data
     packet.protocol=YOU_ARE;
     packet.data_length=(uint16_t)(packet_length-2);
-    packet.connection=(uint16_t)connection;
+    packet.socket=(uint16_t)client_socket[socket].actor_node;
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_create_char_ok(int connection){
+void send_create_char_ok(int socket){
 
     /** public function - see header */
 
@@ -199,11 +174,11 @@ void send_create_char_ok(int connection){
     packet.protocol=CREATE_CHAR_OK;
     packet.data_length=(uint16_t)(packet_length-2);
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_create_char_not_ok(int connection){
+void send_create_char_not_ok(int socket){
 
     /** public function - see header */
 
@@ -216,18 +191,17 @@ void send_create_char_not_ok(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=CREATE_CHAR_NOT_OK;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_raw_text(int connection, int channel, char *text){
+void send_raw_text(int socket, int channel, char *text){
 
     /** public function - see header */
 
@@ -240,7 +214,7 @@ void send_raw_text(int connection, int channel, char *text){
     }packet;
 
     //clear the struct
-    memset(&packet, '0', sizeof(packet));
+    memset(&packet, 0, sizeof(packet));
 
     //calculate the size of the packet length
     size_t packet_length=4 + strlen(text)+1;
@@ -251,10 +225,37 @@ void send_raw_text(int connection, int channel, char *text){
     packet.channel=(unsigned char)channel;
     strcpy(packet.text, text);
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
-void send_text(int connection, int channel_type, const char *fmt, ...){
+
+void send_inventory_item_text(int socket, char *text){
+
+    /** public function - see header */
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        uint16_t data_length;
+        char text[SEND_TEXT_MAX];
+    }packet;
+
+    //clear the struct
+    memset(&packet, 0, sizeof(packet));
+
+    //calculate the size of the packet length
+    size_t packet_length=3 + strlen(text)+1;
+
+    //add data
+    packet.protocol=INVENTORY_ITEM_TEXT;
+    packet.data_length=(uint16_t)(packet_length-2); //subtract 2 from the packet length to calculate the data length
+    strcpy(packet.text, text);
+
+    send_packet(socket, &packet, packet_length);
+}
+
+
+void send_text(int socket, int channel_type, const char *fmt, ...){
 
     /** public function - see header */
 
@@ -269,13 +270,13 @@ void send_text(int connection, int channel_type, const char *fmt, ...){
         stop_server();
     }
 
-    send_raw_text(connection, channel_type, text_in);
+    send_raw_text(socket, channel_type, text_in);
 
     va_end(args);
 }
 
 
-void send_here_your_inventory(int connection){
+void send_here_your_inventory(int socket){
 
     /** public function - see header */
 
@@ -298,28 +299,29 @@ void send_here_your_inventory(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=HERE_YOUR_INVENTORY;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
     packet.slot_count=MAX_INVENTORY_SLOTS;
 
+    int actor_node=client_socket[socket].actor_node;
+
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        packet.inventory[i].object_id=(uint16_t)clients.client[connection].inventory[i].object_id;
-        packet.inventory[i].amount=(uint32_t)clients.client[connection].inventory[i].amount;
+        packet.inventory[i].object_id=(uint16_t)clients.client[actor_node].inventory[i].object_id;
+        packet.inventory[i].amount=(uint32_t)clients.client[actor_node].inventory[i].amount;
         packet.inventory[i].slot=(unsigned char)i;
         packet.inventory[i].flags=0;
     }
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_here_your_ground_items(int connection, int bag_id){
+void send_here_your_ground_items(int socket, int bag_id){
 
     /** public function - see header */
 
@@ -341,12 +343,11 @@ void send_here_your_ground_items(int connection, int bag_id){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=HERE_YOUR_GROUND_ITEMS;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
     packet.slot_count=MAX_BAG_SLOTS;
 
@@ -357,11 +358,11 @@ void send_here_your_ground_items(int connection, int bag_id){
         packet.inventory[i].slot=(unsigned char)i;
     }
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_close_bag(int connection){
+void send_close_bag(int socket){
 
     /** public function - see header */
 
@@ -374,18 +375,17 @@ void send_close_bag(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=CLOSE_BAG;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_get_active_channels(int connection, unsigned char active_chan, int *chan_slot){
+void send_get_active_channels(int socket, unsigned char active_chan, int *chan_slot){
 
     /** public function - see header */
 
@@ -400,12 +400,11 @@ void send_get_active_channels(int connection, unsigned char active_chan, int *ch
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=GET_ACTIVE_CHANNELS;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
     packet._active_chan=active_chan;
 
@@ -414,11 +413,11 @@ void send_get_active_channels(int connection, unsigned char active_chan, int *ch
         packet._chan_slot[i]=(uint32_t)chan_slot[i];
     }
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_here_your_stats(int connection){
+void send_here_your_stats(int socket){
 
     /** public function - see header */
 
@@ -502,72 +501,73 @@ void send_here_your_stats(int connection){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
+
+    int actor_node=client_socket[socket].actor_node;
 
     //add data
     packet.protocol=HERE_YOUR_STATS;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
 
-    packet.physique_pp=(uint16_t)clients.client[connection].physique_pp;
-    packet.max_physique=(uint16_t)clients.client[connection].max_physique;
-    packet.coordination_pp=(uint16_t)clients.client[connection].coordination_pp;
-    packet.max_coordination=(uint16_t)clients.client[connection].max_coordination;
-    packet.reasoning_pp=(uint16_t)clients.client[connection].reasoning_pp;
-    packet.max_reasoning=(uint16_t)clients.client[connection].max_reasoning;
-    packet.will_pp=(uint16_t)clients.client[connection].will_pp;
-    packet.max_will=(uint16_t)clients.client[connection].max_will;
-    packet.instinct_pp=(uint16_t)clients.client[connection].instinct_pp;
-    packet.max_instinct=(uint16_t)clients.client[connection].max_instinct;
-    packet.vitality_pp=(uint16_t)clients.client[connection].vitality_pp;
-    packet.max_vitality=(uint16_t)clients.client[connection].max_vitality;
+    packet.physique_pp=(uint16_t)clients.client[actor_node].physique_pp;
+    packet.max_physique=(uint16_t)clients.client[actor_node].max_physique;
+    packet.coordination_pp=(uint16_t)clients.client[actor_node].coordination_pp;
+    packet.max_coordination=(uint16_t)clients.client[actor_node].max_coordination;
+    packet.reasoning_pp=(uint16_t)clients.client[actor_node].reasoning_pp;
+    packet.max_reasoning=(uint16_t)clients.client[actor_node].max_reasoning;
+    packet.will_pp=(uint16_t)clients.client[actor_node].will_pp;
+    packet.max_will=(uint16_t)clients.client[actor_node].max_will;
+    packet.instinct_pp=(uint16_t)clients.client[actor_node].instinct_pp;
+    packet.max_instinct=(uint16_t)clients.client[actor_node].max_instinct;
+    packet.vitality_pp=(uint16_t)clients.client[actor_node].vitality_pp;
+    packet.max_vitality=(uint16_t)clients.client[actor_node].max_vitality;
 
-    packet.human=(uint16_t)clients.client[connection].human;
-    packet.max_human=(uint16_t)clients.client[connection].max_human;
-    packet.animal=(uint16_t)clients.client[connection].animal;
-    packet.max_animal=(uint16_t)clients.client[connection].max_animal;
-    packet.vegetal=(uint16_t)clients.client[connection].vegetal;
-    packet.max_vegetal=(uint16_t)clients.client[connection].max_vegetal;
-    packet.inorganic=(uint16_t)clients.client[connection].inorganic;
-    packet.max_inorganic=(uint16_t)clients.client[connection].max_inorganic;
-    packet.artificial=(uint16_t)clients.client[connection].artificial;
-    packet.max_artificial=(uint16_t)clients.client[connection].max_artificial;
-    packet.magic=(uint16_t)clients.client[connection].magic;
-    packet.max_magic=(uint16_t)clients.client[connection].max_magic;
+    packet.human=(uint16_t)clients.client[actor_node].human;
+    packet.max_human=(uint16_t)clients.client[actor_node].max_human;
+    packet.animal=(uint16_t)clients.client[actor_node].animal;
+    packet.max_animal=(uint16_t)clients.client[actor_node].max_animal;
+    packet.vegetal=(uint16_t)clients.client[actor_node].vegetal;
+    packet.max_vegetal=(uint16_t)clients.client[actor_node].max_vegetal;
+    packet.inorganic=(uint16_t)clients.client[actor_node].inorganic;
+    packet.max_inorganic=(uint16_t)clients.client[actor_node].max_inorganic;
+    packet.artificial=(uint16_t)clients.client[actor_node].artificial;
+    packet.max_artificial=(uint16_t)clients.client[actor_node].max_artificial;
+    packet.magic=(uint16_t)clients.client[actor_node].magic;
+    packet.max_magic=(uint16_t)clients.client[actor_node].max_magic;
 
-    packet.inventory_emu=(uint16_t)get_inventory_emu(connection);
-    packet.max_inventory_emu=(uint16_t)get_max_inventory_emu(connection);
-    packet.material_pts=(uint16_t)clients.client[connection].material_pts;
-    packet.max_material_pts=(uint16_t)clients.client[connection].max_material_pts;
-    packet.ethereal_pts=(uint16_t)clients.client[connection].ethereal_pts;
-    packet.max_ethereal_pts=(uint16_t)clients.client[connection].max_ethereal_pts;
-    packet.food_lvl=(uint16_t)clients.client[connection].food_lvl;
-    packet.elapsed_book_time=(uint16_t)clients.client[connection].elapsed_book_time;
+    packet.inventory_emu=(uint16_t)get_inventory_emu(actor_node);
+    packet.max_inventory_emu=(uint16_t)get_max_inventory_emu(actor_node);
+    packet.material_pts=(uint16_t)clients.client[actor_node].material_pts;
+    packet.max_material_pts=(uint16_t)clients.client[actor_node].max_material_pts;
+    packet.ethereal_pts=(uint16_t)clients.client[actor_node].ethereal_pts;
+    packet.max_ethereal_pts=(uint16_t)clients.client[actor_node].max_ethereal_pts;
+    packet.food_lvl=(uint16_t)clients.client[actor_node].food_lvl;
+    packet.elapsed_book_time=(uint16_t)clients.client[actor_node].elapsed_book_time;
     packet.unused=0;
 
-    packet.manufacture_exp=(uint32_t)clients.client[connection].manufacture_exp;
-    packet.max_manufacture_exp=(uint32_t)clients.client[connection].max_manufacture_exp;
-    packet.harvest_exp=(uint32_t)clients.client[connection].harvest_exp;
-    packet.max_harvest_exp=(uint32_t)clients.client[connection].max_harvest_exp;
-    packet.alchemy_exp=(uint32_t)clients.client[connection].alchemy_exp;
-    packet.overall_exp=(uint32_t)clients.client[connection].overall_exp;
-    packet.max_overall_exp=(uint32_t)clients.client[connection].max_overall_exp;
-    packet.attack_exp=(uint32_t)clients.client[connection].attack_exp;
-    packet.max_attack_exp=(uint32_t)clients.client[connection].max_attack_exp;
-    packet.defence_exp=(uint32_t)clients.client[connection].defence_exp;
-    packet.max_defence_exp=(uint32_t)clients.client[connection].max_defence_exp;
-    packet.magic_exp=(uint32_t)clients.client[connection].magic_exp;
-    packet.max_magic_exp=(uint32_t)clients.client[connection].max_magic_exp;
-    packet.potion_exp=(uint32_t)clients.client[connection].potion_exp;
-    packet.max_potion_exp=(uint32_t)clients.client[connection].max_potion_exp;
-    packet.book_id=(uint16_t)clients.client[connection].book_id;
-    packet.max_book_time=(uint16_t)clients.client[connection].max_book_time;
+    packet.manufacture_exp=(uint32_t)clients.client[actor_node].manufacture_exp;
+    packet.max_manufacture_exp=(uint32_t)clients.client[actor_node].max_manufacture_exp;
+    packet.harvest_exp=(uint32_t)clients.client[actor_node].harvest_exp;
+    packet.max_harvest_exp=(uint32_t)clients.client[actor_node].max_harvest_exp;
+    packet.alchemy_exp=(uint32_t)clients.client[actor_node].alchemy_exp;
+    packet.overall_exp=(uint32_t)clients.client[actor_node].overall_exp;
+    packet.max_overall_exp=(uint32_t)clients.client[actor_node].max_overall_exp;
+    packet.attack_exp=(uint32_t)clients.client[actor_node].attack_exp;
+    packet.max_attack_exp=(uint32_t)clients.client[actor_node].max_attack_exp;
+    packet.defence_exp=(uint32_t)clients.client[actor_node].defence_exp;
+    packet.max_defence_exp=(uint32_t)clients.client[actor_node].max_defence_exp;
+    packet.magic_exp=(uint32_t)clients.client[actor_node].magic_exp;
+    packet.max_magic_exp=(uint32_t)clients.client[actor_node].max_magic_exp;
+    packet.potion_exp=(uint32_t)clients.client[actor_node].potion_exp;
+    packet.max_potion_exp=(uint32_t)clients.client[actor_node].max_potion_exp;
+    packet.book_id=(uint16_t)clients.client[actor_node].book_id;
+    packet.max_book_time=(uint16_t)clients.client[actor_node].max_book_time;
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_change_map(int connection, char *elm_filename){
+void send_change_map(int socket, char *elm_filename){
 
     /** public function - see header */
 
@@ -575,38 +575,176 @@ void send_change_map(int connection, char *elm_filename){
 
         unsigned char protocol;
         uint16_t data_length;
-        char elm_filename[1024];
+        char elm_filename[160];
     }packet;
 
     //clear the struct
     memset(&packet, 0, sizeof(packet));
 
-    //The struct size includes a reserve of 1024 for the map name.
+    //The struct size includes a reserve of 160 for the map name.
     //We therefore calculate the actual packet length by taking the
-    //struct size less the 1024 reserved for the map name and then
+    //struct size less the 160 reserved for the map name and then
     //add on the actual message length
-    size_t packet_length=sizeof(packet) - 1024 + strlen(elm_filename)+1;
+    size_t packet_length=sizeof(packet) - 160 + strlen(elm_filename)+1;
 
     //add data
     packet.protocol=CHANGE_MAP;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
-
+    packet.data_length=(uint16_t)(packet_length-2);
     strcpy(packet.elm_filename, elm_filename);
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t *packet_length){
+void send_npc_text(int socket, char *text){
 
     /** public function - see header */
 
-  struct __attribute__((__packed__)){
+    struct __attribute__((__packed__)){
 
         unsigned char protocol;
         uint16_t data_length;
-        uint16_t connection;
+        char text[SEND_TEXT_MAX];
+    }packet;
+
+    //clear the struct
+    memset(&packet, 0, sizeof(packet));
+
+    //calculate the size of the packet length
+    size_t packet_length=4 + strlen(text)+1;
+
+    //add data
+    packet.protocol=NPC_TEXT;
+    packet.data_length=(uint16_t)(packet_length-2); //subtract 2 from the packet length to calculate the data length
+    strcpy(packet.text, text);
+
+    send_packet(socket, &packet, packet_length);
+}
+
+
+void send_npc_info(int socket, char *npc_name, int npc_id){
+
+/** public function - see header */
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        uint16_t data_length;
+        char npc_name[20];
+        unsigned char npc_portrait_id;
+    }packet;
+
+   //clear the struct
+    memset(&packet, 0, sizeof(packet));
+
+    //calculate the size of the packet length
+    size_t packet_length=sizeof(packet);
+
+    //add data
+    packet.protocol=SEND_NPC_INFO;
+    packet.data_length=(uint16_t)(packet_length-2); //subtract 2 from the packet length to calculate the data length
+    strcpy(packet.npc_name, npc_name);
+    packet.npc_portrait_id=(unsigned char)npc_id;
+
+    send_packet(socket, &packet, packet_length);
+}
+
+
+void send_npc_options_list(int socket, int npc_actor_node, char *options){
+
+    /** public function - see header */
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        uint16_t data_length;
+
+        struct __attribute__((__packed__)){
+
+            uint16_t len;
+            char option_text[80];
+            uint16_t response;
+            uint16_t actor_id;
+        }npc_option[MAX_NPC_OPTIONS];
+
+    }packet;
+
+    size_t packet_length=sizeof(packet);
+
+    //clear the struct
+    memset(&packet, 0, packet_length);
+
+    //add data
+    packet.protocol=NPC_OPTIONS_LIST;
+
+    //load the npc options
+    int j=0;
+    size_t k=0;
+
+    for(size_t i=0; i<strlen(options); i++){
+
+        if(options[i]==';' || i==strlen(options)-1){
+
+            strncpy(packet.npc_option[j].option_text, options+k, i-k);
+            packet.npc_option[j].actor_id=(uint16_t)npc_actor_node;
+            packet.npc_option[j].response=(uint16_t)j;
+            packet.npc_option[j].len=(uint16_t)(80);
+
+            k=i+(size_t)1;
+            j++;
+        }
+    }
+
+    //shorten the packet length to cut off excess options
+    packet_length=(size_t)(3+(j*86));
+    packet.data_length=(uint16_t)(packet_length-2);
+
+    send_packet(socket, &packet, packet_length);
+}
+
+
+void add_new_enhanced_actor_packet(int socket, unsigned char *packet, size_t *packet_length){
+
+    /** public function - see header */
+
+    int actor_node=client_socket[socket].actor_node;
+    actor.actor_node=actor_node;
+
+    strcpy(actor.char_name, clients.client[actor_node].char_name);
+    actor.guild_id=clients.client[actor_node].guild_id;
+
+    actor.map_tile=clients.client[actor_node].map_tile;
+    actor.map_id=clients.client[actor_node].map_id;
+
+    actor.char_type=clients.client[actor_node].char_type;
+    actor.skin_type=clients.client[actor_node].skin_type;
+    actor.hair_type=clients.client[actor_node].hair_type;
+    actor.shirt_type=clients.client[actor_node].shirt_type;
+    actor.pants_type=clients.client[actor_node].pants_type;
+    actor.boots_type=clients.client[actor_node].boots_type;
+    actor.head_type=clients.client[actor_node].head_type;
+    actor.shield_type=clients.client[actor_node].shield_type;
+    actor.weapon_type=clients.client[actor_node].weapon_type;
+    actor.cape_type=clients.client[actor_node].cape_type;
+    actor.helmet_type=clients.client[actor_node].helmet_type;
+    actor.frame=clients.client[actor_node].frame;
+    actor.max_health=clients.client[actor_node].max_health;
+    actor.current_health=clients.client[actor_node].current_health;
+    actor.player_type=clients.client[actor_node].player_type;
+
+    _add_new_enhanced_actor_packet(packet, packet_length);
+}
+
+
+void _add_new_enhanced_actor_packet(unsigned char *packet, size_t *packet_length){
+
+    /** public function - see header */
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        uint16_t data_length;
+        uint16_t actor_node;
         uint16_t x_pos;
         uint16_t y_pos;
         uint16_t z_pos;
@@ -640,63 +778,60 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
     }_packet2;
 
     //clear the structs
-    memset(&_packet1, '0', sizeof(_packet1));
-    memset(&_packet2, '0', sizeof(_packet2));
+    memset(&_packet1, 0, sizeof(_packet1));
+    memset(&_packet2, 0, sizeof(_packet2));
 
-        //create a char array carrying the banner (char name and guild name separated by a space and
+    int actor_node=actor.actor_node;
+
+    //create a char array carrying the banner (char name and guild name separated by a space and
     //127+colour character)
-    int guild_tag_colour=127+guilds.guild[clients.client[connection].guild_id].guild_tag_colour;
+    int guild_tag_colour=127+guilds.guild[actor.guild_id].guild_tag_colour;
 
     size_t banner_length=(size_t)sprintf(_packet1.banner, "%s %c%s",
-        clients.client[connection].char_name,
+        actor.char_name,
         guild_tag_colour,
-        guilds.guild[clients.client[connection].guild_id].guild_tag);
+        guilds.guild[actor.guild_id].guild_tag);
 
     //calculate the total packet length
     *packet_length=sizeof(_packet1) - 80 + banner_length+1 + sizeof(_packet2);
 
     //add data to packet 1
     _packet1.protocol=ADD_NEW_ENHANCED_ACTOR;
-    _packet1.connection=(uint16_t)connection;
-    int data_length=(int)*packet_length-2;
-    _packet1.data_length=(uint16_t)data_length;
+    _packet1.actor_node=(uint16_t)actor_node;
+    _packet1.data_length=(uint16_t)(*packet_length-2);
 
-    //_packet1.data_length=*packet_length-2;
-
-    int map_id=clients.client[connection].map_id;
+    int map_id=actor.map_id;
     int map_axis=maps.map[map_id].map_axis;
 
-    int x=clients.client[connection].map_tile % map_axis;
-    int y=clients.client[connection].map_tile / map_axis;
-    _packet1.x_pos=(uint16_t)x;
-    _packet1.y_pos=(uint16_t)y;
+    _packet1.x_pos=(uint16_t)(actor.map_tile % map_axis);
+    _packet1.y_pos=(uint16_t)(actor.map_tile / map_axis);
 
     _packet1.z_pos=0; //z position (set to 0 pending further development)
     _packet1.rot=45; //rotation angle (set to 45 pending further development)
 
-    _packet1.char_type=(unsigned char)clients.client[connection].char_type;
+    _packet1.char_type=(unsigned char)actor.char_type;
     _packet1.unused=0; //unused (set to 0)
 
-    _packet1.skin_type=(unsigned char)clients.client[connection].skin_type;
-    _packet1.hair_type=(unsigned char)clients.client[connection].hair_type;
-    _packet1.shirt_type=(unsigned char)clients.client[connection].shirt_type;
-    _packet1.pants_type=(unsigned char)clients.client[connection].pants_type;
-    _packet1.boots_type=(unsigned char)clients.client[connection].boots_type;
-    _packet1.head_type=(unsigned char)clients.client[connection].head_type;
-    _packet1.shield_type=(unsigned char)clients.client[connection].shield_type;
-    _packet1.weapon_type=(unsigned char)clients.client[connection].weapon_type;
-    _packet1.cape_type=(unsigned char)clients.client[connection].cape_type;
-    _packet1.helmet_type=(unsigned char)clients.client[connection].helmet_type;
-    _packet1.frame_type=(unsigned char)clients.client[connection].frame;
-    _packet1.max_health=(unsigned char)clients.client[connection].max_health;
-    _packet1.current_health=(unsigned char)clients.client[connection].current_health;
-    _packet1.player_type=1; //special (PLAYER=1 NPC=??)
+    _packet1.skin_type=(unsigned char)actor.skin_type;
+    _packet1.hair_type=(unsigned char)actor.hair_type;
+    _packet1.shirt_type=(unsigned char)actor.shirt_type;
+    _packet1.pants_type=(unsigned char)actor.pants_type;
+    _packet1.boots_type=(unsigned char)actor.boots_type;
+    _packet1.head_type=(unsigned char)actor.head_type;
+    _packet1.shield_type=(unsigned char)actor.shield_type;
+    _packet1.weapon_type=(unsigned char)actor.weapon_type;
+    _packet1.cape_type=(unsigned char)actor.cape_type;
+    _packet1.helmet_type=(unsigned char)actor.helmet_type;
+    _packet1.frame_type=(unsigned char)actor.frame;
+    _packet1.max_health=(unsigned char)actor.max_health;
+    _packet1.current_health=(unsigned char)actor.current_health;
+    _packet1.player_type=(unsigned char)actor.player_type;
 
     //add data to packet 2
     _packet2.unknown=0;
-    _packet2.char_size=64; //char size (min=2 normal=64 max=127)
+    _packet2.char_size=64; //char size (min=2 normal=64 max=127)// TODO (themuntdregger#1#): add actor scale to actor struct and database table
     _packet2.riding=255; //riding (nothing=255  brown horse=200)
-    _packet2.neck_attachment=64; //neck attachment (none=64)
+    _packet2.neck_attachment=64; //neck attachment (none=64) // TODO (themuntdregger#1#): This setting on the enhanced actor packet might remove the blank medallions on chars
 
     //create the complete packet
     memcpy(packet, &_packet1, sizeof(_packet1)-80 + banner_length+1);
@@ -704,7 +839,7 @@ void add_new_enhanced_actor_packet(int connection, unsigned char *packet, size_t
 }
 
 
-void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_length){
+void remove_actor_packet(int socket, unsigned char *packet, size_t *packet_length){
 
     /** public function - see header */
 
@@ -712,28 +847,25 @@ void remove_actor_packet(int connection, unsigned char *packet, size_t *packet_l
 
         unsigned char protocol;
         uint16_t data_length;
-        uint16_t connection;
+        uint16_t actor_node;
     }_packet;
 
     //calculate the packet length
     *packet_length=sizeof(_packet);
 
     //clear the structs
-    memset(&_packet, '0', sizeof(_packet));
+    memset(&_packet, 0, sizeof(_packet));
 
     //add data to packet 1
     _packet.protocol=REMOVE_ACTOR;
-    int data_length=(int)*packet_length-2;
-    _packet.data_length=(uint16_t)data_length;
-
-    //_packet.data_length=*packet_length-2;
-    _packet.connection=(uint16_t)connection;
+    _packet.data_length=(uint16_t)(*packet_length-2);
+    _packet.actor_node=(uint16_t)client_socket[socket].actor_node;
 
     memcpy(packet, &_packet, sizeof(_packet));
 }
 
 
-void add_actor_packet(int connection, unsigned char move, unsigned char *packet, size_t *packet_length){
+void add_actor_packet(int socket, unsigned char move, unsigned char *packet, size_t *packet_length){
 
     /** public function - see header */
 
@@ -741,7 +873,7 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
 
         unsigned char protocol;
         uint16_t data_length;
-        uint16_t connection;
+        uint16_t actor_node;
         unsigned char move;
     }_packet;
 
@@ -749,22 +881,19 @@ void add_actor_packet(int connection, unsigned char move, unsigned char *packet,
     *packet_length=sizeof(_packet);
 
     //clear the structs
-    memset(&_packet, '0', sizeof(_packet));
+    memset(&_packet, 0, sizeof(_packet));
 
     //add data to packet 1
     _packet.protocol=ADD_ACTOR;
-    int data_length=(int)*packet_length-2;
-    _packet.data_length=(uint16_t)data_length;
-
-    //_packet.data_length=*packet_length-2;
-    _packet.connection=(uint16_t)connection;
+    _packet.data_length=(uint16_t)(*packet_length-2);
+    _packet.actor_node=(uint16_t)client_socket[socket].actor_node;
     _packet.move=move;
 
     memcpy(packet, &_packet, sizeof(_packet));
 }
 
 
-void send_get_new_inventory_item(int connection, int object_id, int amount, int slot){
+void send_get_new_inventory_item(int socket, int object_id, int amount, int slot){
 
     /** public function - see header */
 
@@ -782,23 +911,21 @@ void send_get_new_inventory_item(int connection, int object_id, int amount, int 
     size_t packet_length=sizeof(packet);
 
     //clear the structs
-    memset(&packet, '0', sizeof(packet));
+    memset(&packet, 0, sizeof(packet));
 
     //add data to packet
     packet.protocol=GET_NEW_INVENTORY_ITEM;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
-
+    packet.data_length=(uint16_t)(packet_length-2);
     packet.object_id=(uint16_t)object_id;
     packet.amount=(uint32_t)amount;
     packet.slot=(unsigned char)slot;
     packet.flags=0;
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void get_new_bag_packet(int connection, int bag_list_number, unsigned char *packet, size_t *packet_length){
+void get_new_bag_packet(int socket, int bag_list_number, unsigned char *packet, size_t *packet_length){
 
     /** public function - see header */
 
@@ -815,22 +942,24 @@ void get_new_bag_packet(int connection, int bag_list_number, unsigned char *pack
     *packet_length=sizeof(_packet);
 
     //clear the structs
-    memset(&_packet, '0', sizeof(_packet));
+    memset(&_packet, 0, sizeof(_packet));
+
 
     //add data to packet
     _packet.protocol=GET_NEW_BAG;
-    int data_length=(int)*packet_length-2;
-    _packet.data_length=(uint16_t)data_length;
+    _packet.data_length=(uint16_t)(*packet_length-2);
 
-    _packet.x_pos=(uint16_t)get_x_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
-    _packet.y_pos=(uint16_t)get_y_pos(clients.client[connection].map_tile, clients.client[connection].map_id);
+    int actor_node=client_socket[socket].actor_node;
+    _packet.x_pos=(uint16_t)get_x_pos(clients.client[actor_node].map_tile, clients.client[actor_node].map_id);
+    _packet.y_pos=(uint16_t)get_y_pos(clients.client[actor_node].map_tile, clients.client[actor_node].map_id);
+
     _packet.bag_list_number=(unsigned char)bag_list_number;
 
     memcpy(packet, &_packet, sizeof(_packet));
 }
 
 
-void send_destroy_bag(int connection, int bag_id){
+void send_destroy_bag(int socket, int bag_id){
 
     /** public function - see header */
 
@@ -844,19 +973,18 @@ void send_destroy_bag(int connection, int bag_id){
     size_t packet_length=sizeof(packet);
 
     //clear the struct
-    memset(&packet, '0', packet_length);
+    memset(&packet, 0, packet_length);
 
     //add data
     packet.protocol=DESTROY_BAG;
-    int data_length=(int)packet_length-2;
-    packet.data_length=(uint16_t)data_length;
+    packet.data_length=(uint16_t)(packet_length-2);
     packet.bag_id=(uint16_t)bag_id;
 
-    send_packet(connection, &packet, packet_length);
+    send_packet(socket, &packet, packet_length);
 }
 
 
-void send_get_bags_list(int connection){
+void send_get_bags_list(int socket){
 
   struct __attribute__((__packed__)){
 
@@ -874,19 +1002,20 @@ void send_get_bags_list(int connection){
     }packet;
 
     //clear the struct
-    memset(&packet, '0', sizeof(packet));
+    memset(&packet, 0, sizeof(packet));
 
     //add data
     packet.protocol=GET_BAGS_LIST;
 
-    int map_id=clients.client[connection].map_id;
+    int actor_node=client_socket[socket].actor_node;
+    int map_id=clients.client[actor_node].map_id;
     int map_axis=maps.map[map_id].map_axis;
 
     int j=0;
 
-    for(uint8_t i=0; i<MAX_BAGS; i++){
+    for(int i=0; i<MAX_BAGS; i++){
 
-        if(bag[i].map_id==clients.client[connection].map_id){
+        if(bag[i].map_id==clients.client[actor_node].map_id && bag[i].bag_in_use==true){
 
             packet.bag_list[j].x=(uint16_t)(bag[i].tile % map_axis);
             packet.bag_list[j].y=(uint16_t)(bag[i].tile / map_axis);
@@ -903,9 +1032,8 @@ void send_get_bags_list(int connection){
 
         size_t packet_length=(size_t)(4+(j*5));
 
-        int data_length=(int)packet_length-2;
-        packet.data_length=(uint16_t)data_length;
+        packet.data_length=(uint16_t)(packet_length-2);
 
-        send_packet(connection, &packet, packet_length);
+        send_packet(socket, &packet, packet_length);
     }
 }

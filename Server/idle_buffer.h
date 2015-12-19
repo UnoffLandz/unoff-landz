@@ -28,7 +28,7 @@
 struct buffer_node_type{
 
     char sql[MAX_SQL_LEN];
-    int connection;
+    int actor_node;
     int process_type;
     unsigned char packet[MAX_PROTOCOL_PACKET_SIZE];
 };
@@ -56,7 +56,7 @@ enum{//database buffer processing types
 
     NOTES    :
 **/
-void Xpush_idle_buffer(char *sql, int connection, int process_type, unsigned char *packet);
+void Xpush_idle_buffer(char *sql, int actor_node, int process_type, unsigned char *packet);
 
 
 /** RESULT  : processes an item from the database buffer

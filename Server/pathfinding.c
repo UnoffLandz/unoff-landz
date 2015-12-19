@@ -54,16 +54,25 @@ struct{
 int path_stack_count;
 
 
-void debug_explore_path(int connection, int destination){
+void debug_explore_path(int actor_node, int destination){
 
-    unsigned char height_map[HEIGHT_MAP_MAX]={0};
 
-    int map_id=clients.client[connection].map_id;
+    /** RESULT  : displays an ascii grid representation of the explored map tiles
+
+        RETURNS : void
+
+        PURPOSE : debugging maps
+
+        USAGE   : function - hash_trace_explore
+    */
+
+    int map_id=clients.client[actor_node].map_id;
     int map_axis=maps.map[map_id].map_axis;
+    int pos_x=clients.client[actor_node].map_tile % map_axis;
+    int pos_y=clients.client[actor_node].map_tile / map_axis;
 
-    int pos_x=clients.client[connection].map_tile % map_axis;
-    int pos_y=clients.client[connection].map_tile / map_axis;
-
+    //create duplicate height map so we can fill it indicators for the explored tiles
+    unsigned char height_map[HEIGHT_MAP_MAX]={0};
     memcpy(height_map, maps.map[map_id].height_map, sizeof(maps.map[map_id].height_map));
 
     //append the explore path to the height map
@@ -82,7 +91,7 @@ void debug_explore_path(int connection, int destination){
 
             int z=(y * map_axis) + x;
 
-            if(z==clients.client[connection].map_tile){
+            if(z==clients.client[actor_node].map_tile){
 
                 #if DEBUG_PATHFINDING==1
                 printf("@");
@@ -150,7 +159,7 @@ void debug_explore_path(int connection, int destination){
             }
         }
 
-        send_text(connection, CHAT_SERVER, "%c%s", c_grey1+127, str);
+        send_text(clients.client[actor_node].socket, CHAT_SERVER, "%c%s", c_grey1+127, str);
 
         #if DEBUG_PATHFINDING==1
         printf("\n");
@@ -332,7 +341,7 @@ int get_next_unexplored_tile(){
 }
 
 
-bool explore_path(int connection, int destination_tile){
+bool explore_path(int actor_node, int destination_tile){
 
     /** RESULT  : fills array path_stack with a list of tiles explored between start and destination
 
@@ -343,8 +352,8 @@ bool explore_path(int connection, int destination_tile){
         NOTES   : pathfinding.c get_astar_path
     */
 
-    int start_tile=clients.client[connection].map_tile;
-    int map_id=clients.client[connection].map_id;
+    int start_tile=clients.client[actor_node].map_tile;
+    int map_id=clients.client[actor_node].map_id;
 
     #if DEBUG_PATHFINDING==1
     printf("explore path from %i to %i\n", start_tile, destination_tile);
@@ -383,7 +392,7 @@ bool explore_path(int connection, int destination_tile){
 
         if(node==-1 ) {
 
-            send_text(connection, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
+            send_text(clients.client[actor_node].socket, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
             log_event(EVENT_ERROR, "no explorable tiles remain in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
 
             return false;
@@ -425,7 +434,7 @@ bool explore_path(int connection, int destination_tile){
 }
 
 
-bool get_astar_path(int connection, int start_tile, int destination_tile){
+bool get_astar_path(int actor_node, int start_tile, int destination_tile){
 
     /** public function - see header */
 
@@ -435,16 +444,16 @@ bool get_astar_path(int connection, int start_tile, int destination_tile){
 
     int lowest_value=0;
     int next_tile=0;
-    int map_id=clients.client[connection].map_id;
+    int map_id=clients.client[actor_node].map_id;
 
-    if(explore_path(connection, destination_tile)==false) return false;
+    if(explore_path(actor_node, destination_tile)==false) return false;
 
     //if #EXPLORE_TRACE command has been set then send ascii representation of the
     //local area to the client
-    if(clients.client[connection].debug_explore_path==true){
+    if(clients.client[actor_node].debug_explore_path==true){
 
-        debug_explore_path(connection, destination_tile);
-        clients.client[connection].debug_explore_path=false;
+        debug_explore_path(actor_node, destination_tile);
+        clients.client[actor_node].debug_explore_path=false;
     }
 
     //start path at destination tile
@@ -452,8 +461,8 @@ bool get_astar_path(int connection, int start_tile, int destination_tile){
     path_stack[0].explored=true;
 
     //load destination tile to the path
-    clients.client[connection].path_count=1;
-    clients.client[connection].path[ clients.client[connection].path_count-1]=next_tile;
+    clients.client[actor_node].path_count=1;
+    clients.client[actor_node].path[ clients.client[actor_node].path_count-1]=next_tile;
 
     //loop through explored tiles finding the best adjacent moves from destination to start
     do{
@@ -480,24 +489,24 @@ bool get_astar_path(int connection, int start_tile, int destination_tile){
         //if no adjacent tiles then start is unreachable from destination so abort function
         if(found==false) {
 
-            send_text(connection, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
+            send_text(clients.client[actor_node].socket, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
             return false;
         }
 
         next_tile=path_stack[j].tile;
         path_stack[j].explored=true;
 
-        clients.client[connection].path_count++;
+        clients.client[actor_node].path_count++;
 
-        if(clients.client[connection].path_count>PATH_MAX-1) {
+        if(clients.client[actor_node].path_count>PATH_MAX-1) {
 
             log_event(EVENT_ERROR, "client path array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
             stop_server();
         }
 
-        clients.client[connection].path[ clients.client[connection].path_count-1]=next_tile;
+        clients.client[actor_node].path[ clients.client[actor_node].path_count-1]=next_tile;
 
-    }while(clients.client[connection].path[clients.client[connection].path_count-1]!=start_tile);
+    }while(clients.client[actor_node].path[clients.client[actor_node].path_count-1]!=start_tile);
 
     return true;
 }

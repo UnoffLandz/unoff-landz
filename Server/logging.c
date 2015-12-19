@@ -27,6 +27,8 @@
 #include "server_start_stop.h"
 #include "db/database_functions.h"
 #include "clients.h"
+#include "packet.h"
+#include "string_functions.h"
 
 struct protocol_type protocol[] = {
 
@@ -385,6 +387,7 @@ void get_event_log_file(int event_type, char *file_name){
     }
 }
 
+
 void write_to_log(int event_type, char *text){
 
     /** RESULT  : writes text to the log file corresponding with an event type
@@ -406,6 +409,7 @@ void write_to_log(int event_type, char *text){
     write_to_file(file_name, text);
 }
 
+
 void log_text(int event_type, char *fmt, ...){
 
     /** public function - see header */
@@ -420,6 +424,7 @@ void log_text(int event_type, char *fmt, ...){
 
     write_to_log(event_type, text_out);
 }
+
 
 void log_event(int event_type, const char *fmt, ...){
 
@@ -489,6 +494,7 @@ void log_event(int event_type, const char *fmt, ...){
     write_to_log(event_type, text_out);
 }
 
+
 void initialise_logs(){
 
     /** public function - see header */
@@ -532,11 +538,12 @@ void initialise_logs(){
     log_text(EVENT_INITIALISATION, "");
 }
 
+
 void log_sqlite_error(char *error_type, const char *function_name, const char *module_name, int line_number, int return_code, const char *sql_stmt){
 
         /** public function - see header */
 
-        //we use const char in prototype so we can use __func__ and __FILE__ without causing compiler warnings
+        //N.B we use const char in prototype so we can use __func__ and __FILE__ without causing compiler warnings
 
         log_event(EVENT_ERROR, "%s at line [%i] in function %s: module %s", error_type, line_number, function_name, module_name);
         log_text(EVENT_ERROR, "sql statement [%s]", sql_stmt);
@@ -545,34 +552,64 @@ void log_sqlite_error(char *error_type, const char *function_name, const char *m
         stop_server();
 }
 
-void log_packet(int connection, unsigned char *packet, int direction){
+
+void log_packet(int socket, unsigned char *packet, int direction){
 
     /** public function - see header */
 
-    char text_out[1024]="";
-    int data_length=packet[1]+(packet[2]*256)-1;
+    size_t packet_length=get_packet_length(packet);
 
-    if(data_length>=1024){
+    if(packet_length>=1024){
 
         log_event(EVENT_ERROR, "data length [%i] exceeded max [1024] in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
         stop_server();
     }
 
-    for(int i=0; i<data_length+2; i++){
+    //list packet contents
+    char text_out[1024]="";
+
+    for(size_t i=0; i<packet_length; i++){
 
         sprintf(text_out, "%s %i", text_out, packet[i]);
     }
 
-    if(direction==SEND) {
+    //list raw text
+    char text_out2[1024]="";
+    if(packet[0]==0){
 
-        log_event(EVENT_PACKET, "Sent to       [%i] %s %s", connection, protocol[packet[0]].server, text_out);
-        log_event(EVENT_SESSION, "Sent to [%s] %s", clients.client[connection].char_name, protocol[packet[0]].server);
+        for(size_t i=4; i<packet_length; i++){
+
+            if(packet[i]>=MIN_PRINTABLE_ASCII && packet[i]<=MAX_PRINTABLE_ASCII){
+
+                sprintf(text_out2, "%s%c", text_out2, packet[i]);
+            }
+        }
     }
 
+    int actor_node=client_socket[socket].actor_node;
+    char char_name[80]="";
+
+    if(client_socket[socket].socket_status==CLIENT_LOGGED_IN){
+
+        strcpy(char_name, clients.client[actor_node].char_name);
+    }
+    else {
+
+        sprintf(char_name, "socket %d", socket);
+    }
+
+    //log packets send from server
+    if(direction==SEND) {
+
+        log_event(EVENT_PACKET, "Sent to       [%i] %s %s", socket, protocol[packet[0]].server, text_out);
+        log_event(EVENT_SESSION, "Sent to [%s] %s %s", char_name, protocol[packet[0]].server, text_out2);
+    }
+
+    //log packets received from client
     if(direction==RECEIVE) {
 
-        log_event(EVENT_PACKET, "Received from [%i] %s %s", connection, protocol[packet[0]].client, text_out);
-        log_event(EVENT_SESSION, "Received from [%s] %s", clients.client[connection].char_name, protocol[packet[0]].client);
+        log_event(EVENT_PACKET, "Received from [%i] %s %s", socket, protocol[packet[0]].client, text_out);
+        log_event(EVENT_SESSION, "Received from [%s] %s %s", char_name, protocol[packet[0]].client, text_out2);
     }
 }
 

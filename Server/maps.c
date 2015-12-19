@@ -92,52 +92,56 @@ int get_map_id(char *map_name){
 }
 
 
-void get_map_details(int connection, int map_id){
+void get_map_details(int actor_node, int map_id){
 
     /** public function - see header */
 
-    send_text(connection, CHAT_SERVER, "%cYou are in %s %s", c_green3+127,
+    int socket=clients.client[actor_node].socket;
+
+    send_text(socket, CHAT_SERVER, "%cYou are in %s %s", c_green3+127,
         maps.map[map_id].map_name,
         maps.map[map_id].description);
 
-    int tile=clients.client[connection].map_tile;
+    int tile=clients.client[actor_node].map_tile;
     int x=tile / maps.map[map_id].map_axis;
     int y=tile % maps.map[map_id].map_axis;
 
-    send_text(connection, CHAT_SERVER, "%cAt coordinates x %i y %i (tile %i)", c_green3+127, x, y, tile);
+    send_text(socket, CHAT_SERVER, "%cAt coordinates x %i y %i (tile %i)", c_green3+127, x, y, tile);
 }
 
 
-void get_map_developer_details(int connection, int map_id){
+void get_map_developer_details(int actor_node, int map_id){
 
     /** public function - see header */
 
-    send_text(connection, CHAT_SERVER, "%cMap     :'%s' %s", c_green3+127,
+    int socket=clients.client[actor_node].socket;
+
+    send_text(socket, CHAT_SERVER, "%cMap     :'%s' %s", c_green3+127,
         maps.map[map_id].map_name,
         maps.map[map_id].description);
 
-    send_text(connection, CHAT_SERVER, "%cSize     : %i x %i", c_green3+127, maps.map[map_id].map_axis, maps.map[map_id].map_axis);
-    send_text(connection, CHAT_SERVER, "%cAuthor   : %s", c_green3+127, maps.map[map_id].author);
-    send_text(connection, CHAT_SERVER, "%cEmail    : %s", c_green3+127, maps.map[map_id].author_email);
+    send_text(socket, CHAT_SERVER, "%cSize     : %i x %i", c_green3+127, maps.map[map_id].map_axis, maps.map[map_id].map_axis);
+    send_text(socket, CHAT_SERVER, "%cAuthor   : %s", c_green3+127, maps.map[map_id].author);
+    send_text(socket, CHAT_SERVER, "%cEmail    : %s", c_green3+127, maps.map[map_id].author_email);
 
     char time_stamp_str[9]="";
     char verbose_date_stamp_str[50]="";
     get_time_stamp_str(maps.map[map_id].upload_date, time_stamp_str);
     get_verbose_date_str(maps.map[map_id].upload_date, verbose_date_stamp_str);
-    send_text(connection, CHAT_SERVER, "%cUploaded: %s %s", c_green3+127, verbose_date_stamp_str, time_stamp_str);
+    send_text(socket, CHAT_SERVER, "%cUploaded: %s %s", c_green3+127, verbose_date_stamp_str, time_stamp_str);
 
     switch (maps.map[map_id].development_status){
 
         case DEVELOPMENT:
-        send_text(connection, CHAT_SERVER, "%cStatus: DEVELOPMENT", c_green3+127);
+        send_text(socket, CHAT_SERVER, "%cStatus: DEVELOPMENT", c_green3+127);
         break;
 
         case TESTING:
-        send_text(connection, CHAT_SERVER, "%cStatus: TESTING", c_green3+127);
+        send_text(socket, CHAT_SERVER, "%cStatus: TESTING", c_green3+127);
         break;
 
         case FINAL:
-        send_text(connection, CHAT_SERVER, "%cStatus: FINAL", c_green3+127);
+        send_text(socket, CHAT_SERVER, "%cStatus: FINAL", c_green3+127);
         break;
     }
 }
@@ -157,15 +161,6 @@ void read_elm_header(char *elm_filename){
     }
 
     //read the header
-/*
-    unsigned char header_byte[ELM_FILE_HEADER]= {0};
-    if(fread(header_byte, ELM_FILE_HEADER, 1, file)!=1) {
-
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
-        stop_server();
-    }
-*/
-
     if(fread(&elm_header, sizeof(elm_header), 1, file)!=1){
 
         log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
@@ -174,9 +169,6 @@ void read_elm_header(char *elm_filename){
 
     //close the elm file
     fclose(file);
-
-    //copy bytes to header struct so we can extract data
-    //memcpy(&elm_header, header_byte, ELM_FILE_HEADER);
 
     //check the magic number
     if(elm_header.magic_number[0]!='e' ||
@@ -249,4 +241,3 @@ void read_height_map(char *elm_filename, unsigned char *height_map, int *height_
 
     fclose(file);
 }
-

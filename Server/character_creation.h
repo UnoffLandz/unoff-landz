@@ -36,7 +36,7 @@ extern "C" {
     NOTES   :   Enables priority handling of client communications which, might otherwise be
                 delayed by processing of database operations
 **/
-void check_new_character(int connection, const unsigned char *packet);
+void check_new_character(int actor_node, const unsigned char *packet);
 
 
 /** RESULT  :   Adds details of a new character to the database during an idle event
@@ -48,7 +48,7 @@ void check_new_character(int connection, const unsigned char *packet);
     NOTES   :   Enables priority handling of client communications which, might otherwise be
                 delayed by processing of database operations
 **/
-void add_new_character(int connection, const unsigned char *packet);
+void add_new_character(int actor_node, const unsigned char *packet);
 
 #ifdef __cplusplus
 }
