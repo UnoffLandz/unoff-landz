@@ -125,19 +125,17 @@ int client_respond_to_npc(int actor_node, unsigned char *packet){
     int response=packet[5];
     int socket=clients.client[actor_node].socket;
 
-    // TODO (themuntdregger#1#): finish RESPOND_TO_NPC handling
-
     if(clients.client[npc_actor_node].player_type==NPC){
 
         for(int i=0; i<MAX_NPC_TRIGGERS; i++){
 
             if(npc_trigger[i].actor_node==npc_actor_node
-            && npc_trigger[i].trigger_type==SELECT_OPTION
-            && npc_trigger[i].select_option==response){
+            && npc_trigger[i].trigger_type==SELECT_OPTION){
 
                 int action_node=npc_trigger[i].action_node;
 
-                if(npc_action[action_node].action_type==SELL){
+                if(npc_action[action_node].action_type==SELL_OBJECT
+                && npc_trigger[i].select_option==response){
 
                     //clear the options list
                     send_npc_options_list(socket, npc_actor_node, "");
@@ -145,6 +143,41 @@ int client_respond_to_npc(int actor_node, unsigned char *packet){
                     //check price of item
                     int object_amount_required=npc_action[action_node].object_amount_required;
                     int object_id_required=npc_action[action_node].object_id_required;
+
+                    int slot=find_inventory_slot(actor_node, object_id_required);
+
+                    //actor does not have required item
+                    if(slot==-1){
+
+                        send_npc_text(socket, npc_action[action_node].text_fail);
+                        return 0;
+                    }
+
+                    //actor does not have required amount
+                    if(clients.client[actor_node].inventory[slot].amount<object_amount_required){
+
+                        send_npc_text(socket, npc_action[action_node].text_fail);
+                        return 0;
+                    }
+
+                    remove_from_inventory(actor_node, object_id_required, object_amount_required, slot);
+                    send_npc_text(socket, npc_action[action_node].text_success);
+
+                    //buy an object
+                    // TODO (themuntdregger#1#): add item to char inventory
+
+                    return 0;
+                }
+                else if(npc_action[action_node].action_type==SELL_BOAT_TICKET){
+
+                    //clear the options list
+                    send_npc_options_list(socket, npc_actor_node, "");
+
+                    //check price of item
+                    int object_amount_required=clients.client[actor_node].boat_schedule[response].boat_price;
+                    int boat_node=clients.client[actor_node].boat_schedule[response].boat_node;
+                    int object_id_required=boat[boat_node].boat_payment_object_id;
+
                     int slot=find_inventory_slot(actor_node, object_id_required);
 
                     //actor does not have required item
@@ -165,32 +198,11 @@ int client_respond_to_npc(int actor_node, unsigned char *packet){
                     send_npc_text(socket, npc_action[action_node].text_success);
 
                     //buy a boat ticket
-                    if(npc_action[action_node].sell_item==BOAT_TICKET){
-
-                        clients.client[actor_node].boat_ticket=true;
-                        clients.client[actor_node].boat_schedule_node=npc_action[action_node].boat_schedule_node;
-                    }
-
-                    //buy an object
-                    else if(npc_action[action_node].sell_item==OBJECT){
-
-                        // TODO (themuntdregger#1#): add item to char inventory
-                    }
-
-                    //catch unknown sell item
-                    else {
-
-                        log_event(EVENT_ERROR, "unknown npc sell item [%i] in function %s: module %s: line %i", npc_action[action_node].sell_item, __func__, __FILE__, __LINE__);
-                    }
-
-                    return 0;
+                    clients.client[actor_node].boat_booked=true;
+                    clients.client[actor_node].boat_node=clients.client[actor_node].boat_schedule[response].boat_node;
+                    clients.client[actor_node].boat_departure_time=clients.client[actor_node].boat_schedule[response].boat_departure_time;
                 }
-                else if(npc_action[action_node].action_type==GIVE_OPTIONS){
 
-                    send_npc_options_list(socket, npc_actor_node, npc_action[action_node].option_list);
-                    send_npc_info(socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
-                    send_npc_text(socket, npc_action[action_node].text);
-                }
                 else {
 
                     log_event(EVENT_ERROR, "unknown npc action type [%i] in function %s: module %s: line %i", npc_action[action_node].action_type, __func__, __FILE__, __LINE__);
@@ -217,21 +229,63 @@ int client_touch_player(int actor_node, unsigned char *packet){
 
                 int action_node=npc_trigger[i].action_node;
 
-                switch(npc_action[action_node].action_type){
+                //manually specify an option list
+                if(npc_action[action_node].action_type==GIVE_OPTIONS){
 
-                    case GIVE_OPTIONS:{
-
-                        send_npc_options_list(socket, touched_actor_node, npc_action[action_node].option_list);
+                        send_npc_options_list(socket, touched_actor_node, npc_action[action_node].options_list);
                         send_npc_info(socket, clients.client[touched_actor_node].char_name, clients.client[touched_actor_node].portrait_id);
                         send_npc_text(socket, npc_action[action_node].text);
                         return 0;
+                }
+
+                //fill an options list with a boat schedule
+                else if(npc_action[action_node].action_type==GIVE_BOAT_SCHEDULE){
+
+                    //clear the boat schedule struct
+                    memset(&clients.client[actor_node].boat_schedule, 0, sizeof(clients.client[actor_node].boat_schedule));
+
+                    //create the boat schedule
+                    char boat_schedule[1024]="";
+
+                    for(int i=0; i<MAX_BOATS; i++){
+
+                        if(boat[i].departure_map_id==clients.client[touched_actor_node].map_id){
+
+                            int k=0;
+
+                            for(int j=0; j<3; j++){
+
+                                clients.client[actor_node].boat_schedule[k].boat_node=i;
+
+                                int start_time=game_data.game_minutes / (boat[i].travel_time*2) * (boat[i].travel_time*2);
+
+                                clients.client[actor_node].boat_schedule[k].boat_departure_time=start_time + ((j+1)* boat[i].travel_time *2);
+                                clients.client[actor_node].boat_schedule[k].boat_price=boat[i].boat_price *((3-j) * 2);
+
+                                int mins=clients.client[actor_node].boat_schedule[k].boat_departure_time % 60;
+                                int hrs=clients.client[actor_node].boat_schedule[k].boat_departure_time / 60;
+
+                                sprintf(boat_schedule, "%s%s departing at %i:%2i - price %i;",
+                                    boat_schedule,
+                                    maps.map[boat[i].destination_map_id].map_name,
+                                    hrs, mins,
+                                    clients.client[actor_node].boat_schedule[k].boat_price);
+
+                                k++;
+                            }
+                        }
                     }
 
-                    default:{
+                    //send boat schedule to the npc
+                    send_npc_options_list(socket, touched_actor_node, boat_schedule);
+                    send_npc_info(socket, clients.client[touched_actor_node].char_name, clients.client[touched_actor_node].portrait_id);
+                    send_npc_text(socket, npc_action[action_node].text);
+                    return 0;
+                }
+                else {
 
                         log_event(EVENT_ERROR, "unknown npc action type [%i] in function %s: module %s: line %i", npc_action[action_node].action_type, __func__, __FILE__, __LINE__);
                         return 0;
-                    }
                 }
             }
         }

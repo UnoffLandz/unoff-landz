@@ -22,7 +22,7 @@
 
 #include <stdint.h> //supports int32_t datatype
 
-#define MAX_MAPS 10
+#define MAX_MAPS 50
 #define ELM_FILE_HEADER 124
 #define MIN_MAP_AXIS 10 //used to bounds check maps
 #define ELM_FILE_VERSION 1

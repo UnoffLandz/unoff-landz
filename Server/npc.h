@@ -1,3 +1,22 @@
+/******************************************************************************************************************
+	Copyright 2014, 2015 UnoffLandz
+
+	This file is part of unoff_server_4.
+
+	unoff_server_4 is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	unoff_server_4 is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
+*******************************************************************************************************************/
+
 #ifndef NPC_H_INCLUDED
 #define NPC_H_INCLUDED
 
@@ -29,26 +48,20 @@ struct npc_action_type{
     enum {
 
         GIVE_OPTIONS,
-        SELL,
+        GIVE_BOAT_SCHEDULE,
+        SELL_OBJECT,
+        SELL_BOAT_TICKET,
     }action_type;
 
     char text[80];
-    char option_list[1024];
+    char options_list[1024];
     char text_success[80];
     char text_fail[80];
     int object_id_required;
     int object_amount_required;
     int choice;
 
-    enum {
-
-        OBJECT,
-        BOAT_TICKET
-    }sell_item;
-
-    //int map_id;
-    //int map_tile;
-    int boat_schedule_node;
+    int boat_node;
 };
 extern struct npc_action_type npc_action[MAX_NPC_ACTIONS];
 

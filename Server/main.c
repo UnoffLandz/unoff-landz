@@ -43,6 +43,8 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
+TODO (themuntdregger#1#): #command to remind when booked boat leaves
+
 BUG Player chat in dark gray even when active
 BUG Player chat shows chan 32
 BUG Bingo chat shows chan -30
@@ -144,9 +146,7 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include "client_protocol.h"
 #include "npc.h"
 #include "boats.h"
-
-#define DEBUG_MAIN 0
-#define VERSION "4.5"
+#include "game_time.h"
 
 struct ev_io *libevlist[MAX_ACTORS] = {NULL};
 
@@ -159,6 +159,7 @@ void socket_write_callback(struct ev_loop *loop, struct ev_io *watcher, int reve
 void timeout_cb(EV_P_ struct ev_timer* timer, int revents);
 void game_time_cb(EV_P_ struct ev_timer* timer, int revents);
 void idle_cb(EV_P_ struct ev_idle *watcher, int revents);
+
 
 void start_server(){
 
@@ -263,34 +264,30 @@ void start_server(){
 
     npc_trigger[1].actor_node=actor_node; //npc actor node
     npc_trigger[1].trigger_type=SELECT_OPTION;
-    npc_trigger[1].select_option=0;
     npc_trigger[1].action_node=1;
     //could add time of day, or race as trigger criteria
 
     npc_action[0].actor_node=actor_node;
-    npc_action[0].action_type=GIVE_OPTIONS;
-    strcpy(npc_action[0].text, "Hello. what would you like ?");
-    strcpy(npc_action[0].option_list, "ticket to Platts;option 2;boat schedule;");
+    npc_action[0].action_type=GIVE_BOAT_SCHEDULE;
+    strcpy(npc_action[0].text, "Hello. where would you like to sail?");
 
     npc_action[1].actor_node=actor_node;
-    npc_action[1].action_type=SELL;
+    npc_action[1].action_type=SELL_BOAT_TICKET;
     strcpy(npc_action[1].text_success, "thanks - you just bought a ticket");
-    strcpy(npc_action[1].text_fail, "sorry - you don't have enough for a ticket");
-    npc_action[1].object_id_required=408;
-    npc_action[1].object_amount_required=5;
-    npc_action[1].sell_item=BOAT_TICKET;
-    npc_action[1].boat_schedule_node=0;
+    strcpy(npc_action[1].text_fail, "sorry - you don't have enough for that ticket");
+    npc_action[1].boat_node=0;
 
-    boat_schedule[0].departure_map_id=1;
-    boat_schedule[0].departure_map_tile=4054;
-    boat_schedule[0].destination_map_id=2;
-    boat_schedule[0].destination_map_tile=77969;
-    boat_schedule[0].departure_time=15;
-    strcpy(boat_schedule[0].departure_message, "Welcome aboard Salty Sealines. Please stow your luggage in the hold and enjoy your voyage");
-    boat_schedule[0].arrival_time=20;
-    strcpy(boat_schedule[0].arrival_message, "thank you for sailing with Salty Sealines. We hope you enjoyed your voyage and will sail with us again");
-    boat_schedule[0].boat_map_id=3;
-    boat_schedule[0].boat_map_tile=4651;
+    boat[0].departure_map_id=1;
+    boat[0].departure_map_tile=4054;
+    boat[0].destination_map_id=2;
+    boat[0].destination_map_tile=77969;
+    strcpy(boat[0].departure_message, "Welcome aboard Salty Sealines. Please stow your luggage in the hold and enjoy your voyage");
+    boat[0].travel_time=2;
+    boat[0].boat_payment_object_id=408;
+    boat[0].boat_price=5;
+    strcpy(boat[0].arrival_message, "thank you for sailing with Salty Sealines. We hope you enjoyed your voyage and will sail with us again");
+    boat[0].boat_map_id=6;
+    boat[0].boat_map_tile=4651;
 
     /***************************/
 
@@ -644,7 +641,7 @@ void game_time_cb(EV_P_ struct ev_timer* timer, int revents){
 
             RETURNS  : void
 
-            PURPOSE  : handles game time updates
+            PURPOSE  : updates the game time
 
             NOTES    :
     **/
@@ -658,18 +655,7 @@ void game_time_cb(EV_P_ struct ev_timer* timer, int revents){
         stop_server();
     }
 
-    //update game time
-    game_data.game_minutes++;
-
-    if(game_data.game_minutes>360){// TODO (themuntdregger#1#): replace hard coded value
-
-        game_data.game_minutes=0;
-        game_data.game_days++;
-
-        push_sql_command("UPDATE GAME_DATA_TABLE SET GAME_DAYS=%i WHERE GAME_DATA_ID=1", game_data.game_days);
-    }
-
-    push_sql_command("UPDATE GAME_DATA_TABLE SET GAME_MINUTES=%i WHERE GAME_DATA_ID=1", game_data.game_minutes);
+    update_game_time();
  }
 
 
@@ -757,38 +743,41 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             //check for boat departures
             if(client_socket[socket].socket_status!=SOCKET_UNUSED){
 
-                if(clients.client[i].boat_ticket==true){
+                //check if char is book on boat
+                if(clients.client[i].boat_booked==true){
 
                     //check if it's time for boat to depart
-                    int boat_schedule_node=clients.client[i].boat_schedule_node;
-                    int departure_time=boat_schedule[boat_schedule_node].departure_time;
+                    if(game_data.game_minutes>clients.client[i].boat_departure_time){
 
-                    if(game_data.game_minutes>departure_time){
+                        int boat_node=clients.client[i].boat_node;
 
-                        //check if close enough to boat
-                        int departure_map_id=boat_schedule[boat_schedule_node].departure_map_id;
-                        int departure_map_tile=boat_schedule[boat_schedule_node].departure_map_tile;
+                        //set boat destination arrival time
+                        clients.client[i].boat_arrival_time=clients.client[i].boat_departure_time + boat[boat_node].travel_time;
+
+                        //check if char is close enough to boat
+                        int departure_map_id=boat[boat_node].departure_map_id;
+                        int departure_map_tile=boat[boat_node].departure_map_tile;
                         int departure_map_axis=maps.map[departure_map_id].map_axis;
                         int boat_proximity=get_proximity(clients.client[i].map_tile, departure_map_tile, departure_map_axis);
 
-                        //jump to boat map
-                        // TODO (themuntdregger#1#): replace hard coded value
-                        if(boat_proximity<10 && departure_map_id==clients.client[i].map_id){
+                        //jump char to boat map
+                        if(boat_proximity<BOAT_CATCH_PROXIMITY && departure_map_id==clients.client[i].map_id){
 
-                            int boat_map_id=boat_schedule[boat_schedule_node].boat_map_id;
-                            int boat_map_tile=boat_schedule[boat_schedule_node].boat_map_tile;
+                            if(move_char_between_maps(i, boat[boat_node].boat_map_id, boat[boat_node].boat_map_tile)==false){
 
-                            //jump to boat
-                            if(move_char_between_maps(i, boat_map_id, boat_map_tile)==false){
-
-                                log_event(EVENT_ERROR, "invalid map [%i] in function %s: module %s: line %i", boat_map_id, __func__, __FILE__, __LINE__);
+                                log_event(EVENT_ERROR, "invalid map [%i] in function %s: module %s: line %i", boat[boat_node].boat_map_id, __func__, __FILE__, __LINE__);
                                 stop_server();
                             }
 
-                            broadcast_local_chat(i, boat_schedule[boat_schedule_node].departure_message);
+
+                            send_text(clients.client[i].socket, CHAT_SERVER, "%s", boat[boat_node].departure_message);
+                        }
+                        else {
+
+                            send_text(clients.client[i].socket, CHAN_CHAT, "%cOops, you missed the boat", 127+c_red3);
                         }
 
-                        clients.client[i].boat_ticket=false;
+                        clients.client[i].boat_booked=false;
                         clients.client[i].on_boat=true;
                     }
                 }
@@ -797,25 +786,21 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             //check for boat arrivals
             if(client_socket[socket].socket_status!=SOCKET_UNUSED){
 
+                //check if char is on a boat
                 if(clients.client[i].on_boat==true){
 
-                    //check if it's time for boat to depart
-                    int boat_schedule_node=clients.client[i].boat_schedule_node;
-                    int arrival_time=boat_schedule[boat_schedule_node].arrival_time;
+                    //if boat has reached destination jump char to new map
+                    if(game_data.game_minutes > clients.client[i].boat_arrival_time){
 
-                    if(game_data.game_minutes>arrival_time){
+                        int boat_node=clients.client[i].boat_node;
 
-                        int destination_map_id=boat_schedule[boat_schedule_node].destination_map_id;
-                        int destination_map_tile=boat_schedule[boat_schedule_node].destination_map_tile;
+                        if(move_char_between_maps(i, boat[boat_node].destination_map_id, boat[boat_node].destination_map_tile)==false){
 
-                        //jump to destination
-                        if(move_char_between_maps(i, destination_map_id, destination_map_tile)==false){
-
-                            log_event(EVENT_ERROR, "invalid map [%i] in function %s: module %s: line %i", destination_map_id, __func__, __FILE__, __LINE__);
+                            log_event(EVENT_ERROR, "invalid map [%i] in function %s: module %s: line %i", boat[boat_node].destination_map_id, __func__, __FILE__, __LINE__);
                             stop_server();
                         }
 
-                        broadcast_local_chat(i, boat_schedule[boat_schedule_node].arrival_message);
+                        send_text(clients.client[i].socket, CHAT_SERVER, "%s", boat[boat_node].arrival_message);
 
                         clients.client[i].on_boat=false;
                     }
@@ -881,7 +866,7 @@ int main(int argc, char *argv[]){
         NOTES    :
     **/
 
-    printf("UnoffLandz Server - version %s\n\n", VERSION);
+    printf("Server - version %s.%s %s\n\n", VERSION, BUILD, BUILD_DATE);
 
     char db_filename[80]=DEFAULT_DATABASE_FILE_NAME;
 

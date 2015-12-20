@@ -22,6 +22,11 @@
 
 #define PORT 5555
 #define HEARTBEAT_INTERVAL 26
-#define GAME_MINUTE_INTERVAL 30
+
+#define SERVER_NAME "OL Map Walker"
+#define VERSION "UnoffLandz 4"
+#define BUILD "7"
+#define BUILD_DATE "20/12/2015"
+
 
 #endif // SERVER_PARAMETERS_H_INCLUDED

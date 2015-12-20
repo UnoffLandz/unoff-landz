@@ -17,6 +17,22 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#include "boats.h"
+#ifndef GAME_TIME_H_INCLUDED
+#define GAME_TIME_H_INCLUDED
 
-struct boat_type boat[MAX_BOATS];
+#define GAME_DAY_MINUTES 360 //number of game minutes in each game day
+#define GAME_MINUTE_INTERVAL 30 //number of real seconds in each game minute
+
+/** RESULT   : updates the game time and database
+
+    RETURNS  : void
+
+    PURPOSE  : reduces code size in main.c
+
+    NOTES    :
+**/
+void update_game_time();
+
+
+
+#endif // GAME_TIME_H_INCLUDED

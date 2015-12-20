@@ -221,11 +221,21 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     bool bag_open;
     int open_bag_id;
 
-    int portrait_id; //npc portraite
+    int portrait_id; //npc portrait
 
-    bool boat_ticket;
+    bool boat_booked;
+    int boat_node;
+    int boat_departure_time;
+    int boat_arrival_time;
     bool on_boat;
-    int boat_schedule_node;
+
+    //storage of boat schedule following request from npc
+    struct{
+
+        int boat_node;
+        int boat_departure_time;
+        int boat_price;
+    } boat_schedule[12];
 };
 
 struct client_list_type {
