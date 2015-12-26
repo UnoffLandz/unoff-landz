@@ -589,7 +589,7 @@ void log_packet(int socket, unsigned char *packet, int direction){
     int actor_node=client_socket[socket].actor_node;
     char char_name[80]="";
 
-    if(client_socket[socket].socket_status==CLIENT_LOGGED_IN){
+    if(client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
 
         strcpy(char_name, clients.client[actor_node].char_name);
     }

@@ -58,13 +58,25 @@ int get_inventory_emu(int actor_node);
 
 /** RESULT  : finds an existing inventory slot with an item or the next free slot
 
-    RETURNS : slot number or -1 if no existing or free slot found
+    RETURNS : slot number of existing item or first free slot.
+              If no free slots then -1 is returned
 
     PURPOSE : used in function: start_harvesting
 
     NOTES   :
 */
 int find_inventory_slot(int actor_node, int object_id);
+
+
+/** RESULT  : finds an existing inventory slot with an item
+
+    RETURNS : slot number or -1 if no existing slot
+
+    PURPOSE : used in function: start_harvesting
+
+    NOTES   :
+*/
+int item_in_inventory(int actor_node, int object_id);
 
 
 /** RESULT  : adds objects to the char inventory

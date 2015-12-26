@@ -35,7 +35,6 @@ enum { // client to server protocol
     SEND_VERSION=10,
     HEARTBEAT=14,
     USE_OBJECT=16,
-
     LOOK_AT_INVENTORY_ITEM=19,
  /*
         byte word                purpose

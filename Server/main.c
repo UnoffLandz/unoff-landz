@@ -43,17 +43,30 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-TODO (themuntdregger#1#): #command to remind when booked boat leaves
+Done - Broadcasts to other actors when actor is eaten by a Grue
+Done - added response time control to NPC's (char must select option within 30 seconds)
+Done - Personalised NPC greetings and improved option formatting
+Done - fixed inventory slot placement bug
+Done - Implemented gold coins
+Done - Implemented NPC item buy/sell
+Done - Implemented touch/see proximity for Chars
+Done - Fixed bug in bag poof (bag not disappearing).
+Done - Fixed bug in remove_actor
+Done - Fixed bug in concurrent login prevention
+Done - Fixed bug where char walks through other actors
 
 BUG Player chat in dark gray even when active
 BUG Player chat shows chan 32
 BUG Bingo chat shows chan -30
-FIXME (themuntdregger#1#): unknown protocol packets are not being logged in packet log
+REQUIRED update remote database with cold coin and correct maps
+REQUIRED #command to remind when booked boat leaves
+BUG unknown protocol packets are not being logged in packet log
 
 TEST multiple chat channel handling
 TEST multiple guild application handling
 
 TODO (themuntdregger#1#): On broadcast functions restrict to both node==used and type==player
+TODO (themuntdregger#1#): create sepaerate modules for broadcast chat and broadcast movement
 
 bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
 #jump to default to first walkable tile
@@ -88,6 +101,7 @@ create circular buffer for receiving packets
 need #function to describe char and what it is wearing)
 document new database/struct relationships
 finish char_race_stats and char_gender_stats functions in db_char_tbl.c
+banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveyard)
 
 46 48 map 6
 
@@ -99,7 +113,7 @@ finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 #include <arpa/inet.h>  //supports recv and accept function
 #include <ev.h>         //supports ev event library
 #include <fcntl.h>      //supports fcntl
-#include <unistd.h>     //supports close function, ssize_t data type and TEMP_FAILURE_RETRY
+#include <unistd.h>     //supports close function, ssize_t data type
 
 #include "server_parameters.h"
 #include "global.h"
@@ -237,44 +251,42 @@ void start_server(){
 
     /** Experimental NPC code **/
 
-    int actor_node=get_next_free_actor_node();
+    clients.client[0].client_node_status=CLIENT_NODE_USED;
+    clients.client[0].player_type=NPC;
+    strcpy(clients.client[0].char_name, "NPC_1");
+    clients.client[0].map_id=1;
+    clients.client[0].map_tile=27225;
+    clients.client[0].char_type=1;
+    clients.client[0].skin_type=0;
+    clients.client[0].hair_type=0;
+    clients.client[0].shirt_type=0;
+    clients.client[0].pants_type=0;
+    clients.client[0].boots_type=0;
+    clients.client[0].head_type=0;
+    clients.client[0].shield_type=0;
+    clients.client[0].weapon_type=0;
+    clients.client[0].cape_type=0;
+    clients.client[0].helmet_type=0;
+    clients.client[0].frame=0;
+    clients.client[0].portrait_id=1;
 
-    clients.client[actor_node].node_status=CLIENT_NODE_USED;
-    clients.client[actor_node].player_type=NPC;
-    strcpy(clients.client[actor_node].char_name, "NPC_1");
-    clients.client[actor_node].map_id=1;
-    clients.client[actor_node].map_tile=27225;
-    clients.client[actor_node].char_type=1;
-    clients.client[actor_node].skin_type=0;
-    clients.client[actor_node].hair_type=0;
-    clients.client[actor_node].shirt_type=0;
-    clients.client[actor_node].pants_type=0;
-    clients.client[actor_node].boots_type=0;
-    clients.client[actor_node].head_type=0;
-    clients.client[actor_node].shield_type=0;
-    clients.client[actor_node].weapon_type=0;
-    clients.client[actor_node].cape_type=0;
-    clients.client[actor_node].helmet_type=0;
-    clients.client[actor_node].frame=0;
-
-    npc_trigger[0].actor_node=actor_node; //npc actor node
+    npc_trigger[0].actor_node=0; //npc actor node
     npc_trigger[0].trigger_type=TOUCHED;
     npc_trigger[0].action_node=0;
     //could add time of day or race as trigger criteria
 
-    npc_trigger[1].actor_node=actor_node; //npc actor node
+    npc_trigger[1].actor_node=0; //npc actor node
     npc_trigger[1].trigger_type=SELECT_OPTION;
     npc_trigger[1].action_node=1;
     //could add time of day, or race as trigger criteria
 
-    npc_action[0].actor_node=actor_node;
+    npc_action[0].actor_node=0; //npc actor node
     npc_action[0].action_type=GIVE_BOAT_SCHEDULE;
-    strcpy(npc_action[0].text, "Hello. where would you like to sail?");
+    //automatically selects text
+    //pulls required item and amount from boat struct
 
-    npc_action[1].actor_node=actor_node;
+    npc_action[1].actor_node=0; //npc actor node
     npc_action[1].action_type=SELL_BOAT_TICKET;
-    strcpy(npc_action[1].text_success, "thanks - you just bought a ticket");
-    strcpy(npc_action[1].text_fail, "sorry - you don't have enough for that ticket");
     npc_action[1].boat_node=0;
 
     boat[0].departure_map_id=1;
@@ -283,13 +295,51 @@ void start_server(){
     boat[0].destination_map_tile=77969;
     strcpy(boat[0].departure_message, "Welcome aboard Salty Sealines. Please stow your luggage in the hold and enjoy your voyage");
     boat[0].travel_time=2;
-    boat[0].boat_payment_object_id=408;
-    boat[0].boat_price=5;
+    boat[0].boat_payment_object_id=3; //gold coin
+    boat[0].boat_payment_price=5;
     strcpy(boat[0].arrival_message, "thank you for sailing with Salty Sealines. We hope you enjoyed your voyage and will sail with us again");
     boat[0].boat_map_id=6;
     boat[0].boat_map_tile=4651;
 
+    clients.client[1].client_node_status=CLIENT_NODE_USED;
+    clients.client[1].player_type=NPC;
+    strcpy(clients.client[1].char_name, "NPC_2");
+    clients.client[1].map_id=1;
+    clients.client[1].map_tile=27227;
+    clients.client[1].char_type=1;
+    clients.client[1].skin_type=0;
+    clients.client[1].hair_type=0;
+    clients.client[1].shirt_type=0;
+    clients.client[1].pants_type=0;
+    clients.client[1].boots_type=0;
+    clients.client[1].head_type=0;
+    clients.client[1].shield_type=0;
+    clients.client[1].weapon_type=0;
+    clients.client[1].cape_type=0;
+    clients.client[1].helmet_type=0;
+    clients.client[1].frame=0;
+    clients.client[1].portrait_id=2;
+
+    npc_trigger[2].actor_node=1; //npc actor node
+    npc_trigger[2].trigger_type=TOUCHED;
+    npc_trigger[2].action_node=2;
+
+    npc_trigger[3].actor_node=1; //npc actor node
+    npc_trigger[3].trigger_type=SELECT_OPTION;
+    npc_trigger[3].action_node=3;
+
+    npc_action[2].actor_node=1;
+    npc_action[2].action_type=GIVE_SALE_OPTIONS;
+    npc_action[2].object_id_required=408; //carrots
+    npc_action[2].object_amount_required=5;
+    npc_action[2].object_id_given=3; //gold
+    npc_action[2].object_amount_given=1;
+
+    npc_action[3].actor_node=1;
+    npc_action[3].action_type=SELL_OBJECT;
+
     /***************************/
+
 
     //gather initial stats
     get_db_last_char_created(); //loads details of the last char created from the database into the game_data struct
@@ -456,7 +506,7 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
 
     //set up entry in client socket array
     client_socket[client_sd].actor_node=actor_node;
-    client_socket[client_sd].socket_status=CLIENT_CONNECTED;
+    client_socket[client_sd].socket_node_status=CLIENT_CONNECTED;
 
     //get client ip address
     strcpy(client_socket[client_sd].ip_address, inet_ntoa(client_addr.sin_addr));
@@ -468,7 +518,7 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
 
     //set up entry in actor array
     clients.client[actor_node].socket=client_sd;
-    clients.client[actor_node].node_status=CLIENT_NODE_USED;
+    clients.client[actor_node].client_node_status=CLIENT_NODE_USED;
     clients.client[actor_node].player_type=PLAYER;
 
     //send welcome message and motd to client
@@ -505,7 +555,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         int actor_node=client_socket[watcher->fd].actor_node;
 
         //check the socket has been registered in the socket array
-        if(client_socket[watcher->fd].socket_status==SOCKET_UNUSED){
+        if(client_socket[watcher->fd].socket_node_status==SOCKET_UNUSED){
 
             log_event(EVENT_ERROR, "data received from unregistered socket [%i] in function %s: module %s: line %i", watcher->fd, __func__, __FILE__, __LINE__);
             return;
@@ -593,7 +643,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
             int actor_node=client_socket[watcher->fd].actor_node;
             char char_name[80]="";
 
-            if(client_socket[watcher->fd].socket_status==CLIENT_LOGGED_IN){
+            if(client_socket[watcher->fd].socket_node_status==CLIENT_LOGGED_IN){
 
                 strcpy(char_name, clients.client[actor_node].char_name);
             }
@@ -692,17 +742,22 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             int socket=clients.client[i].socket;
 
             //check for lagged connection
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
+            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
 
                 if(client_socket[socket].time_of_last_heartbeat + HEARTBEAT_INTERVAL < time_check.tv_sec){
 
                     log_event(EVENT_SESSION, "client [%i] char [%s] lagged out", i, clients.client[i].char_name);
 
+                    //broadcast that char was eaten by the Grue
+                    char text_out[160]="";
+                    sprintf(text_out, "Poor old %s was eaten by the Grue", clients.client[i].char_name);
+                    broadcast_local_chat(i, text_out);
+
                     //close connection and stop watcher
-                    close_connection_slot(clients.client[i].socket);
-                    ev_io_stop(loop, libevlist[clients.client[i].socket]);
-                    free(libevlist[clients.client[i].socket]);
-                    libevlist[clients.client[i].socket] = NULL;
+                    close_connection_slot(i);
+                    ev_io_stop(loop, libevlist[socket]);
+                    free(libevlist[socket]);
+                    libevlist[socket] = NULL;
 
                     //clear structs
                     memset(&clients.client[i], 0, sizeof(clients.client[i]));
@@ -711,15 +766,15 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             }
 
             //check for kill flag on connection
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
+            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
 
-                if(client_socket[i].kill_connection==true){
+                if(client_socket[socket].kill_connection==true){
 
                     //close socket and stop watcher
-                    close_connection_slot(clients.client[i].socket);
-                    ev_io_stop(loop, libevlist[clients.client[i].socket]);
-                    free(libevlist[clients.client[i].socket]);
-                    libevlist[clients.client[i].socket] = NULL;
+                    close_connection_slot(i);
+                    ev_io_stop(loop, libevlist[socket]);
+                    free(libevlist[socket]);
+                    libevlist[socket] = NULL;
 
                     //clear structs
                     memset(&clients.client[i], 0, sizeof(clients.client[i]));
@@ -728,7 +783,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             }
 
             //update game time for connection
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
+            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
 
                 if(clients.client[i].time_of_last_minute+GAME_MINUTE_INTERVAL<time_check.tv_sec){
 
@@ -741,13 +796,13 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             }
 
             //check for boat departures
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
+            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
 
                 //check if char is book on boat
                 if(clients.client[i].boat_booked==true){
 
                     //check if it's time for boat to depart
-                    if(game_data.game_minutes>clients.client[i].boat_departure_time){
+                    if(game_data.game_minutes>=clients.client[i].boat_departure_time){
 
                         int boat_node=clients.client[i].boat_node;
 
@@ -757,8 +812,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                         //check if char is close enough to boat
                         int departure_map_id=boat[boat_node].departure_map_id;
                         int departure_map_tile=boat[boat_node].departure_map_tile;
-                        int departure_map_axis=maps.map[departure_map_id].map_axis;
-                        int boat_proximity=get_proximity(clients.client[i].map_tile, departure_map_tile, departure_map_axis);
+                        int boat_proximity=get_proximity(clients.client[i].map_tile, departure_map_tile, departure_map_id);
 
                         //jump char to boat map
                         if(boat_proximity<BOAT_CATCH_PROXIMITY && departure_map_id==clients.client[i].map_id){
@@ -784,13 +838,13 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             }
 
             //check for boat arrivals
-            if(client_socket[socket].socket_status!=SOCKET_UNUSED){
+            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
 
                 //check if char is on a boat
                 if(clients.client[i].on_boat==true){
 
                     //if boat has reached destination jump char to new map
-                    if(game_data.game_minutes > clients.client[i].boat_arrival_time){
+                    if(game_data.game_minutes >= clients.client[i].boat_arrival_time){
 
                         int boat_node=clients.client[i].boat_node;
 
@@ -809,7 +863,10 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
         }
 
         //process all actor related factors (NPC and Players)
-        if(clients.client[i].node_status==CLIENT_NODE_USED) {
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED) {
+
+            //process npc selection timeout
+            process_npc_option_timeout(i, time_check.tv_sec); //use seconds
 
             //process char movements for actors
             process_char_move(i, time_check.tv_usec); //use milliseconds

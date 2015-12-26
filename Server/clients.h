@@ -32,22 +32,31 @@
 #define MAX_ACTORS 100
 #define MAX_SOCKETS 50
 
+#define ACTOR_CONTACT_PROXIMITY 2    //max distance at which actor can touch or harvest
+
 struct client_socket_type{
 
-    int actor_node;
+    int actor_node;// link to the actor node
 
-    enum {
+    enum {// records whether a socket node is being used and its status
 
         SOCKET_UNUSED=0,
         CLIENT_CONNECTED=1,
         CLIENT_LOGGED_IN=2,
-    }socket_status;
+    }socket_node_status;
 
-    bool kill_connection;
-    unsigned char packet_buffer[1024];
-    size_t packet_buffer_length;
-    time_t time_of_last_heartbeat;
-    char ip_address[16];
+    bool kill_connection; //used to signal to the timeout callback that the actor socket
+                          //should be closed
+
+    unsigned char packet_buffer[1024]; //used to store the socket receive data and
+    size_t packet_buffer_length;//       measure it's length
+
+    time_t time_of_last_heartbeat; //tracks the time the client last communicated with
+                                   //with the server and whether the connection should
+                                   //be treated as having lagged out.
+
+    char ip_address[16]; //records the ip address through which the client has connected
+    //                     with the server
 
     //client version data
     int client_version_first_digit;
@@ -72,7 +81,7 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
 
         CLIENT_NODE_UNUSED=0,
         CLIENT_NODE_USED=1,
-    }node_status;
+    }client_node_status;
 
     enum{//describes the actor controller
 
@@ -85,7 +94,6 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     }player_type;
 
     int socket;
-    int npc_node;
 
     time_t char_created;
     int character_id; //database id for char
@@ -229,13 +237,19 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     int boat_arrival_time;
     bool on_boat;
 
-    //storage of boat schedule following request from npc
+    //storage of npc option data
     struct{
 
         int boat_node;
         int boat_departure_time;
-        int boat_price;
-    } boat_schedule[12];
+        int price;
+        int amount;
+    } npc_option[12];
+
+    bool npc_choice;
+    time_t npc_timeout;
+    int npc_node;
+    int action_node;
 };
 
 struct client_list_type {

@@ -26,8 +26,8 @@
 
 #define SEND_TEXT_MAX 1024
 
-struct {// struct used to transfer data to the _add_enhanced_actor_packet function
-
+struct {// struct used to transfer data to the _add_enhanced_actor_packet and
+        //_remove_actor_packet functions
     int actor_node;
     char char_name[80];
     int guild_id;
@@ -208,6 +208,18 @@ void add_new_enhanced_actor_packet(int socket, unsigned char *packet, size_t *pa
 void _add_new_enhanced_actor_packet(unsigned char *packet, size_t *packet_length);
 
 
+/** RESULT  : creates an remove_actor_packet
+
+    RETURNS : void
+
+    PURPOSE : wrapper for _remove_actor_packet that automatically transfers details
+              of the char specified in socket
+
+    NOTES   :
+*/
+void remove_actor_packet(int actor_node, unsigned char *packet, size_t *packet_length);
+
+
 /** RESULT  : creates the remove actor_packet to client
 
     RETURNS : void
@@ -217,7 +229,7 @@ void _add_new_enhanced_actor_packet(unsigned char *packet, size_t *packet_length
     NOTES   : Because this packet is broadcasted to multiple clients we simply create the packet
               and leave the broadcast function to send
 */
-void remove_actor_packet(int socket, unsigned char *packet, size_t *packet_length);
+void _remove_actor_packet(unsigned char *packet, size_t *packet_length);
 
 
 /** RESULT  : creates the add_actor_packet

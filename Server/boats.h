@@ -39,9 +39,10 @@ struct boat_type{
 
     int boat_map_id;
     int boat_map_tile;
-    int boat_price;
+    int boat_payment_price;
     int boat_payment_object_id;
 };
 extern struct boat_type boat[MAX_BOATS];
+
 
 #endif // BOATS_H_INCLUDED

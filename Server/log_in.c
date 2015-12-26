@@ -74,8 +74,6 @@ void process_log_in(int actor_node, const unsigned char *packet){
     if(char_id==-1) {
 
         send_you_dont_exist(socket);
-
-        send_text(socket, CHAT_SERVER, "%cunknown character name", c_red1+127);
         log_event(EVENT_SESSION, "login rejected - unknown char name");
         return;
     }
@@ -90,22 +88,14 @@ void process_log_in(int actor_node, const unsigned char *packet){
 
     //add connection data to character struct
     character.socket=clients.client[actor_node].socket;
-    character.node_status=clients.client[actor_node].node_status;
+    character.client_node_status=clients.client[actor_node].client_node_status;
     character.player_type=clients.client[actor_node].player_type;
 
     //copy the character struct to the client struct
     clients.client[actor_node]=character;
 
-    //add char to map (makes scene visible in client). We need to do this before we inform
-    //client if char is dead or banned, otherwise client will not display that message
-    int map_id=clients.client[actor_node].map_id;
-    int map_tile=clients.client[actor_node].map_tile;
-
-    if(add_char_to_map(actor_node, map_id, map_tile)==false){
-
-        log_event(EVENT_ERROR, "cannot add char [%s] to map [%s] in function %s: module %s: line %i", char_name, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
-        stop_server();
-    }
+    //set the socket status to show that client has changed from [connected] to [logged in]
+    client_socket[socket].socket_node_status=CLIENT_LOGGED_IN;
 
     //send this otherwise warning messages will not be sent to the client screen
     send_you_are(socket);
@@ -113,15 +103,15 @@ void process_log_in(int actor_node, const unsigned char *packet){
     //prevent concurrent login on same char
     for(int i=0; i<MAX_ACTORS; i++){
 
-        // TODO (derekl#1#): test concurrent log-in prevention
-
         if(clients.client[i].socket!=socket
-        && clients.client[i].node_status==CLIENT_NODE_USED
+        && clients.client[i].client_node_status==CLIENT_NODE_USED
         && clients.client[i].character_id==clients.client[actor_node].character_id){
 
-            send_login_not_ok(socket);
-            remove_char_from_map(actor_node);
+            //transport duplicate char to an empty map
+            send_change_map(socket, "./maps/nomap.elm");
 
+            send_login_ok(socket);//need to send login_ok otherwise screen will not display
+                                  //message indicating that char is already logged in
             log_event(EVENT_SESSION, "concurrent login attempt for char [%s] on ip [%c.%c.%c.%c]", char_name,
             client_socket[socket].ip_address[0], client_socket[socket].ip_address[1], client_socket[socket].ip_address[2], client_socket[socket].ip_address[3]);
 
@@ -131,6 +121,16 @@ void process_log_in(int actor_node, const unsigned char *packet){
             client_socket[socket].kill_connection=true;
             return;
         }
+    }
+
+    //add char to map
+    int map_id=clients.client[actor_node].map_id;
+    int map_tile=clients.client[actor_node].map_tile;
+
+    if(add_char_to_map(actor_node, map_id, map_tile)==false){
+
+        log_event(EVENT_ERROR, "cannot add char [%s] to map [%s] in function %s: module %s: line %i", char_name, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        stop_server();
     }
 
     //when reconnecting to the client after a disconnect, this closes any open bag inventory.
@@ -143,9 +143,6 @@ void process_log_in(int actor_node, const unsigned char *packet){
         case CHAR_ALIVE:{
 
             log_event(EVENT_SESSION, "login accepted");
-
-            //set the socket status to show that client has changed from [connected] to [logged in]
-            client_socket[socket].socket_status=CLIENT_LOGGED_IN;
 
             //record when session commenced so we can calculate time in-game
             clients.client[actor_node].session_commenced=time(NULL);
@@ -185,7 +182,6 @@ void process_log_in(int actor_node, const unsigned char *packet){
         case CHAR_DEAD:{
 
             send_login_not_ok(socket);
-            remove_char_from_map(actor_node);
 
             log_event(EVENT_SESSION, "login rejected for [%s] - dead char", clients.client[actor_node].char_name);
 
@@ -193,13 +189,12 @@ void process_log_in(int actor_node, const unsigned char *packet){
 
             //issue kill command for the socket
             client_socket[socket].kill_connection=true;
-            return;
+            break;
         }
 
         case CHAR_BANNED:{
 
             send_login_not_ok(socket);
-            remove_char_from_map(actor_node);
 
             log_event(EVENT_SESSION, "login rejected for [%s] - banned char", clients.client[actor_node].char_name);
 
@@ -207,19 +202,12 @@ void process_log_in(int actor_node, const unsigned char *packet){
 
             //issue kill command for the socket
             client_socket[socket].kill_connection=true;
-            return;
+            break;
         }
 
         default:{
 
-            send_login_not_ok(socket);
-            remove_char_from_map(actor_node);
-
             log_event(EVENT_ERROR, "login rejected for [%s] - unknown char status [%i]", clients.client[actor_node].char_name, clients.client[actor_node].char_status);
-
-            //issue kill command for the socket
-            client_socket[socket].kill_connection=true;
-
             stop_server();
         }
     }

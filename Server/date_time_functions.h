@@ -20,8 +20,8 @@
 #ifndef DATE_TIME_FUNCTIONS_H_INCLUDED
 #define DATE_TIME_FUNCTIONS_H_INCLUDED
 
-#include <time.h>       // supports gettimeof day function (saves separately having to add to any module that calls functions from this module
-#include <sys/time.h>   // supports time_t data type
+#include <time.h>       // supports time_t data type
+#include <sys/time.h>   // support for gettimeofday function
 
 
 extern struct timeval time_check;//output struct for gettimeofday function

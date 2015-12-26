@@ -20,9 +20,12 @@
 #ifndef NPC_H_INCLUDED
 #define NPC_H_INCLUDED
 
+#include <time.h> //support for time_t data type
+
 #define MAX_NPC_TRIGGERS 10
 #define MAX_NPC_ACTIONS 10
 #define MAX_NPC_OPTIONS 10
+#define NPC_OPTION_TIMEOUT 30
 
 struct npc_trigger_type{
 
@@ -47,19 +50,23 @@ struct npc_action_type{
 
     enum {
 
-        GIVE_OPTIONS,
+        GIVE_SALE_OPTIONS,
         GIVE_BOAT_SCHEDULE,
         SELL_OBJECT,
         SELL_BOAT_TICKET,
+        GIVE_OPTIONS,
     }action_type;
 
     char text[80];
     char options_list[1024];
     char text_success[80];
     char text_fail[80];
+    int choice;
+
     int object_id_required;
     int object_amount_required;
-    int choice;
+    int object_id_given;
+    int object_amount_given;
 
     int boat_node;
 };
@@ -77,6 +84,33 @@ extern struct npc_action_type npc_action[MAX_NPC_ACTIONS];
 **/
 int get_next_free_npc_node();
 
+
+/** RESULT   : processes the timeout for an NPC who has provided options
+
+    RETURNS  : void
+
+    PURPOSE  :
+
+    NOTES    :
+**/
+void process_npc_option_timeout(int actor_node, time_t time_check);
+
+
+/** RESULT   : npc gives sales options to player
+
+    RETURNS  : void
+
+    PURPOSE  :
+
+    NOTES    :
+**/
+void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node);
+
+void npc_sell_object(int actor_node, int npc_actor_node, int choice);
+
+void npc_give_boat_options(int actor_node, int npc_actor_node, int action_node);
+
+void npc_sell_boat_ticket(int actor_node, int npc_actor_node, int ticket_node);
 
 /**
 Essentially what we have for each NPC is a series of dev (you guys) specified instructions to perform certain actions on certain triggers. The range of triggers divide roughly into:

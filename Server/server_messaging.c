@@ -63,7 +63,11 @@ void send_motd_header(int socket){
     //prepare list of names for characters in game
     for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
+        int socket=clients.client[i].socket;
+
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED
+        && clients.client[i].player_type==PLAYER
+        && client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
 
             sprintf(chars_in_game_str, "%s %s",  chars_in_game_str, clients.client[i].char_name);
             chars_in_game_count++;

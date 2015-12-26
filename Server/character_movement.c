@@ -149,8 +149,6 @@ void remove_char_from_map(int actor_node){
     //broadcast actor removal to other chars on map
     broadcast_remove_actor_packet(actor_node);
     log_event(EVENT_SESSION, "char %s removed from map %s", clients.client[actor_node].char_name, maps.map[map_id].map_name);
-
-    return;
 }
 
 
@@ -177,10 +175,10 @@ void send_actors_to_client(int actor_node){
         if(map_id==clients.client[i].map_id){
 
             //restrict to actors within visual range of this character
-            if(get_proximity(map_tile, clients.client[i].map_tile, maps.map[map_id].map_axis)<=char_visual_range){
+            if(get_proximity(map_tile, clients.client[i].map_tile, map_id)<=char_visual_range){
 
                 //send actors within visual proximity to this char
-                add_new_enhanced_actor_packet(clients.client[i].socket, packet, &packet_length);
+                add_new_enhanced_actor_packet(i, packet, &packet_length);
                 send_packet(socket, packet, packet_length);
             }
         }

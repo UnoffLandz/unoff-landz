@@ -122,7 +122,7 @@ int get_nearest_unoccupied_tile(int connection, int map_id, int map_tile){
             if(tile_in_lateral_bounds(map_tile, next_tile, map_id)==true){
 
                 // make sure search doesn't go outside of map
-                if(next_tile>0 && next_tile<maps.map[map_id].height_map_size) {
+                if(next_tile>0 && next_tile<(int)maps.map[map_id].height_map_size) {
 
                     //check next best tile
                     if(tile_walkable(map_id, next_tile)==true && tile_unoccupied(connection, map_id, next_tile)==true) return next_tile;

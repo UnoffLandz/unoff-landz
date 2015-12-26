@@ -77,7 +77,7 @@ int char_in_game(char *char_name){
     for(int i=0; i<MAX_ACTORS; i++){
 
         //restrict to actors who are players
-        if(clients.client[i].node_status==CLIENT_NODE_USED &&
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED &&
             clients.client[i].player_type==PLAYER){
 
             //convert compare name to upper case

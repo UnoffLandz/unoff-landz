@@ -53,7 +53,7 @@ struct map_node_type{
     int tile_map_size;
 
     unsigned char height_map[HEIGHT_MAP_MAX];
-    int height_map_size;
+    size_t height_map_size;
 
     int threed_object_map_size;
     int threed_object_structure_len;
@@ -130,7 +130,7 @@ struct __attribute__((__packed__)){
 
     NOTES   :
 */
-int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis);
+int get_proximity(int tile_pos_1, int tile_pos_2, int map_id);
 
 
 /** RESULT  : calculates the tile based on the x,y coordinates
@@ -220,6 +220,6 @@ void read_elm_header(char *elm_filename);
 
     NOTES   :
 */
-void read_height_map(char *elm_filename, unsigned char *height_map, int *height_map_size, int *map_axis);
+void read_height_map(char *elm_filename, unsigned char *height_map, size_t *height_map_size, int *map_axis);
 
 #endif // MAPS_H_INCLUDED

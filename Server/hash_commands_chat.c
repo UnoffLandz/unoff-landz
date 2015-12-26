@@ -124,7 +124,7 @@ int hash_cp(int actor_node, char *text) {
 
     for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED && clients.client[i].player_type==PLAYER){
 
             if(player_in_chan(i, chan_id)!=-1){
 

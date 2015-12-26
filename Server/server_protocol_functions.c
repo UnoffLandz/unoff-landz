@@ -622,7 +622,7 @@ void send_npc_text(int socket, char *text){
 }
 
 
-void send_npc_info(int socket, char *npc_name, int npc_id){
+void send_npc_info(int socket, char *npc_name, int npc_portrait_id){
 
 /** public function - see header */
 
@@ -644,7 +644,7 @@ void send_npc_info(int socket, char *npc_name, int npc_id){
     packet.protocol=SEND_NPC_INFO;
     packet.data_length=(uint16_t)(packet_length-2); //subtract 2 from the packet length to calculate the data length
     strcpy(packet.npc_name, npc_name);
-    packet.npc_portrait_id=(unsigned char)npc_id;
+    packet.npc_portrait_id=(unsigned char)npc_portrait_id;
 
     send_packet(socket, &packet, packet_length);
 }
@@ -703,13 +703,11 @@ void send_npc_options_list(int socket, int npc_actor_node, char *options){
 }
 
 
-void add_new_enhanced_actor_packet(int socket, unsigned char *packet, size_t *packet_length){
+void add_new_enhanced_actor_packet(int actor_node, unsigned char *packet, size_t *packet_length){
 
     /** public function - see header */
 
-    int actor_node=client_socket[socket].actor_node;
     actor.actor_node=actor_node;
-
     strcpy(actor.char_name, clients.client[actor_node].char_name);
     actor.guild_id=clients.client[actor_node].guild_id;
 
@@ -839,7 +837,17 @@ void _add_new_enhanced_actor_packet(unsigned char *packet, size_t *packet_length
 }
 
 
-void remove_actor_packet(int socket, unsigned char *packet, size_t *packet_length){
+void remove_actor_packet(int actor_node, unsigned char *packet, size_t *packet_length){
+
+    /** public function - see header */
+
+    actor.actor_node=actor_node;
+
+    _remove_actor_packet(packet, packet_length);
+}
+
+
+void _remove_actor_packet(unsigned char *packet, size_t *packet_length){
 
     /** public function - see header */
 
@@ -859,7 +867,7 @@ void remove_actor_packet(int socket, unsigned char *packet, size_t *packet_lengt
     //add data to packet 1
     _packet.protocol=REMOVE_ACTOR;
     _packet.data_length=(uint16_t)(*packet_length-2);
-    _packet.actor_node=(uint16_t)client_socket[socket].actor_node;
+    _packet.actor_node=(uint16_t)actor.actor_node;
 
     memcpy(packet, &_packet, sizeof(_packet));
 }

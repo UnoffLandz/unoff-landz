@@ -37,9 +37,11 @@
 struct map_list_type maps;
 
 
-int get_proximity(int tile_pos_1, int tile_pos_2, int map_axis){
+int get_proximity(int tile_pos_1, int tile_pos_2, int map_id){
 
     /** public function - see header */
+
+    int map_axis=maps.map[map_id].map_axis;
 
     int x_diff=abs((tile_pos_1 % map_axis) - (tile_pos_2 % map_axis));
     int y_diff=abs((tile_pos_1 / map_axis) - (tile_pos_2 / map_axis));
@@ -201,7 +203,7 @@ void read_elm_header(char *elm_filename){
 }
 
 
-void read_height_map(char *elm_filename, unsigned char *height_map, int *height_map_size, int *map_axis){
+void read_height_map(char *elm_filename, unsigned char *height_map, size_t *height_map_size, int *map_axis){
 
     /** public function - see header */
 
@@ -215,7 +217,7 @@ void read_height_map(char *elm_filename, unsigned char *height_map, int *height_
         stop_server();
     }
 
-    *height_map_size=elm_header.threed_object_offset-elm_header.height_map_offset;
+    *height_map_size=(size_t)(elm_header.threed_object_offset-elm_header.height_map_offset);
     *map_axis=elm_header.h_tiles * 6;
 
     //bounds check the height map size

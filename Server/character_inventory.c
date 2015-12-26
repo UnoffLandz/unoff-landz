@@ -72,18 +72,31 @@ int find_inventory_slot(int actor_node, int object_id){
 
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
-        if(clients.client[actor_node].inventory[i].object_id==0 && slot==-1) {
+        //find the first empty slot
+        if(clients.client[actor_node].inventory[i].amount==0 && slot==-1) slot=i;
 
-            slot=i;
-        }
-
-        if(clients.client[actor_node].inventory[i].object_id==object_id) {
-
-            return i;
-        }
+        //find slot with the object
+        if(clients.client[actor_node].inventory[i].object_id==object_id
+        && clients.client[actor_node].inventory[i].amount>0) return i;
     }
 
     return slot;
+}
+
+
+int item_in_inventory(int actor_node, int object_id){
+
+    /** public function - see header **/
+
+    //find an existing inventory slot or return -1
+    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
+
+        //fund slot with the object
+        if(clients.client[actor_node].inventory[i].object_id==object_id
+        && clients.client[actor_node].inventory[i].amount>0) return i;
+    }
+
+    return -1;
 }
 
 

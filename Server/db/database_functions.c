@@ -94,7 +94,7 @@ void open_database(const char *db_filename){
 void close_database(){
 
     int rc=sqlite3_close(db);
-    if( rc !=SQLITE_OK ){
+    if(rc != SQLITE_OK ){
 
         //don't use log_sqlite_error function as this already contains a call to close_database
         //and therefore creates an infinite loop

@@ -19,7 +19,7 @@
 
 #include <stdio.h> //support for sprintf function
 #include <stdlib.h> //support for exit function
-#include <string.h> // support for memset
+#include <string.h> // support for memset function
 
 #include "pathfinding.h"
 #include "client_protocol.h"
@@ -282,7 +282,7 @@ bool tile_adjacent(int tile, int test_tile, int map_id){
 }
 
 
-void add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_id){
+void add_adjacent_tiles_to_explore_stack2(int target_tile, int dest_tile, int map_id){
 
     /** RESULT  : adds all tiles adjacent to the target tile to the a-star stack, together with a heuristic value
 
@@ -314,6 +314,53 @@ void add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map
         }
     }
 }
+
+
+void add_adjacent_tiles_to_explore_stack(int target_tile, int dest_tile, int map_id){
+
+    /** RESULT  : adds all tiles adjacent to the target tile to the a-star stack, together with a heuristic value
+
+        RETURNS : void
+
+        PURPOSE : to provide a single function to add adjacent tiles to the a-star stack
+
+        NOTES   : pathfinding.c explore_path
+
+    */
+
+    int map_axis=maps.map[map_id].map_axis;
+
+    unsigned char height_map[HEIGHT_MAP_MAX]={0};
+    memcpy(height_map, maps.map[map_id].height_map, (size_t)maps.map[map_id].height_map_size);
+
+    for(int i=0; i<MAX_ACTORS; i++){
+
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED
+        && clients.client[i].map_id==map_id){
+
+            height_map[clients.client[i].map_tile]=NON_TRAVERSABLE_TILE;
+        }
+    }
+
+    for(int i=0; i<MAX_VECTORS; i++){
+
+        int adj_tile=target_tile + vector[i].x + (map_axis * vector[i].y);
+
+        //ensure adjacent tile is within lateral bounds
+        if(tile_in_lateral_bounds(target_tile, adj_tile, map_id)==true){
+
+            //ensure adjacent tile is traversable
+            if(height_map[adj_tile]!=NON_TRAVERSABLE_TILE) {
+
+                //calculate heuristic distance from adjacent tile to destination
+                int heuristic_value=get_heuristic_value(adj_tile, dest_tile, map_id);
+
+                add_tile_to_explore_stack(heuristic_value, adj_tile);
+            }
+        }
+    }
+}
+
 
 
 int get_next_unexplored_tile(){

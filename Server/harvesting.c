@@ -83,6 +83,7 @@ void stop_harvesting(int actor_node){
 void start_harvesting(int actor_node, int threed_object_list_pos){
 
     /** public function - see header */
+
     int socket=clients.client[actor_node].socket;
 
     //get the id for the object being harvested
@@ -91,9 +92,9 @@ void start_harvesting(int actor_node, int threed_object_list_pos){
 
     //determine if the object is close enough for the char to harvest
     int object_tile=get_object_tile(map_id, threed_object_list_pos);
-    int object_proximity=get_proximity(clients.client[actor_node].map_tile, object_tile, maps.map[map_id].map_axis);
+    int object_proximity=get_proximity(clients.client[actor_node].map_tile, object_tile, map_id);
 
-    if(object_proximity>MIN_HARVEST_PROXIMITY){
+    if(object_proximity>ACTOR_CONTACT_PROXIMITY){
 
         send_text(socket, CHAT_SERVER, "%cYou are too far away to harvest that item!", c_red3+127);
         return;

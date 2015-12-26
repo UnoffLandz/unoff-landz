@@ -20,8 +20,6 @@
 #ifndef HARVESTING_H_INCLUDED
 #define HARVESTING_H_INCLUDED
 
-#define MIN_HARVEST_PROXIMITY 2
-
 /** RESULT  : stops a char harvesting
 
     RETURNS : void

@@ -5,6 +5,8 @@
 #include "idle_buffer2.h"
 #include "db/database_functions.h"
 #include "broadcast_actor_functions.h"
+#include "logging.h"
+#include "server_start_stop.h"
 
 struct client_list_type clients;
 struct client_socket_type client_socket[MAX_SOCKETS];
@@ -12,32 +14,45 @@ struct client_socket_type client_socket[MAX_SOCKETS];
 
 int get_next_free_actor_node(){
 
+    /** public function - see header */
 
     for(int i=0; i<MAX_ACTORS; i++){
 
-        if(clients.client[i].node_status==CLIENT_NODE_UNUSED) return i;
+        if(clients.client[i].client_node_status==CLIENT_NODE_UNUSED) return i;
     }
 
     return -1;
 }
 
 
-
-
 void close_connection_slot(int actor_node){
 
     /** public function - see header */
 
-    if(client_socket[actor_node].socket_status==CLIENT_LOGGED_IN){
+    int socket=clients.client[actor_node].socket;
 
-        //broadcast to local
+    if(client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
+
+        //broadcast actor removal
         broadcast_remove_actor_packet(actor_node);
-        // TODO (themuntdregger#1#): add broadcast to nearby chars that client has been eaten by grue
 
         //update last in game time for char
         clients.client[actor_node].time_of_last_minute=time(NULL);
         push_sql_command("UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[actor_node].time_of_last_minute, clients.client[actor_node].character_id);
+
+        log_event(EVENT_SESSION, "socket [%i] closed on char [%s] whilst LOGGED_IN", socket, clients.client[actor_node].char_name);
+    }
+    else if(client_socket[socket].socket_node_status==CLIENT_CONNECTED){
+
+        log_event(EVENT_SESSION, "socket [%i] closed whilst CONNECTED", socket);
+
+    }
+    else {
+
+        log_event(EVENT_ERROR, "attempt to close unused socket [%i] in function %s: module %s: line %i", socket, __func__, __FILE__, __LINE__);
+        stop_server();
     }
 
-    close(clients.client[actor_node].socket);
+    //hasta la vista baby
+    close(socket);
 }
