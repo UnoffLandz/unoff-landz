@@ -34,34 +34,15 @@
 struct npc_trigger_type npc_trigger[MAX_NPC_TRIGGERS];
 struct npc_action_type npc_action[MAX_NPC_ACTIONS];
 
-void process_npc_option_timeout(int actor_node, time_t time_check){
-
-    /** public function - see header */
-
-    //if npc choice has not been activated then abort
-    if(clients.client[actor_node].npc_choice==false) return;
-
-    //if timeout has not been reached then abort
-    if(clients.client[actor_node].npc_timeout + NPC_OPTION_TIMEOUT > time_check) return;
-
-    //process the timeout
-    clients.client[actor_node].npc_choice=false;
-
-    int npc_node=clients.client[actor_node].npc_node;
-    send_npc_options_list(clients.client[actor_node].socket, npc_node, "");
-    send_npc_info(clients.client[actor_node].socket, clients.client[npc_node].char_name, clients.client[npc_node].portrait_id);
-
-    char text_out[80]="";
-    sprintf(text_out, "%cSorry %s. You took too long to decide. Try again", 127+c_red3, clients.client[actor_node].char_name);
-    send_npc_text(clients.client[actor_node].socket, text_out);
-}
 
 void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node){
+
+    /** public function - see header **/
 
     char text_out[160]="";
     int socket=clients.client[actor_node].socket;
 
-    //clear the section of the client struct that will contain the boat schedule
+    //clear the section of the client struct that will contain the price options
     memset(&clients.client[actor_node].npc_option, 0, sizeof(clients.client[actor_node].npc_option));
 
     //clear the npc options list
@@ -83,6 +64,7 @@ void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node){
 
     //determine the amount of object that the char has
     int char_amount=clients.client[actor_node].inventory[slot].amount;
+    int max=char_amount/amount_required;
 
     char option_str[1024]="";
     sprintf(option_str, "%s%d;", option_str, (int)(amount_required));
@@ -95,11 +77,13 @@ void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node){
     clients.client[actor_node].npc_option[1].amount=amount_required*5;
     clients.client[actor_node].npc_option[2].amount=amount_required*10;
     clients.client[actor_node].npc_option[3].amount=amount_required*15;
+    clients.client[actor_node].npc_option[3].amount=amount_required*max;
 
     clients.client[actor_node].npc_option[0].price=1;
     clients.client[actor_node].npc_option[1].price=5;
     clients.client[actor_node].npc_option[2].price=10;
     clients.client[actor_node].npc_option[3].price=15;
+    clients.client[actor_node].npc_option[3].price=max;
 
     clients.client[actor_node].action_node=action_node;
 
@@ -112,34 +96,45 @@ void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node){
 
     //update time_check struct (used to put a time limit on the char's response)
     gettimeofday(&time_check, NULL);
-    clients.client[actor_node].npc_timeout=time_check.tv_sec;
-    clients.client[actor_node].npc_choice=true;
+    clients.client[actor_node].npc_choice_time=time_check.tv_sec;
 }
+
 
 void npc_sell_object(int actor_node, int npc_actor_node, int choice){
 
+    /** public function - see header **/
+
     char text_out[160]="";
+    int action_node=clients.client[actor_node].action_node;
     int socket=clients.client[actor_node].socket;
 
     //clear the options list
     send_npc_options_list(socket, npc_actor_node, "");
 
+    //check the timeout
+    gettimeofday(&time_check, NULL);
+
+    if(clients.client[actor_node].npc_choice_time + NPC_OPTION_TIMEOUT < time_check.tv_sec){
+
+        send_npc_info(clients.client[actor_node].socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
+        sprintf(text_out, "%cSorry %s. You took too long to decide. Try again", 127+c_red3, clients.client[actor_node].char_name);
+        send_npc_text(clients.client[actor_node].socket, text_out);
+        return;
+    }
+
     //get cost of object to be purchased
     int referring_action_node=clients.client[actor_node].action_node;
+
     int object_amount_required=clients.client[actor_node].npc_option[choice].amount;
     int object_id_required=npc_action[referring_action_node].object_id_required;
-
     int item_required_slot=item_in_inventory(actor_node, object_id_required);
 
     //check actor has payment for the object to be purchased
     if(item_required_slot==-1 || clients.client[actor_node].inventory[item_required_slot].amount < object_amount_required){
 
-
         sprintf(text_out, "Sorry %s.\n\nYou don't have enough %s to buy that amount.", clients.client[actor_node].char_name, object[object_id_required].object_name);
+        send_npc_info(clients.client[actor_node].socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
         send_npc_text(socket, text_out);
-
-        //ensure choice timeout is turned off
-        clients.client[actor_node].npc_choice=false;
         return;
     }
 
@@ -152,25 +147,23 @@ void npc_sell_object(int actor_node, int npc_actor_node, int choice){
     if(item_given_slot==-1){
 
         sprintf(text_out, "Sorry %s.\n\nYou don't have room for....", clients.client[actor_node].char_name);
+        send_npc_info(clients.client[actor_node].socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
         send_npc_text(socket, text_out);
-
-        //ensure choice timeout is turned off
-        clients.client[actor_node].npc_choice=false;
         return;
     }
 
     //add purchased object to and remove payment from the actors inventory
     add_to_inventory(actor_node, object_id_given, object_amount_given, item_given_slot);
     remove_from_inventory(actor_node, object_id_required, object_amount_required, item_required_slot);
-    sprintf(text_out, "Thanks %s.\n\nYou've just bought %i %s", clients.client[actor_node].char_name, object_amount_given, object[object_id_given].object_name);
-    send_npc_text(socket, text_out);
 
-    //ensure choice timeout is turned off
-    clients.client[actor_node].npc_choice=false;
+    //repeat sale options
+    npc_give_sale_options(actor_node, npc_actor_node, action_node);
 }
 
 
 void npc_give_boat_options(int actor_node, int npc_actor_node, int action_node){
+
+    /** public function - see header **/
 
     //clear the section of the client struct that will contain the boat schedule
     memset(&clients.client[actor_node].npc_option, 0, sizeof(clients.client[actor_node].npc_option));
@@ -185,7 +178,6 @@ void npc_give_boat_options(int actor_node, int npc_actor_node, int action_node){
             int k=0;
 
             //get the next three sailing times for each boat
-
             int boat_node=npc_action[action_node].boat_node;
             int object_id_required=boat[boat_node].boat_payment_object_id;
 
@@ -225,11 +217,12 @@ void npc_give_boat_options(int actor_node, int npc_actor_node, int action_node){
 
     //update time_check struct (used to put a time limit on the char's response)
     gettimeofday(&time_check, NULL);
-    clients.client[actor_node].npc_timeout=time_check.tv_sec;
-    clients.client[actor_node].npc_choice=true;
+    clients.client[actor_node].npc_choice_time=time_check.tv_sec;
 }
 
 void npc_sell_boat_ticket(int actor_node, int npc_actor_node, int ticket_node){
+
+  /** public function - see header */
 
     char text_out[160]="";
     int socket=clients.client[actor_node].socket;
@@ -249,26 +242,19 @@ void npc_sell_boat_ticket(int actor_node, int npc_actor_node, int ticket_node){
 
         sprintf(text_out, "Sorry %s.\n\nYou don't have enough %s to buy that ticket.", clients.client[actor_node].char_name, object[object_id_required].object_name);
         send_npc_text(socket, text_out);
-
-        //ensure choice timeout is turned off
-        clients.client[actor_node].npc_choice=false;
         return;
     }
 
     //remove payment from the chars inventory
     remove_from_inventory(actor_node, object_id_required, object_amount_required, slot);
 
-    //communicate to npc
+    //communicate to char
     int map_id=boat[boat_node].destination_map_id;
-    sprintf(text_out, "Thanks %s.\n\nYou've just bought your ticket on the %02i boat to %s. Be sure not to miss it as I don't give refunds.", clients.client[actor_node].char_name, clients.client[actor_node].boat_departure_time, maps.map[map_id].map_name);
+    sprintf(text_out, "Thanks %s.\n\nYou've just bought your ticket on the %02i boat to %s. Be sure not to miss it as I don't give refunds.", clients.client[actor_node].char_name, clients.client[ticket_node].boat_departure_time, maps.map[map_id].map_name);
     send_npc_text(socket, text_out);
 
     //buy a boat ticket
     clients.client[actor_node].boat_booked=true;
     clients.client[actor_node].boat_node=clients.client[actor_node].npc_option[ticket_node].boat_node;
     clients.client[actor_node].boat_departure_time=clients.client[actor_node].npc_option[ticket_node].boat_departure_time;
-
-    //ensure choice timeout is turned off
-    clients.client[actor_node].npc_choice=false;
 }
-

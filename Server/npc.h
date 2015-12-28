@@ -85,17 +85,6 @@ extern struct npc_action_type npc_action[MAX_NPC_ACTIONS];
 int get_next_free_npc_node();
 
 
-/** RESULT   : processes the timeout for an NPC who has provided options
-
-    RETURNS  : void
-
-    PURPOSE  :
-
-    NOTES    :
-**/
-void process_npc_option_timeout(int actor_node, time_t time_check);
-
-
 /** RESULT   : npc gives sales options to player
 
     RETURNS  : void

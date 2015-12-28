@@ -122,13 +122,25 @@ int client_set_active_channel(int actor_node, unsigned char *packet){
 
 int client_respond_to_npc(int actor_node, unsigned char *packet){
 
-    int npc_actor_node=*((int16_t*)(packet+3));
     int response=packet[5];
 
-    if(clients.client[npc_actor_node].player_type==NPC){
+    int npc_actor_node=*((int16_t*)(packet+3));
+    int socket=clients.client[actor_node].socket;
 
-        //turn off response timer
-        clients.client[actor_node].npc_choice=false;
+    //check proximity
+    if(get_proximity(clients.client[actor_node].map_tile, clients.client[npc_actor_node].map_tile, clients.client[actor_node].map_id)>ACTOR_CONTACT_PROXIMITY){
+
+        //clear npc options
+        send_npc_options_list(socket, npc_actor_node, "");
+
+        char text_out[160]="";
+        sprintf(text_out, "Sorry %s.\n\nYou've moved too far away", clients.client[actor_node].char_name);
+        send_npc_info(socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
+        send_npc_text(socket, text_out);
+        return 0;
+    }
+
+    if(clients.client[npc_actor_node].player_type==NPC){
 
         for(int i=0; i<MAX_NPC_TRIGGERS; i++){
 
@@ -140,65 +152,19 @@ int client_respond_to_npc(int actor_node, unsigned char *packet){
                 if(npc_action[action_node].action_type==SELL_OBJECT){
 
                     npc_sell_object(actor_node, npc_actor_node, response);
-/*
-                    //clear the options list
-                    send_npc_options_list(socket, npc_actor_node, "");
-
-                    //get cost of object to be purchased
-                    int referring_action_node=clients.client[actor_node].action_node;
-                    int object_amount_required=clients.client[actor_node].npc_option[response].amount;
-                    int object_id_required=npc_action[referring_action_node].object_id_required;
-
-                    int item_required_slot=item_in_inventory(actor_node, object_id_required);
-
-                    //check actor has payment for the object to be purchased
-                    if(item_required_slot==-1 || clients.client[actor_node].inventory[item_required_slot].amount < object_amount_required){
-
-
-                        sprintf(text_out, "Sorry %s.\n\nYou don't have enough %s to buy that amount.", clients.client[actor_node].char_name, object[object_id_required].object_name);
-                        send_npc_text(socket, text_out);
-
-                        //ensure choice timeout is turned off
-                        clients.client[actor_node].npc_choice=false;
-                        return 0;
-                    }
-
-                    //check actor has room in inventory for the object to be purchased
-                    int object_amount_given=clients.client[actor_node].npc_option[response].price;
-                    int object_id_given=npc_action[referring_action_node].object_id_given;
-                    int item_given_slot=find_inventory_slot(actor_node, object_id_given);
-
-                    //check actor has room for payment item
-                    if(item_given_slot==-1){
-
-                        sprintf(text_out, "Sorry %s.\n\nYou don't have room for....", clients.client[actor_node].char_name);
-                        send_npc_text(socket, text_out);
-
-                        //ensure choice timeout is turned off
-                        clients.client[actor_node].npc_choice=false;
-                        return 0;
-                    }
-
-                    //add purchased object to and remove payment from the actors inventory
-                    add_to_inventory(actor_node, object_id_given, object_amount_given, item_given_slot);
-                    remove_from_inventory(actor_node, object_id_required, object_amount_required, item_required_slot);
-                    sprintf(text_out, "Thanks %s.\n\nYou've just bought %i %s", clients.client[actor_node].char_name, object_amount_given, object[object_id_given].object_name);
-                    send_npc_text(socket, text_out);
-
-                    //ensure choice timeout is turned off
-                    clients.client[actor_node].npc_choice=false;
-                    return 0;
-*/
                 }
+
                 else if(npc_action[action_node].action_type==SELL_BOAT_TICKET){
 
                     npc_sell_boat_ticket(actor_node, npc_actor_node, response);
                 }
+
                 else if(npc_action[action_node].action_type==GIVE_BOAT_SCHEDULE){
 
                     npc_give_boat_options(actor_node, npc_actor_node, action_node);
                     return 0;
                 }
+
                 else {
 
                     log_event(EVENT_ERROR, "unknown npc action type [%i] in function %s: module %s: line %i", npc_action[action_node].action_type, __func__, __FILE__, __LINE__);
@@ -213,7 +179,6 @@ int client_respond_to_npc(int actor_node, unsigned char *packet){
 
 int client_touch_player(int actor_node, unsigned char *packet){
 
-    //char text_out[160]="";
     int touched_actor_node=*((int32_t*)(packet+3));
     int socket=clients.client[actor_node].socket;
 
@@ -225,7 +190,6 @@ int client_touch_player(int actor_node, unsigned char *packet){
     }
 
     if(clients.client[touched_actor_node].player_type==NPC){
-
 
         clients.client[actor_node].npc_node=touched_actor_node;
 
@@ -240,9 +204,15 @@ int client_touch_player(int actor_node, unsigned char *packet){
 
                     npc_give_boat_options(actor_node, touched_actor_node, action_node);
                 }
+
                 else if(npc_action[action_node].action_type==GIVE_SALE_OPTIONS){
 
                     npc_give_sale_options(actor_node, touched_actor_node, action_node);
+                }
+
+                else{
+
+                    log_event(EVENT_ERROR, "unknown npc action type [%i] in function %s: module %s: line %i", npc_action[action_node].action_type, __func__, __FILE__, __LINE__);
                 }
             }
         }

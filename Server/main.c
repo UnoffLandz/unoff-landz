@@ -60,6 +60,11 @@ Done - Fixed bug active chan chat shown in dark grey
 Done - Tested multiple chat channel handling
 Done - updated remote database to include gold coin and correct maps
 
+Bug - npc won't buy max amount
+Bug - npc boat time shown after buying ticket is wrong
+Bug - npc should buy 1
+Bug - npc don't close after sale
+
 REQUIRED #command to remind when booked boat leaves
 BUG unknown protocol packets are not being logged in packet log
 
@@ -295,7 +300,7 @@ void start_server(){
     boat[0].boat_payment_object_id=3; //gold coin
     boat[0].boat_payment_price=5;
     strcpy(boat[0].arrival_message, "thank you for sailing with Salty Sealines. We hope you enjoyed your voyage and will sail with us again");
-    boat[0].boat_map_id=6;
+    boat[0].boat_map_id=3;
     boat[0].boat_map_tile=4651;
 
     clients.client[1].client_node_status=CLIENT_NODE_USED;
@@ -586,19 +591,6 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
                     log_event(EVENT_ERROR, "read error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
                     log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... closing", watcher->fd, errnum, strerror(errnum));
 
-/*
-                    //notify guild that char has logged off
-                    int guild_id=clients.client[actor_node].guild_id;
-
-                    if(guild_id>0){
-
-                        // TODO (themuntdregger#1#): create broadcast_guild_event function to hold this code and to allow ...
-                        //guild master to modify leaving/joining messages and colours
-                        char text_out[80]="";
-                        sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[actor_node].char_name);
-                        broadcast_guild_chat(guild_id, actor_node, text_out);
-                    }
-*/
                     //close socket and stop watcher
                     close_connection_slot(actor_node);
                     ev_io_stop(loop, libevlist[watcher->fd]);
@@ -620,19 +612,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
             if (libevlist[watcher->fd]!= NULL) {
 
                 log_event(EVENT_SESSION, "client [%i] logged-off on socket [%i]", actor_node, watcher->fd);
-/*
-                //notify guild that char has logged off
-                int guild_id=clients.client[actor_node].guild_id;
 
-                if(guild_id>0){
-
-                    // TODO (themuntdregger#1#): create broadcast_guild_event function to hold this code and to allow ...
-                    //guild master to modify leaving/joining messages and colours
-                    char text_out[80]="";
-                    sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[actor_node].char_name);
-                    broadcast_guild_chat(guild_id, actor_node, text_out);
-                }
-*/
                 //close socket and stop watcher
                 close_connection_slot(actor_node);
                 ev_io_stop(loop, libevlist[watcher->fd]);
@@ -874,9 +854,6 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
         //process all actor related factors (NPC and Players)
         if(clients.client[i].client_node_status==CLIENT_NODE_USED) {
-
-            //process npc selection timeout
-            process_npc_option_timeout(i, time_check.tv_sec); //use seconds
 
             //process char movements for actors
             process_char_move(i, time_check.tv_usec); //use milliseconds

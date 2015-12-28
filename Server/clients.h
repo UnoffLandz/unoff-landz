@@ -246,8 +246,7 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
         int amount;
     } npc_option[12];
 
-    bool npc_choice;
-    time_t npc_timeout;
+    time_t npc_choice_time;
     int npc_node;
     int action_node;
 };
