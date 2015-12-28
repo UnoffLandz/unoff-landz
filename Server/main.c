@@ -58,8 +58,8 @@ Done - Fixed local chat (broken after implementation of actor loop)
 Done - Fixed bug channel chat numbers shown incorrectly
 Done - Fixed bug active chan chat shown in dark grey
 Done - Tested multiple chat channel handling
+Done - updated remote database to include gold coin and correct maps
 
-REQUIRED update remote database with cold coin and correct maps
 REQUIRED #command to remind when booked boat leaves
 BUG unknown protocol packets are not being logged in packet log
 
@@ -288,7 +288,7 @@ void start_server(){
 
     boat[0].departure_map_id=1;
     boat[0].departure_map_tile=4054;
-    boat[0].destination_map_id=2;
+    boat[0].destination_map_id=16;
     boat[0].destination_map_tile=77969;
     strcpy(boat[0].departure_message, "Welcome aboard Salty Sealines. Please stow your luggage in the hold and enjoy your voyage");
     boat[0].travel_time=2;
