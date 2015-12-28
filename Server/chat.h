@@ -149,4 +149,14 @@ void clear_client_channels(int actor_node);
 bool chat_chan_open(int actor_node);
 
 
+/** RESULT  : Determines if a chan is the active chan for a particular client
+
+    RETURNS : true / false
+
+    PURPOSE :
+
+    NOTES   :
+**/
+bool is_chan_active(int actor_node, int chan);
+
 #endif // CHAT_H_INCLUDED

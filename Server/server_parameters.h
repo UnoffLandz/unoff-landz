@@ -25,8 +25,8 @@
 
 #define SERVER_NAME "OL Map Walker"
 #define VERSION "UnoffLandz 4"
-#define BUILD "7"
-#define BUILD_DATE "20/12/2015"
+#define BUILD "8"
+#define BUILD_DATE __DATE__
 
 
 #endif // SERVER_PARAMETERS_H_INCLUDED

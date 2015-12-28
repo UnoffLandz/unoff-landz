@@ -385,16 +385,27 @@ void send_close_bag(int socket){
 }
 
 
-void send_get_active_channels(int socket, unsigned char active_chan, int *chan_slot){
+void send_get_active_channels(int socket){
 
     /** public function - see header */
+
+/*  Examples of effect of values used in GET_ACTIVE_CHANNELS
+
+    Active  Slot    Slot    Slot
+    Chan    Zero    One     Two     Channels
+    -----------------------------------------------------------
+    2       1       2       3       Newbie-Help Gen-Help +Market
+    1       1       2       3       Newbie-Help +Gen-Help Market
+    0       1       2       3       +Newbie-Help Gen-Help Market
+    1       0       1       2       +Newbie-Help Gen-Help
+*/
 
     struct __attribute__((__packed__)){
 
         unsigned char protocol;
         uint16_t data_length;
-        unsigned char _active_chan;
-        uint32_t _chan_slot[MAX_CHAN_SLOTS];
+        unsigned char _active_chan; // values start a 0 (chan slot 1)
+        uint32_t _chan_slot[MAX_CHAN_SLOTS]; //values = channel number (0 = no chan)
     }packet;
 
     size_t packet_length=sizeof(packet);
@@ -406,15 +417,18 @@ void send_get_active_channels(int socket, unsigned char active_chan, int *chan_s
     packet.protocol=GET_ACTIVE_CHANNELS;
     packet.data_length=(uint16_t)(packet_length-2);
 
-    packet._active_chan=active_chan;
+    int actor_node=client_socket[socket].actor_node;
+
+    packet._active_chan=(unsigned char)clients.client[actor_node].active_chan;
 
     for(int i=0; i<MAX_CHAN_SLOTS; i++){
 
-        packet._chan_slot[i]=(uint32_t)chan_slot[i];
+        packet._chan_slot[i]=(uint32_t)clients.client[actor_node].chan[i];
     }
 
     send_packet(socket, &packet, packet_length);
 }
+
 
 
 void send_here_your_stats(int socket){

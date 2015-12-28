@@ -150,8 +150,11 @@ void add_new_character(int actor_node, const unsigned char *packet){
 
             if(j<MAX_CHAN_SLOTS){
 
-                if(j==0) character.active_chan=i-CHAT_CHANNEL_0;
-                character.chan[j]=i;
+                if(j==0) {
+
+                    character.active_chan=i;
+                    character.chan[j]=i;
+                }
             }
         }
     }

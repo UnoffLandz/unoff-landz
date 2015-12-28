@@ -32,7 +32,7 @@
 #include "logging.h"
 #include "server_start_stop.h"
 #include "bags.h"
-#include "broadcast_actor_functions.h"
+#include "broadcast_movement.h"
 
 struct client_inventory_type client_inventory;
 

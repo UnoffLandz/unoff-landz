@@ -1,12 +1,15 @@
-#include <stdio.h> //support snprintf
+#include <stdio.h>      //support snprintf
 #include <unistd.h>     //supports close function
 
 #include "clients.h"
 #include "idle_buffer2.h"
 #include "db/database_functions.h"
-#include "broadcast_actor_functions.h"
+#include "broadcast_chat.h"
+#include "broadcast_movement.h"
 #include "logging.h"
 #include "server_start_stop.h"
+#include "colour.h"
+
 
 struct client_list_type clients;
 struct client_socket_type client_socket[MAX_SOCKETS];
@@ -29,6 +32,19 @@ void close_connection_slot(int actor_node){
 
     /** public function - see header */
 
+    //notify guild that char has logged off
+    int guild_id=clients.client[actor_node].guild_id;
+
+    if(guild_id>0){
+
+        // TODO (themuntdregger#1#): create broadcast_guild_event function to hold this code and to allow ...
+        //guild master to modify leaving/joining messages and colours
+        char text_out[80]="";
+        sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[actor_node].char_name);
+        broadcast_guild_chat(guild_id, actor_node, text_out);
+    }
+
+    //close client socket connection
     int socket=clients.client[actor_node].socket;
 
     if(client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){

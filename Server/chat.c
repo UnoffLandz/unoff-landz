@@ -24,7 +24,7 @@
 #include "server_protocol_functions.h"
 #include "server_messaging.h"
 #include "clients.h"
-#include "broadcast_actor_functions.h"
+#include "broadcast_chat.h"
 #include "logging.h"
 #include "characters.h"
 #include "global.h"
@@ -47,6 +47,20 @@ int player_in_chan(int actor_node, int chan){
 
     return -1;
 }
+
+
+bool is_chan_active(int actor_node, int chan){
+
+    /** public function - see header */
+
+    int active_chan_slot=clients.client[actor_node].active_chan;
+    int active_chan=clients.client[actor_node].chan[active_chan_slot];
+
+    if(active_chan==chan) return true;
+
+    return false;
+}
+
 
 bool chat_chan_open(int actor_node){
 
@@ -105,15 +119,20 @@ int join_channel(int actor_node, int chan){
             sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, clients.client[actor_node].char_name, channel[chan].channel_name);
             broadcast_channel_event(chan, actor_node, text_out);
 
+            //set the new chan ans make it active
             clients.client[actor_node].chan[i]=chan;
-
-            push_sql_command("UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", i, chan, clients.client[actor_node].character_id);
-
             clients.client[actor_node].active_chan=i;
 
-            send_client_channels(socket);
+            //send chans to client
+            send_get_active_channels(clients.client[actor_node].socket);
 
-            push_sql_command("UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[actor_node].active_chan, clients.client[actor_node].character_id);
+            //update database
+            push_sql_command("UPDATE CHARACTER_TABLE SET CHAN_0=%i, CHAN_1=%i, CHAN_2=%i, ACTIVE_CHAN=%i WHERE CHAR_ID=%i;",
+            clients.client[actor_node].chan[0],
+            clients.client[actor_node].chan[1],
+            clients.client[actor_node].chan[2],
+            clients.client[actor_node].active_chan,
+            clients.client[actor_node].character_id);
 
             //echo back to player which channel was just joined and its description etc
             send_text(socket, CHAT_SERVER, "%cYou joined channel %s", c_green3+127, channel[chan].channel_name);
@@ -156,8 +175,6 @@ int leave_channel(int actor_node, int chan){
     //null the channel slot
     clients.client[actor_node].chan[slot]=0;
 
-    push_sql_command("UPDATE CHARACTER_TABLE SET CHAN_%i=%i WHERE CHAR_ID=%i;", slot, chan, clients.client[actor_node].character_id);
-
     // need to echo back to player which channel was just joined and its description etc
     send_text(socket, CHAT_SERVER, "%cyou left channel %s", c_green3+127, channel[chan].channel_name);
 
@@ -177,10 +194,15 @@ int leave_channel(int actor_node, int chan){
         }
     }
 
-    //send channel info to client
-    send_client_channels(socket);
+    send_get_active_channels(clients.client[actor_node].socket);
 
-    push_sql_command("UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i;", clients.client[actor_node].active_chan, clients.client[actor_node].character_id);
+    //update database
+    push_sql_command("UPDATE CHARACTER_TABLE SET CHAN_0=%i, CHAN_1=%i, CHAN_2=%i, ACTIVE_CHAN=%i WHERE CHAR_ID=%i;",
+    clients.client[actor_node].chan[0],
+    clients.client[actor_node].chan[1],
+    clients.client[actor_node].chan[2],
+    clients.client[actor_node].active_chan,
+    clients.client[actor_node].character_id);
 
     if(clients.client[actor_node].active_chan==0){
 
@@ -227,26 +249,5 @@ void send_client_channels(int actor_node){
 
     /** public function - see header */
 
-    int chan_slot[MAX_CHAN_SLOTS];
-    int socket=clients.client[actor_node].socket;
-
-    for(int i=0; i<MAX_CHAN_SLOTS; i++){
-
-        chan_slot[i]=clients.client[actor_node].chan[i];
-    }
-
-    send_get_active_channels(socket, (unsigned char)clients.client[actor_node].active_chan, chan_slot);
-}
-
-
-void clear_client_channels(int actor_node){
-
-    /** public function - see header */
-
-    //send zeros to clear all client chat tabs
-    unsigned char active_chan=0;
-    int chan_slot[MAX_CHAN_SLOTS]={0};
-    int socket=clients.client[actor_node].socket;
-
-    send_get_active_channels(socket, active_chan, chan_slot);
+    send_get_active_channels(clients.client[actor_node].socket);
 }

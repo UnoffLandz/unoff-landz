@@ -37,7 +37,8 @@
 #include "map_object.h"
 #include "character_movement.h"
 #include "character_type.h"
-#include "broadcast_actor_functions.h"
+#include "broadcast_chat.h"
+#include "broadcast_movement.h"
 #include "chat.h"
 #include "hash_commands.h"
 #include "server_start_stop.h"
@@ -109,11 +110,11 @@ int client_create_char(int actor_node, unsigned char *packet){
 
 int client_set_active_channel(int actor_node, unsigned char *packet){
 
-    //set the active channel
+    //set the active channel (chans run in reverse from 32(chan 1) - 0(chan 33).
     clients.client[actor_node].active_chan=packet[3]-32;
 
     //update the database
-    push_sql_command("UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", packet[3], clients.client[actor_node].character_id);
+    push_sql_command("UPDATE CHARACTER_TABLE SET ACTIVE_CHAN=%i WHERE CHAR_ID=%i", clients.client[actor_node].active_chan, clients.client[actor_node].character_id);
 
     return 0;
 }
@@ -524,7 +525,6 @@ int client_send_version(int actor_node, unsigned char *packet){
 int client_raw_text(int actor_node, unsigned char *packet){
 
     int socket=clients.client[actor_node].socket;
-    char text_out[1024]="";
 
     //extract text string from packet
     char text[1024]="";
@@ -547,11 +547,11 @@ int client_raw_text(int actor_node, unsigned char *packet){
             return 0;
         }
 
-        //chat channels run from 32 (channel 1) to 63 (channel 32)
-        int active_chan_slot=clients.client[actor_node].active_chan - CHAT_CHANNEL_0;
+        //0 1 2
+        int active_chan_slot=clients.client[actor_node].active_chan;
 
         //channel slots run from zero. Hence, we need to subtract 1 from the active_chan slot value
-        int chan=clients.client[actor_node].chan[active_chan_slot-1];
+        int chan=clients.client[actor_node].chan[active_chan_slot];
 
         //broadcast text
         broadcast_channel_chat(chan, actor_node, text);
@@ -572,21 +572,19 @@ int client_raw_text(int actor_node, unsigned char *packet){
         strcpy(text, text_out);
 
         process_hash_commands(actor_node, text_out);
-        return 0;
     }
 
     //hash commands
     else if(text[0]=='#'){
 
         process_hash_commands(actor_node, text);
-        return 0;
     }
 
     //local chat
     else {
 
         //broadcast text
-        broadcast_local_chat(actor_node, text_out);
+        broadcast_local_chat(actor_node, text);
     }
 
     return 0;

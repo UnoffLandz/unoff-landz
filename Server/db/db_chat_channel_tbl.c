@@ -65,9 +65,17 @@ void load_db_channels(){
 
         channel[chan_id].chan_type=sqlite3_column_int(stmt, 1);
         channel[chan_id].owner_id=sqlite3_column_int(stmt, 2);
-        strcpy(channel[chan_id].password, (char*)sqlite3_column_text(stmt, 3));
-        strcpy(channel[chan_id].channel_name, (char*)sqlite3_column_text(stmt, 4));
-        strcpy(channel[chan_id].description, (char*)sqlite3_column_text(stmt, 5));
+
+        //test each string for null values otherwise the strcpy will segfault
+        if(sqlite3_column_text(stmt, 3))
+            strcpy(channel[chan_id].password, (char*)sqlite3_column_text(stmt, 3));
+
+        if(sqlite3_column_text(stmt, 4))
+            strcpy(channel[chan_id].channel_name, (char*)sqlite3_column_text(stmt, 4));
+
+        if(sqlite3_column_text(stmt, 5))
+            strcpy(channel[chan_id].description, (char*)sqlite3_column_text(stmt, 5));
+
         channel[chan_id].new_chars=sqlite3_column_int(stmt, 6);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", chan_id, channel[chan_id].channel_name);

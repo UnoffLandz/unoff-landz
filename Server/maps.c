@@ -28,7 +28,6 @@
 #include "string_functions.h"
 #include "numeric_functions.h"
 #include "global.h"
-#include "broadcast_actor_functions.h"
 #include "server_start_stop.h"
 #include "e3d.h"
 #include "colour.h"
@@ -218,7 +217,7 @@ void read_height_map(char *elm_filename, unsigned char *height_map, size_t *heig
     }
 
     *height_map_size=(size_t)(elm_header.threed_object_offset-elm_header.height_map_offset);
-    *map_axis=elm_header.h_tiles * 6;
+    *map_axis=elm_header.h_tiles * STEP_TILE_RATIO;
 
     //bounds check the height map size
     if(*height_map_size>HEIGHT_MAP_MAX){
@@ -236,6 +235,48 @@ void read_height_map(char *elm_filename, unsigned char *height_map, size_t *heig
 
     //read the height map
     if(fread(height_map, (size_t) *height_map_size, 1, file)!=1) {
+
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    fclose(file);
+}
+
+
+void read_tile_map(char *elm_filename, unsigned char *tile_map, size_t *tile_map_size, int *map_axis){
+
+    /** public function - see header */
+
+    read_elm_header(elm_filename);
+
+    FILE *file;
+
+    if((file=fopen(elm_filename, "r"))==NULL) {
+
+        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    *tile_map_size=(size_t)(elm_header.height_map_offset-elm_header.tile_map_offset);
+    *map_axis=elm_header.h_tiles * STEP_TILE_RATIO;
+
+    //bounds check the tile map size
+    if(*tile_map_size>TILE_MAP_MAX){
+
+        log_event(EVENT_ERROR, "tile map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", *tile_map_size, TILE_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //read data proceeding the tile map
+    if(fseek(file, elm_header.tile_map_offset, SEEK_SET)!=0){
+
+        log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
+
+    //read the tile map
+    if(fread(tile_map, (size_t) *tile_map_size, 1, file)!=1) {
 
         log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();

@@ -38,7 +38,7 @@
 #include "game_data.h"
 #include "guilds.h"
 #include "idle_buffer2.h"
-#include "broadcast_actor_functions.h"
+#include "broadcast_chat.h"
 #include "hash_commands.h"
 #include "hash_commands_guilds.h"
 #include "hash_commands_chat.h"
@@ -562,32 +562,6 @@ static int hash_trace_explore(int actor_node, char *text) {
 }
 
 
-static int hash_clear_inventory(int actor_node, char *text) {
-
-    /** RESULT  : clears char inventory
-
-        RETURNS : void
-
-        PURPOSE : debugging and testing
-
-        NOTES   :
-    */
-
-    (void)(text);
-    int socket=clients.client[actor_node].socket;
-
-    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
-
-        clients.client[actor_node].inventory[i].object_id=0;
-        clients.client[actor_node].inventory[i].amount=0;
-        clients.client[actor_node].inventory[i].flags=0;
-    }
-
-    send_here_your_inventory(socket);
-
-    return 0;
-}
-
 typedef int (*hash_command_function)(int actor_node, char *text);
 
 
@@ -649,7 +623,6 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#GD",                      false,  0,     PERMISSION_1, hash_guild_details},
     {"#GUILD_MESSAGE",           true,   0,     PERMISSION_1, hash_guild_message},
     {"#GM",                      true,   0,     PERMISSION_1, hash_guild_message},
-    {"#CLEAR_INVENTORY",         false,  0,     PERMISSION_3, hash_clear_inventory},
     {"#SET_GUILD_DESCRIPTION",   true,   18,    PERMISSION_1, hash_set_guild_description},
     {"#SD",                      true,   18,    PERMISSION_1, hash_set_guild_description},
     {"#SET_GUILD_TAG_COLOUR",    true,   18,    PERMISSION_1, hash_set_guild_tag_colour},

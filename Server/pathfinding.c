@@ -251,7 +251,9 @@ int get_heuristic_value(int tile, int dest_tile, int map_id){
     int dest_tile_x=dest_tile % map_axis;
     int dest_tile_y=dest_tile / map_axis;
 
-    return abs(tile_x-dest_tile_x)+abs(tile_y-dest_tile_y);
+    int distance=abs(tile_x-dest_tile_x)+abs(tile_y-dest_tile_y);
+
+    return distance;
 }
 
 

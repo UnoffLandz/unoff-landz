@@ -159,7 +159,7 @@ void send_here_your_ground_items(int socket, int bag_id);
 
     NOTES   :
 */
-void send_get_active_channels(int socket, unsigned char active_chan, int *chan_slot);
+void send_get_active_channels(int socket);
 
 
 /** RESULT  : sends the here_your_stats packet to client

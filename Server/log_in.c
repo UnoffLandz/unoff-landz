@@ -34,7 +34,7 @@
 #include "server_start_stop.h"
 #include "game_data.h"
 #include "packet.h"
-#include "broadcast_actor_functions.h"
+#include "broadcast_chat.h"
 
 void process_log_in(int actor_node, const unsigned char *packet){
 
@@ -157,7 +157,7 @@ void process_log_in(int actor_node, const unsigned char *packet){
             chat channel but without a corresponding chan tab. The solution to this
             appears to be to send a copy of the get_active_channels protocol to the client
             with all channel data set to zero */
-            clear_client_channels(actor_node);
+            //clear_client_channels(actor_node);
 
             /*Now resend the get_active_channels protocol with the required channel data and
             this will ensure that any closed chan tabs are reopened */

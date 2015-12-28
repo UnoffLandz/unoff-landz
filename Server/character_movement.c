@@ -25,7 +25,7 @@
 #include "maps.h"
 #include "date_time_functions.h"
 #include "server_protocol_functions.h"
-#include "broadcast_actor_functions.h"
+#include "broadcast_movement.h"
 #include "global.h"
 #include "colour.h"
 #include "server_messaging.h"
@@ -124,7 +124,7 @@ void process_char_move(int actor_node, time_t current_utime){
                 if(clients.client[actor_node].track==true){
 
                     send_text(clients.client[actor_node].socket, CHAT_SERVER, "%cPosition x=%i y=%i", c_green3+127, next_tile % map_axis, next_tile / map_axis);
-                 }
+                }
 
                 //update char current position and save
                 clients.client[actor_node].map_tile=next_tile;

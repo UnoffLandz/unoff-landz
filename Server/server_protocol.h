@@ -251,7 +251,7 @@ enum { // server to client protocol
         byte word                purpose
         ---- ------------------  --------------------------------------------------------------
         1    Uint8               protocol
-        2-3  uint16_t              data-length (=packet length-2)
+        2-3  uint16_t            data-length (=packet length-2)
         4    Unit8               active channel slot
 
         REPEAT FOR EACH SLOT...

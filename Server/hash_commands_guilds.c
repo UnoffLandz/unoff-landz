@@ -39,7 +39,7 @@
 #include "game_data.h"
 #include "guilds.h"
 #include "idle_buffer2.h"
-#include "broadcast_actor_functions.h"
+#include "broadcast_chat.h"
 #include "server_start_stop.h"
 
 int hash_set_guild_tag_colour(int actor_node, char *text) {

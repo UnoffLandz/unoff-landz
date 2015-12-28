@@ -94,9 +94,14 @@ void load_db_maps(){
         maps.map[map_id].map_axis=sqlite3_column_int(stmt, 4);
 
         //get tile map
+
+/* This old code pulls the tile map from the database
         int tile_map_size=sqlite3_column_bytes(stmt, 5);
         maps.map[map_id].tile_map_size=tile_map_size;
         memcpy(maps.map[map_id].tile_map, (unsigned char*)sqlite3_column_blob(stmt, 5), (size_t)tile_map_size);
+*/
+// This new code pulls the tile map from the elm file
+//read_tile_map(raw_elm_filename, maps.map[map_id].tile_map, &maps.map[map_id].tile_map_size, &maps.map[map_id].map_axis);
 
         //get height map
 
@@ -107,6 +112,11 @@ void load_db_maps(){
 */
 // This new code pulls the height map from the elm file
         read_height_map(raw_elm_filename, maps.map[map_id].height_map, &maps.map[map_id].height_map_size, &maps.map[map_id].map_axis);
+
+//this reads the 2d object list
+
+
+
 
         //get map author
         strcpy(maps.map[map_id].author, (char*)sqlite3_column_text(stmt, 7));

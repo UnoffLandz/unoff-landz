@@ -22,21 +22,21 @@
 
 #include <stdint.h> //supports int32_t datatype
 
+#include "clients.h"
+
 #define MAX_MAPS 50
 #define ELM_FILE_HEADER 124
-#define MIN_MAP_AXIS 10 //used to bounds check maps
 #define ELM_FILE_VERSION 1
 #define MAX_ELM_FILE_SIZE 1000000
 #define TILE_MAP_MAX 50000
 #define HEIGHT_MAP_MAX 150000
+#define NON_TRAVERSABLE_TILE 0
+#define STEP_TILE_RATIO 6
+#define CLIENT_MAP_PATH "./maps/" //the path that needs to be sent with the send_map packet
 
 //#define START_MAP_ID 1       // map_id of the map on which characters are created
 //#define START_MAP_TILE 27225 // tile_pos at which characters are created
 
-#define NON_TRAVERSABLE_TILE 0
-#define CLIENT_MAP_PATH "./maps/" //the path that needs to be sent with the send_map packet
-
-#include "clients.h"
 
 struct map_node_type{
 
@@ -50,7 +50,7 @@ struct map_node_type{
     enum {DEVELOPMENT, TESTING, FINAL}development_status;
 
     unsigned char tile_map[TILE_MAP_MAX];
-    int tile_map_size;
+    size_t tile_map_size;
 
     unsigned char height_map[HEIGHT_MAP_MAX];
     size_t height_map_size;
@@ -221,5 +221,17 @@ void read_elm_header(char *elm_filename);
     NOTES   :
 */
 void read_height_map(char *elm_filename, unsigned char *height_map, size_t *height_map_size, int *map_axis);
+
+
+/** RESULT  : reads the tile map data from an elm file header into an array so that
+              it can then be processed by other functions
+
+    RETURNS : void
+
+    PURPOSE : used in functions: load_db_maps
+
+    NOTES   :
+*/
+void read_tile_map(char *elm_filename, unsigned char *tile_map, size_t *tile_map_size, int *map_axis);
 
 #endif // MAPS_H_INCLUDED

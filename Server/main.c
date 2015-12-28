@@ -49,24 +49,21 @@ Done - Personalised NPC greetings and improved option formatting
 Done - fixed inventory slot placement bug
 Done - Implemented gold coins
 Done - Implemented NPC item buy/sell
-Done - Implemented touch/see proximity for Chars
+Done - Implemented touch/see proximity for chars
 Done - Fixed bug in bag poof (bag not disappearing).
 Done - Fixed bug in remove_actor
 Done - Fixed bug in concurrent login prevention
 Done - Fixed bug where char walks through other actors
+Done - Fixed local chat (broken after implementation of actor loop)
+Done - Fixed bug channel chat numbers shown incorrectly
+Done - Fixed bug active chan chat shown in dark grey
+Done - Tested multiple chat channel handling
 
-BUG Player chat in dark gray even when active
-BUG Player chat shows chan 32
-BUG Bingo chat shows chan -30
 REQUIRED update remote database with cold coin and correct maps
 REQUIRED #command to remind when booked boat leaves
 BUG unknown protocol packets are not being logged in packet log
 
-TEST multiple chat channel handling
 TEST multiple guild application handling
-
-TODO (themuntdregger#1#): On broadcast functions restrict to both node==used and type==player
-TODO (themuntdregger#1#): create sepaerate modules for broadcast chat and broadcast movement
 
 bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
 #jump to default to first walkable tile
@@ -139,7 +136,6 @@ banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveya
 #include "db/db_upgrade.h"
 #include "db/db_guild_tbl.h"
 #include "date_time_functions.h"
-#include "broadcast_actor_functions.h"
 #include "movement.h"
 #include "server_start_stop.h"
 #include "attributes.h"
@@ -152,7 +148,8 @@ banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveya
 #include "gender.h"
 #include "character_type.h"
 #include "colour.h"
-#include "broadcast_actor_functions.h"
+#include "broadcast_chat.h"
+#include "broadcast_movement.h"
 #include "packet.h"
 #include "bags.h"
 #include "string_functions.h"
@@ -589,8 +586,21 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
                     log_event(EVENT_ERROR, "read error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
                     log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... closing", watcher->fd, errnum, strerror(errnum));
 
+/*
+                    //notify guild that char has logged off
+                    int guild_id=clients.client[actor_node].guild_id;
+
+                    if(guild_id>0){
+
+                        // TODO (themuntdregger#1#): create broadcast_guild_event function to hold this code and to allow ...
+                        //guild master to modify leaving/joining messages and colours
+                        char text_out[80]="";
+                        sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[actor_node].char_name);
+                        broadcast_guild_chat(guild_id, actor_node, text_out);
+                    }
+*/
                     //close socket and stop watcher
-                    close_connection_slot(watcher->fd);
+                    close_connection_slot(actor_node);
                     ev_io_stop(loop, libevlist[watcher->fd]);
                     free(libevlist[watcher->fd]);
                     libevlist[watcher->fd] = NULL;
@@ -610,7 +620,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
             if (libevlist[watcher->fd]!= NULL) {
 
                 log_event(EVENT_SESSION, "client [%i] logged-off on socket [%i]", actor_node, watcher->fd);
-
+/*
                 //notify guild that char has logged off
                 int guild_id=clients.client[actor_node].guild_id;
 
@@ -620,11 +630,11 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
                     //guild master to modify leaving/joining messages and colours
                     char text_out[80]="";
                     sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[actor_node].char_name);
-                    broadcast_guild_chat(guild_id, watcher->fd, text_out);
+                    broadcast_guild_chat(guild_id, actor_node, text_out);
                 }
-
+*/
                 //close socket and stop watcher
-                close_connection_slot(watcher->fd);
+                close_connection_slot(actor_node);
                 ev_io_stop(loop, libevlist[watcher->fd]);
                 free(libevlist[watcher->fd]);
                 libevlist[watcher->fd] = NULL;
