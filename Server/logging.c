@@ -559,9 +559,9 @@ void log_packet(int socket, unsigned char *packet, int direction){
 
     size_t packet_length=get_packet_length(packet);
 
-    if(packet_length>=1024){
+    if(packet_length>=MAX_PACKET_SIZE){
 
-        log_event(EVENT_ERROR, "data length [%i] exceeded max [1024] in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "data length [%i] exceeded max [%i] in function %s: module %s: line %i", packet_length, MAX_PACKET_SIZE, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
@@ -587,7 +587,7 @@ void log_packet(int socket, unsigned char *packet, int direction){
     }
 
     int actor_node=client_socket[socket].actor_node;
-    char char_name[80]="";
+    char char_name[MAX_CHAR_NAME_LEN]="";
 
     if(client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
 
@@ -598,18 +598,38 @@ void log_packet(int socket, unsigned char *packet, int direction){
         sprintf(char_name, "socket %d", socket);
     }
 
+    char protocol_name[80]="";
+
     //log packets send from server
     if(direction==SEND) {
 
-        log_event(EVENT_PACKET, "Sent to       [%i] %s %s", socket, protocol[packet[0]].server, text_out);
-        log_event(EVENT_SESSION, "Sent to [%s] %s %s", char_name, protocol[packet[0]].server, text_out2);
+        if(strlen(protocol[packet[0]].server)>0){
+
+            strcpy(protocol_name, protocol[packet[0]].server);
+        }
+        else {
+
+            strcpy(protocol_name, "Unknown Protocol");
+        }
+
+        log_event(EVENT_PACKET, "Sent to       [%i] %s %s", socket, protocol_name, text_out);
+        log_event(EVENT_SESSION, "Sent to [%s] %s[%i] %s", char_name, protocol_name, (int)packet[0], text_out2);
     }
 
     //log packets received from client
     if(direction==RECEIVE) {
 
-        log_event(EVENT_PACKET, "Received from [%i] %s %s", socket, protocol[packet[0]].client, text_out);
-        log_event(EVENT_SESSION, "Received from [%s] %s %s", char_name, protocol[packet[0]].client, text_out2);
+        if(strlen(protocol[packet[0]].client)>0){
+
+            strcpy(protocol_name, protocol[packet[0]].client);
+        }
+        else{
+
+            strcpy(protocol_name, "Unknown Protocol");
+        }
+
+        log_event(EVENT_PACKET, "Received from [%i] %s %s", socket, protocol_name, text_out);
+        log_event(EVENT_SESSION, "Received from [%s] %s[%i] %s", char_name, protocol_name, (int)packet[0], text_out2);
     }
 }
 

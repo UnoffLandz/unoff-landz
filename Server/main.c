@@ -43,48 +43,42 @@ To compile server, link with the following libraries :
 
                                 TO - DO
 
-Done - Broadcasts to other actors when actor is eaten by a Grue
-Done - added response time control to NPC's (char must select option within 30 seconds)
-Done - Personalised NPC greetings and improved option formatting
-Done - fixed inventory slot placement bug
-Done - Implemented gold coins
-Done - Implemented NPC item buy/sell
-Done - Implemented touch/see proximity for chars
-Done - Fixed bug in bag poof (bag not disappearing).
-Done - Fixed bug in remove_actor
-Done - Fixed bug in concurrent login prevention
-Done - Fixed bug where char walks through other actors
-Done - Fixed local chat (broken after implementation of actor loop)
-Done - Fixed bug channel chat numbers shown incorrectly
-Done - Fixed bug active chan chat shown in dark grey
-Done - Tested multiple chat channel handling
-Done - updated remote database to include gold coin and correct maps
-
-Bug - npc won't buy max amount
-Bug - npc boat time shown after buying ticket is wrong
-Bug - npc should buy 1
-Bug - npc don't close after sale
-
-REQUIRED #command to remind when booked boat leaves
-BUG unknown protocol packets are not being logged in packet log
+Done - Fixed char sit/stand
+Done - drop bag and other commands stop harvesting
+Done - harvesting and other commands stop movement
+Done - Fixed #gm
+Done - NPC move script implemented
+Done - #boat (reminds when boat leaves)
+Done - trigger table, action table and boat table stubs
+Done - replaced hard coded values for max char name and max char password
+Done - Fixed bug unknown protocol packets are not being logged in packet log
+Done - separate module for ops #commands
+Done - separate module for devs #commands
+Done - #TRACE_PATH implemented
+Done - changed add_map function to remove supplementary details
+Done - added hash commands so as map supplementary details can be added in-game
+Done - added separate function to extract 3d object list from elm file
+Done - fixed bug in get_nearest_unoccupied_tile
+Done - #jump now contains option to move to first walkable tile
+Done - new harvestables (including pumpkin
 
 TEST multiple guild application handling
 
+load objects and e3d's from text file
+reload map_objects (needed for when new e3d/object is added
+add npc wear item action
+add npc sit/stand action
+
+remove test features which reads tile, height and 3d object list directly from elm file on start_server
 bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
-#jump to default to first walkable tile
-make separate function to extract 3d object list from elm file
-reimplement function get_nearest_unoccupied_tile
 need #command to withdraw application to join guild
 need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
-6+separate module for ops #commands
-separate module for devs #commands
 transfer server welcome message to the database
 #command to change guild chan join/leave notification colours
 remove character_type_name field from CHARACTER_TYPE_TABLE
 map object reserve respawn
 #command to #letter all members of a guild
 finish script loading
-widen distance that new/beamed chars are from other chars
 #IG guild channel functionality
 OPS #command to #letter all chars
 need #command to #letter all guild members (guild master only)
@@ -104,8 +98,6 @@ need #function to describe char and what it is wearing)
 document new database/struct relationships
 finish char_race_stats and char_gender_stats functions in db_char_tbl.c
 banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveyard)
-
-46 48 map 6
 
 ***************************************************************************************************/
 
@@ -166,7 +158,9 @@ banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveya
 
 struct ev_io *libevlist[MAX_ACTORS] = {NULL};
 
+
 extern int current_database_version();
+
 
 //declare prototypes
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
@@ -272,21 +266,23 @@ void start_server(){
     clients.client[0].frame=0;
     clients.client[0].portrait_id=1;
 
+    npc_trigger[0].trigger_node_status=TRIGGER_NODE_USED;
     npc_trigger[0].actor_node=0; //npc actor node
     npc_trigger[0].trigger_type=TOUCHED;
     npc_trigger[0].action_node=0;
-    //could add time of day or race as trigger criteria
+    //could add race as trigger criteria
 
+    npc_trigger[1].trigger_node_status=TRIGGER_NODE_USED;
     npc_trigger[1].actor_node=0; //npc actor node
     npc_trigger[1].trigger_type=SELECT_OPTION;
     npc_trigger[1].action_node=1;
     //could add time of day, or race as trigger criteria
 
+    npc_action[0].action_node_status=ACTION_NODE_USED;
     npc_action[0].actor_node=0; //npc actor node
     npc_action[0].action_type=GIVE_BOAT_SCHEDULE;
-    //automatically selects text
-    //pulls required item and amount from boat struct
 
+    npc_action[1].action_node_status=ACTION_NODE_USED;
     npc_action[1].actor_node=0; //npc actor node
     npc_action[1].action_type=SELL_BOAT_TICKET;
     npc_action[1].boat_node=0;
@@ -322,14 +318,17 @@ void start_server(){
     clients.client[1].frame=0;
     clients.client[1].portrait_id=2;
 
+    npc_trigger[2].trigger_node_status=TRIGGER_NODE_USED;
     npc_trigger[2].actor_node=1; //npc actor node
     npc_trigger[2].trigger_type=TOUCHED;
     npc_trigger[2].action_node=2;
 
+    npc_trigger[3].trigger_node_status=TRIGGER_NODE_USED;
     npc_trigger[3].actor_node=1; //npc actor node
     npc_trigger[3].trigger_type=SELECT_OPTION;
     npc_trigger[3].action_node=3;
 
+    npc_action[2].action_node_status=ACTION_NODE_USED;
     npc_action[2].actor_node=1;
     npc_action[2].action_type=GIVE_SALE_OPTIONS;
     npc_action[2].object_id_required=408; //carrots
@@ -337,11 +336,33 @@ void start_server(){
     npc_action[2].object_id_given=3; //gold
     npc_action[2].object_amount_given=1;
 
+    npc_action[3].action_node_status=ACTION_NODE_USED;
     npc_action[3].actor_node=1;
     npc_action[3].action_type=SELL_OBJECT;
 
-    /***************************/
+    npc_trigger[4].trigger_node_status=TRIGGER_NODE_USED;
+    npc_trigger[4].actor_node=0;
+    npc_trigger[4].trigger_type=TIME;
+    npc_trigger[4].trigger_time=180;
+    npc_trigger[4].action_node=4;
 
+    npc_action[4].action_node_status=ACTION_NODE_USED;
+    npc_action[4].actor_node=0;
+    npc_action[4].action_type=NPC_MOVE;
+    npc_action[4].destination=4634;
+
+    npc_trigger[5].trigger_node_status=TRIGGER_NODE_USED;
+    npc_trigger[5].actor_node=0;
+    npc_trigger[5].trigger_type=TIME;
+    npc_trigger[5].trigger_time=0;
+    npc_trigger[5].action_node=5;
+
+    npc_action[5].action_node_status=ACTION_NODE_USED;
+    npc_action[5].actor_node=0;
+    npc_action[5].action_type=NPC_MOVE;
+    npc_action[5].destination=27225;
+
+    /***************************/
 
     //gather initial stats
     get_db_last_char_created(); //loads details of the last char created from the database into the game_data struct
@@ -541,7 +562,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         NOTES    :
     **/
 
-    unsigned char buffer[1024]={0};
+    unsigned char buffer[MAX_PACKET_SIZE]={0};
 
     //catch libev errors
     if (EV_ERROR & revents) {
@@ -630,8 +651,8 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         //data received from client
         if(read>0){
 
+            char char_name[MAX_CHAR_NAME_LEN]="";
             int actor_node=client_socket[watcher->fd].actor_node;
-            char char_name[80]="";
 
             if(client_socket[watcher->fd].socket_node_status==CLIENT_LOGGED_IN){
 
@@ -861,6 +882,33 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
             //process char harvesting for actors
             process_char_harvest(i, time_check.tv_sec); //use seconds
         }
+
+        //process npc timed triggers
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED
+        && clients.client[i].player_type==NPC) {
+
+            for(int j=0; j<MAX_NPC_TRIGGERS; j++){
+
+                if(npc_trigger[j].trigger_node_status==TRIGGER_NODE_UNUSED) break;
+
+                if(npc_trigger[j].actor_node==i
+                && npc_trigger[j].trigger_type==TIME
+                && npc_trigger[j].trigger_time==game_data.game_minutes){
+
+                    int action_node=npc_trigger[j].action_node;
+                    int npc_destination=npc_action[action_node].destination;
+
+                    //only start npc move is npc is standing still and is not already
+                    //at destination
+                    if(npc_action[action_node].action_type==NPC_MOVE
+                    && clients.client[i].path_count==0
+                    && clients.client[i].map_tile!=npc_destination){
+
+                        start_char_move(i, npc_destination);
+                    }
+                }
+            }
+        }
     }
 
     // check bags for poof time
@@ -1012,8 +1060,8 @@ int main(int argc, char *argv[]){
 
         int map_id=atoi(argv[2]);
 
-        printf("LOAD MAP %i on %s at %s on %s\n", map_id, db_filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "LOAD MAP %i on %s at %s on %s", map_id, db_filename, time_stamp_str, verbose_date_stamp_str);
+        char elm_filename[80]="";
+        strcpy(elm_filename, argv[3]);
 
         open_database(db_filename);
 
@@ -1038,7 +1086,7 @@ int main(int argc, char *argv[]){
 
             if(strncmp(decision, "Y", 1)==0 || strncmp(decision, "YES", 3)==0){
 
-                log_text(EVENT_INITIALISATION, "Remove existing map %i", map_id);
+                log_text(EVENT_INITIALISATION, "Replace existing map %i", map_id);
                 delete_map(map_id);
             }
             else {
@@ -1049,26 +1097,11 @@ int main(int argc, char *argv[]){
             printf("\n");
         }
 
+        log_text(EVENT_INITIALISATION, "LOAD MAP %i %s on %s at %s on %s", map_id, elm_filename, db_filename, time_stamp_str, verbose_date_stamp_str);
         log_text(EVENT_INITIALISATION, "");// insert logical separator
 
-        char elm_filename[80]="";
-        strcpy(elm_filename, argv[3]);
-
-        char map_name[80]="";
-        strcpy(map_name, argv[4]);
-
-        char map_description[80]="";
-        strcpy(map_description, argv[5]);
-
-        char author_name[80]="";
-        strcpy(author_name, argv[6]);
-
-        char author_email[80]="";
-        strcpy(author_email, argv[7]);
-
-        int development_status=atoi(argv[8]);
-
-        add_db_map(map_id, elm_filename, map_name, author_name, map_description, author_email, development_status);
+        add_db_map(map_id, elm_filename);
+        add_db_map_objects(map_id, elm_filename);
 
         return 0;
     }
@@ -1095,10 +1128,7 @@ int main(int argc, char *argv[]){
     printf("start server     -S optional [""database file name""]\n");
     printf("upgrade database -U optional [""database file name""]\n");
     printf("list loaded maps -L optional [""database file name""]\n");
-    printf("load map         -M [map id] [""elm filename""] [""map name""] [""map description""]...\n");
-    printf("                             [""author name""] [""author email""]...\n");
-    printf("                             [""development status code""]...\n");
-    printf("                             optional [""database file name""]\n");
+    printf("load map         -M [map id] [""elm filename""]\n");
 
     return 0;//otherwise we get 'control reached end of non void function'
 }

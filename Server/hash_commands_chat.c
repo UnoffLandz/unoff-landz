@@ -142,7 +142,7 @@ int hash_pm(int actor_node, char *text) {
     /** public function - see header */
 
     int socket=clients.client[actor_node].socket;
-    char char_name[80]="";
+    char char_name[MAX_CHAR_NAME_LEN]="";
     char message[1024]="";
 
     if(sscanf(text, "%*s %s %[^\n]", char_name, message)!=2){

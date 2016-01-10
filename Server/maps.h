@@ -34,6 +34,9 @@
 #define STEP_TILE_RATIO 6
 #define CLIENT_MAP_PATH "./maps/" //the path that needs to be sent with the send_map packet
 
+#define MAX_E3D_FILENAME 80
+#define MAX_MAP_OBJECTS 2000
+
 //#define START_MAP_ID 1       // map_id of the map on which characters are created
 //#define START_MAP_TILE 27225 // tile_pos at which characters are created
 
@@ -121,6 +124,7 @@ struct __attribute__((__packed__)){
     int32_t reserved_16;
     int32_t reserved_17;
 } elm_header;
+
 
 /** RESULT  : calculates the distance between two entities on a map
 
@@ -220,7 +224,7 @@ void read_elm_header(char *elm_filename);
 
     NOTES   :
 */
-void read_height_map(char *elm_filename, unsigned char *height_map, size_t *height_map_size, int *map_axis);
+void read_height_map(char *elm_filename, unsigned char *height_map);
 
 
 /** RESULT  : reads the tile map data from an elm file header into an array so that
@@ -232,6 +236,17 @@ void read_height_map(char *elm_filename, unsigned char *height_map, size_t *heig
 
     NOTES   :
 */
-void read_tile_map(char *elm_filename, unsigned char *tile_map, size_t *tile_map_size, int *map_axis);
+void read_tile_map(char *elm_filename, unsigned char *tile_map);
+
+
+/** RESULT  : determines in a map node has a map
+
+    RETURNS : void
+
+    PURPOSE : used in function hash_jump
+
+    NOTES   :
+*/
+bool map_exists(int map_id);
 
 #endif // MAPS_H_INCLUDED

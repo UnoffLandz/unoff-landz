@@ -31,11 +31,20 @@ struct npc_trigger_type{
 
     int actor_node;
 
+    enum{
+
+        TRIGGER_NODE_UNUSED,
+        TRIGGER_NODE_USED,
+    }trigger_node_status;
+
     enum {
 
         TOUCHED,
         SELECT_OPTION,
+        TIME,
     }trigger_type;
+
+    int trigger_time;
 
     int select_option;
 
@@ -48,6 +57,12 @@ struct npc_action_type{
 
     int actor_node;
 
+    enum{
+
+        ACTION_NODE_UNUSED,
+        ACTION_NODE_USED,
+    }action_node_status;
+
     enum {
 
         GIVE_SALE_OPTIONS,
@@ -55,6 +70,7 @@ struct npc_action_type{
         SELL_OBJECT,
         SELL_BOAT_TICKET,
         GIVE_OPTIONS,
+        NPC_MOVE,
     }action_type;
 
     char text[80];
@@ -69,6 +85,8 @@ struct npc_action_type{
     int object_amount_given;
 
     int boat_node;
+
+    int destination;
 };
 extern struct npc_action_type npc_action[MAX_NPC_ACTIONS];
 

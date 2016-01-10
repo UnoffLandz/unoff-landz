@@ -20,17 +20,49 @@
 #ifndef E3D_H_INCLUDED
 #define E3D_H_INCLUDED
 
-#define MAX_E3D 100
+#include "maps.h"
+
+#define MAX_E3D_TYPES 100
 
 struct e3d_type{
 
-    char e3d_filename[80];
+    char e3d_filename[MAX_E3D_FILENAME];
     float x;
     float y;
     float z;
     int object_id;
 };
-extern struct e3d_type e3d[MAX_E3D];
+extern struct e3d_type e3d[MAX_E3D_TYPES];
+
+
+struct __attribute__((__packed__)){
+
+    char e3d_path_and_filename[MAX_E3D_FILENAME];
+    float x_pos;
+    float y_pos;
+    float z_pos;
+    float x_rot;
+    float y_rot;
+    float z_rot;
+    unsigned char self_lit;
+    unsigned char blended;
+    unsigned char reserved[2];
+    float r;
+    float g;
+    float b;
+    unsigned char reserved2[24];
+}threed_object_list[MAX_MAP_OBJECTS];
+
+
+/** RESULT  : reads the 3d object list from an elm file into an array
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void read_threed_object_list(char *elm_filename);
 
 
 /** RESULT  : finds the object id for an e3d file

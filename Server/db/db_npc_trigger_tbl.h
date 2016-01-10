@@ -1,3 +1,6 @@
+#ifndef DB_NPC_TRIGGER_TBL_H_INCLUDED
+#define DB_NPC_TRIGGER_TBL_H_INCLUDED
+
 /******************************************************************************************************************
 	Copyright 2014, 2015 UnoffLandz
 
@@ -17,32 +20,33 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef PATHFINDING_H_INCLUDED
-#define PATHFINDING_H_INCLUDED
+#define NPC_TRIGGER_TABLE_SQL "CREATE TABLE NPC_TRIGGER_TABLE( \
+        NPC_TRIGGER_ID    INTEGER PRIMARY KEY     NOT NULL, \
+        TRIGGER_TYPE      INT, \
+        TRIGGER_TIME      INT, \
+        SELECT_OPTION     INT, \
+        ACTION_NODE       INT)"
 
-#include <stdbool.h> // support for bool data type
-
-/** RESULT  : fills client path array with an a-star path
-
-    RETURNS : true - path was created, otherwise false
-
-    PURPOSE : to provide a list of explored tiles from which a path can be determined
-
-    USAGE   : pathfinding.c get_astar_path
-*/
-bool get_astar_path(int actor_node, int start_tile, int destination_tile);
-
-
-/** RESULT  : displays an ascii grid indicating tiles covered by the explore_path function
+/** RESULT  : loads data from the npc_trigger table into the npc trigger array
 
     RETURNS : void
 
-    PURPOSE : debugging
+    PURPOSE : retrieve npc trigger data from permanent storage
 
-    NOTES   : used in function: hash_trace_explore
+    NOTES   :
+**/
+void load_db_npc_triggers();
 
-*/
-void debug_explore_path(int actor_node, int destination);
 
+/** RESULT  : adds an npc trigger to the npc trigger table
 
-#endif // PATHFINDING_H_INCLUDED
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+**/
+void add_db_npc_trigger(int npc_trigger_id, int trigger_type, int trigger_time,
+int selection_option, int action_node);
+
+#endif // DB_NPC_TRIGGER_TBL_H_INCLUDED

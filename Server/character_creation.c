@@ -40,6 +40,8 @@
 #include "gender.h"
 #include "string_functions.h"
 #include "server_start_stop.h"
+#include "characters.h"
+#include "movement.h"
 
 #define DEBUG_CHARACTER_CREATION 0
 
@@ -47,9 +49,9 @@ void check_new_character(int actor_node, const unsigned char *packet){
 
     /** public function - see header */
 
-    char char_name_and_password[80]="";
-    char char_name[80]="";
-    char password[80]="";
+    char char_name_and_password[MAX_CHAR_NAME_LEN + MAX_CHAR_PASSWORD_LEN]="";
+    char char_name[MAX_CHAR_NAME_LEN]="";
+    char password[MAX_CHAR_PASSWORD_LEN]="";
 
     size_t packet_length=get_packet_length(packet);
 
@@ -96,7 +98,7 @@ void add_new_character(int actor_node, const unsigned char *packet){
 
         unsigned char protocol;
         uint16_t data_length;
-        char char_name_and_password[80];
+        char char_name_and_password[MAX_CHAR_NAME_LEN + MAX_CHAR_PASSWORD_LEN];
     }_packet_1;
 
     struct __attribute__((__packed__)){
@@ -161,7 +163,7 @@ void add_new_character(int actor_node, const unsigned char *packet){
 
     //set starting map and tile
     character.map_id=game_data.beam_map_id;
-    character.map_tile=game_data.beam_map_tile;
+    character.map_tile=get_nearest_unoccupied_tile(game_data.beam_map_id, game_data.beam_map_tile);
 
     //add character data to the database and retrieve the database entry for the character
     character.character_id=add_db_char_data(character);

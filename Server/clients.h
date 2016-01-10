@@ -28,6 +28,11 @@
 #include "chat.h"                   //contains definition of MAX_CHAN_SLOTS
 #include "character_inventory.h"    //contains definition of MAX_INVENTORY_SLOTS
 #include "character_movement.h"     //contains definition of PATH_MAX
+#include "packet.h"
+#include "characters.h"
+
+#define MAX_CHAR_NAME_LEN 40
+#define MAX_CHAR_PASSWORD_LEN 40
 
 #define MAX_ACTORS 100
 #define MAX_SOCKETS 50
@@ -48,7 +53,7 @@ struct client_socket_type{
     bool kill_connection; //used to signal to the timeout callback that the actor socket
                           //should be closed
 
-    unsigned char packet_buffer[1024]; //used to store the socket receive data and
+    unsigned char packet_buffer[MAX_PACKET_SIZE * 2]; //used to store the socket receive data and
     size_t packet_buffer_length;//       measure it's length
 
     time_t time_of_last_heartbeat; //tracks the time the client last communicated with
@@ -113,8 +118,8 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     int harvest_inventory_slot;
     time_t time_of_last_harvest;
 
-    char char_name[80];
-    char password[80];
+    char char_name[MAX_CHAR_NAME_LEN];
+    char password[MAX_CHAR_PASSWORD_LEN];
 
     enum {
 
@@ -132,8 +137,13 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     int map_id;
     int map_tile;
 
-    bool track; //displays coordinates as char moves
-    bool debug_explore_path; // displays ascii representation of explore path
+    enum {
+
+        DEBUG_OFF,
+        DEBUG_EXPLORE,
+        DEBUG_PATH,
+        DEBUG_TRACK
+    }debug_status;
 
     int guild_id;
     time_t joined_guild;

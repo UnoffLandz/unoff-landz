@@ -84,7 +84,7 @@ bool get_db_char_data(const char *char_name, int char_id){
     sqlite3_stmt *stmt;
 
     //create upper case copy of char name
-    char char_name_uc[80]="";
+    char char_name_uc[MAX_CHAR_NAME_LEN]="";
     strcpy(char_name_uc, char_name);
     str_conv_upper(char_name_uc);
 

@@ -16,13 +16,14 @@
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
-
-#include <stdio.h> //testing only
-
-#include "map_object.h"
 #include "e3d.h"
+#include "logging.h"
+#include "server_start_stop.h"
+#include "objects.h"
+#include "map_object.h"
 
 struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
+
 
 int get_object_id(int map_id, int threed_object_list_pos){
 
@@ -33,11 +34,10 @@ int get_object_id(int map_id, int threed_object_list_pos){
     return e3d[e3d_id].object_id;
 }
 
+
 int get_object_tile(int map_id, int threed_object_list_pos){
 
     /** public function - see header */
 
     return map_object[threed_object_list_pos][map_id].tile;
 }
-
-

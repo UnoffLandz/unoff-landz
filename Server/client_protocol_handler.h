@@ -22,8 +22,8 @@
 
 
 enum{ //values for the SIT_DOWN protocol
-    SIT=0,
-    STAND=1,
+    SIT=1,
+    STAND=0,
 };
 
 /** RESULT  : processes a data packet received from the client

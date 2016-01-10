@@ -22,11 +22,13 @@
 
 #include <stdbool.h>
 
+#include "e3d.h"
+
 #define MAX_OBJECT_ID 2000
 
 struct object_type{
 
-    char e3d_file_name[80];
+    char e3d_file_name[MAX_E3D_FILENAME];
     char object_name[80];
     bool harvestable;
     bool edible;

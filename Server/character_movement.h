@@ -66,4 +66,13 @@ void process_char_move(int actor_node, time_t current_utime);
 **/
 void start_char_move(int actor_node, int destination);
 
+
+/** RESULT  : stops the character moving
+
+    RETURNS : void
+
+    PURPOSE :
+**/
+void stop_char_move(int actor_node);
+
 #endif // CHARACTER_MOVEMENT_H_INCLUDED

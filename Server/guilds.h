@@ -20,8 +20,10 @@
 #ifndef GUILD_H_INCLUDED
 #define GUILD_H_INCLUDED
 
-#include <time.h>
-#include <stdbool.h>
+#include <time.h>// support for time_t data type
+#include <stdbool.h> // support for bool data type
+
+#include "clients.h" //support for MAX_CHAR_NAME_LEN
 
 #define MAX_GUILDS 10
 #define MAX_GUILD_APPLICANTS 10
@@ -60,7 +62,7 @@ struct guild_node_type {
 
     struct {
 
-        char char_name[80];
+        char char_name[MAX_CHAR_NAME_LEN];
         time_t application_date;
     }applicant[MAX_GUILD_APPLICANTS];
 };

@@ -55,7 +55,7 @@ struct data_{
     size_t packet_len;
     int actor_node;
     int process_type;
-    char char_name[80];
+    char char_name[MAX_CHAR_NAME_LEN];
     int guild_id;
 };
 

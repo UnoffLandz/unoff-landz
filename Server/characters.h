@@ -22,7 +22,6 @@
 
 #include "clients.h"
 
-
 enum {// actor frame (needed for stand up/sit down
     frame_sit=12,
     frame_stand=13,
@@ -30,6 +29,7 @@ enum {// actor frame (needed for stand up/sit down
 };
 
 enum { // actor command
+    actor_cmd_nothing=0,
     actor_cmd_sit_down=13,
     actor_cmd_stand_up=14,
     actor_cmd_move_n=20,

@@ -32,6 +32,7 @@
 #include "e3d.h"
 #include "colour.h"
 #include "date_time_functions.h"
+#include "idle_buffer2.h"
 
 struct map_list_type maps;
 
@@ -157,7 +158,7 @@ void read_elm_header(char *elm_filename){
 
     if((file=fopen(elm_filename, "r"))==NULL) {
 
-        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to open file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
@@ -202,7 +203,7 @@ void read_elm_header(char *elm_filename){
 }
 
 
-void read_height_map(char *elm_filename, unsigned char *height_map, size_t *height_map_size, int *map_axis){
+void read_height_map(char *elm_filename, unsigned char *height_map){
 
     /** public function - see header */
 
@@ -216,17 +217,16 @@ void read_height_map(char *elm_filename, unsigned char *height_map, size_t *heig
         stop_server();
     }
 
-    *height_map_size=(size_t)(elm_header.threed_object_offset-elm_header.height_map_offset);
-    *map_axis=elm_header.h_tiles * STEP_TILE_RATIO;
-
     //bounds check the height map size
-    if(*height_map_size>HEIGHT_MAP_MAX){
+    size_t height_map_size=(size_t)(elm_header.threed_object_offset-elm_header.height_map_offset);
 
-        log_event(EVENT_ERROR, "height map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", *height_map_size, HEIGHT_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
+    if(height_map_size>HEIGHT_MAP_MAX){
+
+        log_event(EVENT_ERROR, "height map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", height_map_size, HEIGHT_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
-    //read data proceding the height map
+    //read data preceeding the height map
     if(fseek(file, elm_header.height_map_offset, SEEK_SET)!=0){
 
         log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
@@ -234,7 +234,7 @@ void read_height_map(char *elm_filename, unsigned char *height_map, size_t *heig
     }
 
     //read the height map
-    if(fread(height_map, (size_t) *height_map_size, 1, file)!=1) {
+    if(fread(height_map, height_map_size, 1, file)!=1) {
 
         log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
@@ -244,7 +244,7 @@ void read_height_map(char *elm_filename, unsigned char *height_map, size_t *heig
 }
 
 
-void read_tile_map(char *elm_filename, unsigned char *tile_map, size_t *tile_map_size, int *map_axis){
+void read_tile_map(char *elm_filename, unsigned char *tile_map){
 
     /** public function - see header */
 
@@ -258,13 +258,12 @@ void read_tile_map(char *elm_filename, unsigned char *tile_map, size_t *tile_map
         stop_server();
     }
 
-    *tile_map_size=(size_t)(elm_header.height_map_offset-elm_header.tile_map_offset);
-    *map_axis=elm_header.h_tiles * STEP_TILE_RATIO;
+    size_t tile_map_size=(size_t)(elm_header.height_map_offset-elm_header.tile_map_offset);
 
     //bounds check the tile map size
-    if(*tile_map_size>TILE_MAP_MAX){
+    if(tile_map_size>TILE_MAP_MAX){
 
-        log_event(EVENT_ERROR, "tile map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", *tile_map_size, TILE_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "tile map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", tile_map_size, TILE_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
@@ -276,11 +275,20 @@ void read_tile_map(char *elm_filename, unsigned char *tile_map, size_t *tile_map
     }
 
     //read the tile map
-    if(fread(tile_map, (size_t) *tile_map_size, 1, file)!=1) {
+    if(fread(tile_map, (size_t) tile_map_size, 1, file)!=1) {
 
         log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
         stop_server();
     }
 
     fclose(file);
+}
+
+bool map_exists(int map_id){
+
+    /** public function - see header */
+
+    if(strlen(maps.map[map_id].elm_filename)==0) return false;
+
+    return true;
 }

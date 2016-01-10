@@ -54,11 +54,11 @@
 #include "npc.h"
 #include "character_inventory.h"
 #include "boats.h"
+#include "maps.h"
 
 #define DEBUG_CLIENT_PROTOCOL_HANDLER 1
 // TODO (themuntdregger#1#): Finish PING_RESPONSE handling
 // TODO (themuntdregger#1#): establish what SEND_ME_MY_ACTORS protocol does
-// TODO (themuntdregger#1#): establish what SEND_OPENING_SCREEN does
 
 
 int client_server_stats(int actor_node, unsigned char *packet){
@@ -145,6 +145,7 @@ int client_respond_to_npc(int actor_node, unsigned char *packet){
         for(int i=0; i<MAX_NPC_TRIGGERS; i++){
 
             if(npc_trigger[i].actor_node==npc_actor_node
+            && npc_trigger[i].trigger_node_status==TRIGGER_NODE_USED
             && npc_trigger[i].trigger_type==SELECT_OPTION){
 
                 int action_node=npc_trigger[i].action_node;
@@ -196,6 +197,7 @@ int client_touch_player(int actor_node, unsigned char *packet){
         for(int i=0; i<MAX_NPC_TRIGGERS; i++){
 
             if(npc_trigger[i].actor_node==touched_actor_node
+            && npc_trigger[i].trigger_node_status==TRIGGER_NODE_USED
             && npc_trigger[i].trigger_type==TOUCHED){
 
                 int action_node=npc_trigger[i].action_node;
@@ -238,6 +240,9 @@ int client_look_at_map_object(int actor_node, unsigned char *packet){
 
     //get the object item id
     int object_id=get_object_id(clients.client[actor_node].map_id, threed_object_list_pos);
+
+    read_threed_object_list("startmap.elm");
+    printf("%i [%s]\n", threed_object_list_pos, threed_object_list[threed_object_list_pos].e3d_path_and_filename);
 
     //tell the client what the item is
     if (object_id>0){
@@ -356,7 +361,6 @@ int client_look_at_inventory_item(int actor_node, unsigned char *packet){
     if(object[item].edible==true){
 
         char text_out[SEND_TEXT_MAX]="";
-
         sprintf(text_out, "%cYou see a %s. It's edible!", c_green3+127, object[item].object_name);
         send_inventory_item_text(socket, text_out);
     }
@@ -418,7 +422,7 @@ int client_send_pm(int actor_node, unsigned char *packet){
     memcpy(text, packet+3, (size_t)get_packet_length(packet)-3);
 
     //extract target name and message from pm packet
-    char char_name[80]="";
+    char char_name[MAX_CHAR_NAME_LEN]="";
     char msg[1024]="";
     sscanf(text, "%s %[^\n]", char_name, msg);
 
@@ -622,40 +626,42 @@ struct protocol_array_entry {
     int command;
     bool process_when_connected;
     bool process_when_logged_in;
+    bool stop_harvesting;
+    bool stop_moving;
     protocol_function fn;
 };
 
 
 struct protocol_array_entry protocol_entries[] = {
 
-//                              Process When Process When
-//   Client-Server Protocol     Connected    Logged-in     callback function
-//   -------------------------- ------ -------- ---------- -----------------
-    {RAW_TEXT,                  true,        true,         client_raw_text},
-    {MOVE_TO,                   false,       true,         client_move_to},
-    {SEND_PM,                   false,       true,         client_send_pm},
-    {SIT_DOWN,                  false,       true,         client_sit_down},
-    {GET_PLAYER_INFO,           false,       true,         client_get_player_info},
-    {SEND_VERSION,              true,        true,         client_send_version},
-    {HEARTBEAT,                 true,        true,         client_heart_beat},
-    {USE_OBJECT,                false,       true,         client_use_object},
-    {MOVE_INVENTORY_ITEM,       false,       true,         client_move_inventory_item},
-    {HARVEST,                   false,       true,         client_harvest},
-    {DROP_ITEM,                 false,       true,         client_drop_item},
-    {PICK_UP_ITEM,              false,       true,         client_pick_up_item},
-    {INSPECT_BAG,               false,       true,         client_inspect_bag},
-    {LOOK_AT_MAP_OBJECT,        false,       true,         client_look_at_map_object},
-    {TOUCH_PLAYER,              false,       true,         client_touch_player},
-    {RESPOND_TO_NPC,            false,       true,         client_respond_to_npc},
-    {SET_ACTIVE_CHANNEL,        false,       true,         client_set_active_channel},
-    {LOG_IN,                    true,        false,        client_log_in},
-    {GET_DATE,                  false,       true,         client_get_date},
-    {GET_TIME,                  false,       true,         client_get_time},
-    {CREATE_CHAR,               true,        false,        client_create_char},
-    {LOOK_AT_INVENTORY_ITEM,    false,       true,         client_look_at_inventory_item},
-    {SERVER_STATS,              false,       true,         client_server_stats},
+//                              Process When Process When  Stop       Stop
+//   Client-Server Protocol     Connected    Logged-in     Harvesting Moving  callback function
+//   -------------------------- ------ -------- ---------- ---------- ------- -----------------
+    {RAW_TEXT,                  true,        true,         false,      false, client_raw_text},
+    {MOVE_TO,                   false,       true,         true,       false, client_move_to},
+    {SEND_PM,                   false,       true,         false,      false, client_send_pm},
+    {SIT_DOWN,                  false,       true,         false,      true,  client_sit_down},
+    {GET_PLAYER_INFO,           false,       true,         true,       true,  client_get_player_info},
+    {SEND_VERSION,              true,        true,         false,      false, client_send_version},
+    {HEARTBEAT,                 true,        true,         false,      false, client_heart_beat},
+    {USE_OBJECT,                false,       true,         true,       true,  client_use_object},
+    {MOVE_INVENTORY_ITEM,       false,       true,         true,       true,  client_move_inventory_item},
+    {HARVEST,                   false,       true,         false,      true,  client_harvest},
+    {DROP_ITEM,                 false,       true,         true,       true,  client_drop_item},
+    {PICK_UP_ITEM,              false,       true,         true,       true,  client_pick_up_item},
+    {INSPECT_BAG,               false,       true,         true,       true,  client_inspect_bag},
+    {LOOK_AT_MAP_OBJECT,        false,       true,         true,       true,  client_look_at_map_object},
+    {TOUCH_PLAYER,              false,       true,         true,       true,  client_touch_player},
+    {RESPOND_TO_NPC,            false,       true,         true,       true,  client_respond_to_npc},
+    {SET_ACTIVE_CHANNEL,        false,       true,         false,      false, client_set_active_channel},
+    {LOG_IN,                    true,        false,        false,      false, client_log_in},
+    {GET_DATE,                  false,       true,         false,      false, client_get_date},
+    {GET_TIME,                  false,       true,         false,      false, client_get_time},
+    {CREATE_CHAR,               true,        false,        false,      false, client_create_char},
+    {LOOK_AT_INVENTORY_ITEM,    false,       true,         true,       true, client_look_at_inventory_item},
+    {SERVER_STATS,              false,       true,         false,      false, client_server_stats},
 
-    {255, false, false, 0}
+    {255, false, false, false, false, 0}
 };
 
 
@@ -707,15 +713,31 @@ void process_packet(int actor_node, unsigned char *packet){
     }
 
     //prevent processing of commands whilst client is connected
-    if(protocol_entry->process_when_connected==false && client_socket[actor_node].socket_node_status==CLIENT_CONNECTED){
+    if(protocol_entry->process_when_connected==false && client_socket[socket].socket_node_status==CLIENT_CONNECTED){
 
         return;
     }
 
     //prevent processing of commands whilst client is logged in
-    if(protocol_entry->process_when_logged_in==false && client_socket[actor_node].socket_node_status==CLIENT_LOGGED_IN){
+    if(protocol_entry->process_when_logged_in==false && client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
 
         return;
+    }
+
+    //stop harvesting on certain commands
+    if(protocol_entry->stop_harvesting==true
+    && clients.client[actor_node].harvest_flag==true
+    && client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
+
+        stop_harvesting(actor_node);
+    }
+
+    //stop moving on certain commands
+    if(protocol_entry->stop_moving==true
+    && clients.client[actor_node].path_count>0
+    && client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
+
+        stop_char_move(actor_node);
     }
 
     //execute the protocol command

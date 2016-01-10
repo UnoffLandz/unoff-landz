@@ -50,6 +50,7 @@ void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node){
 
     int object_id_required=npc_action[action_node].object_id_required;
     int amount_required=npc_action[action_node].object_amount_required;
+    int amount_given=npc_action[action_node].object_amount_given;
 
     //check that char has the required object
     int slot=item_in_inventory(actor_node, object_id_required);
@@ -62,37 +63,36 @@ void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node){
         return;
     }
 
-    //determine the amount of object that the char has
-    int char_amount=clients.client[actor_node].inventory[slot].amount;
-    int max=char_amount/amount_required;
-
     char option_str[1024]="";
-    sprintf(option_str, "%s%d;", option_str, (int)(amount_required));
+    sprintf(option_str, "%s%d;", option_str, (int)(amount_required*1));
     sprintf(option_str, "%s%d;", option_str, (int)(amount_required*5));
     sprintf(option_str, "%s%d;", option_str, (int)(amount_required*10));
     sprintf(option_str, "%s%d;", option_str, (int)(amount_required*15));
-    sprintf(option_str, "%s%d;", option_str, (int)(char_amount));
+    sprintf(option_str, "%s%d;", option_str, (int)(amount_required*20));
 
-    clients.client[actor_node].npc_option[0].amount=amount_required;
+    //keep a note of sale list options so we can refer back when responding to NPC
+    clients.client[actor_node].npc_option[0].amount=amount_required*1;
     clients.client[actor_node].npc_option[1].amount=amount_required*5;
     clients.client[actor_node].npc_option[2].amount=amount_required*10;
     clients.client[actor_node].npc_option[3].amount=amount_required*15;
-    clients.client[actor_node].npc_option[3].amount=amount_required*max;
+    clients.client[actor_node].npc_option[4].amount=amount_required*20;
 
-    clients.client[actor_node].npc_option[0].price=1;
-    clients.client[actor_node].npc_option[1].price=5;
-    clients.client[actor_node].npc_option[2].price=10;
-    clients.client[actor_node].npc_option[3].price=15;
-    clients.client[actor_node].npc_option[3].price=max;
+    clients.client[actor_node].npc_option[0].price=amount_given*1;
+    clients.client[actor_node].npc_option[1].price=amount_given*5;
+    clients.client[actor_node].npc_option[2].price=amount_given*10;
+    clients.client[actor_node].npc_option[3].price=amount_given*15;
+    clients.client[actor_node].npc_option[4].price=amount_given*20;
 
+    //retain details of the action node so we can refer back when responding to NPC
     clients.client[actor_node].action_node=action_node;
 
-    send_npc_options_list(socket, npc_actor_node, option_str);
-    send_npc_info(socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
-
+    //send npc communication
     int object_id_given=npc_action[action_node].object_id_given;
+
     sprintf(text_out, "Hello %s.\n\nI am buying %i %s for 1 %s. How many would you like to sell to me?", clients.client[actor_node].char_name,  npc_action[action_node].object_amount_required, object[object_id_required].object_name, object[object_id_given].object_name);
     send_npc_text(socket, text_out);
+    send_npc_info(socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
+    send_npc_options_list(socket, npc_actor_node, option_str);
 
     //update time_check struct (used to put a time limit on the char's response)
     gettimeofday(&time_check, NULL);
@@ -248,13 +248,19 @@ void npc_sell_boat_ticket(int actor_node, int npc_actor_node, int ticket_node){
     //remove payment from the chars inventory
     remove_from_inventory(actor_node, object_id_required, object_amount_required, slot);
 
-    //communicate to char
-    int map_id=boat[boat_node].destination_map_id;
-    sprintf(text_out, "Thanks %s.\n\nYou've just bought your ticket on the %02i boat to %s. Be sure not to miss it as I don't give refunds.", clients.client[actor_node].char_name, clients.client[ticket_node].boat_departure_time, maps.map[map_id].map_name);
-    send_npc_text(socket, text_out);
-
-    //buy a boat ticket
+    //set departure time
     clients.client[actor_node].boat_booked=true;
     clients.client[actor_node].boat_node=clients.client[actor_node].npc_option[ticket_node].boat_node;
     clients.client[actor_node].boat_departure_time=clients.client[actor_node].npc_option[ticket_node].boat_departure_time;
-}
+
+    //communicate to char
+    int map_id=boat[boat_node].destination_map_id;
+
+    sprintf(text_out, "Thanks %s.\n\nYou've just bought your ticket on the %02i:%02i boat to %s. Be sure not to miss it as I don't give refunds.",
+    clients.client[actor_node].char_name,
+    clients.client[actor_node].boat_departure_time / 60,
+    clients.client[actor_node].boat_departure_time % 60,
+    maps.map[map_id].map_name);
+
+    send_npc_text(socket, text_out);
+ }

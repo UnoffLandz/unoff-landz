@@ -42,6 +42,9 @@
 #include "hash_commands.h"
 #include "hash_commands_guilds.h"
 #include "hash_commands_chat.h"
+#include "hash_commands_ops.h"
+#include "hash_commands_devs.h"
+#include "boats.h"
 
 static int hash_motd(int actor_node, char *text) {
 
@@ -73,7 +76,7 @@ static int hash_char_details(int actor_node, char *text) {
         NOTES   :
     */
 
-    char char_name[80]="";
+    char char_name[MAX_CHAR_NAME_LEN]="";
     int socket=clients.client[actor_node].socket;
 
     if(sscanf(text, "%*s %s", char_name)==-1){
@@ -127,7 +130,7 @@ static int hash_beam_me(int actor_node, char *text) {
     clients.client[actor_node].path_count=0;
 
     //ensure char doesn't beam on top of another char
-    int new_map_tile=get_nearest_unoccupied_tile(actor_node, game_data.beam_map_id, game_data.beam_map_tile);
+    int new_map_tile=get_nearest_unoccupied_tile(game_data.beam_map_id, game_data.beam_map_tile);
 
     //beam the char
     move_char_between_maps(actor_node, game_data.beam_map_id, new_map_tile);
@@ -136,203 +139,6 @@ static int hash_beam_me(int actor_node, char *text) {
     clients.client[actor_node].on_boat=false;
 
     send_text(socket, CHAT_SERVER, "%cScotty beamed you up", c_green3+127);
-    return 0;
-}
-
-
-static int hash_jump(int actor_node, char *text) {
-
-    /** RESULT  : jumps char to a new map at (x/y)cartesian coordinates
-
-        RETURNS : void
-
-        PURPOSE : allows map developers to jump to unconnected maps
-
-        NOTES   :
-    */
-
-    int socket=clients.client[actor_node].socket;
-    int map_id, x, y;
-
-    if(sscanf(text, "%*s %i %i %i", &map_id, &x, &y)!=3){
-
-        send_text(socket, CHAT_SERVER, "%cyou need to use the format #JUMP [map id] [x] [y]", c_red3+127);
-        return 0;
-    }
-
-    //check that coordinates are in bounds
-    int map_axis=maps.map[map_id].map_axis;
-    if(x>map_axis || y>map_axis || x<0 || y<0){
-
-        send_text(socket, CHAT_SERVER, "%ccordinates must be between 0 and %i", c_red3+127, map_axis);
-        return 0;
-    }
-
-    //calculate map tile
-    int map_tile=get_tile(x, y, map_id);
-
-    //move char
-    if(move_char_between_maps(actor_node, map_id, map_tile)==false){
-
-        send_text(socket, CHAT_SERVER, "%cjump failed", c_red3+127);
-        return 0;
-    }
-
-    send_text(socket, CHAT_SERVER, "%cYou jumped to map %s tile %i", c_green3+127, maps.map[map_id].map_name, map_tile);
-
-    return 0;
-}
-
-
-static int hash_ops_create_guild(int actor_node, char *text) {
-
-    /** RESULT  : OPS command to create guild
-
-        RETURNS : void
-
-        PURPOSE : OPS only
-
-        NOTES   :
-    */
-
-    int socket=clients.client[actor_node].socket;
-    char guild_name[80];
-    char guild_tag[GUILD_TAG_LENGTH];
-    int permission_level=0;
-
-    if(sscanf(text, "%*s %s %s %i", guild_name, guild_tag, &permission_level)!=3){
-
-        send_text(socket, CHAT_SERVER, "%cyou need to use the format #OPS_CREATE_GUILD [guild name][guild tag][permission level]", c_red3+127);
-        return 0;
-    }
-
-    create_guild(socket, guild_name, guild_tag, permission_level);
-    return 0;
-}
-
-
-static int hash_ops_appoint_guild_member(int actor_node, char *text) {
-
-    /** RESULT  : OPS command to appoint a player to a guild
-
-        RETURNS : void
-
-        PURPOSE : OPS only
-
-        NOTES   :
-    */
-
-    int socket=clients.client[actor_node].socket;
-    char char_name[80]="";
-    char guild_tag[GUILD_TAG_LENGTH]="";
-
-    if(sscanf(text, "%*s %s %s", char_name, guild_tag)!=2){
-
-        send_text(socket, CHAT_SERVER, "you need to use the format #OPS_APPOINT_GUILD_MEMBER [character name][guild tag]", c_red3+127);
-        return 0;
-    }
-
-    join_guild(actor_node, char_name, guild_tag);
-    return 0;
-}
-
-
-static int hash_server_message(int actor_node, char *text) {
-
-    /** public function - see header */
-
-    int socket=clients.client[actor_node].socket;
-    char message[1024]="";
-
-    //scans the string from the second element onwards
-    if(sscanf(text, "%*s %[^\n]", message)!=1){
-
-        send_text(socket, CHAT_SERVER, "%cyou need to use the format #SERVER_MESSAGE [message] or #SM [message]", c_red3+127);
-        return 0;
-    }
-
-    //broadcast message to all clients
-    broadcast_server_message(message);
-
-    return 0;
-}
-
-
-static int hash_ops_change_guild_member_rank(int actor_node, char *text) {
-
-    /** RESULT  : change a chars guild rank
-
-        RETURNS : void
-
-        PURPOSE : OPS only
-
-        NOTES   :
-    */
-
-    int socket=clients.client[actor_node].socket;
-    char char_name[80]="";
-    char guild_tag[GUILD_TAG_LENGTH]="";
-    int guild_rank=0;
-
-    if(sscanf(text, "%*s %s %s %i", char_name, guild_tag, &guild_rank)!=3){
-
-        send_text(socket, CHAT_SERVER, "%cyou need to use the format #OPS_CHANGE_GUILD_MEMBER_RANK [character_name][guild_tag][rank]", c_red3+127);
-        return 0;
-    }
-
-    change_guild_rank(actor_node, char_name, guild_tag, guild_rank);
-    return 0;
-}
-
-
-static int hash_ops_change_guild_permission(int actor_node, char *text) {
-
-    /** RESULT  : change a guilds permission level
-
-        RETURNS : void
-
-        PURPOSE : OPS only
-
-        NOTES   :
-    */
-
-    int socket=clients.client[actor_node].socket;
-    char guild_tag[GUILD_TAG_LENGTH]="";
-    int permission_level=0;
-
-    if(sscanf(text, "%*s %s %i", guild_tag, &permission_level)!=2){
-
-        send_text(socket, CHAT_SERVER, "you need to use the format #OPS_CHANGE_GUILD_PERMISSION [guild tag][permission level]", c_red3+127);
-        return 0;
-    }
-
-    change_guild_permission(actor_node, guild_tag, permission_level);
-    return 0;
-}
-
-
-static int hash_ops_kick_guild_member(int actor_node, char *text) {
-
-    /** RESULT  : ops kicks a member from a a guild
-
-        RETURNS : void
-
-        PURPOSE :
-
-        NOTES   :
-    */
-
-    int socket=clients.client[actor_node].socket;
-    char char_name[80]="";
-    char guild_tag[GUILD_TAG_LENGTH]="";
-
-    if(sscanf(text, "%*s %s %s", guild_tag, char_name)!=2){
-
-        send_text(socket, CHAT_SERVER, "%cyou need to use the format #OPS_KICK_GUILD_MEMBER [guild tag][character name]", c_red3+127);
-        return 0;
-    }
-
-    kick_guild_member(actor_node, guild_tag, char_name);
     return 0;
 }
 
@@ -356,7 +162,7 @@ static int hash_locate_me(int actor_node, char *text) {
 }
 
 
-static int hash_list_maps(int actor_node, char *text) {
+static int hash_boat(int actor_node, char *text) {
 
     /** RESULT  : lists available maps
 
@@ -371,192 +177,21 @@ static int hash_list_maps(int actor_node, char *text) {
 
     int socket=clients.client[actor_node].socket;
 
-    for(int i=0; i<MAX_MAPS; i++){
+    if(clients.client[actor_node].boat_booked==true){
 
-        if(strlen(maps.map[i].elm_filename)>0){
+        int boat_node=clients.client[actor_node].boat_node;
+        int map_id=boat[boat_node].departure_map_id;
 
-            send_text(socket, CHAT_SERVER, "%c%i %s", c_green3+127, i, maps.map[i].elm_filename);
-        }
-    }
-
-    return 0;
-}
-
-
-static int hash_map(int actor_node, char *text) {
-
-    /** RESULT  : extended map information
-
-        RETURNS : void
-
-        PURPOSE :
-
-        NOTES   :
-    */
-
-    int socket=clients.client[actor_node].socket;
-    char map_name[80]="";
-    int map_id;
-
-    if(sscanf(text, "%*s *s")==-1){
-
-        //if no tail specified in command, default to current map
-        map_id=clients.client[actor_node].map_id;
-    }
-    else if(sscanf(text, "%*s %[^\n]", map_name)==1){
-
-        map_id=get_map_id(map_name);
-
-        if(map_id==-1){
-
-            send_text(socket, CHAT_SERVER, "%cMap does not exist", c_red3+127);
-            return 0;
-        }
+        send_text(socket, CHAT_SERVER, "%cyou're booked on the %02i:%02i to %s.",
+        c_green3+127,
+        clients.client[actor_node].boat_departure_time / 60,
+        clients.client[actor_node].boat_departure_time % 60,
+        maps.map[map_id].map_name);
     }
     else {
 
-        send_text(socket, CHAT_SERVER, "%cyou need to use the format #MAP [map_name] or #MAP", c_red3+127);
-        return 0;
+        send_text(socket, CHAT_SERVER, "%cyou've not booked a boat.", c_green3+127);
     }
-
-    get_map_details(actor_node, map_id);
-    get_map_developer_details(actor_node, map_id);
-
-    return 0;
-}
-
-
-static int hash_track(int actor_node, char *text) {
-
-    /** RESULT  : ops kicks a member from a a guild
-
-        RETURNS : void
-
-        PURPOSE :
-
-        NOTES   :
-    */
-
-    int socket=clients.client[actor_node].socket;
-    char on_off[4]="";
-
-    if(sscanf(text, "%*s %s", on_off)!=1){
-
-        send_text(socket, CHAT_SERVER, "%cyou need to use the format #TRACK [ON / OFF]", c_red3+127);
-        return 0;
-    }
-
-    str_conv_upper(on_off);
-
-    if(strcmp(on_off, "ON")==0) {
-
-        send_text(socket, CHAT_SERVER, "%cposition tracking 'on'", c_green3+127);
-        clients.client[actor_node].track=true;
-    }
-
-    else if(strcmp(on_off, "OFF")==0) {
-
-        send_text(socket, CHAT_SERVER, "%cposition tracking 'off'", c_green3+127);
-        clients.client[actor_node].track=false;
-    }
-
-    else {
-
-        send_text(socket, CHAT_SERVER, "%cyou need to use the format #TRACK [ON / OFF]", c_red3+127);
-        return 0;
-    }
-
-    return 0;
-}
-
-
-static int hash_trace(int actor_node, char *text) {
-
-    /** RESULT  : trace walkable tiles
-
-        RETURNS : void
-
-        PURPOSE :
-
-        NOTES   :
-    */
-
-    (void)(text);
-
-    int socket=clients.client[actor_node].socket;
-    int map_id=clients.client[actor_node].map_id;
-    int map_axis=maps.map[map_id].map_axis;
-
-    int pos_x=clients.client[actor_node].map_tile % map_axis;
-    int pos_y=clients.client[actor_node].map_tile / map_axis;
-
-    send_text(socket, CHAT_SERVER, "%cwalkable tile trace (@=%i/%i)", c_green3+127, pos_x, pos_y);
-
-    for(int x=pos_x-20; x<pos_x+20; x++){
-
-        char str[81]="";
-
-        for(int y=pos_y-40; y<pos_y+40; y++){
-
-            int z=(y * map_axis) + x;
-
-            if(z==clients.client[actor_node].map_tile){
-
-                printf("@");
-                strcat(str, "@");
-            }
-            else {
-
-                if(y>=0 && y<map_axis && x>=0 && x<map_axis){
-
-                    if(maps.map[map_id].height_map[z]==NON_TRAVERSABLE_TILE){
-
-                        printf("#");
-                        strcat(str, "#");
-                    }
-                    else{
-
-                        printf(".");
-                        strcat(str, ".");
-                    }
-                }
-                else{
-                    printf(":");
-                    strcat(str, ":");
-                }
-            }
-        }
-
-        send_text(socket, CHAT_SERVER, "%c%s", c_grey1+127, str);
-        printf("\n");
-    }
-
-    return 0;
-}
-
-
-static int hash_trace_explore(int actor_node, char *text) {
-
-    /** RESULT  : trace walkable tiles
-
-        RETURNS : void
-
-        PURPOSE :
-
-        NOTES   :
-    */
-
-    (void)(text);
-
-    int socket=clients.client[actor_node].socket;
-    int map_id=clients.client[actor_node].map_id;
-    int map_axis=maps.map[map_id].map_axis;
-    int pos_x=clients.client[actor_node].map_tile % map_axis;
-    int pos_y=clients.client[actor_node].map_tile / map_axis;
-
-    send_text(socket, CHAT_SERVER, "%cexplorable tile trace (@=%i/%i)", c_green3+127, pos_x, pos_y);
-
-    clients.client[actor_node].debug_explore_path=true;
 
     return 0;
 }
@@ -634,6 +269,13 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#TRACK",                   true,   0,     PERMISSION_2, hash_track},
     {"#TRACE",                   true,   0,     PERMISSION_2, hash_trace},
     {"#TRACE_EXPLORE",           true,   0,     PERMISSION_2, hash_trace_explore},
+    {"#TRACE_PATH",              true,   0,     PERMISSION_2, hash_trace_path},
+    {"#BOAT",                    false,  0,     PERMISSION_1, hash_boat},
+    {"#SET_MAP_NAME",            true,   0,     PERMISSION_2, hash_set_map_name},
+    {"#SET_MAP_DESCRIPTION",     true,   0,     PERMISSION_2, hash_set_map_description},
+    {"#SET_MAP_AUTHOR",          true,   0,     PERMISSION_2, hash_set_map_author},
+    {"#SET_MAP_AUTHOR_EMAIL",    true,   0,     PERMISSION_2, hash_set_map_author_email},
+    {"#SET_MAP_STATUS",          true,   0,     PERMISSION_2, hash_set_map_development_status},
 
     {"", false, 0, 0, 0}
 };

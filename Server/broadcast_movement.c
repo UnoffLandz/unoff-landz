@@ -43,7 +43,7 @@ void broadcast_add_new_enhanced_actor_packet(int actor_node){
 
     //pre-create the add_new_enhanced_actor packet so we don't have to repeat this on each occasion when
     //it needs to sent to other actors
-    unsigned char packet[1024]={0};
+    unsigned char packet[MAX_PACKET_SIZE]={0};
     size_t packet_length=0;
 
     add_new_enhanced_actor_packet(actor_node, packet, &packet_length);
@@ -86,7 +86,7 @@ void broadcast_remove_actor_packet(int actor_node){
 
     //pre-create the remove char packet so we don't have to repeat this on each occasion when it needs to
     //sent to other actors
-    unsigned char packet[1024]={0};
+    unsigned char packet[MAX_PACKET_SIZE]={0};
     size_t packet_length=0;
     remove_actor_packet(actor_node, packet, &packet_length);
 
@@ -122,16 +122,16 @@ void broadcast_actor_packet(int actor_node, unsigned char move, int sender_desti
 
     /** public function - see header */
 
-    unsigned char packet[1024];// sending char packets
+    unsigned char packet[MAX_PACKET_SIZE];// sending char packets
     size_t packet_length=0;
 
-    unsigned char packet1[1024];// receiving char add_actor packet
+    unsigned char packet1[MAX_PACKET_SIZE];// receiving char add_actor packet
     size_t packet1_length=0;
 
-    unsigned char packet2[1024];// receiving char add_enhanced_actor packet
+    unsigned char packet2[MAX_PACKET_SIZE];// receiving char add_enhanced_actor packet
     size_t packet2_length=0;
 
-    unsigned char packet3[1024];// receiving char remove_actor packet
+    unsigned char packet3[MAX_PACKET_SIZE];// receiving char remove_actor packet
     size_t packet3_length=0;
 
     int sender_current_tile=clients.client[actor_node].map_tile;
@@ -205,17 +205,18 @@ void broadcast_actor_packet(int actor_node, unsigned char move, int sender_desti
                 }
 
                 //sending char moves within visual proximity of receiving char
-                else if(proximity_before_move<=sender_visual_range && proximity_after_move<=sender_visual_range){
+                else if(proximity_before_move<=sender_visual_range
+                && proximity_after_move<=sender_visual_range
+                && clients.client[i].player_type==PLAYER){
 
                     if(i==actor_node) {
 
                         // sending char sees itself move
                         add_actor_packet(clients.client[i].socket, move, packet, &packet_length);
                     }
-                    else{
-
+                    else {
                         // sending char sees itself stationery
-                        add_actor_packet(clients.client[i].socket, 0, packet, &packet_length);
+                        add_actor_packet(clients.client[i].socket, actor_cmd_nothing, packet, &packet_length);
                     }
 
                     send_packet(socket, packet, packet_length);
@@ -233,7 +234,7 @@ void broadcast_get_new_bag_packet(int actor_node, int bag_id) {
 
     //pre-create the packet so we don't have to repeat this on each occasion when it needs to
     //sent to other actors
-    unsigned char packet[1024]={0};
+    unsigned char packet[MAX_PACKET_SIZE]={0};
     size_t packet_length=0;
     int socket=clients.client[actor_node].socket;
 

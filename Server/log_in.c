@@ -45,9 +45,9 @@ void process_log_in(int actor_node, const unsigned char *packet){
 
     size_t packet_length=get_packet_length(packet);
 
-    char char_name_and_password[80]="";
-    char char_name[80]="";
-    char password[80]="";
+    char char_name_and_password[MAX_CHAR_NAME_LEN + MAX_CHAR_PASSWORD_LEN]="";
+    char char_name[MAX_CHAR_NAME_LEN]="";
+    char password[MAX_CHAR_PASSWORD_LEN]="";
 
     //we know that there are always 3 bytes before the char name
     //and password, so we can extract this adding

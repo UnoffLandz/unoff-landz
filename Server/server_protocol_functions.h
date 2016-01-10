@@ -23,13 +23,14 @@
 #include <stdint.h>
 
 #include "chat.h" //support for MAX_CHAN_SLOTS
+#include "characters.h" //support for MAX_CHAR_NAME_LEN
 
 #define SEND_TEXT_MAX 1024
 
 struct {// struct used to transfer data to the _add_enhanced_actor_packet and
         //_remove_actor_packet functions
     int actor_node;
-    char char_name[80];
+    char char_name[MAX_CHAR_NAME_LEN];
     int guild_id;
     int map_id;
     int map_tile;
@@ -321,11 +322,37 @@ void send_get_bags_list(int socket);
 */
 void send_inventory_item_text(int socket, char *text);
 
-// TODO (themuntdregger#1#): document npc functions
+
+/** RESULT  : sends text to the NPC window
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
 void send_npc_text(int socket, char *text);
 
+
+/** RESULT  : sends a list of options to the NPC window
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
 void send_npc_options_list(int socket, int npc_actor_node, char *options);
 
+
+/** RESULT  : sends the NPC name and portrait to the NPC window
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
 void send_npc_info(int socket, char *npc_name, int npc_id);
 
 /*****************************************************************************************************

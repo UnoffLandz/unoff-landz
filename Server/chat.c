@@ -31,7 +31,9 @@
 #include "db/database_functions.h"
 #include "idle_buffer2.h"
 
+
 struct channel_node_type channel[MAX_CHANNELS];
+
 
 int player_in_chan(int actor_node, int chan){
 

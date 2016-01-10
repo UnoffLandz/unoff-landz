@@ -89,8 +89,7 @@ void load_db_maps();
 
     NOTES   :
 **/
-void add_db_map(int map_id, char *map_name, char *elm_file, char *map_description, char *map_author,
-    char *map_author_email, int status);
+void add_db_map(int map_id, char *map_name);
 
 
 /** RESULT  : determines if map id exists on database
@@ -123,9 +122,63 @@ void list_db_maps();
 
     PURPOSE : enables an existing map to be replaced
 
-    NOTES   :
+    NOTES   : used in function main.c
 **/
 void delete_map(int map_id);
 
+
+/** RESULT  : adds/changes map name to the database
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :used in function create_database
+**/
+void change_db_map_name(int map_id, char *map_name);
+
+
+/** RESULT  : adds/changes map description to the database
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :used in function create_database
+**/
+void change_db_map_description(int map_id, char *map_description);
+
+
+/** RESULT  : adds/changes map author to the database
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :used in function create_database
+**/
+void change_db_map_author(int map_id, char *map_author);
+
+
+/** RESULT  : adds/changes map author email to the database
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :used in function create_database
+**/
+void change_db_map_author_email(int map_id, char *map_author_email);
+
+
+/** RESULT  : adds/changes map development status to the database
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :used in function create_database
+**/
+void change_db_map_development_status(int map_id, int development_status);
 
 #endif // DB_MAP_TBL_H_INCLUDED

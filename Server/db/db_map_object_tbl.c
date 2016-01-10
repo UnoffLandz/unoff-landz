@@ -22,6 +22,9 @@
 #include <string.h> //support memcpy
 
 #include "database_functions.h"
+#include "db_e3d_tbl.h"
+#include "db_object_tbl.h"
+
 #include "../logging.h"
 #include "../server_start_stop.h"
 #include "../map_object.h"
@@ -30,6 +33,7 @@
 #include "../string_functions.h"
 #include "../numeric_functions.h"
 #include "../e3d.h"
+#include "../objects.h"
 
 void load_db_map_objects(){
 
@@ -93,5 +97,96 @@ void load_db_map_objects(){
 
         log_event(EVENT_ERROR, "no map objects found in database", i);
         stop_server();
+    }
+}
+
+
+void add_db_map_objects(int map_id, char *elm_filename){
+
+    //load e3d and object data, otherwise we'll be unable to populate the map object entries
+    //with links
+    load_db_e3ds();
+    load_db_objects();
+
+    //read the 3d object list into the array
+    read_threed_object_list(elm_filename);
+
+    //get the map axis
+    read_elm_header(elm_filename);
+
+    //add the array data to the database
+    sqlite3_stmt *stmt;
+    char *sErrMsg = 0;
+
+    //as there's likely to be thousands of entries that take an age to load, create a sql statement to which
+    //values can be replaced within TRANSACTION
+    char sql[MAX_SQL_LEN]="INSERT INTO MAP_OBJECT_TABLE("  \
+         "THREEDOL_ID," \
+         "MAP_ID,"  \
+         "TILE," \
+         "E3D_ID," \
+         "HARVESTABLE," \
+         "RESERVE" \
+         ") VALUES(?, ?, ?, ?, ?, ?)";
+
+
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    int reserve=0;
+
+    for(int i=0; i<elm_header.threed_object_count; i++) {
+
+        sqlite3_bind_int(stmt, 1, i);
+        sqlite3_bind_int(stmt, 2, map_id);
+
+        //get map_tile from threed object list
+        float x_pos=threed_object_list[i].x_pos * 2.00f;
+        float y_pos=threed_object_list[i].y_pos * 2.00f;
+        int tile=(int)x_pos + ((int)y_pos * elm_header.h_tiles * STEP_TILE_RATIO);
+        sqlite3_bind_int(stmt, 3, tile);
+
+        //get e3d id from threed object list
+        char e3d_filename[80]="";
+        strcpy(e3d_filename, strrchr(threed_object_list[i].e3d_path_and_filename, '/')+1 );
+        int e3d_id=get_e3d_id(e3d_filename);
+        sqlite3_bind_int(stmt, 4, e3d_id);
+
+        //get whether object is harvestable from threed object list
+        int object_id=e3d[e3d_id].object_id;
+        bool harvestable=object[object_id].harvestable;
+        sqlite3_bind_int(stmt, 5, harvestable);
+
+        sqlite3_bind_int(stmt, 6, reserve);
+
+        rc = sqlite3_step(stmt);
+        if (rc!= SQLITE_DONE) {
+
+            log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        }
+
+       sqlite3_clear_bindings(stmt);
+       sqlite3_reset(stmt);
+    }
+
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    if (rc!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    rc=sqlite3_finalize(stmt);
+    if(rc!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 }

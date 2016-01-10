@@ -49,6 +49,7 @@
 #include "../guilds.h"
 #include "../string_functions.h"
 #include "../gender.h"
+#include "../maps.h"
 
 sqlite3 *db;
 
@@ -443,28 +444,43 @@ void create_database(const char *db_filename){
     add_db_e3d(11, "branch4.e3d", 140);
     add_db_e3d(12, "branch5.e3d", 140);
     add_db_e3d(13, "branch6.e3d", 140);
-    //add_db_e3d(14, "log1.e3d", 408);
-    //add_db_e3d(15, "log2.e3d", 408);
-    add_db_e3d(16, "flowerorange1.e3d", 29);
-    add_db_e3d(17, "flowerorange2.e3d", 29);
-    add_db_e3d(18, "flowerorange3.e3d", 29);
-    add_db_e3d(19, "flowerpink1.e3d", 28);
-    add_db_e3d(20, "flowerwhite1.e3d", 29);
-    add_db_e3d(21, "flowerwhite2.e3d", 29);
-    add_db_e3d(22, "flowerwhite3.e3d", 29);
+    add_db_e3d(14, "flowerbush3.e3d", 36);
+    add_db_e3d(15, "flowerbush2.e3d", 35);
+    add_db_e3d(16, "food_pumpkin.e3d", 406);
+    add_db_e3d(17, "log1.e3d", 214);
+    add_db_e3d(18, "log2.e3d", 214);
+    add_db_e3d(19, "flowerorange1.e3d", 29);
+    add_db_e3d(20, "flowerorange2.e3d", 29);
+    add_db_e3d(21, "flowerorange3.e3d", 29);
+    add_db_e3d(22, "flowerpink1.e3d", 28);
+    add_db_e3d(23, "flowerwhite1.e3d", 29);
+    add_db_e3d(24, "flowerwhite2.e3d", 29);
+    add_db_e3d(25, "flowerwhite3.e3d", 29);
 
-    add_db_object(405, "cabbage", 1, 1, 2);
-    add_db_object(407, "tomato", 1, 1, 2);
-    add_db_object(408, "carrot", 1, 1, 2);
-    add_db_object(140, "stick", 1, 0, 2);
-    add_db_object(29, "tiger lily", 1, 0, 1);
-    add_db_object(28, "chrysanthemum", 1, 0, 1);
-    //add_db_object(29, "impatiens", 1, 0, 1);
+    add_db_object(405, "Cabbage", 1, 1, 2);
+    add_db_object(406, "Pumpkin", 1, 1, 2);
+    add_db_object(407, "Tomato", 1, 1, 2);
+    add_db_object(408, "Carrot", 1, 1, 2);
+    add_db_object(140, "Stick", 1, 0, 2);
+    add_db_object(214, "Log", 1, 0, 4);
+    add_db_object(29, "Tiger lily", 1, 0, 1);
+    add_db_object(28, "Chrysanthemum", 1, 0, 1);
+    add_db_object(27, "Impatiens", 1, 0, 1);
+    add_db_object(34, "Lupins", 1, 0, 1);
+    add_db_object(35, "Snap Dragon", 1, 0, 1);
 
-    add_db_map(1, "startmap.elm", "Isla Prima", "The start map", "Eternal Lands map", "n/a", 2);
+    add_db_map(1, "startmap.elm");
+    change_db_map_name(1, "Isla Prima");
+    change_db_map_description(1, "The start map");
+    change_db_map_author(1, "Eternal Lands");
+    change_db_map_author_email(1, "@");
+    change_db_map_development_status(1, 2);
+    add_db_map_objects(1, "startmap.elm");
 
+    // TODO (themuntdregger#1#): change add_db_guild so that it works in a similar way to add_db_map
     add_db_guild("Operators", "OPS", c_grey3, "The server operators guild", PERMISSION_3, GUILD_ACTIVE);
 
+    //clear the character struct
     memset(&character, 0, sizeof(character));
 
     strcpy(character.char_name, "Player");
@@ -507,6 +523,7 @@ void create_database(const char *db_filename){
 
     add_db_char_data(character);
     printf("Player [master_character][test] added successfully\n");
+    printf("Database [%s] created\n", db_filename);
 }
 
 /*

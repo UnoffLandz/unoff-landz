@@ -121,7 +121,7 @@ void process_char_move(int actor_node, time_t current_utime){
                 broadcast_actor_packet(actor_node, (unsigned char)move_cmd, next_tile);
 
                 // if #TRACK ON has been used display char position on console
-                if(clients.client[actor_node].track==true){
+                if(clients.client[actor_node].debug_status==DEBUG_TRACK){
 
                     send_text(clients.client[actor_node].socket, CHAT_SERVER, "%cPosition x=%i y=%i", c_green3+127, next_tile % map_axis, next_tile / map_axis);
                 }
@@ -161,7 +161,7 @@ void send_actors_to_client(int actor_node){
         PURPOSE : used by add_char_to_map function
     **/
 
-    unsigned char packet[1024]={0};
+    unsigned char packet[MAX_PACKET_SIZE]={0};
     size_t packet_length;
 
     int map_id=clients.client[actor_node].map_id;
@@ -250,7 +250,7 @@ bool add_char_to_map(int actor_node, int map_id, int map_tile){
         if(map_id==bag[i].map_id){
 
             //display bag to client
-            unsigned char packet[1024]={0};
+            unsigned char packet[MAX_PACKET_SIZE]={0};
             size_t packet_length;
             get_new_bag_packet(actor_node, i, packet, &packet_length);
 
@@ -305,12 +305,6 @@ void start_char_move(int actor_node, int destination){
     int current_tile=clients.client[actor_node].map_tile;
     int socket=clients.client[actor_node].socket;
 
-    //if char is harvesting then stop
-    if(clients.client[actor_node].harvest_flag==true){
-
-        stop_harvesting(actor_node);
-    }
-
     //if char is sitting then stand before moving
     if(clients.client[actor_node].frame==frame_sit){
 
@@ -342,4 +336,12 @@ void start_char_move(int actor_node, int destination){
 
     //reset time of last move to zero so the movement is processed without delay
     clients.client[actor_node].time_of_last_move=0;
+}
+
+
+void stop_char_move(int actor_node){
+
+    /** public function - see header */
+
+    clients.client[actor_node].path_count=0;
 }

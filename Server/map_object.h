@@ -24,8 +24,6 @@
 
 #include "maps.h" // required for MAX_MAPS
 
-#define MAX_MAP_OBJECTS 10000
-
 struct map_object_type{
 
     int threedol_id;
@@ -35,6 +33,7 @@ struct map_object_type{
     int reserve;
 };
 extern struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
+
 
 /** RESULT  : finds the object id based on the position of an entry in a map threed object list
 
@@ -56,5 +55,6 @@ int get_object_id(int map_id, int threed_object_list_pos);
     NOTES   :
 */
 int get_object_tile(int map_id, int threed_object_list_pos);
+
 
 #endif // MAP_OBJECT_H_INCLUDED

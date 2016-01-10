@@ -29,6 +29,7 @@
         HARVESTABLE   INT, \
         RESERVE       INT)"
 
+
 /** RESULT  : loads data from the map object table into the map object array
 
     RETURNS : void
@@ -38,5 +39,16 @@
     NOTES   :
 **/
 void load_db_map_objects();
+
+
+/** RESULT  : adds the threed object list for a map to the database
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+**/
+void add_db_map_objects(int map_id, char *elm_filename);
 
 #endif // MAP_OBJECT_H_INCLUDED

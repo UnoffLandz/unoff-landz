@@ -22,6 +22,8 @@
 
 #include <unistd.h> //support for ssize_t datatype
 
+#define MAX_PACKET_SIZE 1024
+
 /*
 struct packet_element_type{
 

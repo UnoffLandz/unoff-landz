@@ -27,6 +27,7 @@
 #include "server_start_stop.h"
 #include "log_in.h"
 #include "character_creation.h"
+#include "packet.h"
 
 struct buffer_list_type idle_buffer;
 
@@ -79,7 +80,7 @@ void Xprocess_idle_buffer(){
         int actor_node=idle_buffer.buffer[1].actor_node;
         int packet_length=idle_buffer.buffer[1].packet[1] + (idle_buffer.buffer[1].packet[2] * 256) + 2;
 
-        unsigned char packet[1024]={0};
+        unsigned char packet[MAX_PACKET_SIZE]={0};
 
         int i=0;
         for(i=0; i<packet_length; i++){

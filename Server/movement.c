@@ -17,6 +17,8 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
+#include <string.h> //support for memcpy function
+
 #include "movement.h"
 #include "maps.h"
 #include "logging.h"
@@ -55,7 +57,7 @@ bool tile_walkable(int map_id, int tile){
 }
 
 
-bool tile_unoccupied(int connection, int map_id, int map_tile){
+bool tile_unoccupied(int map_id, int map_tile){
 
     /** RESULT  : determines if tile is unoccupied
 
@@ -69,7 +71,7 @@ bool tile_unoccupied(int connection, int map_id, int map_tile){
     //now check through clients and see if any have characters occupying that tile
     for(int i=0; i<MAX_ACTORS; i++){
 
-        if(i!=connection && clients.client[i].map_tile==map_tile && clients.client[i].map_id==map_id) return false;
+        if(clients.client[i].map_tile==map_tile && clients.client[i].map_id==map_id) return false;
     }
 
     return true;
@@ -99,41 +101,79 @@ bool tile_in_lateral_bounds(int tile, int next_tile, int map_id){
 }
 
 
-int get_nearest_unoccupied_tile(int connection, int map_id, int map_tile){
+int get_nearest_unoccupied_tile(int map_id, int map_tile){
 
     /** public function - see header */
 
-    int j=0;
     int map_axis=maps.map[map_id].map_axis;
 
-    //check target tile to see if it is walkable and unoccupied
-    if(tile_walkable(map_id, map_tile)==true && tile_unoccupied(connection, map_id, map_tile)==true) return map_tile;
+    unsigned char height_map[HEIGHT_MAP_MAX]={0};
+    memcpy(height_map, maps.map[map_id].height_map, (size_t)maps.map[map_id].height_map_size);
 
+    for(int i=0; i<MAX_ACTORS; i++){
+
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED
+        && clients.client[i].map_id==map_id){
+
+            height_map[clients.client[i].map_tile]=NON_TRAVERSABLE_TILE;
+        }
+    }
+
+    //check target tile to see if it is walkable and unoccupied
+    if(height_map[map_tile]!=NON_TRAVERSABLE_TILE) return map_tile;
 
     //if target tile is not walkable and unoccupied then search adjacent tiles
-    do{
+    int start=0, finish=0, inc=0, last_tile=0;
 
-        //examine all adjacent tiles
-        for(int i=0; i<8; i++){
+    for(int i=0; i<MAX_UNOCCUPIED_TILE_SEARCH; i++){
 
-            int next_tile=map_tile+vector[i].x+(vector[i].y * map_axis * j);
+        for(int j=0; j<4; j++){
 
-            //make sure search doesn't cross lateral bound of map
-            if(tile_in_lateral_bounds(map_tile, next_tile, map_id)==true){
+            switch(j){
 
-                // make sure search doesn't go outside of map
-                if(next_tile>0 && next_tile<(int)maps.map[map_id].height_map_size) {
+                case 0:{
+                    start=map_tile+(map_axis*i)-i;
+                    finish=map_tile+(map_axis*i)+i;
+                    inc=1;
+                    break;
+                }
 
-                    //check next best tile
-                    if(tile_walkable(map_id, next_tile)==true && tile_unoccupied(connection, map_id, next_tile)==true) return next_tile;
+                case 1:{
+                    start=finish=map_tile+(map_axis*i)+i;
+                    finish=map_tile-(map_axis*i)+i;
+                    inc=-map_axis;
+                    break;
+                }
+
+                case 2:{
+                    start=map_tile-(map_axis*i)+i;
+                    finish=map_tile-(map_axis*i)-i;
+                    inc=-1;
+                    break;
+                }
+
+                case 3:{
+                    start=map_tile-(map_axis*i)-i;
+                    finish=map_tile+(map_axis*i)-i;
+                    inc=map_axis;
                 }
             }
+
+            for(int j=start; j<=finish; j+=inc){
+
+                //make sure we don't cross horizontal bounds
+                if(tile_in_lateral_bounds(last_tile, j, map_id)==false) break;
+
+                //make sure we don't cross vertical bounds
+                if(j>(int)maps.map[map_id].height_map_size || j<0) break;
+
+                //check that tile is unoccupied and walkable
+                if(height_map[j]!=NON_TRAVERSABLE_TILE) return j;
+
+                last_tile=j;
+            }
         }
+    }
 
-        //widen search of unoccupied tile
-        j++;
-
-    } while(j<MAX_UNOCCUPIED_TILE_SEARCH);
-
-    return -1; //return -1 if an unoccupied tile cannot be found
+    return -1;
 }

@@ -53,11 +53,90 @@ struct{
 
 int path_stack_count;
 
+void debug_path(int actor_node, int destination){
 
-void debug_explore_path(int actor_node, int destination){
+    /** RESULT  : displays an ascii grid of the path
+
+        RETURNS : void
+
+        PURPOSE : debugging maps
+
+        USAGE   : function -
+    */
+
+    int map_id=clients.client[actor_node].map_id;
+    int map_axis=maps.map[map_id].map_axis;
+    int pos_x=clients.client[actor_node].map_tile % map_axis;
+    int pos_y=clients.client[actor_node].map_tile / map_axis;
+
+    //create duplicate height map so we can fill it indicators for the explored tiles
+    unsigned char height_map[HEIGHT_MAP_MAX]={0};
+    memcpy(height_map, maps.map[map_id].height_map, sizeof(maps.map[map_id].height_map));
+
+    //append the explore path to the height map
+    for(int i=0; i<clients.client[actor_node].path_count; i++){
+
+        int z=clients.client[actor_node].path[i];
+        height_map[z]=99;
+    }
+
+    //print the height map
+    for(int x=pos_x-20; x<pos_x+20; x++){
+
+        char str[81]="";
+
+        for(int y=pos_y-40; y<pos_y+40; y++){
+
+            int z=(y * map_axis) + x;
+
+            if(z==clients.client[actor_node].map_tile){
+
+                strcat(str, "S");
+            }
+
+            else if(z==destination){
+
+                strcat(str, "F");
+            }
+            else {
+
+                if(y>=0 && y<map_axis && x>=0 && x<map_axis){
+
+                    if(height_map[z]==NON_TRAVERSABLE_TILE){
+
+                        strcat(str, "#");
+                    }
+                    else if (height_map[z]!=99){
+
+                        strcat(str, ".");
+                    }
+                    else{
+
+                        if(height_map[z]==destination){
+
+                            strcat(str, "*");
+                        }
+                        else {
+
+                            strcat(str, "X");
+                        }
+                    }
+                }
+                else{
+
+                    strcat(str, ":");
+                }
+            }
+        }
+
+        send_text(clients.client[actor_node].socket, CHAT_SERVER, "%c%s", c_grey1+127, str);
+    }
+}
 
 
-    /** RESULT  : displays an ascii grid representation of the explored map tiles
+void debug_explore(int actor_node, int destination){
+
+    /** RESULT  : displays an ascii grid of tiles explored to create path
 
         RETURNS : void
 
@@ -497,12 +576,11 @@ bool get_astar_path(int actor_node, int start_tile, int destination_tile){
 
     if(explore_path(actor_node, destination_tile)==false) return false;
 
-    //if #EXPLORE_TRACE command has been set then send ascii representation of the
-    //local area to the client
-    if(clients.client[actor_node].debug_explore_path==true){
+    //if #EXPLORE_TRACE commands have been used then send ascii grid to client
+    if(clients.client[actor_node].debug_status==DEBUG_EXPLORE){
 
-        debug_explore_path(actor_node, destination_tile);
-        clients.client[actor_node].debug_explore_path=false;
+        debug_explore(actor_node, destination_tile);
+        clients.client[actor_node].debug_status=DEBUG_OFF;
     }
 
     //start path at destination tile
@@ -556,6 +634,13 @@ bool get_astar_path(int actor_node, int start_tile, int destination_tile){
         clients.client[actor_node].path[ clients.client[actor_node].path_count-1]=next_tile;
 
     }while(clients.client[actor_node].path[clients.client[actor_node].path_count-1]!=start_tile);
+
+    //if #TRACE_PATH command has been used then display ascii grid
+    if(clients.client[actor_node].debug_status==DEBUG_PATH){
+
+        debug_path(actor_node, destination_tile);
+        clients.client[actor_node].debug_status=DEBUG_OFF;
+    }
 
     return true;
 }

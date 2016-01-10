@@ -131,9 +131,6 @@ int hash_guild_message(int actor_node, char *text) {
         return 0;
     }
 
-    //broadcast to self
-    send_text(socket, CHAT_GM, "%c[%s]: %s", c_blue1+127, clients.client[actor_node].char_name, message);
-
     //broadcast to others
     broadcast_guild_chat(guild_id, actor_node, message);
     return 0;
@@ -215,7 +212,7 @@ int hash_kick_guild_member(int actor_node, char *text) {
 
     /** public function - see header */
 
-    char char_name[80]="";
+    char char_name[MAX_CHAR_NAME_LEN]="";
     int socket=clients.client[actor_node].socket;
 
     if(sscanf(text, "%*s %s", char_name)!=1){
@@ -234,7 +231,7 @@ int hash_reject_applicant(int actor_node, char *text) {
     /** public function - see header */
 
     int socket=clients.client[actor_node].socket;
-    char char_name[80]="";
+    char char_name[MAX_CHAR_NAME_LEN]="";
 
     if(sscanf(text, "%*s %s", char_name)!=1){
 
@@ -264,7 +261,7 @@ int hash_accept_applicant(int actor_node, char *text) {
     /** public function - see header */
 
     int socket=clients.client[actor_node].socket;
-    char char_name[80]="";
+    char char_name[MAX_CHAR_NAME_LEN]="";
 
     if(sscanf(text, "%*s %s", char_name)!=1){
 
@@ -324,7 +321,7 @@ int hash_change_rank(int actor_node, char *text) {
     /** public function - see header */
 
     int socket=clients.client[actor_node].socket;
-    char char_name[80];
+    char char_name[MAX_CHAR_NAME_LEN]="";
     int guild_rank=0;
 
     if(sscanf(text, "%*s %s %i", char_name, &guild_rank)!=2){
