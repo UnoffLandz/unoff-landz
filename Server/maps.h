@@ -35,7 +35,7 @@
 #define CLIENT_MAP_PATH "./maps/" //the path that needs to be sent with the send_map packet
 
 #define MAX_E3D_FILENAME 80
-#define MAX_MAP_OBJECTS 2000
+#define MAX_MAP_OBJECTS 6000
 
 //#define START_MAP_ID 1       // map_id of the map on which characters are created
 //#define START_MAP_TILE 27225 // tile_pos at which characters are created
@@ -248,5 +248,8 @@ void read_tile_map(char *elm_filename, unsigned char *tile_map);
     NOTES   :
 */
 bool map_exists(int map_id);
+
+void batch_load_maps(char *file_name);
+
 
 #endif // MAPS_H_INCLUDED

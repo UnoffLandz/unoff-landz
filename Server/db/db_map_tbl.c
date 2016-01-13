@@ -94,29 +94,25 @@ void load_db_maps(){
         maps.map[map_id].map_axis=sqlite3_column_int(stmt, 4);
 
         //get tile map
-
-/* This old code pulls the tile map from the database
-        int tile_map_size=sqlite3_column_bytes(stmt, 5);
+        size_t tile_map_size=(size_t)sqlite3_column_bytes(stmt, 5);
         maps.map[map_id].tile_map_size=tile_map_size;
         memcpy(maps.map[map_id].tile_map, (unsigned char*)sqlite3_column_blob(stmt, 5), (size_t)tile_map_size);
-*/
-// This temporary code reads the tile map directly from the elm file
-        read_tile_map(elm_filename, maps.map[map_id].tile_map);
+
+        //This temporary code reads the tile map directly from the elm file
+        //maps.map[map_id].le_map_size=(size_t)sqlite3_column_bytes(stmt, 6);
+        //read_tile_map(elm_filename, maps.map[map_id].tile_map);
 
         //get height map
-
-/*This old code pulls the height map from the database
         size_t height_map_size=(size_t)sqlite3_column_bytes(stmt, 6);
         maps.map[map_id].height_map_size=height_map_size;
         memcpy(maps.map[map_id].height_map, (unsigned char*)sqlite3_column_blob(stmt, 6), (size_t)height_map_size);
-*/
 
-// This temporary code reads the height map directly from the elm file
-        maps.map[map_id].height_map_size=(size_t)sqlite3_column_bytes(stmt, 6);
-        read_height_map(elm_filename, maps.map[map_id].height_map);
+        //This temporary code reads the height map directly from the elm file
+        //maps.map[map_id].height_map_size=(size_t)sqlite3_column_bytes(stmt, 6);
+        //read_height_map(elm_filename, maps.map[map_id].height_map);
 
-//this temporary code reads the 3d object list directly from the elm file
-        read_threed_object_list(elm_filename);
+        //this temporary code reads the 3d object list directly from the elm file
+        //read_threed_object_list(elm_filename);
 
         //get map author
         strcpy(maps.map[map_id].author, (char*)sqlite3_column_text(stmt, 7));
@@ -436,19 +432,23 @@ void list_db_maps(){
 
 
 void change_db_map_name(int map_id, char *map_name){
-// TODO (themuntdregger#1#): replace with process_sql function
+
     /** public function - see header */
 
-    char sql[MAX_SQL_LEN]="";
-    sprintf(sql, "UPDATE MAP_TABLE SET MAP_NAME='%s' WHERE MAP_ID=%i", map_name, map_id);
-
     sqlite3_stmt *stmt;
+
+    //use parameters rather than inserting values as this enables apostrophe characters
+    //to be handled
+    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_NAME=? WHERE MAP_ID=?";
 
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
+
+    sqlite3_bind_text(stmt, 1, map_name, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, map_id);
 
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
@@ -467,19 +467,23 @@ void change_db_map_name(int map_id, char *map_name){
 
 
 void change_db_map_description(int map_id, char *map_description){
-// TODO (themuntdregger#1#): replace with process_sql function
+
     /** public function - see header */
 
-    char sql[MAX_SQL_LEN]="";
-    sprintf(sql, "UPDATE MAP_TABLE SET MAP_DESCRIPTION='%s' WHERE MAP_ID=%i", map_description, map_id);
-
     sqlite3_stmt *stmt;
+
+    //use parameters rather than inserting values as this enables apostrophe characters
+    //to be handled
+    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_DESCRIPTION=? WHERE MAP_ID=?";
 
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
+
+    sqlite3_bind_text(stmt, 1, map_description, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, map_id);
 
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
@@ -498,19 +502,23 @@ void change_db_map_description(int map_id, char *map_description){
 
 
 void change_db_map_author(int map_id, char *map_author){
-// TODO (themuntdregger#1#): replace with process_sql function
+
     /** public function - see header */
 
-    char sql[MAX_SQL_LEN]="";
-    sprintf(sql, "UPDATE MAP_TABLE SET MAP_AUTHOR='%s' WHERE MAP_ID=%i", map_author, map_id);
-
     sqlite3_stmt *stmt;
+
+    //use parameters rather than inserting values as this enables apostrophe characters
+    //to be handled
+    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_AUTHOR=? WHERE MAP_ID=?";
 
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
+
+    sqlite3_bind_text(stmt, 1, map_author, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, map_id);
 
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
@@ -529,19 +537,23 @@ void change_db_map_author(int map_id, char *map_author){
 
 
 void change_db_map_author_email(int map_id, char *map_author_email){
-// TODO (themuntdregger#1#): replace with process_sql function
+
     /** public function - see header */
 
-    char sql[MAX_SQL_LEN]="";
-    sprintf(sql, "UPDATE MAP_TABLE SET MAP_AUTHOR_EMAIL='%s' WHERE MAP_ID=%i", map_author_email, map_id);
-
     sqlite3_stmt *stmt;
+
+    //use parameters rather than inserting values as this enables apostrophe characters
+    //to be handled
+    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_AUTHOR_EMAIL=? WHERE MAP_ID=?";
 
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
+
+    sqlite3_bind_text(stmt, 1, map_author_email, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, map_id);
 
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
@@ -558,21 +570,24 @@ void change_db_map_author_email(int map_id, char *map_author_email){
     log_event(EVENT_SESSION, "Map [%i] author email changed to [%s] on MAP_TABLE", map_id, map_author_email);
 }
 
+void change_db_map_development_status(int map_id, int map_development_status){
 
-void change_db_map_development_status(int map_id, int development_status){
-// TODO (themuntdregger#1#): replace with process_sql function
     /** public function - see header */
 
-    char sql[MAX_SQL_LEN]="";
-    sprintf(sql, "UPDATE MAP_TABLE SET MAP_STATUS=%i WHERE MAP_ID=%i", development_status, map_id);
-
     sqlite3_stmt *stmt;
+
+    //use parameters rather than inserting values as this enables apostrophe characters
+    //to be handled
+    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_STATUS=? WHERE MAP_ID=?";
 
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
+
+    sqlite3_bind_int(stmt, 1, map_development_status);
+    sqlite3_bind_int(stmt, 2, map_id);
 
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
@@ -586,6 +601,5 @@ void change_db_map_development_status(int map_id, int development_status){
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_SESSION, "Map [%i] development status changed to [%i] on MAP_TABLE", map_id, development_status);
+    log_event(EVENT_SESSION, "Map [%i] development status changed to [%i] on MAP_TABLE", map_id, map_development_status);
 }
-

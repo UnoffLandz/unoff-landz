@@ -332,7 +332,7 @@ void create_database(const char *db_filename){
     }
 
     //create logical divider in log file
-    log_text(EVENT_INITIALISATION, "\nCreating database tables...");
+    log_text(EVENT_INITIALISATION, "\nCreating database tables...\n");
 
     //create database tables
     create_database_table(CHARACTER_TABLE_SQL);
@@ -469,13 +469,7 @@ void create_database(const char *db_filename){
     add_db_object(34, "Lupins", 1, 0, 1);
     add_db_object(35, "Snap Dragon", 1, 0, 1);
 
-    add_db_map(1, "startmap.elm");
-    change_db_map_name(1, "Isla Prima");
-    change_db_map_description(1, "The start map");
-    change_db_map_author(1, "Eternal Lands");
-    change_db_map_author_email(1, "@");
-    change_db_map_development_status(1, 2);
-    add_db_map_objects(1, "startmap.elm");
+    batch_load_maps("map.lst");
 
     // TODO (themuntdregger#1#): change add_db_guild so that it works in a similar way to add_db_map
     add_db_guild("Operators", "OPS", c_grey3, "The server operators guild", PERMISSION_3, GUILD_ACTIVE);

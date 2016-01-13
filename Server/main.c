@@ -61,6 +61,7 @@ Done - added separate function to extract 3d object list from elm file
 Done - fixed bug in get_nearest_unoccupied_tile
 Done - #jump now contains option to move to first walkable tile
 Done - new harvestables (including pumpkin
+Done - batch load maps on startup from map.lst file
 
 TEST multiple guild application handling
 
@@ -68,8 +69,8 @@ load objects and e3d's from text file
 reload map_objects (needed for when new e3d/object is added
 add npc wear item action
 add npc sit/stand action
+change all sql to use parameters rather than inserts
 
-remove test features which reads tile, height and 3d object list directly from elm file on start_server
 bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
 need #command to withdraw application to join guild
 need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves

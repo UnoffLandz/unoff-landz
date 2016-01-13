@@ -33,6 +33,8 @@
 #include "colour.h"
 #include "date_time_functions.h"
 #include "idle_buffer2.h"
+#include "db/db_map_tbl.h"
+#include "db/db_map_object_tbl.h"
 
 struct map_list_type maps;
 
@@ -291,4 +293,45 @@ bool map_exists(int map_id){
     if(strlen(maps.map[map_id].elm_filename)==0) return false;
 
     return true;
+}
+
+void batch_load_maps(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "map load file [%s] not found", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    printf("\n");
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[8][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        int map_id=atoi(output[0]);
+
+        add_db_map(map_id, output[3]);
+        change_db_map_name(map_id, output[1]);
+        change_db_map_description(map_id, output[2]);
+        change_db_map_author(map_id, output[4]);
+        change_db_map_author_email(map_id, output[5]);
+        change_db_map_development_status(map_id, atoi(output[6]));
+        add_db_map_objects(map_id, output[3]);
+    }
+
+    fclose(file);
 }

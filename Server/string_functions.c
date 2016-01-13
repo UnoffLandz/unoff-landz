@@ -141,19 +141,43 @@ void parse_line(char *line, char output[][80]){
     /** public function - see header */
 
     size_t start=0;
-    bool sentence=false;
+
+    enum{
+
+        UNKNOWN,
+        SENTENCE,
+        WORD,
+    } status;
+
     int j=0;
+    status=UNKNOWN;
 
     for(size_t i=0; i<strlen(line); i++){
 
-        if(line[i]=='"' && sentence==true) sentence=false;
-        else if(line[i]=='"' && sentence==false) sentence=true;
-
-        if(line[i]==' ' && sentence==false){
+        if(line[i]=='"' && status==SENTENCE){// found end of sentence
 
             strncpy(&output[j][0], line+start, i-start);
+            status=UNKNOWN;
+            start=i;
+            j++;
+        }
+        else if(line[i]=='"' && status==UNKNOWN) {// found start of sentence
+
+            status=SENTENCE;
+            start=i+1;
+        }
+
+        else if((line[i]==' ' && status==WORD) || (i==strlen(line)-1 && status==WORD)){//found end of word
+
+            strncpy(&output[j][0], line+start, i-start);
+            status=UNKNOWN;
             start=i+1;
             j++;
+        }
+        else if(line[i]!=' ' && status==UNKNOWN){//found start of word
+
+            status=WORD;
+            start=i;
         }
     }
 }
