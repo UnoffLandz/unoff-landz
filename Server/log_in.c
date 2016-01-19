@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014, 2015 UnoffLandz
+    Copyright 2014, 2015, 2016 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -26,7 +26,6 @@
 #include "string_functions.h"
 #include "logging.h"
 #include "server_messaging.h"
-#include "global.h"
 #include "clients.h"
 #include "characters.h"
 #include "db/db_character_tbl.h"

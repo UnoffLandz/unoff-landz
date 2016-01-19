@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -20,12 +20,13 @@
 #include <stdio.h>  //support for NULL
 #include <string.h> //support for strcpy and memcpy
 #include <stdint.h> //support for int32_t datatype
+#include <stdlib.h> //support EXIT_FAILURE
 
 #include "database_functions.h"
 #include "db_map_tbl.h"
 #include "db_e3d_tbl.h"
-//#include "db_map_object_tbl.h"
 #include "db_object_tbl.h"
+#include "db_map_object_tbl.h"
 
 #include "../logging.h"
 #include "../map_object.h"
@@ -129,6 +130,9 @@ void load_db_maps(){
         //get map upload date
         maps.map[map_id].upload_date=sqlite3_column_int(stmt, 10);
         log_text(EVENT_MAP_LOAD, "map upload date[%i]", maps.map[map_id].upload_date);
+
+        maps.map[map_id].threed_object_count=sqlite3_column_int(stmt, 11);
+        log_text(EVENT_MAP_LOAD, "threed object count[%i]", maps.map[map_id].threed_object_count);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", map_id, maps.map[map_id].map_name);
 
@@ -246,79 +250,6 @@ void delete_map(int map_id){
 }
 
 
-void add_db_map_old(int map_id, char *elm_filename, char *map_name, char *map_description, char *map_author,
-    char *map_author_email, int status){
-
-    /** public function - see header */
-
-    read_elm_header(elm_filename);
-    read_tile_map(elm_filename, maps.map[map_id].tile_map);
-    read_height_map(elm_filename, maps.map[map_id].height_map);
-
-/*do this separately*/
-    //read_threed_object_list(elm_filename, map_id);
-    //add_db_map_objects(elm_filename, map_id);
-
-    //insert map data (as we are inserting blobs, we need to bind values rather that adding values to the string
-    char sql[MAX_SQL_LEN]="INSERT INTO MAP_TABLE("  \
-                "MAP_ID," \
-                "MAP_NAME,"  \
-                "MAP_DESCRIPTION," \
-                "ELM_FILE_NAME, " \
-                "MAP_AXIS," \
-                "TILE_MAP," \
-                "HEIGHT_MAP, " \
-                "MAP_AUTHOR, " \
-                "MAP_AUTHOR_EMAIL, " \
-                "MAP_UPLOAD_DATE, " \
-                "MAP_STATUS"
-                ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-    sqlite3_stmt *stmt;
-
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    sqlite3_bind_int(stmt, 1, map_id);
-    sqlite3_bind_text(stmt, 2, map_name, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, map_description, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 4, elm_filename, -1, SQLITE_STATIC);
-
-    int map_axis=elm_header.h_tiles * STEP_TILE_RATIO;
-    sqlite3_bind_int(stmt, 5, map_axis);
-
-    int tile_map_size=elm_header.height_map_offset - elm_header.tile_map_offset;
-    sqlite3_bind_blob(stmt, 6, maps.map[map_id].tile_map, tile_map_size, NULL);
-
-    int height_map_size=elm_header.threed_object_offset - elm_header.height_map_offset;
-    sqlite3_bind_blob(stmt, 7, maps.map[map_id].height_map, height_map_size, NULL);
-
-    sqlite3_bind_text(stmt, 8, map_author, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 9, map_author_email, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 10, status);
-    sqlite3_bind_int(stmt, 11, (int)time(NULL));
-
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    printf("Map [%s] added successfully\n", map_name);
-
-    log_event(EVENT_SESSION, "Added map [%s] file name [%s] to MAP_TABLE", map_name, elm_filename);
-}
-
-
 void add_db_map(int map_id, char *elm_filename){
 
     /** public function - see header */
@@ -334,8 +265,9 @@ void add_db_map(int map_id, char *elm_filename){
                 "MAP_AXIS," \
                 "TILE_MAP," \
                 "HEIGHT_MAP," \
-                "MAP_UPLOAD_DATE"
-                ") VALUES(?, ?, ?, ?, ?, ?)";
+                "MAP_UPLOAD_DATE,"
+                "THREED_OBJECT_COUNT"
+                ") VALUES(?, ?, ?, ?, ?, ?, ?)";
 
     sqlite3_stmt *stmt;
 
@@ -363,6 +295,9 @@ void add_db_map(int map_id, char *elm_filename){
 
     //load map upload date
     sqlite3_bind_int(stmt, 6, (int)time(NULL));
+
+    //load threed object count
+    sqlite3_bind_int(stmt, 7, elm_header.threed_object_count);
 
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
@@ -602,4 +537,46 @@ void change_db_map_development_status(int map_id, int map_development_status){
     }
 
     log_event(EVENT_SESSION, "Map [%i] development status changed to [%i] on MAP_TABLE", map_id, map_development_status);
+}
+
+
+void batch_add_maps(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "map load file [%s] not found", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    printf("\n");
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[8][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        int map_id=atoi(output[0]);
+
+        add_db_map(map_id, output[3]);
+        change_db_map_name(map_id, output[1]);
+        change_db_map_description(map_id, output[2]);
+        change_db_map_author(map_id, output[4]);
+        change_db_map_author_email(map_id, output[5]);
+        change_db_map_development_status(map_id, atoi(output[6]));
+        add_db_map_objects(map_id, output[3]);
+    }
+
+    fclose(file);
 }

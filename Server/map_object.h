@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -22,19 +22,6 @@
 
 #include <stdbool.h> // support for bool data type
 
-#include "maps.h" // required for MAX_MAPS
-
-struct map_object_type{
-
-    int threedol_id;
-    int tile;
-    int e3d_id;
-    bool harvestable;
-    int reserve;
-};
-extern struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
-
-
 /** RESULT  : finds the object id based on the position of an entry in a map threed object list
 
     RETURNS : the object id
@@ -55,6 +42,7 @@ int get_object_id(int map_id, int threed_object_list_pos);
     NOTES   :
 */
 int get_object_tile(int map_id, int threed_object_list_pos);
+
 
 
 #endif // MAP_OBJECT_H_INCLUDED

@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -25,6 +25,7 @@
 #include "e3d.h"
 
 #define MAX_OBJECT_ID 2000
+#define OBJECT_FILE "object.lst"
 
 struct object_type{
 
@@ -36,5 +37,6 @@ struct object_type{
     int emu;
 };
 extern struct object_type object[MAX_OBJECT_ID];
+
 
 #endif // MAP_OBJECTS_H_INCLUDED

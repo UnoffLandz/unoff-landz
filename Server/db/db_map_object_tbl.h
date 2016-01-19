@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -27,7 +27,8 @@
         TILE          INT, \
         E3D_ID        INT, \
         HARVESTABLE   INT, \
-        RESERVE       INT)"
+        RESERVE       INT, \
+        E3D_FILENAME  TEXT)"
 
 
 /** RESULT  : loads data from the map object table into the map object array
@@ -50,5 +51,28 @@ void load_db_map_objects();
     NOTES   :
 **/
 void add_db_map_objects(int map_id, char *elm_filename);
+
+
+/** RESULT  : updates the map_object table with the e3d table
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+**/
+void update_db_map_objects(int map_id);
+
+
+/** RESULT  : synchronises the map_object table with changes in the e3d table
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void batch_update_map_objects(char *file_name);
+
 
 #endif // MAP_OBJECT_H_INCLUDED

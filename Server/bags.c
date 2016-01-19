@@ -10,7 +10,6 @@
 #include "server_messaging.h"
 #include "server_protocol_functions.h"
 #include "broadcast_movement.h"
-#include "items.h"
 
 #define DEBUG_BAGS 0
 
@@ -123,9 +122,9 @@ int get_bag_inventory_emu(int bag_id){
 
     for(int i=0; i<MAX_BAG_SLOTS; i++){
 
-        int item_id=bag[bag_id].inventory[i].object_id;
-        int item_emu=item[item_id].emu ;
-        bag_emu+=bag[bag_id].inventory[i].amount * item_emu;
+        int object_id=bag[bag_id].inventory[i].object_id;
+        int object_emu=object[object_id].emu ;
+        bag_emu+=bag[bag_id].inventory[i].amount * object_emu;
     }
 
     return bag_emu;

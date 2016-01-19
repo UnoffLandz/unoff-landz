@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -16,11 +16,16 @@
 	You should have received a copy of the GNU General Public License
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
+#include <stdio.h> //supports FILE datatype
+#include <stdlib.h> //supports EXIT_FAILURE
+#include <string.h> //supports memset function
+
 #include "e3d.h"
 #include "logging.h"
 #include "server_start_stop.h"
 #include "objects.h"
-#include "map_object.h"
+#include "string_functions.h"
+#include "db/db_map_object_tbl.h"
 
 struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
 
@@ -41,3 +46,5 @@ int get_object_tile(int map_id, int threed_object_list_pos){
 
     return map_object[threed_object_list_pos][map_id].tile;
 }
+
+

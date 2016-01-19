@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014, 2015 UnoffLandz
+    Copyright 2014, 2015, 2016 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -26,7 +26,6 @@
 #include "date_time_functions.h"
 #include "server_protocol_functions.h"
 #include "broadcast_movement.h"
-#include "global.h"
 #include "colour.h"
 #include "server_messaging.h"
 #include "characters.h"

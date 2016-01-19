@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -17,14 +17,15 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 #include <stdio.h> //support data type FILE
-
-#include "e3d.h"
-
 #include <string.h> //support for strcmp
 #include <stdlib.h> // support for exit
 
+#include "e3d.h"
 #include "logging.h"
 #include "server_start_stop.h"
+#include "string_functions.h"
+#include "db/db_e3d_tbl.h"
+
 
 struct e3d_type e3d[MAX_E3D_TYPES];
 
@@ -86,4 +87,3 @@ int get_e3d_id(char *e3d_filename){
 
     return 0;
 }
-

@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014, 2015 UnoffLandz
+    Copyright 2014, 2015, 2016 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -15,8 +15,7 @@
 
     You should have received a copy of the GNU General Public License
     along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
-*******************************************************************************************************************/
-/******************************************************************************************************************
+*******************************************************************************************************************
 
                                     COMPILER SETTINGS
 
@@ -39,68 +38,6 @@ To compile server, link with the following libraries :
     libsqlite3.so           - sqlite database library
 
 ****************************************************************************************************/
-/***************************************************************************************************
-
-                                TO - DO
-
-Done - Fixed char sit/stand
-Done - drop bag and other commands stop harvesting
-Done - harvesting and other commands stop movement
-Done - Fixed #gm
-Done - NPC move script implemented
-Done - #boat (reminds when boat leaves)
-Done - trigger table, action table and boat table stubs
-Done - replaced hard coded values for max char name and max char password
-Done - Fixed bug unknown protocol packets are not being logged in packet log
-Done - separate module for ops #commands
-Done - separate module for devs #commands
-Done - #TRACE_PATH implemented
-Done - changed add_map function to remove supplementary details
-Done - added hash commands so as map supplementary details can be added in-game
-Done - added separate function to extract 3d object list from elm file
-Done - fixed bug in get_nearest_unoccupied_tile
-Done - #jump now contains option to move to first walkable tile
-Done - new harvestables (including pumpkin
-Done - batch load maps on startup from map.lst file
-
-TEST multiple guild application handling
-
-load objects and e3d's from text file
-reload map_objects (needed for when new e3d/object is added
-add npc wear item action
-add npc sit/stand action
-change all sql to use parameters rather than inserts
-
-bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
-need #command to withdraw application to join guild
-need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
-transfer server welcome message to the database
-#command to change guild chan join/leave notification colours
-remove character_type_name field from CHARACTER_TYPE_TABLE
-map object reserve respawn
-#command to #letter all members of a guild
-finish script loading
-#IG guild channel functionality
-OPS #command to #letter all chars
-need #command to #letter all guild members (guild master only)
-implement guild stats
-Table to separately record all drops/pick ups in db
-Table to separately record chars leaving and joining guilds
-save guild applicant list to database
-document idle_buffer2.h
-convert attribute struct so as attribute type can be addressed programatically
-identify cause of stall after login (likely to be loading of inventory from db)
-identify cause of char bobbing
-put inventory slots in a binary blob (may solve stall on log in)
-improve error handling on upgrade_database function
-refactor function current_database_version
-create circular buffer for receiving packets
-need #function to describe char and what it is wearing)
-document new database/struct relationships
-finish char_race_stats and char_gender_stats functions in db_char_tbl.c
-banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveyard)
-
-***************************************************************************************************/
 
 #include <stdio.h>      //supports printf function
 #include <string.h>     //supports memset and strcpy functions
@@ -111,7 +48,6 @@ banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveya
 #include <unistd.h>     //supports close function, ssize_t data type
 
 #include "server_parameters.h"
-#include "global.h"
 #include "logging.h"
 #include "server_messaging.h"
 #include "clients.h"
@@ -156,12 +92,10 @@ banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveya
 #include "npc.h"
 #include "boats.h"
 #include "game_time.h"
+#include "file_functions.h"
+#include "server_build_details.h"
 
 struct ev_io *libevlist[MAX_ACTORS] = {NULL};
-
-
-extern int current_database_version();
-
 
 //declare prototypes
 void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int revents);
@@ -192,15 +126,6 @@ void start_server(){
 
     struct sockaddr_in server_addr;
 
-    //check database version
-    int database_version = get_database_version();
-
-    if(database_version != REQUIRED_DATABASE_VERSION) {
-
-        printf("Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", database_version, REQUIRED_DATABASE_VERSION);
-        return;
-    }
-
     //clear garbage from structs
     memset(&client_socket, 0, sizeof(client_socket));
     memset(&clients, 0, sizeof(clients));
@@ -209,6 +134,16 @@ void start_server(){
 
     //load data from database into memory
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    load_db_game_data();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    //check database version (can only be done once game data has been loaded
+    if(game_data.database_version != REQUIRED_DATABASE_VERSION) {
+
+        printf("Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", game_data.database_version, REQUIRED_DATABASE_VERSION);
+        return;
+    }
 
     load_db_e3ds();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
@@ -235,9 +170,6 @@ void start_server(){
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     load_db_channels();
-    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
-    load_db_game_data();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     load_db_seasons();
@@ -971,6 +903,9 @@ int main(int argc, char *argv[]){
         bool load_map;
         bool list_maps;
         bool help;
+        bool load_e3d_list;
+        bool load_object_list;
+        bool update_map_objects;
     }option;
 
     //clear struct to prevent garbage
@@ -1000,6 +935,9 @@ int main(int argc, char *argv[]){
         if (strcmp(argv[i], "-M") == 0)option.load_map=true;
         if (strcmp(argv[i], "-L") == 0)option.list_maps=true;
         if (strcmp(argv[i], "-H") == 0)option.help=true;
+        if (strcmp(argv[i], "-E") == 0)option.load_e3d_list=true;
+        if (strcmp(argv[i], "-O") == 0)option.load_object_list=true;
+        if (strcmp(argv[i], "-R") == 0)option.update_map_objects=true;
 
         log_text(EVENT_INITIALISATION, "%i [%s]", i, argv[i]);// log each command line option
     }
@@ -1027,13 +965,43 @@ int main(int argc, char *argv[]){
 
         if(argc==3) strcpy(db_filename, argv[2]);
 
-        printf("CREATE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
+        //check that database file does not already exist
+        if(file_exists(db_filename)){
+
+            printf("Filename [%s] already exists. Do you wish to replace it Y/N ?", db_filename);
+
+            //get decision from stdin
+            char decision[10]="";
+
+            if(fgets(decision, sizeof(decision), stdin)==NULL){
+
+                log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                stop_server();
+            }
+
+            //convert decision to upper case and determine if map replacement should proceed
+            str_conv_upper(decision);
+
+            if(strncmp(decision, "Y", 1)==0 || strncmp(decision, "YES", 3)==0){
+
+                log_text(EVENT_INITIALISATION, "Replace existing database %s", db_filename);
+
+                //delete the old datafile and create a new one
+                remove(db_filename);
+                open_database(db_filename);
+            }
+            else return 0;
+        }
+
+        printf("\nCREATE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
         log_text(EVENT_INITIALISATION, "CREATE DATABASE using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
         log_text(EVENT_INITIALISATION, "");// insert logical separator
 
+        //create the new database
         create_database(db_filename);
-        //_create_database("load_script.txt");
+
+        close_database();
 
         return 0;
     }
@@ -1051,13 +1019,87 @@ int main(int argc, char *argv[]){
         open_database(db_filename);
         upgrade_database(db_filename);
 
+        close_database();
+
+        return 0;
+    }
+
+    //execute load e3d list
+    else if(option.load_e3d_list==true){
+
+        if(argc==4) strcpy(db_filename, argv[5]);
+        open_database(db_filename);
+
+        char filename[80]=E3D_FILE;
+        if(argc==3) strcpy(filename, argv[2]);
+
+        printf("LOAD E3D LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+
+        log_text(EVENT_INITIALISATION, "LOAD E3D LIST using %s at %s on %s", filename, time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+        //delete the table contents and load new data
+        process_sql("DELETE FROM E3D_TABLE");
+        batch_add_e3ds(filename);
+        batch_update_map_objects(MAP_FILE);
+
+        close_database();
+
+        return 0;
+    }
+
+    //execute load object list
+    else if(option.load_object_list==true){
+
+        if(argc==4) strcpy(db_filename, argv[5]);
+        open_database(db_filename);
+
+        char filename[80]=OBJECT_FILE;
+        if(argc==3) strcpy(filename, argv[2]);
+
+        printf("LOAD OBJECT LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+
+        log_text(EVENT_INITIALISATION, "LOAD OBJECT LIST using %s at %s on %s", filename, time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+        //delete the existing table contents and add new data
+        process_sql("DELETE FROM OBJECT_TABLE");
+        batch_add_objects(filename);
+        batch_update_map_objects(MAP_FILE);
+
+        close_database();
+
+        return 0;
+    }
+
+    //execute update map_objects
+    else if(option.update_map_objects==true){
+
+        if(argc==4) strcpy(db_filename, argv[5]);
+        open_database(db_filename);
+
+        char map_filename[80]=MAP_FILE;
+        if(argc==3) strcpy(map_filename, argv[2]);
+
+        open_database(db_filename);
+
+        printf("UPDATE MAP OBJECTS at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
+
+        log_text(EVENT_INITIALISATION, "UPDATE MAPS OBJECTS at %s on %s", time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+        //delete the existing table contents and add new data
+        process_sql("DELETE FROM MAP_OBJECT_TABLE");
+        batch_update_map_objects(map_filename);
+
+        close_database();
         return 0;
     }
 
     //execute load map
-    else if(option.load_map==true && argc>=9){
+    else if(option.load_map==true && argc>=4){
 
-        if(argc==10) strcpy(db_filename, argv[9]);
+        if(argc==5) strcpy(db_filename, argv[4]);
 
         int map_id=atoi(argv[2]);
 
@@ -1101,8 +1143,11 @@ int main(int argc, char *argv[]){
         log_text(EVENT_INITIALISATION, "LOAD MAP %i %s on %s at %s on %s", map_id, elm_filename, db_filename, time_stamp_str, verbose_date_stamp_str);
         log_text(EVENT_INITIALISATION, "");// insert logical separator
 
+        //add map and associated map objects
         add_db_map(map_id, elm_filename);
         add_db_map_objects(map_id, elm_filename);
+
+        close_database();
 
         return 0;
     }
@@ -1120,16 +1165,21 @@ int main(int argc, char *argv[]){
         open_database(db_filename);
         list_db_maps();
 
+        close_database();
+
         return 0;
     }
 
     //display command line options if no command line options are found or command line options are not recognised
     printf("Command line options...\n");
-    printf("create database  -C optional [""database file name""]\n");
-    printf("start server     -S optional [""database file name""]\n");
-    printf("upgrade database -U optional [""database file name""]\n");
-    printf("list loaded maps -L optional [""database file name""]\n");
-    printf("load map         -M [map id] [""elm filename""]\n");
+    printf("create database    -C optional [""database file name""]\n");
+    printf("start server       -S optional [""database file name""]\n");
+    printf("upgrade database   -U optional [""database file name""]\n");
+    printf("list loaded maps   -L optional [""database file name""]\n");
+    printf("load map           -M [map id] [""elm filename""] optional [""database file name""]\n");
+    printf("load e3d list      -E optional [""e3d file list""] optional [""database file name""]\n");
+    printf("load object list   -O optional [""object file list""] optional [""database file name""]\n");
+    printf("update map objects -R [""map file list""] optional [""database file name""]\n");
 
     return 0;//otherwise we get 'control reached end of non void function'
 }

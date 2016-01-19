@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -20,7 +20,6 @@
 
 #include "clients.h"
 #include "character_race.h"
-#include "items.h"
 #include "character_type.h"
 #include "attributes.h"
 #include "objects.h"
@@ -56,7 +55,7 @@ int get_inventory_emu(int actor_node){
     for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
 
         int object_id=clients.client[actor_node].inventory[i].object_id;
-        total_emu +=(clients.client[actor_node].inventory[i].amount * item[object_id].emu);
+        total_emu +=(clients.client[actor_node].inventory[i].amount * object[object_id].emu);
      }
 
     return total_emu;
@@ -185,7 +184,7 @@ void drop_from_inventory_to_bag(int actor_node, int inventory_slot, int withdraw
     int socket=clients.client[actor_node].socket;
 
     //determine the item to be dropped
-    int item_id=clients.client[actor_node].inventory[inventory_slot].object_id;
+    int object_id=clients.client[actor_node].inventory[inventory_slot].object_id;
 
     int bag_id;
     int bag_slot=-1;
@@ -196,7 +195,7 @@ void drop_from_inventory_to_bag(int actor_node, int inventory_slot, int withdraw
         bag_id=clients.client[actor_node].open_bag_id;
 
         //find a slot in which to place the item
-        bag_slot=find_bag_slot(bag_id, item_id);
+        bag_slot=find_bag_slot(bag_id, object_id);
 
         //check if max bag slots exceeded
         if(bag_slot==-1){
@@ -229,16 +228,16 @@ void drop_from_inventory_to_bag(int actor_node, int inventory_slot, int withdraw
     clients.client[actor_node].open_bag_id=bag_id;
 
     //remove item from char inventory
-    int amount_withdrawn=remove_from_inventory(actor_node, item_id, withdraw_amount, inventory_slot);
+    int amount_withdrawn=remove_from_inventory(actor_node, object_id, withdraw_amount, inventory_slot);
 
     //add to bag
-    int amount_added=add_to_bag(bag_id, item_id, amount_withdrawn, bag_slot);
+    int amount_added=add_to_bag(bag_id, object_id, amount_withdrawn, bag_slot);
 
     //catch if amount added to bag is less than amount withdrawn from inventory
     if(amount_added != amount_withdrawn){
 
         log_event(EVENT_ERROR, "char [%s] error dropping item from inventory", clients.client[actor_node].char_name);
-        log_text(EVENT_ERROR, "item [%s]", object[item_id].object_name);
+        log_text(EVENT_ERROR, "item [%s]", object[object_id].object_name);
         log_text(EVENT_ERROR, "amount withdrawn from inventory [%i]", amount_withdrawn);
         log_text(EVENT_ERROR, "amount added to bag [%i]", amount_added);
 

@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -21,7 +21,6 @@
 #include <string.h> //support for strcpy
 
 #include "server_messaging.h"
-#include "global.h"
 #include "date_time_functions.h"
 #include "colour.h"
 #include "string_functions.h"
@@ -29,7 +28,7 @@
 #include "game_data.h"
 #include "server_protocol_functions.h"
 #include "logging.h"
-#include "server_parameters.h"
+#include "server_build_details.h"
 
 void send_motd_header(int socket){
 
@@ -135,16 +134,16 @@ bool send_motd_file(int socket){
     return true;
 }
 
-void send_motd(int connection){
+void send_motd(int socket){
 
     /** public function - see header */
 
-    send_motd_header(connection);
+    send_motd_header(socket);
 
     //if there's an motd file then send to client otherwise log that no motd file was found
-    if(send_motd_file(connection)!=true){
+    if(send_motd_file(socket)!=true){
 
-        log_event(EVENT_SESSION, "no motd file available for connection [%i]", connection);
+        log_event(EVENT_SESSION, "no motd file available for connection [%i]", socket);
     }
 }
 

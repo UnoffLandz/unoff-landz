@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -47,7 +47,7 @@ enum { // channel types
 
     NOTES   :
 **/
-void send_motd_header(int connection);
+void send_motd_header(int socket);
 
 
 /** RESULT  : sends the content of the motd file to connection
@@ -58,7 +58,7 @@ void send_motd_header(int connection);
 
     NOTES   :
 **/
-bool send_motd_file(int connection);
+bool send_motd_file(int socket);
 
 
 /** RESULT  : sends the motd header and contents of the motd file to a connected client

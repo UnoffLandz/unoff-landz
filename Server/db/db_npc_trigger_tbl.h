@@ -2,7 +2,7 @@
 #define DB_NPC_TRIGGER_TBL_H_INCLUDED
 
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 

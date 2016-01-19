@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -29,8 +29,8 @@
         CHAN_0              INT, \
         CHAN_1              INT, \
         CHAN_2              INT, \
-        GM_PERMISSION       INT, \
-        IG_PERMISSION       INT, \
+        PLAYER_TYPE         INT, \
+        UNUSED              INT, \
         MAP_ID              INT, \
         MAP_TILE            INT, \
         GUILD_ID            INT, \
@@ -127,6 +127,17 @@ extern "C" {
     NOTES   :
 **/
 bool get_db_char_data(const char *char_name, int char_id);
+
+
+/** RESULT  : loads npcs from the client table into the client array
+
+    RETURNS : void
+
+    PURPOSE : retrieve npc data from permanent storage
+
+    NOTES   :
+**/
+void load_npc_characters();
 
 
 #ifdef __cplusplus

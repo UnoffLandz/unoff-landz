@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -71,6 +71,7 @@ void load_db_game_data(){
         game_data.game_minutes=sqlite3_column_int(stmt, 5);
         game_data.game_days=sqlite3_column_int(stmt, 6);
         game_data.year_length=sqlite3_column_int(stmt, 7);
+        game_data.database_version=sqlite3_column_int(stmt, 8);
 
         i++;
     }

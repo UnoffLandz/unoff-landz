@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -49,5 +49,8 @@ void load_db_objects();
 **/
 void add_db_object(int object_id, char *object_name, int harvestable, int edible, int interval);
 
+
+// TODO (themuntdregger#1#): document batch_load_objects function
+void batch_add_objects(char *file_name);
 
 #endif // DB_OBJECT_TBL_H_INCLUDED

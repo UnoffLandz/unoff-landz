@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014, 2015 UnoffLandz
+    Copyright 2014, 2015, 2016 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -20,8 +20,6 @@
 #include <stdio.h> //supports fopen
 #include <sys/stat.h> //supports fstat
 #include <stdbool.h>
-
-#include "global.h"
 
 
 int get_file_size(char *file_name){

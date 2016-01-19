@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -22,7 +22,6 @@
 
 #include "database_functions.h"
 #include "../clients.h"
-#include "../global.h"
 #include "../characters.h"
 #include "../logging.h"
 #include "../game_data.h"
@@ -118,8 +117,8 @@ bool get_db_char_data(const char *char_name, int char_id){
         character.chan[0]=sqlite3_column_int(stmt, 5);
         character.chan[1]=sqlite3_column_int(stmt, 6);
         character.chan[2]=sqlite3_column_int(stmt, 7);
-        character.gm_permission=sqlite3_column_int(stmt, 8);
-        character.ig_permission=sqlite3_column_int(stmt, 9);
+        character.player_type=sqlite3_column_int(stmt, 8);
+        character.unused=sqlite3_column_int(stmt, 9);
         character.map_id=sqlite3_column_int(stmt, 10);
         character.map_tile=sqlite3_column_int(stmt, 11);
         character.guild_id=sqlite3_column_int(stmt, 12);
@@ -250,8 +249,8 @@ int add_db_char_data(struct client_node_type character){
         "CHAN_0," \
         "CHAN_1," \
         "CHAN_2," \
-        "GM_PERMISSION," \
-        "IG_PERMISSION," \
+        "PLAYER_TYPE," \
+        "UNUSED," \
         "MAP_ID," \
         "MAP_TILE," \
         "GUILD_ID," \
@@ -287,8 +286,8 @@ int add_db_char_data(struct client_node_type character){
     sqlite3_bind_int(stmt, 5, character.chan[0]);
     sqlite3_bind_int(stmt, 6, character.chan[1]);
     sqlite3_bind_int(stmt, 7, character.chan[2]);
-    sqlite3_bind_int(stmt, 8, 0); // gm permission
-    sqlite3_bind_int(stmt, 9, 0); // ig permission
+    sqlite3_bind_int(stmt, 8, character.player_type);
+    sqlite3_bind_int(stmt, 9, character.unused);
     sqlite3_bind_int(stmt, 10, character.map_id);
     sqlite3_bind_int(stmt, 11, character.map_tile);
     sqlite3_bind_int(stmt, 12, character.guild_id);
@@ -402,6 +401,7 @@ int add_db_char_data(struct client_node_type character){
     return id;
 }
 
+
 void get_db_last_char_created(){
 
     /** public function - see header */
@@ -436,12 +436,94 @@ void get_db_last_char_created(){
     }
 }
 
+
 void load_char_race_stats(){
 
     //TODO (themuntdregger#1#): add char race stats
 }
 
+
 void load_char_gender_stats(){
 
     //TODO (themuntdregger#1#): add char gender stats
+}
+
+
+void load_npc_characters(){
+
+    /** public function - see header */
+
+    log_event(EVENT_INITIALISATION, "loading npc_characters...");
+
+    sqlite3_stmt *stmt;
+
+    char sql[MAX_SQL_LEN]="SELECT * FROM CHARACTER_TABLE WHERE PLAYER_TYPE=?";
+
+    //check database table exists
+    char database_table[80];
+    strcpy(database_table, strstr(sql, "FROM")+5);
+    if(table_exists(database_table)==false){
+
+        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
+        stop_server();
+    }
+
+    //prepare the sql statement
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    sqlite3_bind_int(stmt, 0, NPC);
+
+    //read the sql query result into the client array
+    int i=0;
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        if(sqlite3_column_int(stmt, 8)==NPC){
+
+            int actor_node=get_next_free_actor_node();
+
+            clients.client[actor_node].character_id=sqlite3_column_int(stmt, 0);
+            strcpy(clients.client[actor_node].char_name, (char*) sqlite3_column_text(stmt, 1));
+            clients.client[actor_node].char_status=sqlite3_column_int(stmt, 3);
+            clients.client[actor_node].active_chan=sqlite3_column_int(stmt, 4);
+            clients.client[actor_node].player_type=sqlite3_column_int(stmt, 8);
+            clients.client[actor_node].unused=sqlite3_column_int(stmt, 9);
+            clients.client[actor_node].map_id=sqlite3_column_int(stmt, 10);
+            clients.client[actor_node].map_tile=sqlite3_column_int(stmt, 11);
+            clients.client[actor_node].char_type=sqlite3_column_int(stmt, 14);
+            clients.client[actor_node].skin_type=sqlite3_column_int(stmt, 15);
+            clients.client[actor_node].hair_type=sqlite3_column_int(stmt, 16);
+            clients.client[actor_node].shirt_type=sqlite3_column_int(stmt, 17);
+            clients.client[actor_node].pants_type=sqlite3_column_int(stmt, 18);
+            clients.client[actor_node].boots_type=sqlite3_column_int(stmt, 19);
+            clients.client[actor_node].head_type=sqlite3_column_int(stmt, 20);
+            clients.client[actor_node].shield_type=sqlite3_column_int(stmt, 21);
+            clients.client[actor_node].weapon_type=sqlite3_column_int(stmt, 22);
+            clients.client[actor_node].cape_type=sqlite3_column_int(stmt, 23);
+            clients.client[actor_node].helmet_type=sqlite3_column_int(stmt, 24);
+            clients.client[actor_node].frame=sqlite3_column_int(stmt, 25);
+            clients.client[actor_node].char_created=sqlite3_column_int(stmt, 29);
+
+            log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", i, clients.client[actor_node].char_name);
+
+            i++;
+        }
+    }
+
+    //test that we were able to read all the rows in the query result
+    if (rc!= SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    //destroy the prepared sql statement
+    rc=sqlite3_finalize(stmt);
+    if(rc!=SQLITE_OK){
+
+         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
 }

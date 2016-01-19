@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -22,11 +22,5 @@
 
 #define PORT 5555
 #define HEARTBEAT_INTERVAL 26
-
-#define SERVER_NAME "OL Map Walker"
-#define VERSION "UnoffLandz 4"
-#define BUILD "8"
-#define BUILD_DATE __DATE__
-
 
 #endif // SERVER_PARAMETERS_H_INCLUDED

@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -131,8 +131,7 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     int active_chan;
     int chan[MAX_CHAN_SLOTS];       // chan0, chan1, chan2
 
-    int gm_permission;
-    int ig_permission;
+    int unused;
 
     int map_id;
     int map_tile;

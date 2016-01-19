@@ -1,5 +1,5 @@
 /****************************************************************************************************
-    Copyright 2014, 2015 UnoffLandz
+    Copyright 2014, 2015, 2016 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -33,6 +33,7 @@
 #include "db_object_tbl.h"
 #include "db_e3d_tbl.h"
 #include "db_map_object_tbl.h"
+#include "../game_data.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// DB Upgrade helper functions (by Nemerle)
@@ -302,8 +303,6 @@ static int upgrade_v4_to_v5(const char *dbname) {
 
     create_database_table(MAP_OBJECT_TABLE_SQL);
 
-    //add_db_map_objects("startup.elm", 1);
-
     set_db_version(5);
 
     sqlite3_close(db);
@@ -363,18 +362,21 @@ void upgrade_database(const char *dbname) {
         return;
     }
 
-    int old_version = get_database_version();
-    int new_version = REQUIRED_DATABASE_VERSION;
+    if(game_data.database_version==REQUIRED_DATABASE_VERSION) {
 
-    if(old_version>new_version) {
+        fprintf(stderr,"Database is already up to date !\n");
+        return;
+    }
+    else if(game_data.database_version>REQUIRED_DATABASE_VERSION) {
 
-        fprintf(stderr,"Cannot update database : database is newer than server !\n");
+        fprintf(stderr,"Database is a new version than that required by server !\n");
         return;
     }
 
-    while(old_version<new_version) {
+    while(game_data.database_version<REQUIRED_DATABASE_VERSION) {
 
-        const struct upgrade_array_entry *entry = find_upgrade_entry(old_version);
+        // find the function that upgrades the database to the next version
+        const struct upgrade_array_entry *entry = find_upgrade_entry(game_data.database_version);
 
         if(!entry){
 
@@ -385,14 +387,14 @@ void upgrade_database(const char *dbname) {
         fprintf(stdout,"DB version update %d to %d:",entry->from_version,entry->to_version);
 
         // backup is created before calling each upgrade function
-        if(-1==create_backup(dbname,old_version)){
+        if(-1==create_backup(dbname, game_data.database_version)){
 
             return;
         }
 
         if(0==entry->fn(dbname)) {
 
-            old_version = entry->to_version; // version upgrade successful
+            game_data.database_version = entry->to_version; // version upgrade successful
             fprintf(stdout,"OK\n");
         }
         else {

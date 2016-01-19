@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -257,7 +257,7 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#GUILD_DETAILS",           false,  0,     PERMISSION_1, hash_guild_details},
     {"#GD",                      false,  0,     PERMISSION_1, hash_guild_details},
     {"#GUILD_MESSAGE",           true,   0,     PERMISSION_1, hash_guild_message},
-    {"#GM",                      true,   0,     PERMISSION_1, hash_guild_message},
+    {"#GM",                      true,   1,     PERMISSION_1, hash_guild_message},
     {"#SET_GUILD_DESCRIPTION",   true,   18,    PERMISSION_1, hash_set_guild_description},
     {"#SD",                      true,   18,    PERMISSION_1, hash_set_guild_description},
     {"#SET_GUILD_TAG_COLOUR",    true,   18,    PERMISSION_1, hash_set_guild_tag_colour},

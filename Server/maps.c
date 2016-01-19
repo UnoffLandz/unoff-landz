@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -27,7 +27,6 @@
 #include "movement.h"
 #include "string_functions.h"
 #include "numeric_functions.h"
-#include "global.h"
 #include "server_start_stop.h"
 #include "e3d.h"
 #include "colour.h"
@@ -74,6 +73,7 @@ int get_y_pos(int tile, int map_id){
 
     return tile / maps.map[map_id].map_axis;
 }
+
 
 int get_map_id(char *map_name){
 
@@ -286,6 +286,7 @@ void read_tile_map(char *elm_filename, unsigned char *tile_map){
     fclose(file);
 }
 
+
 bool map_exists(int map_id){
 
     /** public function - see header */
@@ -295,43 +296,4 @@ bool map_exists(int map_id){
     return true;
 }
 
-void batch_load_maps(char *file_name){
 
-    /** public function - see header */
-
-    FILE* file;
-
-    if((file=fopen(file_name, "r"))==NULL){
-
-        log_event(EVENT_ERROR, "map load file [%s] not found", file_name);
-        exit(EXIT_FAILURE);
-    }
-
-    char line[160]="";
-    int line_counter=0;
-
-    printf("\n");
-
-    while (fgets(line, sizeof(line), file)) {
-
-        line_counter++;
-
-        sscanf(line, "%*s");
-
-        char output[8][80];
-        memset(&output, 0, sizeof(output));
-        parse_line(line, output);
-
-        int map_id=atoi(output[0]);
-
-        add_db_map(map_id, output[3]);
-        change_db_map_name(map_id, output[1]);
-        change_db_map_description(map_id, output[2]);
-        change_db_map_author(map_id, output[4]);
-        change_db_map_author_email(map_id, output[5]);
-        change_db_map_development_status(map_id, atoi(output[6]));
-        add_db_map_objects(map_id, output[3]);
-    }
-
-    fclose(file);
-}

@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -28,7 +28,6 @@
 #include "server_messaging.h"
 #include "colour.h"
 #include "chat.h"
-#include "global.h"
 #include "logging.h"
 #include "bags.h"
 #include "packet.h"

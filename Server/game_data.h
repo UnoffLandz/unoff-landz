@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -35,6 +35,7 @@ struct game_data_type {
     int start_map_id;
     int start_map_tile;
     int year_length;
+    int database_version;
 };
 extern struct game_data_type game_data;
 

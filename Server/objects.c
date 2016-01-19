@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -19,10 +19,15 @@
 
 #include <stdio.h> //support for printf (testing)
 #include <string.h> //support for memcpy
+#include <stdlib.h> //support for EXIT_FAILURE
 
 #include "maps.h"
 #include "string_functions.h"
 #include "objects.h"
-#include "global.h"
+#include "logging.h"
+#include "db/db_object_tbl.h"
 
 struct object_type object[MAX_OBJECT_ID];
+
+
+

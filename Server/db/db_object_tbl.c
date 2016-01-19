@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -25,6 +25,7 @@
 #include "../gender.h"
 #include "../server_start_stop.h"
 #include "../objects.h"
+#include "../string_functions.h"
 
 void load_db_objects(){
 
@@ -96,6 +97,7 @@ void load_db_objects(){
     }
 }
 
+
 void add_db_object(int object_id, char *object_name, bool harvestable, bool edible, int interval){
 
     /** public function - see header */
@@ -121,3 +123,38 @@ void add_db_object(int object_id, char *object_name, bool harvestable, bool edib
 
     log_event(EVENT_SESSION, "Added object [%s] to OBJECT_TABLE", object_name);
 }
+
+
+void batch_add_objects(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "object load file [%s] not found", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    printf("\n");
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[5][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        add_db_object(atoi(output[0]), output[1], atoi(output[2]), atoi(output[3]), atoi(output[4]));
+    }
+
+    fclose(file);
+}
+

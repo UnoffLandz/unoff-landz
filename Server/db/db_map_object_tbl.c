@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -24,10 +24,10 @@
 #include "database_functions.h"
 #include "db_e3d_tbl.h"
 #include "db_object_tbl.h"
+#include "db_map_tbl.h"
 
 #include "../logging.h"
 #include "../server_start_stop.h"
-#include "../map_object.h"
 #include "../maps.h"
 #include "../file_functions.h"
 #include "../string_functions.h"
@@ -74,6 +74,7 @@ void load_db_map_objects(){
         map_object[threedol_id][map_id].e3d_id=sqlite3_column_int(stmt, 4);
         if(sqlite3_column_int(stmt, 5)==1) map_object[threedol_id][map_id].harvestable=true; else map_object[threedol_id][map_id].harvestable=false;
         map_object[threedol_id][map_id].reserve=sqlite3_column_int(stmt, 6);
+        strcpy( map_object[threedol_id][map_id].e3d_filename, (char*)sqlite3_column_text(stmt, 7));
 
         log_event(EVENT_INITIALISATION, "loaded [%i]", id);
 
@@ -103,10 +104,11 @@ void load_db_map_objects(){
 
 void add_db_map_objects(int map_id, char *elm_filename){
 
+    /** public function - see header */
+
     //load e3d and object data, otherwise we'll be unable to populate the map object entries
     //with links
     load_db_e3ds();
-    load_db_objects();
 
     //read the 3d object list into the array
     read_threed_object_list(elm_filename);
@@ -126,8 +128,9 @@ void add_db_map_objects(int map_id, char *elm_filename){
          "TILE," \
          "E3D_ID," \
          "HARVESTABLE," \
-         "RESERVE" \
-         ") VALUES(?, ?, ?, ?, ?, ?)";
+         "RESERVE," \
+         "E3D_FILENAME"
+         ") VALUES(?, ?, ?, ?, ?, ?, ?)";
 
 
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -168,6 +171,8 @@ void add_db_map_objects(int map_id, char *elm_filename){
 
         sqlite3_bind_int(stmt, 6, reserve);
 
+        sqlite3_bind_text(stmt, 7, e3d_filename, -1, SQLITE_STATIC);
+
         rc = sqlite3_step(stmt);
         if (rc!= SQLITE_DONE) {
 
@@ -189,4 +194,85 @@ void add_db_map_objects(int map_id, char *elm_filename){
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
+}
+
+void update_db_map_objects(int map_id){
+
+    /** public function - see header */
+
+    load_db_maps();//required for threed object count
+    load_db_map_objects();
+    load_db_e3ds();
+
+    sqlite3_stmt *stmt;
+
+    int threed_object_count=maps.map[map_id].threed_object_count;
+
+    for(int i=0; i<threed_object_count; i++) {
+
+        //get e3d id from threed object list
+        int e3d_id=get_e3d_id(map_object[i][map_id].e3d_filename);
+
+        if(e3d_id!=map_object[i][map_id].e3d_id){
+
+            // TODO (themuntdregger#1#): add logging
+
+            char sql[MAX_SQL_LEN]="";
+            sprintf(sql, "UPDATE MAP_OBJECT_TABLE SET E3D_ID=%i WHERE MAP_ID=%i AND THREEDOL_ID=%i", e3d_id, map_id, i);
+
+            int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+            if(rc!=SQLITE_OK) {
+
+                log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+            }
+
+            rc = sqlite3_step(stmt);
+            if (rc!= SQLITE_DONE) {
+
+                log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+            }
+
+            rc=sqlite3_finalize(stmt);
+            if(rc!=SQLITE_OK) {
+
+                log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+            }
+        }
+    }
+}
+
+
+void batch_update_map_objects(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "map load file [%s] not found", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    printf("\n");
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[8][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        int map_id=atoi(output[0]);
+
+        update_db_map_objects(map_id);
+      }
+
+    fclose(file);
 }

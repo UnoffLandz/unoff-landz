@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -25,7 +25,6 @@
 #include "character_type.h"
 #include "game_data.h"
 #include "attributes.h"
-#include "global.h"
 #include "logging.h"
 #include "string_functions.h"
 #include "server_start_stop.h"

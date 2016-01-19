@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -263,4 +263,4 @@ void npc_sell_boat_ticket(int actor_node, int npc_actor_node, int ticket_node){
     maps.map[map_id].map_name);
 
     send_npc_text(socket, text_out);
- }
+}

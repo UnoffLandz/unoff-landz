@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014, 2015 UnoffLandz
+    Copyright 2014, 2015, 2016 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -53,7 +53,7 @@ struct packet_element_type{
 
     NOTES   :
 */
-void send_packet(int connection, void *packet, size_t packet_length);
+void send_packet(int actor_node, void *packet, size_t packet_length);
 
 
 /** RESULT  : creates a packet

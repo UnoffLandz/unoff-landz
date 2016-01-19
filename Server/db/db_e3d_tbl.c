@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -18,12 +18,14 @@
 *******************************************************************************************************************/
 #include <stdio.h> //support snprintf
 #include <string.h> //support strcpy
-#include <stdlib.h> //testing only
+#include <stdlib.h> //support EXIT_FAILURE
 
 #include "database_functions.h"
 #include "../logging.h"
 #include "../server_start_stop.h"
 #include "../e3d.h"
+#include "../string_functions.h"
+
 
 void load_db_e3ds(){
 
@@ -93,6 +95,7 @@ void load_db_e3ds(){
     }
 }
 
+
 void add_db_e3d(int id, char *e3d_filename, int object_id){
 
     /** public function - see header */
@@ -110,4 +113,38 @@ void add_db_e3d(int id, char *e3d_filename, int object_id){
     printf("e3d [%s] added successfully\n", e3d_filename);
 
     log_event(EVENT_SESSION, "Added e3d [%s] to E3D_TABLE", e3d_filename);
+}
+
+
+void batch_add_e3ds(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "e3d load file [%s] not found", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    printf("\n");
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[5][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        add_db_e3d(atoi(output[0]), output[1], atoi(output[2]));
+    }
+
+    fclose(file);
 }

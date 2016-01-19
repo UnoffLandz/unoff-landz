@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014, 2015 UnoffLandz
+    Copyright 2014, 2015, 2016 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -240,9 +240,6 @@ int client_look_at_map_object(int actor_node, unsigned char *packet){
 
     //get the object item id
     int object_id=get_object_id(clients.client[actor_node].map_id, threed_object_list_pos);
-
-    read_threed_object_list("startmap.elm");
-    printf("%i [%s]\n", threed_object_list_pos, threed_object_list[threed_object_list_pos].e3d_path_and_filename);
 
     //tell the client what the item is
     if (object_id>0){

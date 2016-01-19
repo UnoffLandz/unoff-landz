@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -36,6 +36,7 @@
 
 #define MAX_E3D_FILENAME 80
 #define MAX_MAP_OBJECTS 6000
+#define MAP_FILE "map.lst"
 
 //#define START_MAP_ID 1       // map_id of the map on which characters are created
 //#define START_MAP_TILE 27225 // tile_pos at which characters are created
@@ -124,6 +125,18 @@ struct __attribute__((__packed__)){
     int32_t reserved_16;
     int32_t reserved_17;
 } elm_header;
+
+//place struct here rather than in map_object.h in order to avoid 'issues'
+struct map_object_type{
+
+    int threedol_id;
+    int tile;
+    int e3d_id;
+    bool harvestable;
+    int reserve;
+    char e3d_filename[80];
+};
+extern struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
 
 
 /** RESULT  : calculates the distance between two entities on a map
@@ -248,8 +261,5 @@ void read_tile_map(char *elm_filename, unsigned char *tile_map);
     NOTES   :
 */
 bool map_exists(int map_id);
-
-void batch_load_maps(char *file_name);
-
 
 #endif // MAPS_H_INCLUDED

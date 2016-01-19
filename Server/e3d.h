@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -22,6 +22,7 @@
 
 #include "maps.h"
 
+#define E3D_FILE "e3d.lst"
 #define MAX_E3D_TYPES 100
 
 struct e3d_type{
@@ -74,5 +75,6 @@ void read_threed_object_list(char *elm_filename);
     NOTES   :
 **/
 int get_e3d_id(char *e3d_filename);
+
 
 #endif // E3D_H_INCLUDED

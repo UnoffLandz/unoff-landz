@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-	Copyright 2014, 2015 UnoffLandz
+	Copyright 2014, 2015, 2016 UnoffLandz
 
 	This file is part of unoff_server_4.
 
@@ -67,7 +67,8 @@ edible                       4) edible
         MAP_AUTHOR          TEXT, \
         MAP_AUTHOR_EMAIL    TEXT, \
         MAP_UPLOAD_DATE     INT,  \
-        MAP_STATUS          INT \
+        MAP_STATUS          INT, \
+        THREED_OBJECT_COUNT INT \
         )"
 
 /** RESULT  : loads data from the map table into the map array
@@ -180,5 +181,16 @@ void change_db_map_author_email(int map_id, char *map_author_email);
     NOTES   :used in function create_database
 **/
 void change_db_map_development_status(int map_id, int development_status);
+
+
+/** RESULT  : batch load maps
+
+    RETURNS : void
+
+    PURPOSE : used when creating a new database
+
+    NOTES   :
+*/
+void batch_add_maps(char *file_name);
 
 #endif // DB_MAP_TBL_H_INCLUDED

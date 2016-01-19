@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014, 2015 UnoffLandz
+    Copyright 2014, 2015, 2016 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -27,7 +27,6 @@
 #include "broadcast_chat.h"
 #include "logging.h"
 #include "characters.h"
-#include "global.h"
 #include "db/database_functions.h"
 #include "idle_buffer2.h"
 

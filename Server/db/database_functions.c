@@ -1,5 +1,5 @@
 /******************************************************************************************************************
-    Copyright 2014, 2015 UnoffLandz
+    Copyright 2014, 2015, 2016 UnoffLandz
 
     This file is part of unoff_server_4.
 
@@ -36,7 +36,6 @@
 #include "db_e3d_tbl.h"
 #include "db_map_object_tbl.h"
 #include "db_guild_tbl.h"
-#include "../global.h"
 #include "../server_start_stop.h"
 #include "../attributes.h"
 #include "../chat.h"
@@ -50,10 +49,12 @@
 #include "../string_functions.h"
 #include "../gender.h"
 #include "../maps.h"
+#include "../objects.h"
+#include "../e3d.h"
 
+// declare the database handle as global
 sqlite3 *db;
 
-int current_database_version();
 
 static int prepare_query(const char *sql, sqlite3_stmt **stmt, const char *_func, int line){
 
@@ -137,8 +138,8 @@ bool table_exists(const char *table_name) {
     return true;
 }
 
-
-static int column_exists(const char *table, const char *column) {
+/*
+int column_exists(const char *table, const char *column) {
 
     sqlite3_stmt *stmt;
     char sql[MAX_SQL_LEN]="";
@@ -175,7 +176,7 @@ static int column_exists(const char *table, const char *column) {
     sqlite3_finalize(stmt);
     return 0;
 }
-
+*/
 
 int database_table_count(){
 
@@ -281,55 +282,9 @@ void process_sql(const char *sql_str){
 }
 
 
-int get_database_version() {
-
-    sqlite3_stmt *selectStmt;
-    const char *sql_str = "SELECT DB_VERSION FROM GAME_DATA_TABLE";
-
-    if(0==column_exists("GAME_DATA_TABLE","DB_VERSION"))
-        return 0;
-
-    if(-1==prepare_query(sql_str,&selectStmt,__func__,__LINE__))
-        return -1;
-
-    int rc = sqlite3_step(selectStmt);
-    if (rc == SQLITE_DONE) {
-        log_event(EVENT_ERROR,"Database is missing GAME_DATA_TABLE contents.");
-        return -1;
-    }
-    else if (rc != SQLITE_ROW) {
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql_str);
-    }
-    else {
-        return sqlite3_column_int(selectStmt, 0);
-    }
-    rc = sqlite3_finalize(selectStmt);
-
-    return 0;
-}
-
-
 void create_database(const char *db_filename){
 
     /** public function - see header **/
-
-    //check that sqlite file does not already exist
-    if(file_exists(db_filename)){
-
-        log_event(EVENT_ERROR, "sqlite file [%s] already exists", db_filename);
-        printf("sqlite file [%s] already exists\n", db_filename);
-        stop_server();
-    }
-
-    //create new sqlite database file
-    log_event(EVENT_INITIALISATION, "Creating sqlite file [%s]", db_filename);
-    printf("Creating sqlite file [%s]", db_filename);
-
-    int rc = sqlite3_open(db_filename, &db);
-    if( rc !=SQLITE_OK ){
-
-        log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
-    }
 
     //create logical divider in log file
     log_text(EVENT_INITIALISATION, "\nCreating database tables...\n");
@@ -433,50 +388,21 @@ void create_database(const char *db_filename){
         attribute_id++;
     }
 
-    add_db_e3d(1, "cabbage.e3d", 405);
-    add_db_e3d(2, "tomatoeplant1.e3d", 407);
-    add_db_e3d(3, "tomatoeplant2.e3d", 407);
-    add_db_e3d(4, "foodtomatoe.e3d", 407);
-    add_db_e3d(5, "food_carrot.e3d", 408);
-    add_db_e3d(8, "branch1.e3d", 140);
-    add_db_e3d(9, "branch2.e3d", 140);
-    add_db_e3d(10, "branch3.e3d", 140);
-    add_db_e3d(11, "branch4.e3d", 140);
-    add_db_e3d(12, "branch5.e3d", 140);
-    add_db_e3d(13, "branch6.e3d", 140);
-    add_db_e3d(14, "flowerbush3.e3d", 36);
-    add_db_e3d(15, "flowerbush2.e3d", 35);
-    add_db_e3d(16, "food_pumpkin.e3d", 406);
-    add_db_e3d(17, "log1.e3d", 214);
-    add_db_e3d(18, "log2.e3d", 214);
-    add_db_e3d(19, "flowerorange1.e3d", 29);
-    add_db_e3d(20, "flowerorange2.e3d", 29);
-    add_db_e3d(21, "flowerorange3.e3d", 29);
-    add_db_e3d(22, "flowerpink1.e3d", 28);
-    add_db_e3d(23, "flowerwhite1.e3d", 29);
-    add_db_e3d(24, "flowerwhite2.e3d", 29);
-    add_db_e3d(25, "flowerwhite3.e3d", 29);
-
-    add_db_object(405, "Cabbage", 1, 1, 2);
-    add_db_object(406, "Pumpkin", 1, 1, 2);
-    add_db_object(407, "Tomato", 1, 1, 2);
-    add_db_object(408, "Carrot", 1, 1, 2);
-    add_db_object(140, "Stick", 1, 0, 2);
-    add_db_object(214, "Log", 1, 0, 4);
-    add_db_object(29, "Tiger lily", 1, 0, 1);
-    add_db_object(28, "Chrysanthemum", 1, 0, 1);
-    add_db_object(27, "Impatiens", 1, 0, 1);
-    add_db_object(34, "Lupins", 1, 0, 1);
-    add_db_object(35, "Snap Dragon", 1, 0, 1);
-
-    batch_load_maps("map.lst");
+    //add items in this order otherwise map object table will be corrupted
+    batch_add_objects(OBJECT_FILE);
+    batch_add_e3ds(E3D_FILE);
+    batch_add_maps(MAP_FILE);//also adds map objects
 
     // TODO (themuntdregger#1#): change add_db_guild so that it works in a similar way to add_db_map
     add_db_guild("Operators", "OPS", c_grey3, "The server operators guild", PERMISSION_3, GUILD_ACTIVE);
 
+    //load game data so that starting map and tile can be found
+    load_db_game_data();
+
     //clear the character struct
     memset(&character, 0, sizeof(character));
 
+    //create the master character
     strcpy(character.char_name, "Player");
     strcpy(character.password, "test");
     character.char_created=time(NULL);
@@ -491,10 +417,6 @@ void create_database(const char *db_filename){
     character.head_type=1;
     character.frame=frame_stand;
     character.char_created=time(NULL);
-
-    //load game data so that starting map and map tile can be found
-    load_db_game_data();
-
     character.map_id=game_data.beam_map_id;
     character.map_tile=game_data.beam_map_tile;
     character.guild_id=1;
@@ -517,229 +439,6 @@ void create_database(const char *db_filename){
 
     add_db_char_data(character);
     printf("Player [master_character][test] added successfully\n");
+
     printf("Database [%s] created\n", db_filename);
 }
-
-/*
-void _create_database(const char *db_scriptfile){
-
-    FILE* file;
-
-    if((file=fopen(db_scriptfile, "r"))==NULL){
-
-        log_event(EVENT_ERROR, "database script file [%s] not found", db_scriptfile);
-        exit(EXIT_FAILURE);
-    }
-
-    char line[80]="";
-    char command[80]="";
-    int line_counter=0;
-
-    char db_filename[80]="database.sqlite";
-
-    int db_version=1;
-    int game_year_length=360;
-
-    int start_map_id=1;
-    int start_map_tile=0;
-    bool start_position_found=false;
-
-    int beam_map_id=1;
-    int beam_map_tile=0;
-
-    while (fgets(line, sizeof(line), file)) {
-
-        line_counter++;
-
-        //detect start of comment section and insert a null terminator so that comments are
-        //ignored when parsing the instruction
-        for(int i=0; i<80; i++){
-
-            if(line[i]=='#'){
-
-                line[i]=0;
-                break;
-            }
-        }
-
-        //get the instruction
-        sscanf(line, "%s", command);
-        str_conv_upper(command);
-
-        //parse the instruction
-        if(strcmp(command, "DATABASE_FILENAME")==0){
-
-            if(sscanf(line, "%*s %s", db_filename)!=1){
-
-                printf("line %i - error in database_filename statement\n", line_counter);
-            }
-        }
-
-        if(strcmp(command, "DATABASE_VERSION")==0){
-
-            if(sscanf(line, "%*s %i", &db_version)!=1){
-
-                printf("line %i - error in database_version statement\n", line_counter);
-            }
-        }
-
-        if(strcmp(command, "GAME_YEAR_LENGTH")==0){
-
-
-            if(sscanf(line, "%*s %i", &game_year_length)!=1){
-
-                printf("line %i - error in game_year_length statement\n", line_counter);
-            }
-        }
-
-        if(strcmp(command, "START_MAP_POSITION")==0){
-
-            if(sscanf(line, "%*s %i %i", &start_map_id, &start_map_tile)!=2){
-
-                printf("line %i - error in start_position statement\n", line_counter);
-            }
-
-            start_position_found=true;
-            if(beam_map_id==0) beam_map_id=start_map_id;
-            if(beam_map_tile==0) beam_map_tile=start_map_tile;
-        }
-
-        if(strcmp(command, "BEAM_MAP_POSITION")==0){
-
-            if(sscanf(line, "%*s %i %i", &beam_map_id, &beam_map_tile)!=2){
-
-                printf("line %i - error in beam_position statement\n", line_counter);
-            }
-        }
-
-        //if(start_position_found==true) add_db_game_data(beam_map_id, beam_map_tile, start_map_id, start_map_tile, game_year_length, db_version);
-
-        if(strcmp(command, "ADD_CHANNEL")==0){
-
-            char output[10][80];
-            parse_line(line, output);
-
-            int chan_id=atoi(output[0]);
-            int owner_id=atoi(output[1]);
-            int chan_type=atoi(output[2]);
-            int new_chars=atoi(output[6]);
-
-            //add_db_channel(chan_id, owner_id, chan_type, output[3], output[4], output[5], new_chars);
-        }
-
-        if(strcmp(command, "ADD_RACE")==0){
-
-            int race_id=0;
-            char race_name[80]="";
-
-            if(sscanf(line, "%*s %i %s", &race_id, race_name)!=2){
-
-                printf("line %i - error in ADD_RACE\n", line_counter);
-            }
-
-            //copy the race name to the race struct so we can lookup the race id
-            strcpy(race[race_id].race_name, race_name);
-
-            //add_db_race(race_id, output[1], output[2]);
-        }
-
-        if(strcmp(command, "ADD_GENDER")==0){
-
-            int gender_id=0;
-            char gender_name[80]="";
-
-            if(sscanf(line, "%*s %i %s", &gender_id, gender_name)!=2){
-
-                printf("line %i - error in ADD_GENDER\n", line_counter);
-            }
-
-            //copy the gender name to the gender struct so we can lookup the gender id
-            strcpy(gender[gender_id].gender_name, gender_name);
-
-            //add_db_race(gender_id, output[1]);
-        }
-
-        if(strcmp(command, "ADD_CHAR_TYPE")==0){
-
-            int char_type=0;
-            char race_name[80]="";
-            char gender_name[80]="";
-
-            if(sscanf(line, "%*s %i %s %s", &char_type, race_name, gender_name)!=3){
-
-                printf("line %i - error in ADD_CHAR_TYPE\n", line_counter);
-            }
-
-            //find the race id based on the race name
-            bool found=false;
-            int race_id=0;
-
-            for(int i=0; i<MAX_RACES; i++){
-
-                if(strcmp(race_name, race[i].race_name)==0){
-
-                    found=true;
-                    race_id=i;
-                    break;
-                }
-            }
-
-            if(found==false){
-
-                printf("line %i - race name not found\n", line_counter);
-            }
-
-            found=false;
-            int gender_id=0;
-
-            for(int i=0; i<MAX_GENDER; i++){
-
-                if(strcmp(gender_name, gender[i].gender_name)==0){
-
-                    found=true;
-                    gender_id=i;
-                    break;
-                }
-            }
-
-            if(found==false){
-
-                printf("line %i - gender name not found\n", line_counter);
-            }
-
-            //add_db_char_type(char_type, race_id, gender_id);
-        }
-
-        if(strcmp(command, "ADD_SEASON")==0){
-
-            char output[10][80];
-            parse_line(line, output);
-
-            int season_id=atoi(output[0]);
-            int start=atoi(output[3]);
-            int finish=atoi(output[4]);
-
-            //add_db_season(season_id, output[1], output[2], start, finish);
-        }
-
-        if(strcmp(command, "ADD_MAP")==0){
-
-            char output[10][80];
-            parse_line(line, output);
-
-            int map_id=atoi(output[0]);
-            int status=atoi(output[6]);
-            int upload_date=atoi(output[7]);
-
-            add_db_map(map_id, output[1], output[2], output[3], output[4], output[5], status, upload_date);
-        }
-
-        //ADD_GUILD
-        //ADD_CHARACTER
-        //ADD_ATTRIBUTES
-        // remove "" from sentences
-    }
-
-    fclose(file);
-}
-*/
