@@ -49,9 +49,9 @@ Done - batch load maps on startup from map.lst file
 Done - batch load objects on startup from object.lst file
 Done - batch load e3ds on startup from e3d.lst
 Done - command line option to load e3ds/objects
-Done - command line option to reload map objects
+Done - command line option to reload map objects/maps
 Done - #gm only available for ranks of 1 and greater
-Done - add THREED_OBJECT_COUNT to map table------------------------*
+Done - add THREED_OBJECT_COUNT to map table
 Done - changed GM_PERMISSION to PLAYER_TYPE and IG PERMISSION to UNUSED in character table
 
 ***************************************************************************************************

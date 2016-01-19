@@ -906,6 +906,7 @@ int main(int argc, char *argv[]){
         bool load_e3d_list;
         bool load_object_list;
         bool update_map_objects;
+        bool reload_maps;
     }option;
 
     //clear struct to prevent garbage
@@ -938,6 +939,8 @@ int main(int argc, char *argv[]){
         if (strcmp(argv[i], "-E") == 0)option.load_e3d_list=true;
         if (strcmp(argv[i], "-O") == 0)option.load_object_list=true;
         if (strcmp(argv[i], "-R") == 0)option.update_map_objects=true;
+        if (strcmp(argv[i], "-X") == 0)option.reload_maps=true;
+
 
         log_text(EVENT_INITIALISATION, "%i [%s]", i, argv[i]);// log each command line option
     }
@@ -1024,7 +1027,7 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
-    //execute load e3d list
+    //execute add from e3d list
     else if(option.load_e3d_list==true){
 
         if(argc==4) strcpy(db_filename, argv[5]);
@@ -1048,7 +1051,7 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
-    //execute load object list
+    //execute add from object list
     else if(option.load_object_list==true){
 
         if(argc==4) strcpy(db_filename, argv[5]);
@@ -1093,6 +1096,30 @@ int main(int argc, char *argv[]){
         batch_update_map_objects(map_filename);
 
         close_database();
+        return 0;
+    }
+
+    //reload maps
+    else if(option.reload_maps==true){
+
+        if(argc==4) strcpy(db_filename, argv[5]);
+        open_database(db_filename);
+
+        char map_filename[80]=MAP_FILE;
+        if(argc==3) strcpy(map_filename, argv[2]);
+
+        printf("RELOAD MAP LIST using %s at %s on %s\n", map_filename, time_stamp_str, verbose_date_stamp_str);
+
+        log_text(EVENT_INITIALISATION, "RELOAD MAP LIST using %s at %s on %s", map_filename, time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "");// insert logical separator
+
+        //delete the existing table contents and add new data
+        process_sql("DELETE FROM MAP_TABLE");
+        process_sql("DELETE FROM MAP_OBJECT_TABLE");
+        batch_add_maps(map_filename); // also adds map objects
+
+        close_database();
+
         return 0;
     }
 
@@ -1180,6 +1207,7 @@ int main(int argc, char *argv[]){
     printf("load e3d list      -E optional [""e3d file list""] optional [""database file name""]\n");
     printf("load object list   -O optional [""object file list""] optional [""database file name""]\n");
     printf("update map objects -R [""map file list""] optional [""database file name""]\n");
+    printf("reload maps        -X [""map file list""] optional [""database file name""]\n");
 
     return 0;//otherwise we get 'control reached end of non void function'
 }
