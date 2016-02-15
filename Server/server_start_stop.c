@@ -35,7 +35,7 @@ void stop_server(){
     get_time_stamp_str(stop_time, time_stamp_str);
     get_verbose_date_str(stop_time, verbose_date_stamp_str);
 
-    printf("SERVER STOP at %s on %s\ncheck 'error.log' for details\n", time_stamp_str, verbose_date_stamp_str);
+    fprintf(stderr, "SERVER STOP at %s on %s\ncheck 'error.log' for details\n", time_stamp_str, verbose_date_stamp_str);
 
     log_event(EVENT_ERROR, "SERVER STOP at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
 

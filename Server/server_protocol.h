@@ -209,6 +209,16 @@ enum { // server to client protocol
              char array)
         +1   Uint8               npc portrait id
 */
+    SEND_PARTIAL_STAT=49, //sends a specific stat
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16_t            data-length (=packet length-2)
+
+        4    Uint8               attribute type
+        5-8  Uint32              attribute value
+*/
 
     ADD_NEW_ENHANCED_ACTOR=51,
 /*
@@ -243,6 +253,30 @@ enum { // server to client protocol
         27   Uint8               character size
         28   Uint8               mount (nothing=255  brown horse=200)
         29   Uint8               neck attachment
+*/
+
+    ACTOR_WEAR_ITEM =52,
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16_t            data-length (=packet length-2)
+
+        4-5  Uint16              char id
+        6    Uint8               equipable item type
+        7    Uint8               equipable item id
+*/
+
+    ACTOR_UNWEAR_ITEM=53,
+/*
+        byte word                purpose
+        ---- ------------------  --------------------------------------------------------------
+        1    Uint8               protocol
+        2-3  Uint16_t            data-length (=packet length-2)
+
+        4-5  Uint16              char id
+        6    Uint8               equipable item type
+        7    Uint8               equipable item id
 */
 
     DISPLAY_CLIENT_WINDOW=63,

@@ -33,6 +33,12 @@ void load_db_npc_actions(){
 
     sqlite3_stmt *stmt;
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="SELECT * FROM NPC_ACTION_TABLE";
 
     //check database table exists
@@ -108,6 +114,12 @@ int object_id_given, int object_amount_given, int boat_node, int destination){
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO NPC_ACTION_TABLE("
@@ -131,7 +143,7 @@ int object_id_given, int object_amount_given, int boat_node, int destination){
 
     process_sql(sql);
 
-    printf("NPC action [%i] added successfully\n", npc_action_id);
+    fprintf(stderr, "NPC action [%i] added successfully\n", npc_action_id);
 
     log_event(EVENT_SESSION, "Added NPC action [%i] to NPC_ACTION_TABLE", npc_action_id);
 }

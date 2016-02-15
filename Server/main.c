@@ -69,6 +69,7 @@ To compile server, link with the following libraries :
 #include "db/db_map_object_tbl.h"
 #include "db/db_upgrade.h"
 #include "db/db_guild_tbl.h"
+#include "db/db_skills_tbl.h"
 #include "date_time_functions.h"
 #include "movement.h"
 #include "server_start_stop.h"
@@ -135,14 +136,25 @@ void start_server(){
     //load data from database into memory
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        fprintf(stderr, "database not open in function %s: module %s: line %i\n", __func__, __FILE__, __LINE__);
+
+        //can't use stop_server() function as it will try and close database
+        exit(EXIT_FAILURE);
+    }
+
     load_db_game_data();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //check database version (can only be done once game data has been loaded
     if(game_data.database_version != REQUIRED_DATABASE_VERSION) {
 
-        printf("Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", game_data.database_version, REQUIRED_DATABASE_VERSION);
-        return;
+        log_event(EVENT_ERROR, "Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", game_data.database_version, REQUIRED_DATABASE_VERSION);
+        fprintf(stderr, "Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", game_data.database_version, REQUIRED_DATABASE_VERSION);
+        stop_server();
     }
 
     load_db_e3ds();
@@ -176,6 +188,9 @@ void start_server(){
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     load_db_guilds();
+    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
+
+    load_db_skills();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     /** Experimental NPC code **/
@@ -224,11 +239,11 @@ void start_server(){
     boat[0].departure_map_tile=4054;
     boat[0].destination_map_id=16;
     boat[0].destination_map_tile=77969;
-    strcpy(boat[0].departure_message, "Welcome aboard Salty Sealines. Please stow your luggage in the hold and enjoy your voyage");
+    strcpy(boat[0].departure_message, "Welcome aboard Salty Sea Lines. Please stow your luggage in the hold and enjoy your voyage");
     boat[0].travel_time=2;
     boat[0].boat_payment_object_id=3; //gold coin
     boat[0].boat_payment_price=5;
-    strcpy(boat[0].arrival_message, "thank you for sailing with Salty Sealines. We hope you enjoyed your voyage and will sail with us again");
+    strcpy(boat[0].arrival_message, "Thank you for sailing with Salty Sea Lines. We hope you enjoyed your voyage and will sail with us again");
     boat[0].boat_map_id=3;
     boat[0].boat_map_tile=4651;
 
@@ -378,9 +393,9 @@ void start_server(){
     ev_idle_start(loop, idle_watcher);
 
     log_event(EVENT_INITIALISATION, "idle watcher started");
-    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    log_event(EVENT_INITIALISATION, "main loop started");
+    log_event(EVENT_INITIALISATION, "\nmain loop started");
+    fprintf(stderr, "accepting client connections\n");
 
     while(1) {
 
@@ -680,22 +695,17 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     //check through all actors and process pending actions
     for(int i=0; i<MAX_ACTORS; i++){
 
-        //process player related factors
+        //process PLAYER related factors
         if(clients.client[i].player_type==PLAYER){
 
             int socket=clients.client[i].socket;
 
-            //check for lagged connection
-            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
+            if(client_socket[socket].socket_node_status==CLIENT_CONNECTED){
 
+                //check for lagged connection on connected clients
                 if(client_socket[socket].time_of_last_heartbeat + HEARTBEAT_INTERVAL < time_check.tv_sec){
 
                     log_event(EVENT_SESSION, "client [%i] char [%s] lagged out", i, clients.client[i].char_name);
-
-                    //broadcast that char was eaten by the Grue
-                    char text_out[160]="";
-                    sprintf(text_out, "Poor old %s was eaten by the Grue", clients.client[i].char_name);
-                    broadcast_local_chat(i, text_out);
 
                     //close connection and stop watcher
                     close_connection_slot(i);
@@ -707,11 +717,8 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                     memset(&clients.client[i], 0, sizeof(clients.client[i]));
                     memset(&client_socket[socket], 0, sizeof(client_socket[socket]));
                 }
-            }
 
-            //check for kill flag on connection
-            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
-
+                //check for kill flag on connected clients
                 if(client_socket[socket].kill_connection==true){
 
                     //close socket and stop watcher
@@ -726,9 +733,43 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                 }
             }
 
-            //update game time for connection
-            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
+            else if(client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
 
+                //check for lagged connection on logged in players
+                if(client_socket[socket].time_of_last_heartbeat + HEARTBEAT_INTERVAL < time_check.tv_sec){
+
+                    log_event(EVENT_SESSION, "client [%i] char [%s] lagged out", i, clients.client[i].char_name);
+
+                    char text_out[160]="";
+                    sprintf(text_out, "Poor old %s was eaten by the Grue", clients.client[i].char_name);
+                    broadcast_local_chat(i, text_out);
+
+                    //close connection and stop watcher
+                    close_connection_slot(i);
+                    ev_io_stop(loop, libevlist[socket]);
+                    free(libevlist[socket]);
+                    libevlist[socket] = NULL;
+
+                    //clear structs
+                    memset(&clients.client[i], 0, sizeof(clients.client[i]));
+                    memset(&client_socket[socket], 0, sizeof(client_socket[socket]));
+                }
+
+                //check for kill flag on connection on logged in players
+                if(client_socket[socket].kill_connection==true){
+
+                    //close socket and stop watcher
+                    close_connection_slot(i);
+                    ev_io_stop(loop, libevlist[socket]);
+                    free(libevlist[socket]);
+                    libevlist[socket] = NULL;
+
+                    //clear structs
+                    memset(&clients.client[i], 0, sizeof(clients.client[i]));
+                    memset(&client_socket[socket], 0, sizeof(client_socket[socket]));
+                }
+
+                //update time for logged in players
                 if(clients.client[i].time_of_last_minute+GAME_MINUTE_INTERVAL<time_check.tv_sec){
 
                     clients.client[i].time_of_last_minute=time_check.tv_sec;
@@ -737,54 +778,8 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                     //update database with time char was last in game
                     push_sql_command("UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[i].time_of_last_minute, clients.client[i].character_id);
                 }
-            }
 
-            //check for boat departures
-            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
-
-                //check if char is book on boat
-                if(clients.client[i].boat_booked==true){
-
-                    //check if it's time for boat to depart
-                    if(game_data.game_minutes>=clients.client[i].boat_departure_time){
-
-                        int boat_node=clients.client[i].boat_node;
-
-                        //set boat destination arrival time
-                        clients.client[i].boat_arrival_time=clients.client[i].boat_departure_time + boat[boat_node].travel_time;
-
-                        //check if char is close enough to boat
-                        int departure_map_id=boat[boat_node].departure_map_id;
-                        int departure_map_tile=boat[boat_node].departure_map_tile;
-                        int boat_proximity=get_proximity(clients.client[i].map_tile, departure_map_tile, departure_map_id);
-
-                        //jump char to boat map
-                        if(boat_proximity<BOAT_CATCH_PROXIMITY && departure_map_id==clients.client[i].map_id){
-
-                            if(move_char_between_maps(i, boat[boat_node].boat_map_id, boat[boat_node].boat_map_tile)==false){
-
-                                log_event(EVENT_ERROR, "invalid map [%i] in function %s: module %s: line %i", boat[boat_node].boat_map_id, __func__, __FILE__, __LINE__);
-                                stop_server();
-                            }
-
-
-                            send_text(clients.client[i].socket, CHAT_SERVER, "%s", boat[boat_node].departure_message);
-                        }
-                        else {
-
-                            send_text(clients.client[i].socket, CHAN_CHAT, "%cOops, you missed the boat", 127+c_red3);
-                        }
-
-                        clients.client[i].boat_booked=false;
-                        clients.client[i].on_boat=true;
-                    }
-                }
-            }
-
-            //check for boat arrivals
-            if(client_socket[socket].socket_node_status!=SOCKET_UNUSED){
-
-                //check if char is on a boat
+                //check for boat departures only for logged in players
                 if(clients.client[i].on_boat==true){
 
                     //if boat has reached destination jump char to new map
@@ -803,23 +798,19 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
                         clients.client[i].on_boat=false;
                     }
                 }
+
+                //process char movements for actors
+                process_char_move(i, time_check.tv_usec); //use milliseconds
+
+                //process char harvesting for actors
+                process_char_harvest(i, time_check.tv_sec); //use seconds
             }
         }
 
-        //process all actor related factors (NPC and Players)
-        if(clients.client[i].client_node_status==CLIENT_NODE_USED) {
+        //process NPC related factors
+        else if(clients.client[i].player_type==NPC) {
 
-            //process char movements for actors
-            process_char_move(i, time_check.tv_usec); //use milliseconds
-
-            //process char harvesting for actors
-            process_char_harvest(i, time_check.tv_sec); //use seconds
-        }
-
-        //process npc timed triggers
-        if(clients.client[i].client_node_status==CLIENT_NODE_USED
-        && clients.client[i].player_type==NPC) {
-
+            //check for triggers
             for(int j=0; j<MAX_NPC_TRIGGERS; j++){
 
                 if(npc_trigger[j].trigger_node_status==TRIGGER_NODE_UNUSED) break;
@@ -880,6 +871,40 @@ void idle_cb (struct ev_loop *loop, struct ev_idle *watcher, int revents){
 }
 
 
+bool get_decision(){
+
+    /** RESULT   : gets yes/no from keyboard
+
+        RETURNS  : true/false
+
+        PURPOSE  :
+
+        NOTES    :
+    **/
+
+    //get decision from stdin
+    char decision[10]="";
+
+    if(fgets(decision, sizeof(decision), stdin)==NULL){
+
+        log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        fprintf(stderr, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_FAILURE as this is an error situation
+        exit(EXIT_FAILURE);
+    }
+
+    //convert decision to upper case
+    str_conv_upper(decision);
+
+    //test decision
+    if(strncmp(decision, "Y", 1)==0 || strncmp(decision, "YES", 3)==0) return true;
+
+    return false;
+}
+
+
 int main(int argc, char *argv[]){
 
     /** RESULT   : handles command line arguments
@@ -891,7 +916,7 @@ int main(int argc, char *argv[]){
         NOTES    :
     **/
 
-    printf("Server - version %s.%s %s\n\n", VERSION, BUILD, BUILD_DATE);
+    fprintf(stderr, "Server - version %s.%s %s\n\n", VERSION, BUILD, BUILD_DATE);
 
     char db_filename[80]=DEFAULT_DATABASE_FILE_NAME;
 
@@ -941,23 +966,33 @@ int main(int argc, char *argv[]){
         if (strcmp(argv[i], "-R") == 0)option.update_map_objects=true;
         if (strcmp(argv[i], "-X") == 0)option.reload_maps=true;
 
-
         log_text(EVENT_INITIALISATION, "%i [%s]", i, argv[i]);// log each command line option
     }
-
-    log_text(EVENT_INITIALISATION, "");// insert logical separator
 
     //execute start server
     if(option.start_server==true){
 
+        fprintf(stdout, "This option [S] starts the game server using the existing database.\n");
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
+
+        if(get_decision()==false){
+
+            log_text(EVENT_INITIALISATION, "Aborted server start");
+            fprintf(stdout, "Aborted server start\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use database file specified in command line if specified
         if(argc==3) strcpy(db_filename, argv[2]);
 
-        printf("SERVER START using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
-
-        log_text(EVENT_INITIALISATION, "SERVER START using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
+        log_text(EVENT_INITIALISATION, "SERVER START using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
+        fprintf(stdout, "SERVER START using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
         open_database(db_filename);
+
         start_server();
 
         return 0;
@@ -966,152 +1001,241 @@ int main(int argc, char *argv[]){
     //execute create database
     else if(option.create_database==true){
 
+        fprintf(stdout, "This option [C] creates a new game server database.\n");
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
+
+        if(get_decision()==false){
+
+            log_text(EVENT_INITIALISATION, "Aborted create database");
+            fprintf(stdout, "Aborted create database\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use database file specified in command line if specified
         if(argc==3) strcpy(db_filename, argv[2]);
 
         //check that database file does not already exist
         if(file_exists(db_filename)){
 
-            printf("Filename [%s] already exists. Do you wish to replace it Y/N ?", db_filename);
+            fprintf(stdout, "Database file [%s] already exists. Do you wish to replace it Y/N ?", db_filename);
 
-            //get decision from stdin
-            char decision[10]="";
+            if(get_decision()==false){
 
-            if(fgets(decision, sizeof(decision), stdin)==NULL){
+                log_text(EVENT_INITIALISATION, "Aborted create database");
+                fprintf(stdout, "Aborted create database\n");
 
-                log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-                stop_server();
+                //Because server hasn't started we use exit rather than stop_server()
+                //We also use EXIT_SUCCESS as this is not an error situation
+                exit(EXIT_SUCCESS);
             }
 
-            //convert decision to upper case and determine if map replacement should proceed
-            str_conv_upper(decision);
+            log_text(EVENT_INITIALISATION, "Replace existing database %s", db_filename);
+            fprintf(stdout, "Replace existing database %s", db_filename);
 
-            if(strncmp(decision, "Y", 1)==0 || strncmp(decision, "YES", 3)==0){
+            //backup existing database file
+            create_backup_file(db_filename, 0);// TODO (themuntdregger#1#): need tp be able to create a text based suffix for backups
 
-                log_text(EVENT_INITIALISATION, "Replace existing database %s", db_filename);
+            //delete existing database file
+            remove(db_filename);
 
-                //delete the old datafile and create a new one
-                remove(db_filename);
-                open_database(db_filename);
-            }
-            else return 0;
+            log_text(EVENT_INITIALISATION, "CREATE DATABASE using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
+            fprintf(stdout, "\nCREATE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
+
+            //creates empty database file and opens it for use
+            create_empty_database_file(db_filename);
+
+            //populate new database with starting data
+            populate_database(db_filename);
+
+            close_database();
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
         }
-
-        printf("\nCREATE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
-
-        log_text(EVENT_INITIALISATION, "CREATE DATABASE using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
-
-        //create the new database
-        create_database(db_filename);
-
-        close_database();
-
-        return 0;
     }
 
     //execute upgrade database
     else if(option.upgrade_database==true){
 
+        fprintf(stdout, "This option [U] upgrades an existing game server database.\n");
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
+
+        if(get_decision()==false){
+
+            log_text(EVENT_INITIALISATION, "Aborted upgrade database");
+            fprintf(stdout, "Aborted upgrade database\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use database file specified in command line if specified
         if(argc==3) strcpy(db_filename, argv[2]);
 
-        printf("UPGRADE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
-
-        log_text(EVENT_INITIALISATION, "UPGRADE DATABASE using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
+        log_text(EVENT_INITIALISATION, "UPGRADE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
+        fprintf(stderr, "UPGRADE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
         open_database(db_filename);
         upgrade_database(db_filename);
 
         close_database();
 
-        return 0;
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
     }
 
     //execute add from e3d list
     else if(option.load_e3d_list==true){
 
-        if(argc==4) strcpy(db_filename, argv[5]);
-        open_database(db_filename);
-
         char filename[80]=E3D_FILE;
+
+        //use e3d data file specified in command line if specified
         if(argc==3) strcpy(filename, argv[2]);
 
-        printf("LOAD E3D LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+        fprintf(stdout, "This option [E] replaces existing e3d data on the game server database with that" \
+        "uploaded from file name [%s]\n", E3D_FILE);
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
 
-        log_text(EVENT_INITIALISATION, "LOAD E3D LIST using %s at %s on %s", filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
+        if(get_decision()==false){
 
-        //delete the table contents and load new data
+            log_text(EVENT_INITIALISATION, "Aborted replace e3d data");
+            fprintf(stdout, "Aborted replace e3d data\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use database file specified in command line if specified
+        if(argc==4) strcpy(db_filename, argv[5]);
+
+        fprintf(stderr, "LOAD E3D LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "LOAD E3D LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+
+        //open database, delete the table contents, load new data, update map objects
+        open_database(db_filename);
         process_sql("DELETE FROM E3D_TABLE");
         batch_add_e3ds(filename);
         batch_update_map_objects(MAP_FILE);
 
         close_database();
 
-        return 0;
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
     }
 
     //execute add from object list
     else if(option.load_object_list==true){
 
-        if(argc==4) strcpy(db_filename, argv[5]);
-        open_database(db_filename);
-
         char filename[80]=OBJECT_FILE;
+
+        //use object data file specified in command line if specified
         if(argc==3) strcpy(filename, argv[2]);
 
-        printf("LOAD OBJECT LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+        fprintf(stdout, "This option [O] replaces existing object data on the game server database with that" \
+        "uploaded from file name [%s]\n", OBJECT_FILE);
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
 
-        log_text(EVENT_INITIALISATION, "LOAD OBJECT LIST using %s at %s on %s", filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
+        if(get_decision()==false){
 
-        //delete the existing table contents and add new data
+            log_text(EVENT_INITIALISATION, "Aborted replace object data");
+            fprintf(stdout, "Aborted replace object data\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use database file specified in command line if specified
+        if(argc==4) strcpy(db_filename, argv[5]);
+
+
+        log_text(EVENT_INITIALISATION, "LOAD OBJECT LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+        fprintf(stderr, "LOAD OBJECT LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+
+        //delete the existing table contents, add new data
+        open_database(db_filename);
         process_sql("DELETE FROM OBJECT_TABLE");
         batch_add_objects(filename);
-        batch_update_map_objects(MAP_FILE);
-
         close_database();
 
-        return 0;
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
     }
 
     //execute update map_objects
     else if(option.update_map_objects==true){
 
-        if(argc==4) strcpy(db_filename, argv[5]);
-        open_database(db_filename);
+        fprintf(stdout, "This option [R] updates exiting map object data " \
+        "in the database to reflect and manual changes made in the e3d table data\n");
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
 
+        if(get_decision()==false){
+
+            log_text(EVENT_INITIALISATION, "Aborted update map object data");
+            fprintf(stdout, "Aborted update map object data\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use optional database file specified in command line
+        if(argc==4) strcpy(db_filename, argv[5]);
+
+        //use optional MAP_FILE specified in command line
         char map_filename[80]=MAP_FILE;
         if(argc==3) strcpy(map_filename, argv[2]);
 
+        log_text(EVENT_INITIALISATION, "UPDATE MAPS OBJECTS at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
+        fprintf(stderr, "UPDATE MAP OBJECTS at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
+
+        //update the map objects for all maps specified in MAP_FILE
         open_database(db_filename);
-
-        printf("UPDATE MAP OBJECTS at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
-
-        log_text(EVENT_INITIALISATION, "UPDATE MAPS OBJECTS at %s on %s", time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
-
-        //delete the existing table contents and add new data
-        process_sql("DELETE FROM MAP_OBJECT_TABLE");
         batch_update_map_objects(map_filename);
 
         close_database();
-        return 0;
-    }
+
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
+   }
 
     //reload maps
     else if(option.reload_maps==true){
 
-        if(argc==4) strcpy(db_filename, argv[5]);
-        open_database(db_filename);
-
         char map_filename[80]=MAP_FILE;
+
+        //use optional MAP_FILE specified in command line
         if(argc==3) strcpy(map_filename, argv[2]);
 
-        printf("RELOAD MAP LIST using %s at %s on %s\n", map_filename, time_stamp_str, verbose_date_stamp_str);
+        fprintf(stdout, "This option [X] replaces existing maps on the game server database with those" \
+        "uploaded from file name [%s]\n", MAP_FILE);
+        if(get_decision()==false){
 
-        log_text(EVENT_INITIALISATION, "RELOAD MAP LIST using %s at %s on %s", map_filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
+            log_text(EVENT_INITIALISATION, "Aborted replace maps");
+            fprintf(stdout, "Aborted replace current maps\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use optional database file specified in command line
+        if(argc==4) strcpy(db_filename, argv[5]);
+
+        open_database(db_filename);
+
+        log_text(EVENT_INITIALISATION, "RELOAD MAP LIST using %s at %s on %s\n", map_filename, time_stamp_str, verbose_date_stamp_str);
+        fprintf(stderr, "RELOAD MAP LIST using %s at %s on %s\n", map_filename, time_stamp_str, verbose_date_stamp_str);
 
         //delete the existing table contents and add new data
         process_sql("DELETE FROM MAP_TABLE");
@@ -1120,11 +1244,26 @@ int main(int argc, char *argv[]){
 
         close_database();
 
-        return 0;
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
     }
 
     //execute load map
     else if(option.load_map==true && argc>=4){
+
+        fprintf(stdout, "This option [M] loads a new map to the database\n");
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
+
+        if(get_decision()==false){
+
+            log_text(EVENT_INITIALISATION, "Aborted update map object data");
+            fprintf(stdout, "Aborted update map object data\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
 
         if(argc==5) strcpy(db_filename, argv[4]);
 
@@ -1140,7 +1279,7 @@ int main(int argc, char *argv[]){
 
         if(get_db_map_exists(map_id)==true){
 
-            printf( "Do you wish to replace map [%i] [%s] Y/N: ", map_id, maps.map[map_id].map_name);
+            fprintf(stderr,  "Do you wish to replace map [%i] [%s] Y/N: ", map_id, maps.map[map_id].map_name);
 
             //get decision from stdin
             char decision[10]="";
@@ -1148,7 +1287,7 @@ int main(int argc, char *argv[]){
             if(fgets(decision, sizeof(decision), stdin)==NULL){
 
                 log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-                stop_server();
+                exit(EXIT_FAILURE);
             }
 
             //convert decision to upper case and determine if map replacement should proceed
@@ -1164,11 +1303,10 @@ int main(int argc, char *argv[]){
                 return 0;
             }
 
-            printf("\n");
+            fprintf(stderr, "\n");
         }
 
-        log_text(EVENT_INITIALISATION, "LOAD MAP %i %s on %s at %s on %s", map_id, elm_filename, db_filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
+        log_text(EVENT_INITIALISATION, "LOAD MAP %i %s on %s at %s on %s\n", map_id, elm_filename, db_filename, time_stamp_str, verbose_date_stamp_str);
 
         //add map and associated map objects
         add_db_map(map_id, elm_filename);
@@ -1184,10 +1322,9 @@ int main(int argc, char *argv[]){
 
         if(argc>2) strcpy(db_filename, argv[2]);
 
-        printf("LIST MAPS using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
+        fprintf(stderr, "LIST MAPS using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
-        log_text(EVENT_INITIALISATION, "LIST MAPS using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
-        log_text(EVENT_INITIALISATION, "");// insert logical separator
+        log_text(EVENT_INITIALISATION, "LIST MAPS using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
         open_database(db_filename);
         list_db_maps();
@@ -1198,16 +1335,16 @@ int main(int argc, char *argv[]){
     }
 
     //display command line options if no command line options are found or command line options are not recognised
-    printf("Command line options...\n");
-    printf("create database    -C optional [""database file name""]\n");
-    printf("start server       -S optional [""database file name""]\n");
-    printf("upgrade database   -U optional [""database file name""]\n");
-    printf("list loaded maps   -L optional [""database file name""]\n");
-    printf("load map           -M [map id] [""elm filename""] optional [""database file name""]\n");
-    printf("load e3d list      -E optional [""e3d file list""] optional [""database file name""]\n");
-    printf("load object list   -O optional [""object file list""] optional [""database file name""]\n");
-    printf("update map objects -R [""map file list""] optional [""database file name""]\n");
-    printf("reload maps        -X [""map file list""] optional [""database file name""]\n");
+    fprintf(stderr, "Command line options...\n");
+    fprintf(stderr, "create database    -C optional [""database file name""]\n");
+    fprintf(stderr, "start server       -S optional [""database file name""]\n");
+    fprintf(stderr, "upgrade database   -U optional [""database file name""]\n");
+    fprintf(stderr, "list loaded maps   -L optional [""database file name""]\n");
+    fprintf(stderr, "load map           -M [map id] [""elm filename""] optional [""database file name""]\n");
+    fprintf(stderr, "load e3d list      -E optional [""e3d file list""] optional [""database file name""]\n");
+    fprintf(stderr, "load object list   -O optional [""object file list""] optional [""database file name""]\n");
+    fprintf(stderr, "update map objects -R [""map file list""] optional [""database file name""]\n");
+    fprintf(stderr, "reload maps        -X [""map file list""] optional [""database file name""]\n");
 
     return 0;//otherwise we get 'control reached end of non void function'
 }

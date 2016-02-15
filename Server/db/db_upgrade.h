@@ -24,6 +24,9 @@
 
 #ifndef DB_UPGRADE_H_INCLUDED
 #define DB_UPGRADE_H_INCLUDED
+
+#define REQUIRED_DATABASE_VERSION 1
+
 #ifdef __cplusplus
 extern "C" {
 #endif

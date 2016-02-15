@@ -61,7 +61,7 @@ struct client_socket_type{
                                    //be treated as having lagged out.
 
     char ip_address[16]; //records the ip address through which the client has connected
-    //                     with the server
+                         //with the server
 
     //client version data
     int client_version_first_digit;
@@ -233,7 +233,7 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     int max_book_time;
     int elapsed_book_time;
 
-    struct client_inventory_type inventory[MAX_INVENTORY_SLOTS];
+    struct client_inventory_type inventory[MAX_EQUIP_SLOT+1];
 
     bool bag_open;
     int open_bag_id;

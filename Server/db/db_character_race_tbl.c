@@ -18,17 +18,24 @@
 *******************************************************************************************************************/
 
 #include <stdio.h> //support for snprintf
-#include <stdlib.h> //support for NULL data type
+#include <stdlib.h> //support for NULL data type and atoi function
 #include <string.h> //support for strcpy function
 
 #include "database_functions.h"
 #include "../logging.h"
 #include "../character_race.h"
 #include "../server_start_stop.h"
+#include "../string_functions.h"
 
 void load_db_char_races(){
 
     /** public function - see header */
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     log_event(EVENT_INITIALISATION, "loading races...");
 
@@ -78,8 +85,8 @@ void load_db_char_races(){
     }
 
     //destroy the sql statement
-    sqlite3_finalize(stmt);
-    if (rc != SQLITE_DONE) {
+    rc=sqlite3_finalize(stmt);
+    if (rc != SQLITE_OK) {
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
@@ -94,6 +101,14 @@ void load_db_char_races(){
 
 void add_db_race(int race_id, char *race_name, char *race_description){
 
+    /** public function - see header */
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO RACE_TABLE("  \
@@ -104,8 +119,43 @@ void add_db_race(int race_id, char *race_name, char *race_description){
 
     process_sql(sql);
 
-    printf("Race [%s] added successfully\n", race_name);
+    fprintf(stderr, "Race [%s] added successfully\n", race_name);
 
     log_event(EVENT_SESSION, "Added race [%i] [%s] to RACE_TABLE", race_id, race_name);
+}
+
+
+void batch_add_races(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "race list file [%s] not found", file_name);
+        stop_server();
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    log_event(EVENT_INITIALISATION, "\nAdding races specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding races specified in file [%s]\n", file_name);
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[3][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        add_db_race(atoi(output[0]), output[1], output[2]);
+    }
+
+    fclose(file);
 }
 

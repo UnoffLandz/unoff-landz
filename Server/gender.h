@@ -21,6 +21,7 @@
 #define CHARACTER_GENDER_H_INCLUDED
 
 #define MAX_GENDER 2
+#define GENDER_FILE "gender.lst"
 
 struct gender_type{
     char gender_name[20];

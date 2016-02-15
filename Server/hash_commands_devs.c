@@ -296,7 +296,7 @@ int hash_trace(int actor_node, char *text) {
 
             if(z==clients.client[actor_node].map_tile){
 
-                printf("@");
+                fprintf(stderr, "@");
                 strcat(str, "@");
             }
             else {
@@ -305,24 +305,24 @@ int hash_trace(int actor_node, char *text) {
 
                     if(maps.map[map_id].height_map[z]==NON_TRAVERSABLE_TILE){
 
-                        printf("#");
+                        fprintf(stderr, "#");
                         strcat(str, "#");
                     }
                     else{
 
-                        printf(".");
+                        fprintf(stderr, ".");
                         strcat(str, ".");
                     }
                 }
                 else{
-                    printf(":");
+                    fprintf(stderr, ":");
                     strcat(str, ":");
                 }
             }
         }
 
         send_text(socket, CHAT_SERVER, "%c%s", c_grey1+127, str);
-        printf("\n");
+        fprintf(stderr, "\n");
     }
 
     return 0;
@@ -367,3 +367,24 @@ int hash_trace_path(int actor_node, char *text) {
 
     return 0;
 }
+
+int hash_object(int actor_node, char *text) {
+
+    /** public function - see header */
+
+    int socket=clients.client[actor_node].socket;
+    int object_id=0;
+
+    //extract data from text string
+    if(sscanf(text, "%*s %i", &object_id)!=1){
+
+        send_text(socket, CHAT_SERVER, "%cyou need to use the format #OBJECT [object id]]", c_red3+127);
+        return 0;
+    }
+
+    //put item in slot 0
+    add_to_inventory(actor_node, object_id, 1, 0);
+
+    return 0;
+}
+

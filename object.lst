@@ -1,11 +1,13 @@
-405 Cabbage      1 1 2
-406 Pumpkin      1 1 2
-407 Tomato       1 1 2
-408 Carrot       1 1 2
-140 Stick        1 0 2
-214 Log          1 0 4
-29 "Tiger lily"  1 0 1
-28 Chrysanthemum 1 0 1
-27 Impatiens     1 0 1
-34 Lupins        1 0 1
-35 "Snap Dragon" 1 0 1
+405 Cabbage      1 1 2 3  -1 0
+406 Pumpkin      1 1 2 4  -1 0
+407 Tomato       1 1 2 2  -1 0
+408 Carrot       1 1 2 2  -1 0
+140 Stick        1 0 2 3   0 50
+214 Log          1 0 4 10 -1 0
+29 "Tiger lily"  1 0 1 1  -1 0
+28 Chrysanthemum 1 0 1 1  -1 0
+27 Impatiens     1 0 1 1  -1 0
+35 Lupins        1 0 1 1  -1 0
+34 "Snap Dragon" 1 0 1 1  -1 0
+254 "White Water Lilly" 1 0 1 1 -1 0
+255 "Pink Water Lilly"  1 0 1 1 -1 0

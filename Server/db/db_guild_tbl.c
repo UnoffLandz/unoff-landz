@@ -34,6 +34,12 @@ void load_db_guilds(){
 
     sqlite3_stmt *stmt;
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="SELECT * FROM GUILD_TABLE";
 
     //check database table exists
@@ -78,7 +84,6 @@ void load_db_guilds(){
 
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
-
     if(rc!=SQLITE_OK){
 
          log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -99,6 +104,12 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
     /** public function - see header */
 
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="INSERT INTO GUILD_TABLE("  \
         "GUILD_NAME," \
@@ -171,7 +182,7 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    printf("Guild [%s] added successfully\n", guild_tag);
+    fprintf(stderr, "Guild [%s] added successfully\n", guild_tag);
 
     log_event(EVENT_INITIALISATION, "Added guild [%s] to GUILD_TABLE", guild_tag);
 
@@ -184,6 +195,12 @@ void get_db_guild_member_list(int guild_id, int order){
     /** public function - see header */
 
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="";
 

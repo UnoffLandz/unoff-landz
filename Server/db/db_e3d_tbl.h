@@ -46,7 +46,15 @@ void load_db_e3ds();
 **/
 void add_db_e3d(int e3d_id, char *e3d_file_name, int object_id);
 
-// TODO (themuntdregger#1#): document batch_load_e3ds
+
+/** RESULT  : loads e3d data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of e3d data
+
+    NOTES   :
+*/
 void batch_add_e3ds(char *file_name);
 
 #endif // DB_E3D_TBL_H_INCLUDED

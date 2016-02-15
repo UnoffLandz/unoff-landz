@@ -276,7 +276,7 @@ struct hash_command_array_entry hash_command_entries[] = {
     {"#SET_MAP_AUTHOR",          true,   0,     PERMISSION_2, hash_set_map_author},
     {"#SET_MAP_AUTHOR_EMAIL",    true,   0,     PERMISSION_2, hash_set_map_author_email},
     {"#SET_MAP_STATUS",          true,   0,     PERMISSION_2, hash_set_map_development_status},
-
+    {"#OBJECT",                  true,   0,     PERMISSION_3, hash_object},
     {"", false, 0, 0, 0}
 };
 

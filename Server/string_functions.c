@@ -41,6 +41,9 @@ void ssnprintf(char *str, int max_len, char *fmt, ...){
 
         log_event(EVENT_ERROR, "ssnprint overrun with string [%s] in function %s: module %s: line %i", str, __func__, __FILE__, __LINE__);
         log_text(EVENT_ERROR, "attempt to write string length [%i] to buffer length [%i]", i, max_len);
+
+        fprintf(stderr, "ssnprint overrun. See error.log\n");
+
         stop_server();
     }
 

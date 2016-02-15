@@ -29,6 +29,12 @@ void load_db_game_data(){
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     log_event(EVENT_INITIALISATION, "loading game data...");
 
     sqlite3_stmt *stmt;
@@ -101,6 +107,12 @@ void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int 
 
    /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO GAME_DATA_TABLE("  \
@@ -115,7 +127,7 @@ void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int 
 
     process_sql(sql);
 
-    printf("Game Data added successfully\n");
+    fprintf(stderr, "Game Data added successfully\n");
 
     log_event(EVENT_SESSION, "Added game data to GAME_DATA_TABLE");
 }

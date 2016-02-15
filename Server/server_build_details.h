@@ -19,56 +19,88 @@
 #ifndef SERVER_BUILD_DETAILS_H_INCLUDED
 #define SERVER_BUILD_DETAILS_H_INCLUDED
 
-
 #define SERVER_NAME "OL Map Walker"
 #define VERSION "UnoffLandz 4"
-#define BUILD "9"
+#define BUILD "10"
 #define BUILD_DATE __DATE__
 
 /***************************************************************************************************
+                                BUILD 10
 
-Done - Fixed char sit/stand
-Done - drop bag and other commands stop harvesting
-Done - harvesting and other commands stop movement
-Done - Fixed #gm
-Done - NPC move script implemented
-Done - #boat (reminds when boat leaves)
-Done - trigger table, action table and boat table stubs
-Done - replaced hard coded values for max char name and max char password
-Done - Fixed bug unknown protocol packets are not being logged in packet log
-Done - separate module for ops #commands
-Done - separate module for devs #commands
-Done - #TRACE_PATH implemented
-Done - changed add_map function to remove supplementary details
-Done - added hash commands so as map supplementary details can be added in-game
-Done - added separate function to extract 3d object list from elm file
-Done - fixed bug in get_nearest_unoccupied_tile
-Done - #jump now contains option to move to first walkable tile
-Done - new harvestables (including pumpkin
-Done - batch load maps on startup from map.lst file
-Done - batch load objects on startup from object.lst file
-Done - batch load e3ds on startup from e3d.lst
-Done - command line option to load e3ds/objects
-Done - command line option to reload map objects/maps
-Done - #gm only available for ranks of 1 and greater
-Done - add THREED_OBJECT_COUNT to map table
-Done - changed GM_PERMISSION to PLAYER_TYPE and IG PERMISSION to UNUSED in character table
+Done -  as there's no way for the server to stop char movement after it's been initiated
+        through the client, there's not much point in attempting to stop movement on
+        commands like sit/stand, harvest etc. Hence stop_movement flags on protocol array
+        are now all set to false.
+
+Done -  add emu equipable_item_type and equipable_item_id to object table
+
+Done -  refactored functions in database_functions.c
+
+Done -  database functions now check to make sure database is open/closed
+
+Done -  corrected database functions which did not test or incorrectly handled the
+        return code of sqlite3_finalize statement
+
+Done -  replaced printf with fprintf for console messages
+
+Done -  implemented batch loading of char races, genders, char types, seasons
+
+Done -  refactored functions in db_upgrade.c
+
+Done - implemented carry capacity values on hud and inventory grid
+
+Done - corrected bug spotted by Life where equipping more than 1 item causes client to
+crash.
+
+Done - implemented char object equipping
+
+Done - #object command
+
+Done - implemented skills exp and levels
+
+Done - implemented batch loading of skills data
 
 ***************************************************************************************************
 
                                 TO - DO
 
+ADD NEW PROTOCOLS TO WEBSITE
+ADD NEW #COMMAND TO WEBSITE
+Deprecate upgrade database
+
+TEST whether db skills add from list to database
+change harvesting.lst to harvesting_skill.list
+change char_experience.c/h to char_skills.c/h
+change db_skills_tbl.c/h to db_skill_tbl.c/h
+
+do add_data functions need to be public now we have batch_add??
+implement check_db_open function in all db modules
+implement check_table_exists function in all db modules
+implement GET_CALL_INFO macro in log functions
+
+function to calculate level from exp
+Load exp/skills from list
+BUG send_here_your_stats not working
+
 TEST multiple guild application handling
+TEST database upgrade
+TEST map object upgrade
 
 for NPC's introduce time trigger to sell/boat ticket purchase so that different responses
 can be engineered for different times of day.
 
-load guilds, chars, channels, seasons, race, gender, char_type from text file
+load game data, guilds, chars, channels and attributes from text file
 add npc wear item action
 add npc sit/stand action
-change all sql to use parameters rather than inserts
-replace printf with fprintf(stderr
 
+determine how to add water lilly to item dds (object 673  items27.dds in textures plant1.dds in 3d objects)
+implement nexus, pick-points (apply to equipable items)
+
+harvest red bush, blue bush
+implement fish
+change all sql to use parameters rather than inserts (can't do this process_sql relies on
+a sql string being passed to the function)
+replace snprintf with ssnprintf
 bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
 need #command to withdraw application to join guild
 need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
@@ -77,7 +109,6 @@ transfer server welcome message to the database
 remove character_type_name field from CHARACTER_TYPE_TABLE
 map object reserve respawn
 #command to #letter all members of a guild
-finish script loading
 #IG guild channel functionality
 OPS #command to #letter all chars
 need #command to #letter all guild members (guild master only)
@@ -90,7 +121,6 @@ convert attribute struct so as attribute type can be addressed programatically
 identify cause of stall after login (likely to be loading of inventory from db)
 identify cause of char bobbing
 put inventory slots in a binary blob (may solve stall on log in)
-improve error handling on upgrade_database function
 create circular buffer for receiving packets
 need #function to describe char and what it is wearing)
 document new database/struct relationships

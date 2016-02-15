@@ -27,21 +27,27 @@
 #include "../attributes.h"
 #include "../server_start_stop.h"
 
-
 void load_db_attributes(){
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     log_event(EVENT_INITIALISATION, "loading attributes...");
 
     //check database table exists
-   if(table_exists("ATTRIBUTE_TABLE")==false){
+    if(table_exists("ATTRIBUTE_TABLE")==false){
 
         log_event(EVENT_ERROR, "table [ATTRIBUTE_TABLE] not found in database");
         stop_server();
     }
 
     int i=0;
+
     for(int attribute_type_id=1; attribute_type_id<=MAX_ATTRIBUTES; attribute_type_id++){
 
         for(int race_id=0; race_id<MAX_RACES; race_id++){
@@ -109,6 +115,12 @@ void add_db_attribute(int race_id, int attribute_type_id, int attribute_value[50
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     sqlite3_stmt *stmt;
     char *sErrMsg = 0;
 
@@ -160,7 +172,7 @@ void add_db_attribute(int race_id, int attribute_type_id, int attribute_value[50
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    printf("Attribute [%s] added successfully\n", attribute_name[attribute_type_id]);
+    fprintf(stderr, "Attribute [%s] added successfully\n", attribute_name[attribute_type_id]);
 
     log_event(EVENT_SESSION, "Added attribute [%s] to ATTRIBUTE_TABLE", attribute_name[attribute_type_id]);
  }

@@ -53,7 +53,7 @@ void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node){
     int amount_given=npc_action[action_node].object_amount_given;
 
     //check that char has the required object
-    int slot=item_in_inventory(actor_node, object_id_required);
+    int slot=item_in_inventory(actor_node, object_id_required, CARRY_SLOTS);
 
     if(slot==-1){
 
@@ -127,7 +127,7 @@ void npc_sell_object(int actor_node, int npc_actor_node, int choice){
 
     int object_amount_required=clients.client[actor_node].npc_option[choice].amount;
     int object_id_required=npc_action[referring_action_node].object_id_required;
-    int item_required_slot=item_in_inventory(actor_node, object_id_required);
+    int item_required_slot=item_in_inventory(actor_node, object_id_required, CARRY_SLOTS);
 
     //check actor has payment for the object to be purchased
     if(item_required_slot==-1 || clients.client[actor_node].inventory[item_required_slot].amount < object_amount_required){
@@ -141,7 +141,7 @@ void npc_sell_object(int actor_node, int npc_actor_node, int choice){
     //check actor has room in inventory for the object to be purchased
     int object_amount_given=clients.client[actor_node].npc_option[choice].price;
     int object_id_given=npc_action[referring_action_node].object_id_given;
-    int item_given_slot=find_inventory_slot(actor_node, object_id_given);
+    int item_given_slot=find_inventory_slot(actor_node, object_id_given, CARRY_SLOTS);
 
     //check actor has room for payment item
     if(item_given_slot==-1){
@@ -236,7 +236,7 @@ void npc_sell_boat_ticket(int actor_node, int npc_actor_node, int ticket_node){
     int object_id_required=boat[boat_node].boat_payment_object_id;
 
     //check that char has the required payment item
-    int slot=find_inventory_slot(actor_node, object_id_required);
+    int slot=find_inventory_slot(actor_node, object_id_required, CARRY_SLOTS);
 
     if(slot==-1 || clients.client[actor_node].inventory[slot].amount < object_amount_required ){
 

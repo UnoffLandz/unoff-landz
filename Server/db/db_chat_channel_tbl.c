@@ -34,6 +34,12 @@ void load_db_channels(){
 
     sqlite3_stmt *stmt;
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="SELECT * FROM CHANNEL_TABLE";
 
     //check database table exists
@@ -107,6 +113,12 @@ void load_db_channels(){
 void add_db_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description, int new_chars){
 
     /** public function - see header */
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,

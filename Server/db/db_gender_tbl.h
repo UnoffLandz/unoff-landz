@@ -45,4 +45,16 @@ void load_db_genders();
 **/
 void add_db_gender(int gender_id, char *gender_name);
 
+
+/** RESULT  : loads gender data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of gender data
+
+    NOTES   :
+*/
+void batch_add_gender(char *file_name);
+
+
 #endif // DB_CHARACTER_GENDER_TBL_H_INCLUDED

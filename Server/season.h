@@ -21,6 +21,7 @@
 #define SEASON_H_INCLUDED
 
 #define MAX_SEASONS 4
+#define SEASON_FILE "season.lst"
 
 struct season_type{
 

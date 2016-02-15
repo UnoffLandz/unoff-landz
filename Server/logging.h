@@ -29,6 +29,10 @@
 #define MAP_LOAD_LOG_FILE_NAME       "map_load.log"
 #define PACKET_LOG_FILE_NAME         "packet.log"
 
+#define MAX_LOG_STRING 1024
+
+#define GET_CALL_INFO __func__, __FILE__, __LINE__
+
 
 enum { //log events
     EVENT_NEW_CHAR,
@@ -46,8 +50,6 @@ enum {//packet logging
     SEND,
     RECEIVE
 };
-
-
 
 struct protocol_type{
 

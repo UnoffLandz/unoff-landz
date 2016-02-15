@@ -17,8 +17,9 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#include <stdio.h>  //support for NULL snprintf printf
+#include <stdio.h>  //support for NULL data type and snprintf function
 #include <string.h> //support for strcpy
+#include <stdlib.h> //support for atoi function
 
 #include "database_functions.h"
 #include "../logging.h"
@@ -34,6 +35,12 @@ void load_db_seasons(){
     log_event(EVENT_INITIALISATION, "loading season data...");
 
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="SELECT * FROM SEASON_TABLE";
 
@@ -93,6 +100,12 @@ void add_db_season(int season_id, char *season_name, char *season_description, i
 
    /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="";
     ssnprintf(sql, MAX_SQL_LEN,
         "INSERT INTO SEASON_TABLE("  \
@@ -105,7 +118,44 @@ void add_db_season(int season_id, char *season_name, char *season_description, i
 
     process_sql(sql);
 
-    printf("Season [%s] added successfully\n", season_name);
+    fprintf(stderr, "Season [%s] added successfully\n", season_name);
 
     log_event(EVENT_SESSION, "Added season [%s] to SEASON_TABLE", season_name);
 }
+
+
+void batch_add_seasons(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "season list file [%s] not found", file_name);
+        stop_server();
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    log_event(EVENT_INITIALISATION, "\nAdding seasons specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding seasons specified in file [%s]\n", file_name);
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[5][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        add_db_season(atoi(output[0]), output[1], output[2], atoi(output[3]), atoi(output[4]));
+    }
+
+    fclose(file);
+}
+
+

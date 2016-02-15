@@ -17,17 +17,35 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef CHARACTER_TYPE_H_INCLUDED
-#define CHARACTER_TYPE_H_INCLUDED
+#ifndef DB_SKILLS_TBL_H_INCLUDED
+#define DB_SKILLS_TBL_H_INCLUDED
 
-#define MAX_CHARACTER_TYPES 42 //the highest character type code used by the client
-#define CHAR_TYPE_FILE "char_type.lst"
+#define SKILL_TABLE_SQL "CREATE TABLE SKILLS_TABLE( \
+        SKILL_ID        INTEGER PRIMARY KEY NOT NULL, \
+        SKILL_TYPE_ID   TEXT, \
+        LEVEL           INT, \
+        EXP             INT)"
 
-struct character_type_type{
-    int race_id;
-    int gender_id;
-    int char_count;
-};
-extern struct character_type_type character_type[MAX_CHARACTER_TYPES];
+#endif // DB_SKILLS_TBL_H_INCLUDED
 
-#endif // CHARACTER_TYPE_H_INCLUDED
+
+/** RESULT  : loads data from the skills table into the skills array
+
+    RETURNS : void
+
+    PURPOSE : retrieve skills data from permanent storage
+
+    NOTES   :
+**/
+void load_db_skills();
+
+
+/** RESULT  : loads skill data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of skill data
+
+    NOTES   :
+*/
+void batch_add_skills(int skill_type_id, char *file_name);

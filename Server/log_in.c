@@ -34,6 +34,7 @@
 #include "game_data.h"
 #include "packet.h"
 #include "broadcast_chat.h"
+#include "attributes.h"
 
 void process_log_in(int actor_node, const unsigned char *packet){
 
@@ -149,6 +150,10 @@ void process_log_in(int actor_node, const unsigned char *packet){
             send_login_ok(socket);
             send_here_your_stats(socket);
             send_here_your_inventory(socket);
+
+            //set emu
+            send_partial_stat(socket, CARRY_WGHT_BASE, get_max_inventory_emu(actor_node));
+            send_partial_stat(socket,  CARRY_WGHT_CUR, get_inventory_emu(actor_node));
 
             /* when the client is disconnected from server, it still allows chat chan tabs to
             be closed. However, if the client reconnects, the chan tabs are not automatically

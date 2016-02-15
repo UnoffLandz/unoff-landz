@@ -35,6 +35,12 @@ void load_db_e3ds(){
 
     sqlite3_stmt *stmt;
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="SELECT * FROM E3D_TABLE";
 
     //check database table exists
@@ -100,6 +106,12 @@ void add_db_e3d(int id, char *e3d_filename, int object_id){
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="";
 
     snprintf(sql, MAX_SQL_LEN, "INSERT INTO E3D_TABLE("  \
@@ -110,7 +122,7 @@ void add_db_e3d(int id, char *e3d_filename, int object_id){
 
     process_sql(sql);
 
-    printf("e3d [%s] added successfully\n", e3d_filename);
+    fprintf(stderr, "e3d [%s] added successfully\n", e3d_filename);
 
     log_event(EVENT_SESSION, "Added e3d [%s] to E3D_TABLE", e3d_filename);
 }
@@ -131,7 +143,8 @@ void batch_add_e3ds(char *file_name){
     char line[160]="";
     int line_counter=0;
 
-    printf("\n");
+    log_event(EVENT_INITIALISATION, "\nAdding e3ds specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding e3ds specified in file [%s]\n", file_name);
 
     while (fgets(line, sizeof(line), file)) {
 

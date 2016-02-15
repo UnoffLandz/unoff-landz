@@ -292,7 +292,7 @@ void send_here_your_inventory(int socket){
             uint32_t amount;
             unsigned char slot;
             unsigned char flags;
-        }inventory[MAX_INVENTORY_SLOTS];
+        }inventory[MAX_EQUIP_SLOT+1];
 
     }packet;
 
@@ -305,11 +305,11 @@ void send_here_your_inventory(int socket){
     packet.protocol=HERE_YOUR_INVENTORY;
     packet.data_length=(uint16_t)(packet_length-2);
 
-    packet.slot_count=MAX_INVENTORY_SLOTS;
+    packet.slot_count=MAX_EQUIP_SLOT+1;
 
     int actor_node=client_socket[socket].actor_node;
 
-    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
+    for(int i=0; i<MAX_EQUIP_SLOT+1; i++){
 
         packet.inventory[i].object_id=(uint16_t)clients.client[actor_node].inventory[i].object_id;
         packet.inventory[i].amount=(uint32_t)clients.client[actor_node].inventory[i].amount;
@@ -429,6 +429,95 @@ void send_get_active_channels(int socket){
     send_packet(socket, &packet, packet_length);
 }
 
+void send_partial_stat(int socket, int attribute_type, int attribute_level){
+
+    /** public function - see header */
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        uint16_t data_length;
+
+        uint8_t attribute_type;
+        uint32_t attribute_level;
+    }packet;
+
+    size_t packet_length=sizeof(packet);
+
+    //clear the struct
+    memset(&packet, 0, packet_length);
+
+    //add data
+    packet.protocol=SEND_PARTIAL_STAT;
+    packet.data_length=(uint16_t)(packet_length-2);
+
+    packet.attribute_type=(uint8_t)attribute_type;
+    packet.attribute_level=(uint32_t)attribute_level;
+
+    send_packet(socket, &packet, packet_length);
+}
+
+
+void actor_wear_item_packet(int char_id, unsigned char *packet, size_t *packet_length, int equipable_item_type, int equipable_item_id){
+
+    /** public function - see header */
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        uint16_t data_length;
+
+        uint16_t char_id;
+        uint8_t equipable_item_type;
+        uint8_t equipable_item_id;
+    }_packet;
+
+    *packet_length=sizeof(_packet);
+
+    //clear the struct
+    memset(&_packet, 0, *packet_length);
+
+    //add data
+    _packet.protocol=ACTOR_WEAR_ITEM;
+    _packet.data_length=(uint16_t)(*packet_length-2);
+
+    _packet.char_id=(uint16_t)char_id;
+    _packet.equipable_item_type=(uint8_t)equipable_item_type;
+    _packet.equipable_item_id=(uint8_t)equipable_item_id;
+
+    memcpy(packet, &_packet, sizeof(_packet));
+}
+
+
+void actor_unwear_item_packet(int char_id, unsigned char *packet, size_t *packet_length, int equipable_item_type, int equipable_item_id){
+
+    /** public function - see header */
+
+    struct __attribute__((__packed__)){
+
+        unsigned char protocol;
+        uint16_t data_length;
+
+        uint16_t char_id;
+        uint8_t equipable_item_type;
+        uint8_t equipable_item_id;
+    }_packet;
+
+    *packet_length=sizeof(_packet);
+
+    //clear the struct
+    memset(&_packet, 0, *packet_length);
+
+    //add data
+    _packet.protocol=ACTOR_UNWEAR_ITEM;
+    _packet.data_length=(uint16_t)(*packet_length-2);
+
+    _packet.char_id=(uint16_t)char_id;
+    _packet.equipable_item_type=(uint8_t)equipable_item_type;
+    _packet.equipable_item_id=(uint8_t)equipable_item_id;
+
+    memcpy(packet, &_packet, sizeof(_packet));
+}
 
 
 void send_here_your_stats(int socket){
@@ -485,6 +574,7 @@ void send_here_your_stats(int socket){
 
         uint16_t inventory_emu;
         uint16_t max_inventory_emu;
+
         uint16_t material_pts;
         uint16_t max_material_pts;
         uint16_t ethereal_pts;
@@ -548,9 +638,9 @@ void send_here_your_stats(int socket){
     packet.max_artificial=(uint16_t)clients.client[actor_node].max_artificial;
     packet.magic=(uint16_t)clients.client[actor_node].magic;
     packet.max_magic=(uint16_t)clients.client[actor_node].max_magic;
-
     packet.inventory_emu=(uint16_t)get_inventory_emu(actor_node);
     packet.max_inventory_emu=(uint16_t)get_max_inventory_emu(actor_node);
+
     packet.material_pts=(uint16_t)clients.client[actor_node].material_pts;
     packet.max_material_pts=(uint16_t)clients.client[actor_node].max_material_pts;
     packet.ethereal_pts=(uint16_t)clients.client[actor_node].ethereal_pts;

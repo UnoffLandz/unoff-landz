@@ -31,7 +31,6 @@
 #ifndef DATABASE_FUNCTIONS_H_INCLUDED
 #define DATABASE_FUNCTIONS_H_INCLUDED
 
-#define REQUIRED_DATABASE_VERSION 2
 #define DEFAULT_DATABASE_FILE_NAME "unoff.sqlite"
 #define MAX_SQL_LEN 1024
 
@@ -59,16 +58,28 @@ void process_sql(const char *sql_str);
 
 #include <stdbool.h>
 
-/** RESULT  : Opens sqlite database file and creates the handle [db] which can then be called by other
-              database functions.
+/** RESULT  :   Opens an existing sqlite database file and creates a global handle [db]
+                which can then be called by other database functions.
 
-    RETURNS : void
+    RETURNS :   void
 
-    PURPOSE : provides a single loggable function to open the database
+    PURPOSE :   provides a single loggable function to open the database
 
     NOTES   :
 **/
 void open_database(const char *database_name);
+
+
+/** RESULT  :   Creates an empty sqlite database file and the handle [db] which can
+                then be called by other database functions.
+
+    RETURNS :   void
+
+    PURPOSE :   Creates a new sqlite database
+
+    NOTES   :
+**/
+void create_empty_database_file (const char *db_filename);
 
 
 /** RESULT  : Closes the currently opened sqlite database file
@@ -105,7 +116,7 @@ int database_table_count();
 void create_database_table(char *sql);
 
 
-/** RESULT   : creates the default database
+/** RESULT   : populates an empty sqlite database with data
 
     RETURNS  : void
 
@@ -113,7 +124,7 @@ void create_database_table(char *sql);
 
     NOTES    :
 **/
-void create_database(const char *db_filename);
+void populate_database(const char *db_filename);
 
 
 /** RESULT   : checks if a database table exists
@@ -136,5 +147,38 @@ bool table_exists(const char *table_name);
     NOTES    :
 **/
 int get_database_version();
+
+
+/** RESULT   : reports if database is closed when it should be open
+
+    RETURNS  : void
+
+    PURPOSE  : reporting wrapper
+
+    NOTES    :
+**/
+void check_db_open(const char *module, const char *func, const int line);
+
+
+/** RESULT   : reports if database is open when it should be closed
+
+    RETURNS  : void
+
+    PURPOSE  : reporting wrapper
+
+    NOTES    :
+**/
+void check_db_closed(const char *module, const char *func, const int line);
+
+
+/** RESULT   : reports if a table exists within the database
+
+    RETURNS  : void
+
+    PURPOSE  : reporting wrapper for table_exists function
+
+    NOTES    :
+**/
+void check_table_exists(char *table_name, const char *module, const char *func, const int line);
 
 #endif // DATABASE_FUNCTIONS_H_INCLUDED

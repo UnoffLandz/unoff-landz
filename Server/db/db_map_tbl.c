@@ -27,7 +27,6 @@
 #include "db_e3d_tbl.h"
 #include "db_object_tbl.h"
 #include "db_map_object_tbl.h"
-
 #include "../logging.h"
 #include "../map_object.h"
 #include "../maps.h"
@@ -46,6 +45,12 @@ void load_db_maps(){
 
     sqlite3_stmt *stmt;
     int i=0;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="SELECT * FROM MAP_TABLE";
 
@@ -159,11 +164,18 @@ void load_db_maps(){
     }
 }
 
+
 bool get_db_map_exists(int map_id) {
 
     /** public function - see header */
 
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="SELECT count(*) FROM MAP_TABLE WHERE MAP_ID=?";
 
@@ -201,8 +213,8 @@ bool get_db_map_exists(int map_id) {
     }
 
     //discard sql statement
-    sqlite3_finalize(stmt);
-    if(rc!=SQLITE_DONE) {
+    rc=sqlite3_finalize(stmt);
+    if(rc!=SQLITE_OK) {
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
@@ -213,9 +225,16 @@ bool get_db_map_exists(int map_id) {
     return true;
 }
 
+
 void delete_map(int map_id){
 
     /** public function - see header */
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="DELETE FROM MAP_TABLE WHERE MAP_ID=?";
 
@@ -253,6 +272,12 @@ void delete_map(int map_id){
 void add_db_map(int map_id, char *elm_filename){
 
     /** public function - see header */
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     read_elm_header(elm_filename);
     read_tile_map(elm_filename, maps.map[map_id].tile_map);
@@ -311,7 +336,7 @@ void add_db_map(int map_id, char *elm_filename){
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    printf("Map [%s] added successfully\n", elm_filename);
+    fprintf(stderr, "Map [%s] added successfully\n", elm_filename);
 
     log_event(EVENT_SESSION, "Added map [%i] file name [%s] to MAP_TABLE", map_id, elm_filename);
 }
@@ -323,6 +348,12 @@ void list_db_maps(){
 
     sqlite3_stmt *stmt;
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="SELECT * FROM MAP_TABLE";
 
     //prepare the sql statement
@@ -332,7 +363,7 @@ void list_db_maps(){
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    printf("%6s %s %s\n", "[MAP ID]", "[MAP_NAME]", "[ELM FILE]");
+    fprintf(stderr, "%6s %s %s\n", "[MAP ID]", "[MAP_NAME]", "[ELM FILE]");
 
     //read the sql query result into the map array
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -348,7 +379,7 @@ void list_db_maps(){
         char map_file_name[80]="";
         strcpy(map_file_name, (char*)sqlite3_column_text(stmt, 2));
 
-        printf("[%6i] [%s] [%s]\n", map_id, map_name, map_file_name);
+        fprintf(stderr, "[%6i] [%s] [%s]\n", map_id, map_name, map_file_name);
     }
 
     //test that we were able to read all the rows in the query result
@@ -371,6 +402,12 @@ void change_db_map_name(int map_id, char *map_name){
     /** public function - see header */
 
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled
@@ -407,6 +444,12 @@ void change_db_map_description(int map_id, char *map_description){
 
     sqlite3_stmt *stmt;
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled
     char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_DESCRIPTION=? WHERE MAP_ID=?";
@@ -441,6 +484,12 @@ void change_db_map_author(int map_id, char *map_author){
     /** public function - see header */
 
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled
@@ -477,6 +526,12 @@ void change_db_map_author_email(int map_id, char *map_author_email){
 
     sqlite3_stmt *stmt;
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled
     char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_AUTHOR_EMAIL=? WHERE MAP_ID=?";
@@ -505,11 +560,18 @@ void change_db_map_author_email(int map_id, char *map_author_email){
     log_event(EVENT_SESSION, "Map [%i] author email changed to [%s] on MAP_TABLE", map_id, map_author_email);
 }
 
+
 void change_db_map_development_status(int map_id, int map_development_status){
 
     /** public function - see header */
 
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled
@@ -555,7 +617,8 @@ void batch_add_maps(char *file_name){
     char line[160]="";
     int line_counter=0;
 
-    printf("\n");
+    log_event(EVENT_INITIALISATION, "\nAdding maps specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding maps specified in file [%s]\n", file_name);
 
     while (fgets(line, sizeof(line), file)) {
 

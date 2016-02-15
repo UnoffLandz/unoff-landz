@@ -24,25 +24,6 @@
 
 #define MAX_PACKET_SIZE 1024
 
-/*
-struct packet_element_type{
-
-    enum {  PROTOCOL=1,     //a uint8
-            DATA_LENGTH=2,  //a uint16 carrying an automatically calculated data length value
-            UINT16=3,       //a uint16
-            BYTE=4,         //a uint8
-            STRING_NULL=5,  //a character string terminated by an ascii null (0)
-            STRING_SPACE=6, //a character string terminated by an ascii space (32)
-            UINT32=7        //a uint32
-    } data_type;
-
-    union{
-
-        int numeric;
-        char string[1024];
-    }data;
-};
-*/
 
 /** RESULT  : sends packet from the server
 
@@ -54,28 +35,6 @@ struct packet_element_type{
     NOTES   :
 */
 void send_packet(int actor_node, void *packet, size_t packet_length);
-
-
-/** RESULT  : creates a packet
-
-    RETURNS : packet length
-
-    PURPOSE : provides a common packet creation framework
-
-    NOTES   :
-*/
-//int build_packet(struct packet_element_type *element, int element_count, unsigned char *packet);
-
-
-/** RESULT  : reads a packet
-
-    RETURNS : packet length
-
-    PURPOSE : provides a common packet reading framework
-
-    NOTES   :
-*/
-//void read_packet(struct packet_element_type *element, int element_count, const unsigned char *packet);
 
 
 /** RESULT  : reads a packet to determine the packet length

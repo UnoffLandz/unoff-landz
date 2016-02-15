@@ -27,26 +27,22 @@
 #include "../objects.h"
 #include "../string_functions.h"
 
+
 void load_db_objects(){
 
     /** public function - see header */
 
     log_event(EVENT_INITIALISATION, "loading object...");
 
-    sqlite3_stmt *stmt;
+    sqlite3_stmt *stmt=NULL;
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM OBJECT_TABLE";
-
-    //check database table exists
-    char database_table[80];
-    strcpy(database_table, strstr(sql, "FROM")+5);
-    if(table_exists(database_table)==false){
-
-        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
-        stop_server();
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("OBJECT_TABLE", GET_CALL_INFO);
 
     //prepare the sql statement
+    char sql[MAX_SQL_LEN]="SELECT * FROM OBJECT_TABLE";
+
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
@@ -55,6 +51,7 @@ void load_db_objects(){
 
     //read the sql query result into the object array
     int i=0;
+    rc=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -71,6 +68,9 @@ void load_db_objects(){
         if(sqlite3_column_int(stmt, 2)==1) object[object_id].harvestable=true; else object[object_id].harvestable=false;
         if(sqlite3_column_int(stmt, 3)==1) object[object_id].edible=true; else object[object_id].edible=false;
         object[object_id].harvest_interval=sqlite3_column_int(stmt, 4);
+        object[object_id].emu=sqlite3_column_int(stmt, 5);
+        object[object_id].equipable_item_type=sqlite3_column_int(stmt, 6);
+        object[object_id].equipable_item_id=sqlite3_column_int(stmt, 7);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", i, object[object_id].object_name);
 
@@ -78,6 +78,7 @@ void load_db_objects(){
     }
 
     //test that we were able to read all the rows in the query result
+
     if (rc!= SQLITE_DONE) {
 
         log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -98,9 +99,15 @@ void load_db_objects(){
 }
 
 
-void add_db_object(int object_id, char *object_name, bool harvestable, bool edible, int interval){
+void add_db_object(int object_id, char *object_name, bool harvestable, bool edible, int interval, double emu, int equipable_item_type, int equipable_item_id){
 
     /** public function - see header */
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="";
 
@@ -114,12 +121,15 @@ void add_db_object(int object_id, char *object_name, bool harvestable, bool edib
         "OBJECT_NAME," \
         "HARVESTABLE," \
         "EDIBLE," \
-        "HARVEST_INTERVAL"
-        ") VALUES(%i, '%s', %i, %i, %i)", object_id, object_name, _harvest, _edible, interval);
+        "HARVEST_INTERVAL," \
+        "EMU," \
+        "EQUIPABLE_ITEM_TYPE, " \
+        "EQUIPABLE_ITEM_ID" \
+        ") VALUES(%i, '%s', %i, %i, %i, %f, %i, %i)", object_id, object_name, _harvest, _edible, interval, emu, equipable_item_type, equipable_item_id);
 
     process_sql(sql);
 
-    printf("Object [%s] added successfully\n", object_name);
+    fprintf(stderr, "Object [%s] added successfully\n", object_name);
 
     log_event(EVENT_SESSION, "Added object [%s] to OBJECT_TABLE", object_name);
 }
@@ -133,14 +143,15 @@ void batch_add_objects(char *file_name){
 
     if((file=fopen(file_name, "r"))==NULL){
 
-        log_event(EVENT_ERROR, "object load file [%s] not found", file_name);
-        exit(EXIT_FAILURE);
+        log_event(EVENT_ERROR, "object list file [%s] not found", file_name);
+        stop_server();
     }
 
     char line[160]="";
     int line_counter=0;
 
-    printf("\n");
+    log_event(EVENT_INITIALISATION, "\nAdding objects specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding objects specified in file [%s]\n", file_name);
 
     while (fgets(line, sizeof(line), file)) {
 
@@ -148,13 +159,12 @@ void batch_add_objects(char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[5][80];
+        char output[8][80];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_object(atoi(output[0]), output[1], atoi(output[2]), atoi(output[3]), atoi(output[4]));
+        add_db_object(atoi(output[0]), output[1], atoi(output[2]), atoi(output[3]), atoi(output[4]), atof(output[5]), atoi(output[6]), atoi(output[7]));
     }
 
     fclose(file);
 }
-

@@ -34,75 +34,52 @@
 #include "db_e3d_tbl.h"
 #include "db_map_object_tbl.h"
 #include "../game_data.h"
+#include "../logging.h"
+#include "../server_start_stop.h"
+#include "db_game_data_tbl.h"
+#include "db_upgrade.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// DB Upgrade helper functions (by Nemerle)
+/// DB Upgrade helper functions (originally by Nemerle then appallingly hacked about by the ebul muntdregger)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static char *create_backup_name(const char *dbname,int ver) {
-
-    char buf[4096];
-    snprintf(buf,sizeof(buf),"ver_%d_of_%s",ver,dbname);
-    char *res = (char *)malloc(strlen(buf)+1);
-    strncpy(res,buf,strlen(buf)+1);
-    return res;
-}
-
-static int create_backup(const char *dbname,int ver) {
-
-    int copy_result;
-    char *bak_fname = create_backup_name(dbname,ver);
-
-    printf("UPGRADE [v%d]: Creating database backup - %s\n",ver,bak_fname);
-    if(file_exists(bak_fname)) {
-        printf("UPGRADE [v%d]: Backup file [%s] already exists - "
-               "I'm not sure what to do, if it's old failed backup remove it by hand and retry\n",ver,bak_fname);
-        return -1;
-
-    }
-
-    copy_result = fcopy(dbname,bak_fname);
-    free(bak_fname);
-
-    if(-1==copy_result) {
-        printf("UPGRADE [v%d]: Copying existing db to backup failed\n",ver);
-        return -1;
-    }
-
-    return 0;
-}
-
+/*
 static int callback(void *unused, int argc, char **argv, char **azColName){
 
     (void)unused; // suppress warning
 
     for(int i=0; i<argc; i++){
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+
+        fprintf(stderr, "%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
     }
 
-    printf("\n");
+    fprintf(stderr, "\n");
 
     return 0;
 }
+*/
 
-static int set_db_version(int db_version) {
+void set_db_version(int db_version) {
 
-    char *err_msg = NULL;
+    /** RESULT  : sets the database version entry in the database
+
+        RETURNS : void
+
+        PURPOSE : to enable database upgrade procedures and error checking
+
+        NOTES   :
+    **/
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="";
 
     snprintf(sql, MAX_SQL_LEN,"UPDATE GAME_DATA_TABLE SET DB_VERSION = %d", db_version);
-
-    int rc = sqlite3_exec(db, sql, callback, 0, &err_msg);
-    if( rc != SQLITE_OK ) {
-
-        fprintf(stderr, "SQL error: %s\n", err_msg);
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-
-        return -1;
-    }
-
-    return 0;
+    process_sql(sql);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,202 +88,48 @@ static int set_db_version(int db_version) {
 
 static int upgrade_v0_to_v1(const char *dbname) {
 
-    sqlite3 *db;
-    int rc;
-    char *err_msg = NULL;
+    /** RESULT   : upgrades database from v0 to v1
 
-    rc = sqlite3_open(dbname, &db);
+        RETURNS  : void
 
-    if( rc !=SQLITE_OK ) {
-        return -1;
+        PURPOSE  :
+
+        NOTES    :
+    **/
+
+    (void) dbname;
+
+    sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
     }
 
-    rc = sqlite3_exec(db,"ALTER TABLE GAME_DATA_TABLE ADD COLUMN db_version INTEGER",callback,0,&err_msg);
-    if( rc != SQLITE_OK ){
+    char sql[MAX_SQL_LEN]="ALTER TABLE GAME_DATA_TABLE ADD COLUMN TEST TEXT";
 
-        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-        return -1;
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
+    //process the sql statement
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW);
+
+    //destroy the sql statement
+    rc=sqlite3_finalize(stmt);
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+    }
+
+    //set the new database version
     set_db_version(1);
-    sqlite3_close(db);
-    fprintf(stderr,"UPGRADE [v%d]: Success\n",1);
 
-    return 0;
-}
 
-static int upgrade_v1_to_v2() {
-
-    set_db_version(2);
-
-    fprintf(stderr,"UPGRADE [v%d]: Success\n", 2);
-
-    return 0;
-}
-
-static int upgrade_v2_to_v3(const char *dbname) {
-
-    create_database_table(E3D_TABLE_SQL);
-
-    create_database_table(OBJECT_TABLE_SQL);
-
-    sqlite3 *db;
-    char *err_msg = NULL;
-
-    int rc = sqlite3_open(dbname, &db);
-
-    if( rc !=SQLITE_OK ) {
-
-        return -1;
-    }
-
-    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS MAP_OBJECT_TABLE", callback, 0, &err_msg);
-
-    if( rc != SQLITE_OK ){
-
-        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
-
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-
-        return -1;
-    }
-
-    set_db_version(3);
-
-    sqlite3_close(db);
-    fprintf(stderr,"UPGRADE [v%d]: Success\n", 3);
-
-    return 0;
-}
-
-static int upgrade_v3_to_v4(const char *dbname) {
-
-    sqlite3 *db;
-    char *err_msg = NULL;
-
-    int rc = sqlite3_open(dbname, &db);
-
-    if( rc !=SQLITE_OK ) {
-
-        return -1;
-    }
-
-    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS MAP_OBJECT_TABLE", callback, 0, &err_msg);
-
-    if( rc != SQLITE_OK ){
-
-        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
-
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-
-        return -1;
-    }
-
-    create_database_table(OBJECT_TABLE_SQL);
-
-    set_db_version(4);
-
-    sqlite3_close(db);
-    fprintf(stderr,"UPGRADE [v%d]: Success\n", 4);
-
-    return 0;
-}
-
-static int upgrade_v4_to_v5(const char *dbname) {
-
-    sqlite3 *db;
-    char *err_msg = NULL;
-
-    int rc = sqlite3_open(dbname, &db);
-
-    if( rc !=SQLITE_OK ) {
-
-        return -1;
-    }
-
-    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS E3D_TABLE", callback, 0, &err_msg);
-
-    if( rc != SQLITE_OK ){
-
-        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
-
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-
-        return -1;
-    }
-
-    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS MAP_OBJECT_TABLE", callback, 0, &err_msg);
-
-    if( rc != SQLITE_OK ){
-
-        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
-
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-
-        return -1;
-    }
-
-    create_database_table(E3D_TABLE_SQL);
-
-    add_db_e3d(1, "cabbage.e3d", 405);
-    add_db_e3d(2, "tomatoeplant1.e3d", 407);
-    add_db_e3d(3, "tomatoeplant2.e3d", 407);
-    add_db_e3d(4, "foodtomatoe.e3d", 407);
-    add_db_e3d(5, "food_carrot.e3d", 408);
-    add_db_e3d(8, "branch1.e3d", 140);
-    add_db_e3d(9, "branch2.e3d", 140);
-    add_db_e3d(10, "branch3.e3d", 140);
-    add_db_e3d(11, "branch4.e3d", 140);
-    add_db_e3d(12, "branch5.e3d", 140);
-    add_db_e3d(13, "branch6.e3d", 140);
-    add_db_e3d(15, "flowerorange1.e3d", 29);
-    add_db_e3d(16, "flowerorange2.e3d", 29);
-    add_db_e3d(17, "flowerorange3.e3d", 29);
-
-    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS OBJECT_TABLE", callback, 0, &err_msg);
-
-    if( rc != SQLITE_OK ){
-
-        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
-
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-
-        return -1;
-    }
-
-    create_database_table(OBJECT_TABLE_SQL);
-
-    add_db_object(405, "cabbage", 1, 1, 2);
-    add_db_object(407, "tomato", 1, 1, 2);
-    add_db_object(408, "carrot", 1, 1, 2);
-    add_db_object(140, "stick", 1, 0, 2);
-    add_db_object(29, "tiger lily", 1, 0, 1);
-
-    rc = sqlite3_exec(db,"DROP TABLE IF EXISTS MAP_OBJECT_TABLE", callback, 0, &err_msg);
-
-    if( rc != SQLITE_OK ){
-
-        fprintf(stderr,"UPGRADE [v%d]: Database alteration failed - %s\n",1,err_msg);
-
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-
-        return -1;
-    }
-
-    create_database_table(MAP_OBJECT_TABLE_SQL);
-
-    set_db_version(5);
-
-    sqlite3_close(db);
-    fprintf(stderr,"UPGRADE [v%d]: Success\n", 5);
+    fprintf(stdout,"Database upgrade from version 0 to version 1 successful\n");
 
     return 0;
 }
@@ -319,25 +142,31 @@ typedef int (*upgrade_function)(const char *dbname);
 
 struct upgrade_array_entry {
 
-    //uint32_t from_version;
-    //uint32_t to_version;
     int from_version;
     int to_version;
-
     upgrade_function fn;
 };
 
 struct upgrade_array_entry entries[] = {
 
-    { 4, 5, upgrade_v4_to_v5},
-    { 3, 4, upgrade_v3_to_v4},
-    { 2, 3, upgrade_v2_to_v3},
-    { 1, 2, upgrade_v1_to_v2},
-    { 0, 1, upgrade_v0_to_v1},
-    { 0, 0, NULL}
+//    Version   Version
+//    Upgrading Upgrading   Upgrade
+//    From      To          Function
+//    --------- ----------- -------------
+    { 0,        1,          upgrade_v0_to_v1},
+    { 0,        0,          NULL}
 };
 
 static const struct upgrade_array_entry *find_upgrade_entry(int old_version) {
+
+    /** RESULT  : finds upgrade command
+
+        RETURNS : void
+
+        PURPOSE : code modularity
+
+        NOTES   :
+    */
 
     int idx=0;
 
@@ -352,25 +181,31 @@ static const struct upgrade_array_entry *find_upgrade_entry(int old_version) {
     return NULL;
 }
 
-extern int current_database_version();
 
 void upgrade_database(const char *dbname) {
 
-    if(!file_exists(dbname)) {
+    /** public function - see header */
 
-        fprintf(stderr,"Cannot upgrade database %s - no such file\n", dbname);
-        return;
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
     }
 
+    load_db_game_data();
+
+    //compare database version entry with the hard-coded version in the code-base
     if(game_data.database_version==REQUIRED_DATABASE_VERSION) {
 
-        fprintf(stderr,"Database is already up to date !\n");
-        return;
+        fprintf(stderr,"Database [%s] is already up to date at version [%i]\n", dbname, REQUIRED_DATABASE_VERSION);
+        log_event(EVENT_ERROR, "Database [%s] is already up to date at version [%i]", dbname, REQUIRED_DATABASE_VERSION);
+        stop_server();
     }
     else if(game_data.database_version>REQUIRED_DATABASE_VERSION) {
 
-        fprintf(stderr,"Database is a new version than that required by server !\n");
-        return;
+        fprintf(stderr,"Database [%s] is version [%i] which is newer than this codebase version [%i]\n", dbname, game_data.database_version, REQUIRED_DATABASE_VERSION);
+        log_event(EVENT_ERROR, "Database [%s] is version [%i] which is newer than this codebase version [%i]", dbname, game_data.database_version, REQUIRED_DATABASE_VERSION);
+        stop_server();
     }
 
     while(game_data.database_version<REQUIRED_DATABASE_VERSION) {
@@ -380,27 +215,27 @@ void upgrade_database(const char *dbname) {
 
         if(!entry){
 
-            fprintf(stderr,"Cannot find entry for database\n");
-            return;
+            log_event(EVENT_ERROR, "can't find entry for database in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            stop_server();
         }
 
-        fprintf(stdout,"DB version update %d to %d:",entry->from_version,entry->to_version);
+        fprintf(stderr,"Database version update %d to %d\n", entry->from_version, entry->to_version);
+        log_event(EVENT_ERROR, "Database version update %d to %d:", entry->from_version, entry->to_version);
 
         // backup is created before calling each upgrade function
-        if(-1==create_backup(dbname, game_data.database_version)){
+        create_backup_file(dbname, game_data.database_version);
 
-            return;
-        }
+        if(entry->fn(dbname)==0) {
 
-        if(0==entry->fn(dbname)) {
-
-            game_data.database_version = entry->to_version; // version upgrade successful
-            fprintf(stdout,"OK\n");
+            game_data.database_version = entry->to_version;
+            fprintf(stderr,"Database update successful\n");
+            log_event(EVENT_ERROR, "Database update successful");
         }
         else {
 
-            fprintf(stdout,"FAILED\n");
-            return;
+            fprintf(stderr,"Database update failed\n");
+            log_event(EVENT_ERROR, "Database update failed");
+            stop_server();
         }
     }
 }

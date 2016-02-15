@@ -17,17 +17,28 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef CHARACTER_TYPE_H_INCLUDED
-#define CHARACTER_TYPE_H_INCLUDED
+#ifndef BROADCAST_EQUIPABLES_H_INCLUDED
+#define BROADCAST_EQUIPABLES_H_INCLUDED
 
-#define MAX_CHARACTER_TYPES 42 //the highest character type code used by the client
-#define CHAR_TYPE_FILE "char_type.lst"
+/** RESULT  : broadcasts the actor_wear_item packet to all clients in range
 
-struct character_type_type{
-    int race_id;
-    int gender_id;
-    int char_count;
-};
-extern struct character_type_type character_type[MAX_CHARACTER_TYPES];
+    RETURNS : void
 
-#endif // CHARACTER_TYPE_H_INCLUDED
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_actor_equip_item(int actor_node, int equipable_item_type, int equipable_item_id);
+
+
+/** RESULT  : broadcasts the actor_unwear_item packet to all clients in range
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_actor_unequip_item(int actor_node, int equipable_item_type, int equipable_item_id);
+
+#endif // BROADCAST_EQUIPABLES_H_INCLUDED

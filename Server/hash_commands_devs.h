@@ -122,4 +122,17 @@ int hash_set_map_author_email(int actor_node, char *text);
 */
 int hash_set_map_development_status(int actor_node, char *text);
 
+
+/** RESULT  : determines an inventory item image
+
+    RETURNS : void
+
+    PURPOSE : determines an item inventory image
+
+    NOTES   :
+*/
+int hash_object(int actor_node, char *text);
+
+
+
 #endif // HASH_COMMANDS_DEVS_H_INCLUDED

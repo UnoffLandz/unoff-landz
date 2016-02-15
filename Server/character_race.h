@@ -22,6 +22,7 @@
 #define CHARACTER_RACES_H_INCLUDED
 
 #define MAX_RACES 7
+#define RACE_FILE "race.lst"
 
 struct race_type{
     char race_name[20];

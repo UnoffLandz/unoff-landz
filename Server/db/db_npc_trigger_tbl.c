@@ -33,6 +33,12 @@ void load_db_npc_triggers(){
 
     sqlite3_stmt *stmt;
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="SELECT * FROM NPC_TRIGGER_TABLE";
 
     //check database table exists
@@ -100,6 +106,12 @@ int select_option, int action_node){
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO NPC_TRIGGER_TABLE("
@@ -112,7 +124,7 @@ int select_option, int action_node){
 
     process_sql(sql);
 
-    printf("NPC trigger [%i] added successfully\n", npc_trigger_id);
+    fprintf(stderr, "NPC trigger [%i] added successfully\n", npc_trigger_id);
 
     log_event(EVENT_SESSION, "Added NPC trigger [%i] to NPC_TRIGGER_TABLE", npc_trigger_id);
 }

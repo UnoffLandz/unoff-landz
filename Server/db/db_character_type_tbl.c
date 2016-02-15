@@ -18,7 +18,8 @@
 *******************************************************************************************************************/
 
 #include <stdio.h> //support for snprintf
-#include <stdlib.h> //support for NULL data type
+#include <stdlib.h> //support for NULL data type and atoi function
+#include <string.h> //support for memset function
 
 #include "database_functions.h"
 #include "../logging.h"
@@ -26,14 +27,22 @@
 #include "../server_start_stop.h"
 #include "../character_race.h"
 #include "../gender.h"
+#include "../string_functions.h"
 #include "db_character_race_tbl.h"
 #include "db_gender_tbl.h"
+
 
 void load_db_char_types(){
 
     /** public function - see header */
 
     log_event(EVENT_INITIALISATION, "loading character types...");
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     //check database table exists
     const char database_table[]="CHARACTER_TYPE_TABLE";
@@ -98,6 +107,12 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO CHARACTER_TYPE_TABLE("  \
@@ -112,7 +127,42 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
     load_db_char_races();
     load_db_genders();
 
-    printf("Character type [%i] gender [%s] race [%s] added successfully\n", char_type_id, race[race_id].race_name, gender[gender_id].gender_name);
+    fprintf(stderr, "Character type [%i] gender [%s] race [%s] added successfully\n", char_type_id, race[race_id].race_name, gender[gender_id].gender_name);
 
     log_event(EVENT_SESSION, "Added character type [%i] gender [%s] race [%s] to CHARACTER_TYPE_TABLE", char_type_id,race[race_id].race_name, gender[gender_id].gender_name);
+}
+
+
+void batch_add_char_types(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "char type list file [%s] not found", file_name);
+        stop_server();
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    log_event(EVENT_INITIALISATION, "\nAdding char types specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding char types specified in file [%s]\n", file_name);
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[4][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        add_db_char_type(atoi(output[0]), atoi(output[1]), atoi(output[2]));
+    }
+
+    fclose(file);
 }

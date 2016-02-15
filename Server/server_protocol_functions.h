@@ -355,6 +355,41 @@ void send_npc_options_list(int socket, int npc_actor_node, char *options);
 */
 void send_npc_info(int socket, char *npc_name, int npc_id);
 
+
+/** RESULT  : sends a specific stat to the client
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void send_partial_stat(int socket, int attribute_type, int attribute_level);
+
+
+/** RESULT  : equips an item to an actor
+
+    RETURNS : void
+
+    PURPOSE : actor is shown with item equipped
+
+    NOTES   :
+*/
+void actor_wear_item_packet(int actor_id, unsigned char *packet, size_t *packet_length, int equipable_item_type, int equipable_item_id);
+
+
+/** RESULT  : unequips an item from an actor
+
+    RETURNS : void
+
+    PURPOSE : actor is shown with item unequipped
+
+    NOTES   :
+*/
+void actor_unwear_item_packet(int actor_id, unsigned char *packet, size_t *packet_length, int equipable_item_type, int equipable_item_id);
+
+
+
 /*****************************************************************************************************
 ***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
 ******************************************************************************************************/

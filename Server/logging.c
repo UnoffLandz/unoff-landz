@@ -81,11 +81,11 @@ struct protocol_type protocol[] = {
     {"", ""}, //46
     {"", ""}, //47
     {"", ""}, //48
-    {"", "SEND_PARTIAL_STATS"}, //49
+    {"SEND_PARTIAL_STATS", ""}, //49
     {"", ""}, //50
     {"ADD_NEW_ENHANCED_ACTOR", ""}, //51
-    {"", ""}, //52
-    {"", ""}, //53
+    {"ACTOR_WEAR_ITEM", ""}, //52
+    {"ACTOR_UNWEAR_ITEM", ""}, //53
     {"", ""}, //54
     {"", ""}, //55
     {"", ""}, //56
@@ -352,7 +352,7 @@ void clear_file(char *file_name){
 
             //If file can't be reopened then we've got a serious problem. No point in trying to log it to the error log
             //as that could be subject to the same problem. Hence, send a message to the console and close server gracefully
-            printf("unable to clear file [%s] in function clear_file: module logging.c\n", file_name);
+            fprintf(stderr, "unable to clear file [%s] in function clear_file: module logging.c\n", file_name);
             stop_server();
         }
     }
@@ -430,8 +430,8 @@ void log_event(int event_type, const char *fmt, ...){
 
     /** public function - see header */
 
-    char text_in[1024]="";
-    char text_out[1024]="";
+    char text_in[MAX_LOG_STRING]="";
+    char text_out[MAX_LOG_STRING]="";
 
     char time_stamp_str[9]="";
     char date_stamp_str[11]="";
@@ -439,7 +439,17 @@ void log_event(int event_type, const char *fmt, ...){
     va_list args;
     va_start(args, fmt);
 
+
+    //extract text from fmt
     vsprintf(text_in, fmt, args);
+
+    //ensure text doesn't overflow
+    size_t len=strlen(text_in);
+    if(len>=MAX_LOG_STRING){
+
+        log_event(EVENT_ERROR, "log text [%i] exceeds maximum string size [%i] in function %s: module %s: line %i", len, MAX_LOG_STRING, __func__, __FILE__, __LINE__);
+        stop_server();
+    }
 
     //get the date stamps
     get_time_stamp_str(time(NULL), time_stamp_str);
@@ -484,7 +494,7 @@ void log_event(int event_type, const char *fmt, ...){
             //we should never reach here as unknown events are directed by function get_event_log_file to the
             //the error log. However, just in case the unthinkable occurs, we capture it here and terminate the
             //server gracefully
-            printf("unknown event type [%i] detected in function log_event: module logging.c\n", event_type);
+            fprintf(stderr, "unknown event type [%i] detected in function log_event: module logging.c\n", event_type);
             stop_server();
             break;
     }
@@ -517,7 +527,7 @@ void initialise_logs(){
             //If the initialisation log file can't be reopened then we've got a serious problem. No point in trying to
             //log it to the error log as that hasn't been cleared yet and could be subject to the same problem. Hence,
             //send a message to the console and close server gracefully
-            printf("unable to clear initialisation log file [%s] in function initialise_logs: module logging.c\n", INITIALISATION_LOG_FILE_NAME);
+            fprintf(stderr, "unable to clear initialisation log file [%s] in function initialise_logs: module logging.c\n", INITIALISATION_LOG_FILE_NAME);
             stop_server();
         }
     }

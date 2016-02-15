@@ -33,6 +33,12 @@ bool get_db_char_exists(int char_id){
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     sqlite3_stmt *stmt;
 
     char sql[MAX_SQL_LEN]="SELECT count(*) FROM CHARACTER_TABLE WHERE CHAR_ID=?";
@@ -58,7 +64,7 @@ bool get_db_char_exists(int char_id){
     }
 
     rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_DONE) {
+    if (rc != SQLITE_OK) {
 
         log_sqlite_error("sqlite3_finalize", __func__, __FILE__, __LINE__, rc, sql);
     }
@@ -79,6 +85,12 @@ bool get_db_char_exists(int char_id){
 bool get_db_char_data(const char *char_name, int char_id){
 
     /** public function - see header */
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     sqlite3_stmt *stmt;
 
@@ -198,12 +210,17 @@ int get_db_char_count(){
 
     /** public function - see header */
 
-    int rc=0;
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     sqlite3_stmt *stmt;
 
     char sql[MAX_SQL_LEN]="SELECT count(*) FROM CHARACTER_TABLE";
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -222,8 +239,8 @@ int get_db_char_count(){
         stop_server();
     }
 
-    sqlite3_finalize(stmt);
-    if(rc!=SQLITE_DONE){
+    rc=sqlite3_finalize(stmt);
+    if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
@@ -238,6 +255,12 @@ int add_db_char_data(struct client_node_type character){
 
     sqlite3_stmt *stmt;
     char *sErrMsg = 0;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char char_tbl_sql[MAX_SQL_LEN]="";
     snprintf(char_tbl_sql, MAX_SQL_LEN,
@@ -369,7 +392,7 @@ int add_db_char_data(struct client_node_type character){
     }
 
     //create the char inventory record on the database
-    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
+    for(int i=0; i<MAX_EQUIP_SLOT+1; i++){
 
         sqlite3_bind_int(stmt, 1, id);
         sqlite3_bind_int(stmt, 2, i);
@@ -406,13 +429,18 @@ void get_db_last_char_created(){
 
     /** public function - see header */
 
-    int rc=0;
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN, "SELECT CHAR_NAME, CHAR_CREATED FROM CHARACTER_TABLE ORDER BY CHAR_CREATED DESC LIMIT 1;");
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -456,6 +484,12 @@ void load_npc_characters(){
     log_event(EVENT_INITIALISATION, "loading npc_characters...");
 
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="SELECT * FROM CHARACTER_TABLE WHERE PLAYER_TYPE=?";
 

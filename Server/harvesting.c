@@ -28,6 +28,7 @@
 #include "objects.h"
 #include "server_protocol_functions.h"
 #include "e3d.h"
+#include "char_experience.h"
 
 #define DEBUG_HARVESTING 0
 
@@ -56,6 +57,8 @@ void process_char_harvest(int actor_node, time_t current_time){
                 stop_harvesting(actor_node);
                 return;
             }
+
+            add_exp(actor_node, HARVESTING_SKILL, 1);
 
             //update time of last harvest
             clients.client[actor_node].time_of_last_harvest=current_time;
@@ -108,11 +111,11 @@ void start_harvesting(int actor_node, int threed_object_list_pos){
     }
 
     //check that we have an existing or free slot
-    int slot=find_inventory_slot(actor_node, object_id);
+    int slot=find_inventory_slot(actor_node, object_id, CARRY_SLOTS);
 
     if(slot==-1){
 
-        send_text(socket, CHAT_SERVER, "%cYou have no free slots in your inventory!. ", c_red3+127);
+        send_text(socket, CHAT_SERVER, "%cYou have no free slots in your inventory!", c_red3+127);
         return;
     }
 

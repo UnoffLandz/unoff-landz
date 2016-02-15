@@ -22,11 +22,14 @@
 #define DB_OBJECT_TBL_H_INCLUDED
 
 #define OBJECT_TABLE_SQL "CREATE TABLE OBJECT_TABLE( \
-        OBJECT_ID    INTEGER PRIMARY KEY     NOT NULL, \
-        OBJECT_NAME     TEXT, \
-        HARVESTABLE     INT, \
-        EDIBLE          INT, \
-        HARVEST_INTERVAL INT)"
+        OBJECT_ID           INTEGER PRIMARY KEY     NOT NULL, \
+        OBJECT_NAME         TEXT, \
+        HARVESTABLE         INT,  \
+        EDIBLE              INT,  \
+        HARVEST_INTERVAL    INT,  \
+        EMU                 REAL, \
+        EQUIPABLE_ITEM_TYPE INT,  \
+        EQUIPABLE_ITEM_ID   INT)"
 
 /** RESULT  : loads data from the object table into the object array
 
@@ -47,10 +50,17 @@ void load_db_objects();
 
     NOTES   : to eventually be outsourced to a separate utility
 **/
-void add_db_object(int object_id, char *object_name, int harvestable, int edible, int interval);
+void add_db_object(int object_id, char *object_name, int harvestable, int edible, int interval, double emu, bool equipable);
 
 
-// TODO (themuntdregger#1#): document batch_load_objects function
+/** RESULT  : loads object data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of objects
+
+    NOTES   :
+*/
 void batch_add_objects(char *file_name);
 
 #endif // DB_OBJECT_TBL_H_INCLUDED

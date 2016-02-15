@@ -48,4 +48,16 @@ void load_db_char_races();
 **/
 void add_db_race(int race_id, char *race_name, char *race_description);
 
+
+/** RESULT  : loads race data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of race data
+
+    NOTES   :
+*/
+void batch_add_races(char *file_name);
+
+
 #endif // DB_CHARACTER_RACE_TBL_H_INCLUDED

@@ -49,4 +49,15 @@ int load_db_char_types();
 void add_db_char_type(int char_type_id, int race_id, int gender_id);
 
 
+/** RESULT  : loads char type data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of char type data
+
+    NOTES   :
+*/
+void batch_add_char_types(char *file_name);
+
+
 #endif // DB_CHARACTER_TYPE_TBL_H_INCLUDED

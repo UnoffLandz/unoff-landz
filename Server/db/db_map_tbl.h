@@ -183,11 +183,11 @@ void change_db_map_author_email(int map_id, char *map_author_email);
 void change_db_map_development_status(int map_id, int development_status);
 
 
-/** RESULT  : batch load maps
+/** RESULT  : loads map data specified in a text file
 
     RETURNS : void
 
-    PURPOSE : used when creating a new database
+    PURPOSE : batch loading of maps
 
     NOTES   :
 */

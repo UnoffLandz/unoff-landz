@@ -23,7 +23,10 @@
 
 #include <stdbool.h>
 
-#define MAX_INVENTORY_SLOTS 36
+#define MIN_CARRY_SLOT 0
+#define MAX_CARRY_SLOT 35
+#define MIN_EQUIP_SLOT 36
+#define MAX_EQUIP_SLOT 43
 
 struct client_inventory_type {
 
@@ -32,6 +35,13 @@ struct client_inventory_type {
         int flags;
 };
 extern struct client_inventory_type client_inventory;
+
+
+enum { //slot type
+
+    CARRY_SLOTS,
+    EQUIP_SLOTS,
+};
 
 
 /** RESULT  : calculates the maximum carry capacity for a char
@@ -65,7 +75,7 @@ int get_inventory_emu(int actor_node);
 
     NOTES   :
 */
-int find_inventory_slot(int actor_node, int object_id);
+int find_inventory_slot(int actor_node, int object_id, int slot_type);
 
 
 /** RESULT  : finds an existing inventory slot with an item
@@ -76,7 +86,7 @@ int find_inventory_slot(int actor_node, int object_id);
 
     NOTES   :
 */
-int item_in_inventory(int actor_node, int object_id);
+int item_in_inventory(int actor_node, int object_id, int slot_type);
 
 
 /** RESULT  : adds objects to the char inventory

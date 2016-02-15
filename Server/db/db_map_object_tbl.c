@@ -43,6 +43,12 @@ void load_db_map_objects(){
 
     sqlite3_stmt *stmt;
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="SELECT * FROM MAP_OBJECT_TABLE";
 
     //check database table exists
@@ -74,7 +80,7 @@ void load_db_map_objects(){
         map_object[threedol_id][map_id].e3d_id=sqlite3_column_int(stmt, 4);
         if(sqlite3_column_int(stmt, 5)==1) map_object[threedol_id][map_id].harvestable=true; else map_object[threedol_id][map_id].harvestable=false;
         map_object[threedol_id][map_id].reserve=sqlite3_column_int(stmt, 6);
-        strcpy( map_object[threedol_id][map_id].e3d_filename, (char*)sqlite3_column_text(stmt, 7));
+        strcpy(map_object[threedol_id][map_id].e3d_filename, (char*)sqlite3_column_text(stmt, 7));
 
         log_event(EVENT_INITIALISATION, "loaded [%i]", id);
 
@@ -105,6 +111,12 @@ void load_db_map_objects(){
 void add_db_map_objects(int map_id, char *elm_filename){
 
     /** public function - see header */
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     //load e3d and object data, otherwise we'll be unable to populate the map object entries
     //with links
@@ -200,6 +212,12 @@ void update_db_map_objects(int map_id){
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     load_db_maps();//required for threed object count
     load_db_map_objects();
     load_db_e3ds();
@@ -257,7 +275,7 @@ void batch_update_map_objects(char *file_name){
     char line[160]="";
     int line_counter=0;
 
-    printf("\n");
+    fprintf(stderr, "\n");
 
     while (fgets(line, sizeof(line), file)) {
 

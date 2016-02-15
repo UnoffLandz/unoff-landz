@@ -43,6 +43,4 @@ int get_object_id(int map_id, int threed_object_list_pos);
 */
 int get_object_tile(int map_id, int threed_object_list_pos);
 
-
-
 #endif // MAP_OBJECT_H_INCLUDED

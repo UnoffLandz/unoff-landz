@@ -266,6 +266,8 @@ int client_look_at_map_object(int actor_node, unsigned char *packet){
 
     send_text(clients.client[actor_node].socket, CHAT_SERVER, text_out);
 
+    printf("%i %s\n", threed_object_list_pos, map_object[threed_object_list_pos][map_id].e3d_filename);
+
     return 0;
 }
 
@@ -378,10 +380,7 @@ int client_use_object(int actor_node, unsigned char *packet){
     int threed_object_id=*((int32_t*)(packet+3));
     int use_with_position=*((int32_t*)(packet+7));
 
-    //if char is moving when protocol arrives, cancel rest of path
-    clients.client[actor_node].path_count=0;
-
-    printf("threed object %i use with position %i\n", threed_object_id, use_with_position);
+    printf("actor node %i 3d object list pos %i use with %i\n", actor_node, threed_object_id, use_with_position);
 
     return 0;
 }
@@ -637,25 +636,25 @@ struct protocol_array_entry protocol_entries[] = {
     {RAW_TEXT,                  true,        true,         false,      false, client_raw_text},
     {MOVE_TO,                   false,       true,         true,       false, client_move_to},
     {SEND_PM,                   false,       true,         false,      false, client_send_pm},
-    {SIT_DOWN,                  false,       true,         false,      true,  client_sit_down},
-    {GET_PLAYER_INFO,           false,       true,         true,       true,  client_get_player_info},
+    {SIT_DOWN,                  false,       true,         false,      false,  client_sit_down},
+    {GET_PLAYER_INFO,           false,       true,         true,       false,  client_get_player_info},
     {SEND_VERSION,              true,        true,         false,      false, client_send_version},
     {HEARTBEAT,                 true,        true,         false,      false, client_heart_beat},
-    {USE_OBJECT,                false,       true,         true,       true,  client_use_object},
-    {MOVE_INVENTORY_ITEM,       false,       true,         true,       true,  client_move_inventory_item},
-    {HARVEST,                   false,       true,         false,      true,  client_harvest},
-    {DROP_ITEM,                 false,       true,         true,       true,  client_drop_item},
-    {PICK_UP_ITEM,              false,       true,         true,       true,  client_pick_up_item},
-    {INSPECT_BAG,               false,       true,         true,       true,  client_inspect_bag},
-    {LOOK_AT_MAP_OBJECT,        false,       true,         true,       true,  client_look_at_map_object},
-    {TOUCH_PLAYER,              false,       true,         true,       true,  client_touch_player},
-    {RESPOND_TO_NPC,            false,       true,         true,       true,  client_respond_to_npc},
+    {USE_OBJECT,                false,       true,         true,       false,  client_use_object},
+    {MOVE_INVENTORY_ITEM,       false,       true,         true,       false,  client_move_inventory_item},
+    {HARVEST,                   false,       true,         false,      false,  client_harvest},
+    {DROP_ITEM,                 false,       true,         true,       false,  client_drop_item},
+    {PICK_UP_ITEM,              false,       true,         true,       false,  client_pick_up_item},
+    {INSPECT_BAG,               false,       true,         true,       false,  client_inspect_bag},
+    {LOOK_AT_MAP_OBJECT,        false,       true,         true,       false,  client_look_at_map_object},
+    {TOUCH_PLAYER,              false,       true,         true,       false,  client_touch_player},
+    {RESPOND_TO_NPC,            false,       true,         true,       false,  client_respond_to_npc},
     {SET_ACTIVE_CHANNEL,        false,       true,         false,      false, client_set_active_channel},
     {LOG_IN,                    true,        false,        false,      false, client_log_in},
     {GET_DATE,                  false,       true,         false,      false, client_get_date},
     {GET_TIME,                  false,       true,         false,      false, client_get_time},
     {CREATE_CHAR,               true,        false,        false,      false, client_create_char},
-    {LOOK_AT_INVENTORY_ITEM,    false,       true,         true,       true, client_look_at_inventory_item},
+    {LOOK_AT_INVENTORY_ITEM,    false,       true,         true,       false, client_look_at_inventory_item},
     {SERVER_STATS,              false,       true,         false,      false, client_server_stats},
 
     {255, false, false, false, false, 0}
@@ -668,7 +667,7 @@ static const struct protocol_array_entry *find_protocol_entry(int command) {
 
         RETURNS : void
 
-        PURPOSE : code modularity
+        PURPOSE :
 
         NOTES   :
     */

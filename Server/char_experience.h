@@ -16,52 +16,53 @@
     You should have received a copy of the GNU General Public License
     along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
+#ifndef CHAR_EXPERIENCE_H_INCLUDED
+#define CHAR_EXPERIENCE_H_INCLUDED
 
-#ifndef FILE_FUNCTIONS_H_INCLUDED
-#define FILE_FUNCTIONS_H_INCLUDED
+#define HARVESTING_SKILL_FILE "harvesting.lst"
 
-#include <stdbool.h>
 
-/** RESULT  : gets the size of a file
+#define MAX_LEVELS 127
+#define MAX_SKILLS 12
 
-    RETURNS : file size
+struct {
 
-    PURPOSE : supports transfer of file data to memory
+    int max_exp[MAX_LEVELS];
+}skill_level[MAX_SKILLS];
 
-    NOTES   :
+enum{//skill types
+
+    HARVESTING_SKILL    =1,
+    MAGIC_SKILL         =2,
+    MANUFACTURING_SKILL =3,
+    ALCHEMY_SKILL       =4,
+    DEFENCE_SKILL       =5,
+    ATTACK_SKILL        =6,
+    POTION_SKILL        =7,
+    SUMMONING_SKILL     =8,
+    CRAFTING_SKILL      =9,
+    ENGINEERING_SKILL   =10,
+    RANGING_SKILL       =11,
+    TAILORING_SKILL     =12,
+};
+
+struct skill_name_type{
+
+    int skill_id;
+    char skill[80];
+};
+
+extern struct skill_name_type skill_name[MAX_SKILLS];
+
+/** RESULT   : adds experience to a skill
+
+    RETURNS  : void
+
+    PURPOSE  :
+
+    NOTES    :
 **/
-int get_file_size(char *file_name);
+void add_exp(int actor_node, int skill_id, int exp);
 
 
-/** RESULT  : determines if a file exists
-
-    RETURNS : TRUE/FALSE
-
-    PURPOSE : supports detecting existing database file
-
-    NOTES   :
-**/
-bool file_exists(const char *filename);
-
-///
-/// \brief Copy a file named name to newname
-/// \param name - name of existing file
-/// \param newname - name of resulting file
-/// \return -1 on failure 0 on success
-///
-extern int fcopy(const char *name,const char *newname);
-
-
-/** RESULT  : creates a backup of a file
-
-    RETURNS : void
-
-    PURPOSE : file backup
-
-    NOTES   :
-**/
-void create_backup_file(const char *existing_file_name, int backup_suffix);
-
-
-
-#endif // FILE_FUNCTIONS_H_INCLUDED
+#endif // CHAR_EXPERIENCE_H_INCLUDED

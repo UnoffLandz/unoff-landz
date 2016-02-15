@@ -17,13 +17,15 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#include <string.h> //support strcpy
-#include <stdio.h> //support snprintf
+#include <string.h> //support strcpy function
+#include <stdlib.h> //support for NULL data type and atoi function
+#include <stdio.h> //support snprintf function
 
 #include "database_functions.h"
 #include "../logging.h"
 #include "../gender.h"
 #include "../server_start_stop.h"
+#include "../string_functions.h"
 
 void load_db_genders(){
 
@@ -32,6 +34,12 @@ void load_db_genders(){
     log_event(EVENT_INITIALISATION, "loading gender...");
 
     sqlite3_stmt *stmt;
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     char sql[MAX_SQL_LEN]="SELECT * FROM GENDER_TABLE";
 
@@ -98,6 +106,12 @@ void add_db_gender(int gender_id, char *gender_name){
 
     /** public function - see header */
 
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO GENDER_TABLE("  \
@@ -107,8 +121,42 @@ void add_db_gender(int gender_id, char *gender_name){
 
     process_sql(sql);
 
-    printf("Gender [%s] added successfully\n", gender_name);
+    fprintf(stderr, "Gender [%s] added successfully\n", gender_name);
 
     log_event(EVENT_SESSION, "Added gender [%s] to GENDER_TABLE", gender_name);
 }
 
+
+void batch_add_gender(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "gender list file [%s] not found", file_name);
+        stop_server();
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    log_event(EVENT_INITIALISATION, "\nAdding genders specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding genders specified in file [%s]\n", file_name);
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[2][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        add_db_gender(atoi(output[0]), output[1]);
+    }
+
+    fclose(file);
+}

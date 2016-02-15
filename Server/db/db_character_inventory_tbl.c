@@ -24,6 +24,14 @@
 
 void get_db_char_inventory(int character_id){
 
+    /** public function - see header **/
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
+
     int rc=0;
     sqlite3_stmt *stmt;
 
@@ -50,7 +58,7 @@ void get_db_char_inventory(int character_id){
     }
 
     sqlite3_finalize(stmt);
-    if(rc!=SQLITE_DONE){
+    if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
@@ -60,6 +68,12 @@ void get_db_char_inventory(int character_id){
 void add_db_char_inventory(struct client_node_type character){
 
     /** public function - see header **/
+
+    //check database is open
+    if(!db){
+
+        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    }
 
     int rc=0;
     sqlite3_stmt *stmt;
@@ -81,7 +95,7 @@ void add_db_char_inventory(struct client_node_type character){
         log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    for(int i=0; i<MAX_INVENTORY_SLOTS; i++){
+    for(int i=0; i<MAX_EQUIP_SLOT+1; i++){
 
         //usually, we'd start by binding an inventory_id to column 0. However, sqlite creates this automatically
         sqlite3_bind_int(stmt, 1, character.character_id);
@@ -111,5 +125,5 @@ void add_db_char_inventory(struct client_node_type character){
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    log_event(EVENT_SESSION, "added inventory of [%i] slots to database for char [%s]", MAX_INVENTORY_SLOTS, character.char_name);
+    log_event(EVENT_SESSION, "added inventory of [%i] slots to database for char [%s]", MAX_EQUIP_SLOT+1, character.char_name);
 }
