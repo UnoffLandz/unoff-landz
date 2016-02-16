@@ -17,17 +17,14 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef DB_SKILLS_TBL_H_INCLUDED
-#define DB_SKILLS_TBL_H_INCLUDED
+#ifndef DB_SKILL_TBL_H_INCLUDED
+#define DB_SKILL_TBL_H_INCLUDED
 
 #define SKILL_TABLE_SQL "CREATE TABLE SKILLS_TABLE( \
         SKILL_ID        INTEGER PRIMARY KEY NOT NULL, \
         SKILL_TYPE_ID   TEXT, \
         LEVEL           INT, \
         EXP             INT)"
-
-#endif // DB_SKILLS_TBL_H_INCLUDED
-
 
 /** RESULT  : loads data from the skills table into the skills array
 
@@ -49,3 +46,5 @@ void load_db_skills();
     NOTES   :
 */
 void batch_add_skills(int skill_type_id, char *file_name);
+
+#endif // DB_SKILLS_H_INCLUDED

@@ -71,10 +71,7 @@ void set_db_version(int db_version) {
     **/
 
     //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    check_db_open(GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="";
 
@@ -102,10 +99,7 @@ static int upgrade_v0_to_v1(const char *dbname) {
     sqlite3_stmt *stmt;
 
     //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    check_db_open(GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="ALTER TABLE GAME_DATA_TABLE ADD COLUMN TEST TEXT";
 
@@ -187,10 +181,7 @@ void upgrade_database(const char *dbname) {
     /** public function - see header */
 
     //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    check_db_open(GET_CALL_INFO);
 
     load_db_game_data();
 

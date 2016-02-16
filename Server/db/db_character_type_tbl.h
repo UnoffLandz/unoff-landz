@@ -38,17 +38,6 @@
 int load_db_char_types();
 
 
-/** RESULT  : loads an entry to the character type table
-
-    RETURNS : void
-
-    PURPOSE : Loads character type data to the database
-
-    NOTES   :
-**/
-void add_db_char_type(int char_type_id, int race_id, int gender_id);
-
-
 /** RESULT  : loads char type data specified in a text file
 
     RETURNS : void
@@ -58,6 +47,5 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id);
     NOTES   :
 */
 void batch_add_char_types(char *file_name);
-
 
 #endif // DB_CHARACTER_TYPE_TBL_H_INCLUDED

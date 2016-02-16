@@ -31,11 +31,9 @@ void load_db_char_races(){
 
     /** public function - see header */
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+     //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("RACE_TABLE", GET_CALL_INFO);
 
     log_event(EVENT_INITIALISATION, "loading races...");
 
@@ -101,13 +99,18 @@ void load_db_char_races(){
 
 void add_db_race(int race_id, char *race_name, char *race_description){
 
-    /** public function - see header */
+    /** RESULT  : loads an entry to the race table
 
-    //check database is open
-    if(!db){
+        RETURNS : void
 
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+        PURPOSE : used in batch_add_races
+
+        NOTES   :
+    **/
+
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("RACE_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
@@ -158,4 +161,3 @@ void batch_add_races(char *file_name){
 
     fclose(file);
 }
-

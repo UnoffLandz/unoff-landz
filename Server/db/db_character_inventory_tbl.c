@@ -26,19 +26,16 @@ void get_db_char_inventory(int character_id){
 
     /** public function - see header **/
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
-
-    int rc=0;
-    sqlite3_stmt *stmt;
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("INVENTORY_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN, "SELECT SLOT, IMAGE_ID, AMOUNT FROM INVENTORY_TABLE WHERE CHAR_ID=%i", character_id);
 
-    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    sqlite3_stmt *stmt;
+
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_DONE){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -57,7 +54,7 @@ void get_db_char_inventory(int character_id){
         log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
-    sqlite3_finalize(stmt);
+    rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -69,27 +66,24 @@ void add_db_char_inventory(struct client_node_type character){
 
     /** public function - see header **/
 
-    //check database is open
-    if(!db){
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("INVENTORY_TABLE", GET_CALL_INFO);
 
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
-
-    int rc=0;
     sqlite3_stmt *stmt;
     char *sErrMsg = 0;
 
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN, "INSERT INTO INVENTORY_TABLE(CHAR_ID, SLOT, IMAGE_ID, AMOUNT) VALUES(?, ?, ?, ?)");
 
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
     }
 
     //wrap in a transaction to speed up insertion
-    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
     if(rc!=SQLITE_OK){
 
         log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);
@@ -113,7 +107,7 @@ void add_db_char_inventory(struct client_node_type character){
         sqlite3_reset(stmt);
     }
 
-    sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
     if (rc != SQLITE_DONE) {
 
         log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);

@@ -36,17 +36,6 @@
 void load_db_e3ds();
 
 
-/** RESULT  : adds an e3d to the e3d table
-
-    RETURNS : void
-
-    PURPOSE : a test function to e3ds to the e3d table
-
-    NOTES   : to eventually be outsourced to a separate utility
-**/
-void add_db_e3d(int e3d_id, char *e3d_file_name, int object_id);
-
-
 /** RESULT  : loads e3d data specified in a text file
 
     RETURNS : void

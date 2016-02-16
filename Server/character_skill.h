@@ -16,11 +16,10 @@
     You should have received a copy of the GNU General Public License
     along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
-#ifndef CHAR_EXPERIENCE_H_INCLUDED
-#define CHAR_EXPERIENCE_H_INCLUDED
+#ifndef CHARACTER_SKILL_H_INCLUDED
+#define CHARACTER_SKILL_H_INCLUDED
 
-#define HARVESTING_SKILL_FILE "harvesting.lst"
-
+#define HARVESTING_SKILL_FILE "harvesting_skill.lst"
 
 #define MAX_LEVELS 127
 #define MAX_SKILLS 12
@@ -65,4 +64,4 @@ extern struct skill_name_type skill_name[MAX_SKILLS];
 void add_exp(int actor_node, int skill_id, int exp);
 
 
-#endif // CHAR_EXPERIENCE_H_INCLUDED
+#endif // CHARACTER_SKILL_H_INCLUDED

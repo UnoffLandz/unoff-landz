@@ -28,9 +28,8 @@
 #include "objects.h"
 #include "server_protocol_functions.h"
 #include "e3d.h"
-#include "char_experience.h"
+#include "character_skill.h"
 
-#define DEBUG_HARVESTING 0
 
 void process_char_harvest(int actor_node, time_t current_time){
 

@@ -35,11 +35,9 @@ void load_db_e3ds(){
 
     sqlite3_stmt *stmt;
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+     //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("E3D_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="SELECT * FROM E3D_TABLE";
 
@@ -104,13 +102,18 @@ void load_db_e3ds(){
 
 void add_db_e3d(int id, char *e3d_filename, int object_id){
 
-    /** public function - see header */
+    /** RESULT  : adds an e3d to the e3d table
 
-    //check database is open
-    if(!db){
+        RETURNS : void
 
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+        PURPOSE : used by function batch_add_e3ds
+
+        NOTES   : to eventually be outsourced to a separate utility
+    **/
+
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("E3D_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="";
 

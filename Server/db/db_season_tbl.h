@@ -40,18 +40,6 @@
 void load_db_seasons();
 
 
-/** RESULT  : adds season data to the season data table
-
-    RETURNS : void
-
-    PURPOSE : a test function to load season data to the season data table
-
-    NOTES   : to eventually be outsourced to a separate utility
-**/
-
-void add_db_season(int season_id, char *season_name, char *season_description, int start_day, int end_day);
-
-
 /** RESULT  : loads seasons specified in a text file
 
     RETURNS : void
@@ -61,7 +49,5 @@ void add_db_season(int season_id, char *season_name, char *season_description, i
     NOTES   :
 */
 void batch_add_seasons(char *file_name);
-
-
 
 #endif // DB_SEASON_TBL_H_INCLUDED

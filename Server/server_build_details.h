@@ -64,18 +64,8 @@ Done - implemented batch loading of skills data
 
                                 TO - DO
 
-ADD NEW PROTOCOLS TO WEBSITE
-ADD NEW #COMMAND TO WEBSITE
-Deprecate upgrade database
-
 TEST whether db skills add from list to database
-change harvesting.lst to harvesting_skill.list
-change char_experience.c/h to char_skills.c/h
-change db_skills_tbl.c/h to db_skill_tbl.c/h
 
-do add_data functions need to be public now we have batch_add??
-implement check_db_open function in all db modules
-implement check_table_exists function in all db modules
 implement GET_CALL_INFO macro in log functions
 
 function to calculate level from exp

@@ -38,17 +38,6 @@
 void load_db_char_races();
 
 
-/** RESULT  : loads an entry to the race table
-
-    RETURNS : void
-
-    PURPOSE : Loads race data to the database
-
-    NOTES   :
-**/
-void add_db_race(int race_id, char *race_name, char *race_description);
-
-
 /** RESULT  : loads race data specified in a text file
 
     RETURNS : void

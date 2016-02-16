@@ -36,7 +36,7 @@
 #include "db_e3d_tbl.h"
 #include "db_map_object_tbl.h"
 #include "db_guild_tbl.h"
-#include "db_skills_tbl.h"
+#include "db_skill_tbl.h"
 #include "db_upgrade.h"
 #include "../server_start_stop.h"
 #include "../attributes.h"
@@ -55,7 +55,7 @@
 #include "../e3d.h"
 #include "../character_type.h"
 #include "../season.h"
-#include "../char_experience.h"
+#include "../character_skill.h"
 
 sqlite3 *db; // declare the database handle as global
 

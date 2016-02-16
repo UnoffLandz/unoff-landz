@@ -43,22 +43,11 @@ void load_db_map_objects(){
 
     sqlite3_stmt *stmt;
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_OBJECT_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="SELECT * FROM MAP_OBJECT_TABLE";
-
-    //check database table exists
-    char database_table[80];
-    strcpy(database_table, strstr(sql, "FROM")+5);
-    if(table_exists(database_table)==false){
-
-        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
-        stop_server();
-    }
 
     //prepare the sql statement
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -112,11 +101,9 @@ void add_db_map_objects(int map_id, char *elm_filename){
 
     /** public function - see header */
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_OBJECT_TABLE", GET_CALL_INFO);
 
     //load e3d and object data, otherwise we'll be unable to populate the map object entries
     //with links
@@ -208,15 +195,14 @@ void add_db_map_objects(int map_id, char *elm_filename){
     }
 }
 
+
 void update_db_map_objects(int map_id){
 
     /** public function - see header */
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_OBJECT_TABLE", GET_CALL_INFO);
 
     load_db_maps();//required for threed object count
     load_db_map_objects();

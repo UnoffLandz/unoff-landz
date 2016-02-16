@@ -69,7 +69,7 @@ To compile server, link with the following libraries :
 #include "db/db_map_object_tbl.h"
 #include "db/db_upgrade.h"
 #include "db/db_guild_tbl.h"
-#include "db/db_skills_tbl.h"
+#include "db/db_skill_tbl.h"
 #include "date_time_functions.h"
 #include "movement.h"
 #include "server_start_stop.h"
@@ -137,14 +137,7 @@ void start_server(){
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-        fprintf(stderr, "database not open in function %s: module %s: line %i\n", __func__, __FILE__, __LINE__);
-
-        //can't use stop_server() function as it will try and close database
-        exit(EXIT_FAILURE);
-    }
+    check_db_open(GET_CALL_INFO);
 
     load_db_game_data();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file

@@ -24,7 +24,7 @@
 #include "../logging.h"
 #include "database_functions.h"
 #include "../server_start_stop.h"
-#include "../char_experience.h"
+#include "../character_skill.h"
 #include "../string_functions.h"
 
 
@@ -100,8 +100,9 @@ void add_db_skill_level(int skill_type_id, int level, int exp){
 
     /** public function - see header */
 
-    //check database is open
+    //check database is open and table exists
     check_db_open(GET_CALL_INFO);
+    check_table_exists("SKILL_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="";
 

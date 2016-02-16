@@ -101,13 +101,18 @@ void load_db_objects(){
 
 void add_db_object(int object_id, char *object_name, bool harvestable, bool edible, int interval, double emu, int equipable_item_type, int equipable_item_id){
 
-    /** public function - see header */
+    /** RESULT  : adds an object to the object table
 
-    //check database is open
-    if(!db){
+        RETURNS : void
 
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+        PURPOSE : used by batch_add_objects function
+
+        NOTES   :
+    **/
+
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("OBJECT_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="";
 

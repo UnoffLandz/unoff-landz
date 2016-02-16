@@ -46,22 +46,11 @@ void load_db_maps(){
     sqlite3_stmt *stmt;
     int i=0;
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="SELECT * FROM MAP_TABLE";
-
-    //check database table exists
-    char database_table[80];
-    strcpy(database_table, strstr(sql, "FROM")+5);
-    if(table_exists(database_table)==false){
-
-        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
-        stop_server();
-    }
 
     //prepare sql statement
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -172,10 +161,7 @@ bool get_db_map_exists(int map_id) {
     sqlite3_stmt *stmt;
 
     //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    check_db_open(GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="SELECT count(*) FROM MAP_TABLE WHERE MAP_ID=?";
 
@@ -230,11 +216,8 @@ void delete_map(int map_id){
 
     /** public function - see header */
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="DELETE FROM MAP_TABLE WHERE MAP_ID=?";
 
@@ -273,11 +256,9 @@ void add_db_map(int map_id, char *elm_filename){
 
     /** public function - see header */
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
     read_elm_header(elm_filename);
     read_tile_map(elm_filename, maps.map[map_id].tile_map);
@@ -348,11 +329,9 @@ void list_db_maps(){
 
     sqlite3_stmt *stmt;
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="SELECT * FROM MAP_TABLE";
 
@@ -404,10 +383,7 @@ void change_db_map_name(int map_id, char *map_name){
     sqlite3_stmt *stmt;
 
     //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    check_db_open(GET_CALL_INFO);
 
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled
@@ -444,11 +420,8 @@ void change_db_map_description(int map_id, char *map_description){
 
     sqlite3_stmt *stmt;
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
 
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled
@@ -485,11 +458,8 @@ void change_db_map_author(int map_id, char *map_author){
 
     sqlite3_stmt *stmt;
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
 
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled
@@ -527,10 +497,7 @@ void change_db_map_author_email(int map_id, char *map_author_email){
     sqlite3_stmt *stmt;
 
     //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    check_db_open(GET_CALL_INFO);
 
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled
@@ -568,10 +535,7 @@ void change_db_map_development_status(int map_id, int map_development_status){
     sqlite3_stmt *stmt;
 
     //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    check_db_open(GET_CALL_INFO);
 
     //use parameters rather than inserting values as this enables apostrophe characters
     //to be handled

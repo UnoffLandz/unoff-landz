@@ -33,22 +33,11 @@ void load_db_npc_actions(){
 
     sqlite3_stmt *stmt;
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("NPC_ACTION_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="SELECT * FROM NPC_ACTION_TABLE";
-
-    //check database table exists
-    char database_table[80];
-    strcpy(database_table, strstr(sql, "FROM")+5);
-    if(table_exists(database_table)==false){
-
-        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
-        stop_server();
-    }
 
     //prepare the sql statement
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -114,11 +103,9 @@ int object_id_given, int object_amount_given, int boat_node, int destination){
 
     /** public function - see header */
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("NPC_ACTION_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,

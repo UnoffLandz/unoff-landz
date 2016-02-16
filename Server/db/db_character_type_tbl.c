@@ -38,11 +38,9 @@ void load_db_char_types(){
 
     log_event(EVENT_INITIALISATION, "loading character types...");
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("CHARACTER_TYPE_TABLE", GET_CALL_INFO);
 
     //check database table exists
     const char database_table[]="CHARACTER_TYPE_TABLE";
@@ -105,13 +103,18 @@ void load_db_char_types(){
 
 void add_db_char_type(int char_type_id, int race_id, int gender_id){
 
-    /** public function - see header */
+    /** RESULT  : loads an entry to the character type table
 
-    //check database is open
-    if(!db){
+        RETURNS : void
 
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+        PURPOSE : used in batch_add_char_types
+
+        NOTES   :
+    **/
+
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("CHARACTER_TYPE_TABLE", GET_CALL_INFO);
 
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
@@ -123,7 +126,7 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
 
     process_sql(sql);
 
-   //load race and gender data so that we can create a meaningful messages
+    //load race and gender data so that we can create a meaningful messages
     load_db_char_races();
     load_db_genders();
 

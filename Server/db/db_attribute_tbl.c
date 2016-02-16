@@ -31,20 +31,9 @@ void load_db_attributes(){
 
     /** public function - see header */
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
-
-    log_event(EVENT_INITIALISATION, "loading attributes...");
-
-    //check database table exists
-    if(table_exists("ATTRIBUTE_TABLE")==false){
-
-        log_event(EVENT_ERROR, "table [ATTRIBUTE_TABLE] not found in database");
-        stop_server();
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("ATTRIBUTE_TABLE", GET_CALL_INFO);
 
     int i=0;
 
@@ -115,11 +104,9 @@ void add_db_attribute(int race_id, int attribute_type_id, int attribute_value[50
 
     /** public function - see header */
 
-    //check database is open
-    if(!db){
-
-        log_event(EVENT_ERROR, "database not open in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-    }
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("ATTRIBUTE_TABLE", GET_CALL_INFO);
 
     sqlite3_stmt *stmt;
     char *sErrMsg = 0;

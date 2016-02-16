@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
-#include "char_experience.h"
+#include "character_skill.h"
 #include "clients.h"
 #include "server_protocol_functions.h"
 #include "attributes.h"

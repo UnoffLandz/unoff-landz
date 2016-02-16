@@ -35,17 +35,6 @@
 void load_db_genders();
 
 
-/** RESULT  : adds a gender to the gender table
-
-    RETURNS : void
-
-    PURPOSE : a test function to load genders to the gender table
-
-    NOTES   : to eventually be outsourced to a separate utility
-**/
-void add_db_gender(int gender_id, char *gender_name);
-
-
 /** RESULT  : loads gender data specified in a text file
 
     RETURNS : void

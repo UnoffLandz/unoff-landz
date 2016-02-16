@@ -42,17 +42,6 @@
 void load_db_objects();
 
 
-/** RESULT  : adds an object to the object table
-
-    RETURNS : void
-
-    PURPOSE : a test function to load objects to the object table
-
-    NOTES   : to eventually be outsourced to a separate utility
-**/
-void add_db_object(int object_id, char *object_name, int harvestable, int edible, int interval, double emu, bool equipable);
-
-
 /** RESULT  : loads object data specified in a text file
 
     RETURNS : void
