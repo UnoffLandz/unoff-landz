@@ -181,4 +181,26 @@ void check_db_closed(const char *module, const char *func, const int line);
 **/
 void check_table_exists(char *table_name, const char *module, const char *func, const int line);
 
+
+/** RESULT   : prepares a sql statement for processing
+
+    RETURNS  : void
+
+    PURPOSE  : reporting wrapper
+
+    NOTES    :
+**/
+void prepare_query(const char *sql, sqlite3_stmt **stmt, const char *module, const char *func, const int line);
+
+
+/** RESULT   : disposes of a sql statement after processing
+
+    RETURNS  : void
+
+    PURPOSE  : reporting wrapper
+
+    NOTES    :
+**/
+void destroy_query(const char *sql, sqlite3_stmt **stmt, const char *module, const char *func, const int line);
+
 #endif // DATABASE_FUNCTIONS_H_INCLUDED

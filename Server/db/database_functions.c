@@ -155,6 +155,34 @@ void close_database(){
 }
 
 
+void prepare_query(const char *sql, sqlite3_stmt **stmt, const char *module, const char *func, const int line){
+
+     /** public function - see header **/
+
+    int rc=sqlite3_prepare_v2(db, sql, -1, stmt, NULL);
+
+    if(rc!=SQLITE_OK) {
+
+        log_sqlite_error("sqlite_prepare_v2 failed", func, module, line, rc, sql);
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+void destroy_query(const char *sql, sqlite3_stmt **stmt, const char *module, const char *func, const int line){
+
+    /** public function - see header **/
+
+    int rc=sqlite3_finalize(*stmt);
+
+    if(rc!=SQLITE_OK){
+
+        log_sqlite_error("sqlite3_finalize failed", func, module, line, rc, sql);
+        exit(EXIT_FAILURE);
+    }
+}
+
+
 bool table_exists(const char *table_name) {
 
     /** public function - see header **/
@@ -429,7 +457,7 @@ void populate_database(const char *db_filename){
     /** public function - see header **/
 
     //check database is open
-    check_db_closed(GET_CALL_INFO);
+    check_db_open(GET_CALL_INFO);
 
     //create logical divider in log file and on console
     log_text(EVENT_INITIALISATION, "\nCreating database tables...\n");
@@ -461,9 +489,17 @@ void populate_database(const char *db_filename){
 
     batch_add_races(RACE_FILE); //add race before gender and char type
     batch_add_gender(GENDER_FILE);
+
+    //load race and gender data so that we can have meaningful messages when logging
+    //batch_add_char_types
+    load_db_char_races();
+    load_db_genders();
     batch_add_char_types(CHAR_TYPE_FILE);
+
     batch_add_seasons(SEASON_FILE);
+
     batch_add_objects(OBJECT_FILE); //add objects before e3ds and maps
+
     batch_add_e3ds(E3D_FILE);
     batch_add_maps(MAP_FILE);//also adds map objects
     batch_add_skills(HARVESTING_SKILL, HARVESTING_SKILL_FILE);

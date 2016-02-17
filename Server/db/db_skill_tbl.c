@@ -86,12 +86,6 @@ void load_db_skills(){
 
              log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
         }
-
-        if(i==0){
-
-            log_event(EVENT_ERROR, "no harvest skill levels found in database", i);
-            stop_server();
-        }
     }
 }
 
@@ -106,7 +100,7 @@ void add_db_skill_level(int skill_type_id, int level, int exp){
 
     char sql[MAX_SQL_LEN]="";
 
-    snprintf(sql, MAX_SQL_LEN, "INSERT INTO SKILLS_TABLE("  \
+    snprintf(sql, MAX_SQL_LEN, "INSERT INTO SKILL_TABLE("  \
         "SKILL_TYPE_ID," \
         "LEVEL," \
         "EXP " \

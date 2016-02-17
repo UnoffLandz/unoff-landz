@@ -27,10 +27,7 @@
 /***************************************************************************************************
                                 BUILD 10
 
-Done -  as there's no way for the server to stop char movement after it's been initiated
-        through the client, there's not much point in attempting to stop movement on
-        commands like sit/stand, harvest etc. Hence stop_movement flags on protocol array
-        are now all set to false.
+Done -  Implemented sqlite_prepare and sqlite_finalize reporting wrappers
 
 Done -  add emu equipable_item_type and equipable_item_id to object table
 
@@ -66,6 +63,7 @@ Done - implemented batch loading of skills data
 
 TEST whether db skills add from list to database
 
+implement prepare_sql and destroy_sql functions in place of raw sqlite functions
 implement GET_CALL_INFO macro in log functions
 
 function to calculate level from exp

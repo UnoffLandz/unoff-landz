@@ -398,7 +398,7 @@ int add_db_char_data(struct client_node_type character){
     }
 
     rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
-    if (rc != SQLITE_DONE) {
+    if (rc != SQLITE_OK) {
 
         log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, inventory_tbl_sql);
     }

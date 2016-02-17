@@ -40,15 +40,6 @@ void load_db_char_races(){
     sqlite3_stmt *stmt;
     char sql[MAX_SQL_LEN]="SELECT * FROM RACE_TABLE";
 
-    //check database table exists
-    char database_table[80];
-    strcpy(database_table, strstr(sql, "FROM")+5);
-    if(table_exists(database_table)==false){
-
-        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
-        stop_server();
-    }
-
     //prepare the sql statement
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){

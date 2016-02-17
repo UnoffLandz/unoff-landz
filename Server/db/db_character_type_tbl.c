@@ -126,13 +126,9 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
 
     process_sql(sql);
 
-    //load race and gender data so that we can create a meaningful messages
-    load_db_char_races();
-    load_db_genders();
+    fprintf(stderr, "Character type [%i] gender [%s] race [%s] added successfully\n", char_type_id, gender[gender_id].gender_name, race[race_id].race_name);
 
-    fprintf(stderr, "Character type [%i] gender [%s] race [%s] added successfully\n", char_type_id, race[race_id].race_name, gender[gender_id].gender_name);
-
-    log_event(EVENT_SESSION, "Added character type [%i] gender [%s] race [%s] to CHARACTER_TYPE_TABLE", char_type_id,race[race_id].race_name, gender[gender_id].gender_name);
+    log_event(EVENT_SESSION, "Added character type [%i] gender [%s] race [%s] to CHARACTER_TYPE_TABLE", char_type_id, gender[gender_id].gender_name, race[race_id].race_name);
 }
 
 
