@@ -59,8 +59,8 @@ void send_packet(int socket, void *packet, size_t packet_length){
             log_event(EVENT_ERROR, "send failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
             log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
 
-            int actor_node=client_socket[socket].actor_node;
-            log_text(EVENT_ERROR, "actor node [%i] actor name [%s] protocol [%i]", actor_node, clients.client[actor_node].char_name, (int)packet);
+            int32_t actor_node=client_socket[socket].actor_node;
+            log_text(EVENT_ERROR, "actor node [%i] actor name [%s] protocol [%i]", actor_node, clients.client[actor_node].char_name, packet);
 
             return;
         }

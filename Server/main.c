@@ -965,19 +965,6 @@ int main(int argc, char *argv[]){
     //execute start server
     if(option.start_server==true){
 
-        fprintf(stdout, "This option [S] starts the game server using the existing database.\n");
-        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
-
-        if(get_decision()==false){
-
-            log_text(EVENT_INITIALISATION, "Aborted server start");
-            fprintf(stdout, "Aborted server start\n");
-
-            //Because server hasn't started we use exit rather than stop_server()
-            //We also use EXIT_SUCCESS as this is not an error situation
-            exit(EXIT_SUCCESS);
-        }
-
         //use database file specified in command line if specified
         if(argc==3) strcpy(db_filename, argv[2]);
 
@@ -1132,7 +1119,7 @@ int main(int argc, char *argv[]){
         //use object data file specified in command line if specified
         if(argc==3) strcpy(filename, argv[2]);
 
-        fprintf(stdout, "This option [O] replaces existing object data on the game server database with that" \
+        fprintf(stdout, "This option [O] replaces existing object data on the game server database with that " \
         "uploaded from file name [%s]\n", OBJECT_FILE);
         fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
 

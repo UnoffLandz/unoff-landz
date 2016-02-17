@@ -61,6 +61,11 @@ Done - implemented batch loading of skills data
 
                                 TO - DO
 
+Need command line option to load skill
+Fix bug duplicate skills table error
+
+Put broadcast_get_new_bag_packet etc in new module broadcast_bags
+
 TEST whether db skills add from list to database
 
 implement prepare_sql and destroy_sql functions in place of raw sqlite functions

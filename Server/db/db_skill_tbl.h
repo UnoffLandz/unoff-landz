@@ -22,7 +22,7 @@
 
 #define SKILL_TABLE_SQL "CREATE TABLE SKILL_TABLE( \
         SKILL_ID        INTEGER PRIMARY KEY NOT NULL, \
-        SKILL_TYPE_ID   TEXT, \
+        SKILL_TYPE_ID   INT, \
         LEVEL           INT, \
         EXP             INT)"
 

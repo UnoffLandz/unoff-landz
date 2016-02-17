@@ -226,7 +226,6 @@ void broadcast_actor_packet(int actor_node, unsigned char move, int sender_desti
 }
 
 
-
 void broadcast_get_new_bag_packet(int actor_node, int bag_id) {
 
     /** public function - see header */

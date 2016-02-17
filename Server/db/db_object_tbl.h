@@ -27,7 +27,7 @@
         HARVESTABLE         INT,  \
         EDIBLE              INT,  \
         HARVEST_INTERVAL    INT,  \
-        EMU                 REAL, \
+        EMU                 INT, \
         EQUIPABLE_ITEM_TYPE INT,  \
         EQUIPABLE_ITEM_ID   INT)"
 
