@@ -32,7 +32,6 @@
 #include "characters.h"
 #include "game_data.h"
 #include "character_race.h"
-#include "db/db_character_inventory_tbl.h"
 #include "packet.h"
 #include "character_race.h"
 #include "character_type.h"
@@ -64,7 +63,7 @@ void check_new_character(int actor_node, const unsigned char *packet){
     //for two strings separated by a space
     if(sscanf(char_name_and_password, "%s %s", char_name, password)!=2){
 
-        log_event(EVENT_ERROR, "failed to find character name in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "failed to find character name in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -125,10 +124,11 @@ void add_new_character(int actor_node, const unsigned char *packet){
     //extract the char name and password
     if(sscanf(_packet_1.char_name_and_password, "%s %s", character.char_name, character.password)!=2){
 
-        log_event(EVENT_ERROR, "failed to find character name in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "failed to find character name in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
+    //add the char data
     character.skin_type=_packet_2.skin_type;
     character.hair_type=_packet_2.hair_type;
     character.shirt_type=_packet_2.shirt_type;
@@ -144,21 +144,7 @@ void add_new_character(int actor_node, const unsigned char *packet){
     character.char_created=time(NULL);
 
     //set starting channels
-    int j=0;
-    for(int i=0; i<MAX_CHANNELS; i++){
-
-        if(channel[i].new_chars==1){
-
-            if(j<MAX_CHAN_SLOTS){
-
-                if(j==0) {
-
-                    character.active_chan=i;
-                    character.chan[j]=i;
-                }
-            }
-        }
-    }
+    add_new_char_chat_channels();
 
     //set starting map and tile
     character.map_id=game_data.beam_map_id;
@@ -167,22 +153,22 @@ void add_new_character(int actor_node, const unsigned char *packet){
     //add character data to the database and retrieve the database entry for the character
     character.character_id=add_db_char_data(character);
 
-    //TEST CODE -- add initial items to inventory
+    //add initial items to inventory
     //character.client_inventory[0].slot=1; //slots run from 1
     //character.client_inventory[0].image_id=612;
     //character.client_inventory[0].amount=10;
-
-    add_db_char_inventory(character);
+    //add_db_char_inventory(character);
 
     //update game details
     game_data.char_count++;
     strcpy(game_data.name_last_char_created, character.char_name);
     game_data.date_last_char_created=character.char_created;
 
-    //update game stats
+    //update race stats
     int race_id=character_type[character.char_type].race_id;
     race[race_id].char_count++;
 
+    //update gender stats
     int gender_id=character_type[character.char_type].gender_id;
     gender[gender_id].char_count++;
 

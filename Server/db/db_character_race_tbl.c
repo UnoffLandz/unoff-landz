@@ -44,7 +44,7 @@ void load_db_char_races(){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //read the sql query result into the race array
@@ -55,7 +55,7 @@ void load_db_char_races(){
 
         if(race_id>MAX_RACES) {
 
-            log_event(EVENT_ERROR, "race_id [%i] exceeds max [%i] in function %s: module %s: line %i", race_id, MAX_RACES, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "race_id [%i] exceeds max [%i] in function %s: module %s: line %i", race_id, MAX_RACES, GET_CALL_INFO);
             stop_server();
         }
 
@@ -67,17 +67,11 @@ void load_db_char_races(){
         i++;
     }
 
-    //test that we were able to read all the rows in the query result
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy the sql statement
     rc=sqlite3_finalize(stmt);
     if (rc != SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     if(i==0){
@@ -99,19 +93,33 @@ void add_db_race(int race_id, char *race_name, char *race_description){
         NOTES   :
     **/
 
+    sqlite3_stmt *stmt=NULL;
+
     //check database is open and table exists
     check_db_open(GET_CALL_INFO);
     check_table_exists("RACE_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO RACE_TABLE("  \
+    char sql[MAX_SQL_LEN]="INSERT INTO RACE_TABLE("  \
         "RACE_ID," \
         "RACE_NAME," \
         "RACE_DESCRIPTION" \
-        ") VALUES(%i, '%s', '%s')", race_id, race_name, race_description);
+        ") VALUES(?, ?, ?)";
 
-    process_sql(sql);
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, race_id);
+    sqlite3_bind_text(stmt, 2, race_name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, race_description, -1, SQLITE_STATIC);
+
+    //process sql statement
+    int rc=sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
+    }
+
+    //destroy query
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "Race [%s] added successfully\n", race_name);
 

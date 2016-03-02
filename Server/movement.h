@@ -58,4 +58,37 @@ bool tile_in_lateral_bounds(int tile, int next_tile, int map_id);
 bool tile_walkable(int map_id, int map_tile);
 bool tile_unoccupied(int map_id, int map_tile);
 
+/** RESULT  : broadcasts the enhanced_new_actor packet to all clients in range
+
+    RETURNS : void
+
+    PURPOSE : broadcasts character addition
+
+    NOTES   :
+*/
+void broadcast_add_new_enhanced_actor_packet(int actor_node);
+
+
+/** RESULT  : broadcasts the remove_actor packet to all clients in range
+
+    RETURNS : void
+
+    PURPOSE : broadcasts character removal
+
+    NOTES   :
+*/
+void broadcast_remove_actor_packet(int actor_node);
+
+
+/** RESULT  : broadcasts the actor packet to all clients in range
+
+    RETURNS : void
+
+    PURPOSE : broadcasts character movement
+
+    NOTES   :
+*/
+void broadcast_actor_packet(int actor_node, unsigned char move, int sender_destination_tile);
+
+
 #endif // MOVEMENT_H_INCLUDED

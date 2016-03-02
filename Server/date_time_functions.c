@@ -105,7 +105,7 @@ void get_game_season(int game_days, char *season_name, char *season_description)
         }
     }
 
-    log_event(EVENT_ERROR, "invalid season in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+    log_event(EVENT_ERROR, "invalid season in function %s: module %s: line %i", GET_CALL_INFO);
     stop_server();
 }
 

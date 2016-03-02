@@ -24,6 +24,7 @@
 #include "../logging.h"
 #include "../guilds.h"
 #include "../server_start_stop.h"
+#include "../string_functions.h"
 
 
 void load_db_guilds(){
@@ -44,7 +45,7 @@ void load_db_guilds(){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //read the sql query result into the guild array
@@ -65,17 +66,11 @@ void load_db_guilds(){
         i++;
     }
 
-    //test that we were able to read all the rows in the query result
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK){
 
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     if(i==0){
@@ -112,7 +107,7 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //bind the data
@@ -130,14 +125,7 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
     }
 
     //find the id of the new entry
@@ -147,7 +135,7 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
     rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //process the sql statement
@@ -157,16 +145,11 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
         id=sqlite3_column_int(stmt, 0);
     }
 
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy the sql statement
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     fprintf(stderr, "Guild [%s] added successfully\n", guild_tag);
@@ -199,7 +182,7 @@ void get_db_guild_member_list(int guild_id, int order){
     }
     else {
 
-        log_event(EVENT_ERROR, "unknown order type [%i] function %s: module %s: line %i", order, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unknown order type [%i] function %s: module %s: line %i", order, GET_CALL_INFO);
         stop_server();
     }
 
@@ -207,7 +190,7 @@ void get_db_guild_member_list(int guild_id, int order){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //zero the struct
@@ -235,15 +218,46 @@ void get_db_guild_member_list(int guild_id, int order){
 
     guild_member_list.guild_member_count=i;
 
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy sql command
     rc=sqlite3_finalize(stmt);
     if (rc != SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize", GET_CALL_INFO, rc, sql);
     }
 }
+
+
+void batch_add_guilds(char *file_name){
+
+    /**public function - see header**/
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "guild load file [%s] not found", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    log_event(EVENT_INITIALISATION, "\nAdding guilds specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding guilds specified in file [%s]\n", file_name);
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[6][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        add_db_guild(output[0], output[1], atoi(output[2]), output[3], atoi(output[4]), atoi(output[5]));
+    }
+
+    fclose(file);
+}
+

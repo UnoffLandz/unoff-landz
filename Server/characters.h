@@ -22,11 +22,57 @@
 
 #include "clients.h"
 
+#define CHARACTER_FILE "character.lst"
+
 enum {// actor frame (needed for stand up/sit down
+
+/*
+    #define frame_walk 0
+    #define frame_run 1
+    #define frame_die1 2
+    #define frame_die2 3
+    #define frame_pain1 4
+    #define frame_pain2 11
+    #define frame_pick 5
+    #define frame_drop 6
+    #define frame_idle 7
+    #define frame_harvest 8
+    #define frame_cast 9
+    #define frame_ranged 10
+*/
     frame_sit=12,
     frame_stand=13,
-    frame_sit_idle=14
+    frame_sit_idle=14, //use this for sitting
+/*
+    #define frame_combat_idle 15
+    #define frame_in_combat 16
+    #define frame_out_combat 17
+    #define frame_attack_up_1 18
+    #define frame_attack_up_2 19
+    #define frame_attack_up_3 20
+    #define frame_attack_up_4 21
+    #define frame_attack_down_1 22
+    #define frame_attack_down_2 23
+    #define frame_attack_down_3 24
+    #define frame_attack_down_4 25
+    #define frame_attack_down_5 26
+    #define frame_attack_down_6 27
+    #define frame_attack_down_7 28
+    #define frame_attack_down_8 29
+    #define frame_attack_down_9 30
+    #define frame_attack_down_10 31
+    #define frame_attack_up_5 32
+    #define frame_attack_up_6 33
+    #define frame_attack_up_7 34
+    #define frame_attack_up_8 35
+    #define frame_attack_up_9 36
+    #define frame_attack_up_10 37
+    //frame values for poses (40 different poses)
+    #define frame_poses_start 100
+    #define frame_poses_end 140
+*/
 };
+
 
 enum { // actor command
     actor_cmd_nothing=0,
@@ -43,6 +89,7 @@ enum { // actor command
 };
 
 enum { // shield type
+
     SHIELD_WOOD=0,
     SHIELD_WOOD_ENHANCED=1,
     SHIELD_IRON=2,
@@ -135,7 +182,27 @@ enum {//equipable weapons
     BOW_CROSS                   =68,
 };
 
+enum { //neck items
+
+    NECK_NO_ITEM                =0,
+    NECK_UNICORN_MEDALION       =1,
+    NECK_SUN_MEDALLION          =2,
+    NECK_BLUESTONE              =3,
+    NECK_REDSTONE               =4,
+    NECK_BRONZE_ARMOUR          =5,
+    NECK_BLUE_ARMOUR            =6,
+    NECK_RED_ARMOUR             =7,
+    NECK_SILVER_TURQUIOSE       =8,
+    NECK_TURQUIOSE_AMBER        =9,
+    NECK_STAR_MEDALLION         =10,
+    NECK_MOON_MEDALLION         =11,
+    NECK_GOLD_MEDALLION         =12,
+    NECK_FOX_SCARF              =13
+};
+
+
 enum { // cape type
+
     CAPE_BLACK,
     CAPE_BLUE,
     CAPE_BLUEGRAY,

@@ -23,6 +23,7 @@
 #include "maps.h"
 #include "logging.h"
 #include "characters.h"
+#include "server_protocol_functions.h"
 
 struct vector_type vector[] = {
 
@@ -176,4 +177,198 @@ int get_nearest_unoccupied_tile(int map_id, int map_tile){
     }
 
     return -1;
+}
+
+
+
+void broadcast_add_new_enhanced_actor_packet(int actor_node){
+
+    /** public function - see header */
+
+    int map_id=clients.client[actor_node].map_id;
+    int char_tile=clients.client[actor_node].map_tile;
+
+    //pre-create the add_new_enhanced_actor packet so we don't have to repeat this on each occasion when
+    //it needs to sent to other actors
+    unsigned char packet[MAX_PACKET_SIZE]={0};
+    size_t packet_length=0;
+
+    add_new_enhanced_actor_packet(actor_node, packet, &packet_length);
+
+    //cycle through all the actors
+    for(int i=0; i<MAX_ACTORS; i++){
+
+        //restrict to used nodes
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED
+        && clients.client[i].player_type==PLAYER){
+
+            //exclude the broadcasting char
+            if(i!=actor_node){
+
+                //restrict to chars on the same map as broadcasting char
+                if(map_id==clients.client[i].map_id){
+
+                    //select this char and those characters in visual range of this char
+                    int receiver_char_visual_range=get_char_visual_range(i);
+                    int receiver_char_tile=clients.client[i].map_tile;
+
+                    //restrict to those chars that can see the broadcasting char
+                    if(get_proximity(char_tile, receiver_char_tile, map_id) < receiver_char_visual_range){
+
+                        send_packet(clients.client[i].socket, packet, packet_length);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void broadcast_remove_actor_packet(int actor_node){
+
+    /** public function - see header */
+
+    int map_id=clients.client[actor_node].map_id;
+    int char_tile=clients.client[actor_node].map_tile;
+
+    //pre-create the remove char packet so we don't have to repeat this on each occasion when it needs to
+    //sent to other actors
+    unsigned char packet[MAX_PACKET_SIZE]={0};
+    size_t packet_length=0;
+    remove_actor_packet(actor_node, packet, &packet_length);
+
+    //cycle through all the actors
+    for(int i=0; i<MAX_ACTORS; i++){
+
+        //restrict to clients that are logged in
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED
+        && clients.client[i].player_type==PLAYER){
+
+            //exclude the broadcasting char
+            if(i!=actor_node){
+
+                //restrict to chars on the same map as broadcasting char
+                if(map_id==clients.client[i].map_id){
+
+                    int receiver_char_visual_range=get_char_visual_range(i);
+                    int receiver_char_tile=clients.client[i].map_tile;
+
+                    //restrict to those chars that can see the broadcasting char
+                    if(get_proximity(char_tile, receiver_char_tile, map_id) < receiver_char_visual_range){
+
+                        send_packet(clients.client[i].socket, packet, packet_length);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void broadcast_actor_packet(int actor_node, unsigned char move, int sender_destination_tile){
+
+    /** public function - see header */
+
+    unsigned char packet[MAX_PACKET_SIZE];// sending char packets
+    size_t packet_length=0;
+
+    unsigned char packet1[MAX_PACKET_SIZE];// receiving char add_actor packet
+    size_t packet1_length=0;
+
+    unsigned char packet2[MAX_PACKET_SIZE];// receiving char add_enhanced_actor packet
+    size_t packet2_length=0;
+
+    unsigned char packet3[MAX_PACKET_SIZE];// receiving char remove_actor packet
+    size_t packet3_length=0;
+
+    int sender_current_tile=clients.client[actor_node].map_tile;
+    int sender_visual_range=get_char_visual_range(actor_node);
+
+    int map_id=clients.client[actor_node].map_id;
+
+    int proximity_before_move=0;
+    int proximity_after_move=0;
+
+    int socket=clients.client[actor_node].socket;
+
+    // pre-create packets that will be sent more than once in order to save time
+    add_actor_packet(socket, move, packet1, &packet1_length);
+    add_new_enhanced_actor_packet(actor_node, packet2, &packet2_length);
+    remove_actor_packet(actor_node, packet3, &packet3_length);
+
+    // broadcast sender char move to all clients
+    for(int i=0; i<MAX_ACTORS; i++){
+
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED){
+
+            if(clients.client[i].map_id==clients.client[actor_node].map_id){
+
+                int receiver_tile=clients.client[i].map_tile;
+                int receiver_visual_range=get_char_visual_range(i);
+
+                proximity_before_move=get_proximity(sender_current_tile, receiver_tile, map_id);
+                proximity_after_move=get_proximity(sender_destination_tile, receiver_tile, map_id);
+
+                //This block deals with receiving char vision (exclude npc's)
+                if(i!=actor_node && clients.client[i].player_type==PLAYER){
+
+                    //sending char moves into visual proximity of receiving char (send enhanced actor packet)
+                    if(proximity_before_move > receiver_visual_range && proximity_after_move <= receiver_visual_range){
+
+                        send_packet(clients.client[i].socket, packet2, packet2_length);
+                    }
+
+                    //sending char moves out of visual proximity of receiving char (send remove actor packet)
+                    else if(proximity_before_move<=receiver_visual_range && proximity_after_move>receiver_visual_range){
+
+                        send_packet(clients.client[i].socket, packet3, packet3_length);
+                    }
+
+                    //sending char moving within visual proximity of receiving char (send add actor packet)
+                     else if(proximity_before_move<=receiver_visual_range && proximity_after_move<=receiver_visual_range){
+
+                        send_packet(clients.client[i].socket, packet1, packet1_length);
+                    }
+
+                    //sending char moving outside visual proximity of receiving char (do nothing)
+                    else {
+
+                        //do nothing - block is for debug purposes only
+                    }
+                }
+
+                //sending char moves into visual proximity of receiving char
+                if(proximity_before_move>sender_visual_range && proximity_after_move <= sender_visual_range){
+
+                    add_new_enhanced_actor_packet(i, packet, &packet_length);
+                    send_packet(socket, packet, packet_length);
+                }
+
+                //sending char moves out of visual proximity of receiving char
+                else if(proximity_before_move<=sender_visual_range && proximity_after_move>sender_visual_range){
+
+                    remove_actor_packet(i, packet, &packet_length);
+                    send_packet(socket, packet, packet_length);
+                }
+
+                //sending char moves within visual proximity of receiving char
+                else if(proximity_before_move<=sender_visual_range
+                && proximity_after_move<=sender_visual_range
+                && clients.client[i].player_type==PLAYER){
+
+                    if(i==actor_node) {
+
+                        // sending char sees itself move
+                        add_actor_packet(clients.client[i].socket, move, packet, &packet_length);
+                    }
+                    else {
+                        // sending char sees itself stationery
+                        add_actor_packet(clients.client[i].socket, actor_cmd_nothing, packet, &packet_length);
+                    }
+
+                    send_packet(socket, packet, packet_length);
+                }
+            }
+        }
+    }
 }

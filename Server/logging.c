@@ -447,7 +447,7 @@ void log_event(int event_type, const char *fmt, ...){
     size_t len=strlen(text_in);
     if(len>=MAX_LOG_STRING){
 
-        log_event(EVENT_ERROR, "log text [%i] exceeds maximum string size [%i] in function %s: module %s: line %i", len, MAX_LOG_STRING, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "log text [%i] exceeds maximum string size [%i] in function %s: module %s: line %i", len, MAX_LOG_STRING, GET_CALL_INFO);
         stop_server();
     }
 
@@ -571,7 +571,7 @@ void log_packet(int socket, unsigned char *packet, int direction){
 
     if(packet_length>=MAX_PACKET_SIZE){
 
-        log_event(EVENT_ERROR, "data length [%i] exceeded max [%i] in function %s: module %s: line %i", packet_length, MAX_PACKET_SIZE, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "data length [%i] exceeded max [%i] in function %s: module %s: line %i", packet_length, MAX_PACKET_SIZE, GET_CALL_INFO);
         stop_server();
     }
 

@@ -37,8 +37,6 @@
 #include "map_object.h"
 #include "character_movement.h"
 #include "character_type.h"
-#include "broadcast_chat.h"
-#include "broadcast_movement.h"
 #include "chat.h"
 #include "hash_commands.h"
 #include "server_start_stop.h"
@@ -55,6 +53,7 @@
 #include "character_inventory.h"
 #include "boats.h"
 #include "maps.h"
+#include "movement.h"
 
 #define DEBUG_CLIENT_PROTOCOL_HANDLER 1
 // TODO (themuntdregger#1#): Finish PING_RESPONSE handling
@@ -168,7 +167,7 @@ int client_respond_to_npc(int actor_node, unsigned char *packet){
 
                 else {
 
-                    log_event(EVENT_ERROR, "unknown npc action type [%i] in function %s: module %s: line %i", npc_action[action_node].action_type, __func__, __FILE__, __LINE__);
+                    log_event(EVENT_ERROR, "unknown npc action type [%i] in function %s: module %s: line %i", npc_action[action_node].action_type, GET_CALL_INFO);
                 }
             }
         }
@@ -214,7 +213,7 @@ int client_touch_player(int actor_node, unsigned char *packet){
 
                 else{
 
-                    log_event(EVENT_ERROR, "unknown npc action type [%i] in function %s: module %s: line %i", npc_action[action_node].action_type, __func__, __FILE__, __LINE__);
+                    log_event(EVENT_ERROR, "unknown npc action type [%i] in function %s: module %s: line %i", npc_action[action_node].action_type, GET_CALL_INFO);
                 }
             }
         }
@@ -588,14 +587,14 @@ int client_sit_down(int actor_node, unsigned char *packet){
 
         case SIT:{
 
-            clients.client[actor_node].frame=frame_sit;
+            clients.client[actor_node].frame=frame_sit_idle;
             broadcast_actor_packet(actor_node, actor_cmd_sit_down, clients.client[actor_node].map_tile);
             break;
         }
 
         default:{
 
-            log_event(EVENT_ERROR, "unknown sit/stand value [%i] in function %s: module %s: line %i", packet[3], __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "unknown sit/stand value [%i] in function %s: module %s: line %i", packet[3], GET_CALL_INFO);
             stop_server();
         }
     }

@@ -83,8 +83,6 @@ To compile server, link with the following libraries :
 #include "gender.h"
 #include "character_type.h"
 #include "colour.h"
-#include "broadcast_chat.h"
-#include "broadcast_movement.h"
 #include "packet.h"
 #include "bags.h"
 #include "string_functions.h"
@@ -95,6 +93,10 @@ To compile server, link with the following libraries :
 #include "game_time.h"
 #include "file_functions.h"
 #include "server_build_details.h"
+#include "character_skill.h"
+#include "season.h"
+#include "guilds.h"
+#include "character_skill.h"
 
 struct ev_io *libevlist[MAX_ACTORS] = {NULL};
 
@@ -118,6 +120,7 @@ void start_server(){
         NOTES    :
     **/
 
+    //declare structs
     struct ev_loop *loop = ev_default_loop(0);
 
     struct ev_io *socket_watcher = (struct ev_io*)malloc(sizeof(struct ev_io));
@@ -127,22 +130,15 @@ void start_server(){
 
     struct sockaddr_in server_addr;
 
-    //clear garbage from structs
-    memset(&client_socket, 0, sizeof(client_socket));
-    memset(&clients, 0, sizeof(clients));
-
-    // TODO (themuntdregger#1#): clear other structs, ie maps, e3d etc
-
-    //load data from database into memory
-    log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
-
     //check database is open
     check_db_open(GET_CALL_INFO);
 
+    //clear array and load game data
+    memset(&game_data, 0, sizeof(game_data));
     load_db_game_data();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    //check database version (can only be done once game data has been loaded
+    //check database version (can only be done once game data has been loaded)
     if(game_data.database_version != REQUIRED_DATABASE_VERSION) {
 
         log_event(EVENT_ERROR, "Database version [%i] not equal to [%i] - use -U option to upgrade your database\n", game_data.database_version, REQUIRED_DATABASE_VERSION);
@@ -150,44 +146,73 @@ void start_server(){
         stop_server();
     }
 
+    //clear socket array
+    memset(&client_socket, 0, sizeof(client_socket));
+
+    //clear client array
+    memset(&clients, 0, sizeof(clients));
+
+    //clear e3d array and load data
+    memset(&e3d, 0, sizeof(e3d));
     load_db_e3ds();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear object array and load data
+    memset(&object, 0, sizeof(object));
     load_db_objects();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear maps array and load data
+    memset(&maps, 0, sizeof(maps));
     load_db_maps();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear map object array and load data
+    memset(&map_object, 0, sizeof(map_object));
     load_db_map_objects();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear race array and load data
+    memset(&race, 0, sizeof(race));
     load_db_char_races();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear gender array and load data
+    memset(&gender, 0, sizeof(gender));
     load_db_genders();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear char type array and load data
+    memset(&character_type, 0, sizeof(character_type));
     load_db_char_types();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear attribute array and load data
+    memset(&attribute, 0, sizeof(attribute));
     load_db_attributes();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear channel array and load data
+    memset(&channel, 0, sizeof(channel));
     load_db_channels();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear season array and load data
+    memset(&season, 0, sizeof(season));
     load_db_seasons();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear guild array and load data
+    memset(&guilds, 0, sizeof(guilds));
     load_db_guilds();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
+    //clear skill array and load data
+    memset(&skill_level, 0, sizeof(skill_level));
     load_db_skills();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     /** Experimental NPC code **/
-
     clients.client[0].client_node_status=CLIENT_NODE_USED;
     clients.client[0].player_type=NPC;
     strcpy(clients.client[0].char_name, "NPC_1");
@@ -315,7 +340,7 @@ void start_server(){
 
         int errnum=errno;
 
-        log_event(EVENT_ERROR, "failed to create master socket in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "failed to create master socket in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
         stop_server();
     }
@@ -334,7 +359,7 @@ void start_server(){
 
         int errnum=errno;
 
-        log_event(EVENT_ERROR, "setsockopt failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "setsockopt failed in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
         stop_server();
     }
@@ -346,7 +371,7 @@ void start_server(){
 
         int errnum=errno;
 
-        log_event(EVENT_ERROR, "bind failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "bind failed in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
         stop_server();
     }
@@ -358,7 +383,7 @@ void start_server(){
 
         int errnum=errno;
 
-        log_event(EVENT_ERROR, "listen failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "listen failed in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
         stop_server();
     }
@@ -415,14 +440,14 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
 
     if (client_watcher == NULL) {
 
-        log_event(EVENT_ERROR, "malloc failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "malloc failed in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
     //catch errors in libev
     if (EV_ERROR & revents) {
 
-        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -433,7 +458,7 @@ void socket_accept_callback(struct ev_loop *loop, struct ev_io *watcher, int rev
 
         int errnum=errno;
 
-        log_event(EVENT_ERROR, "accept failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "accept failed in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "socket [%i] error [%i] [%s]", watcher->fd, errnum, strerror(errnum));
         stop_server();
     }
@@ -508,7 +533,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
     //catch libev errors
     if (EV_ERROR & revents) {
 
-        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -521,7 +546,7 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
         //check the socket has been registered in the socket array
         if(client_socket[watcher->fd].socket_node_status==SOCKET_UNUSED){
 
-            log_event(EVENT_ERROR, "data received from unregistered socket [%i] in function %s: module %s: line %i", watcher->fd, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "data received from unregistered socket [%i] in function %s: module %s: line %i", watcher->fd, GET_CALL_INFO);
             return;
         }
 
@@ -536,21 +561,21 @@ void socket_read_callback(struct ev_loop *loop, struct ev_io *watcher, int reven
 
                 case EINTR: {// non serious error so keep client connection
 
-                    log_event(EVENT_SESSION, "read EINTR in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                    log_event(EVENT_SESSION, "read EINTR in function %s: module %s: line %i", GET_CALL_INFO);
                     log_text(EVENT_SESSION, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
                     break;
                 }
 
                 case EWOULDBLOCK: {// non serious error so keep client connection
 
-                    log_event(EVENT_SESSION, "read EWOULDBLOCK in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                    log_event(EVENT_SESSION, "read EWOULDBLOCK in function %s: module %s: line %i", GET_CALL_INFO);
                     log_text(EVENT_SESSION, "sock [%i] error [%i] [%s]... ignoring", watcher->fd, errnum, strerror(errnum));
                     break;
                 }
 
                 default:{// serious error so kill client connection
 
-                    log_event(EVENT_ERROR, "read error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                    log_event(EVENT_ERROR, "read error in function %s: module %s: line %i", GET_CALL_INFO);
                     log_text(EVENT_ERROR, "sock [%i] error [%i] [%s]... closing", watcher->fd, errnum, strerror(errnum));
 
                     //close socket and stop watcher
@@ -648,12 +673,13 @@ void game_time_cb(EV_P_ struct ev_timer* timer, int revents){
             NOTES    :
     **/
 
-    (void)(timer);//removes unused parameter warning
+    //removes unused parameter warning
+    (void)(timer);
     (void)(loop);
 
     if (EV_ERROR & revents) {
 
-        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -678,7 +704,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
     //catch evlib error
     if (EV_ERROR & revents) {
 
-        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -782,7 +808,7 @@ void timeout_cb(EV_P_ struct ev_timer* timer, int revents){
 
                         if(move_char_between_maps(i, boat[boat_node].destination_map_id, boat[boat_node].destination_map_tile)==false){
 
-                            log_event(EVENT_ERROR, "invalid map [%i] in function %s: module %s: line %i", boat[boat_node].destination_map_id, __func__, __FILE__, __LINE__);
+                            log_event(EVENT_ERROR, "invalid map [%i] in function %s: module %s: line %i", boat[boat_node].destination_map_id, GET_CALL_INFO);
                             stop_server();
                         }
 
@@ -856,7 +882,7 @@ void idle_cb (struct ev_loop *loop, struct ev_idle *watcher, int revents){
 
     if (EV_ERROR & revents) {
 
-        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "EV error in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -880,8 +906,8 @@ bool get_decision(){
 
     if(fgets(decision, sizeof(decision), stdin)==NULL){
 
-        log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
-        fprintf(stderr, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", GET_CALL_INFO);
+        fprintf(stderr, "something failed in fgets in function %s: module %s: line %i", GET_CALL_INFO);
 
         //Because server hasn't started we use exit rather than stop_server()
         //We also use EXIT_FAILURE as this is an error situation
@@ -923,6 +949,7 @@ int main(int argc, char *argv[]){
         bool help;
         bool load_e3d_list;
         bool load_object_list;
+        bool load_harvest_skill_list;
         bool update_map_objects;
         bool reload_maps;
     }option;
@@ -956,6 +983,7 @@ int main(int argc, char *argv[]){
         if (strcmp(argv[i], "-H") == 0)option.help=true;
         if (strcmp(argv[i], "-E") == 0)option.load_e3d_list=true;
         if (strcmp(argv[i], "-O") == 0)option.load_object_list=true;
+        if (strcmp(argv[i], "-P") == 0)option.load_harvest_skill_list=true;
         if (strcmp(argv[i], "-R") == 0)option.update_map_objects=true;
         if (strcmp(argv[i], "-X") == 0)option.reload_maps=true;
 
@@ -1016,7 +1044,7 @@ int main(int argc, char *argv[]){
             fprintf(stdout, "Replace existing database %s", db_filename);
 
             //backup existing database file
-            create_backup_file(db_filename, 0);// TODO (themuntdregger#1#): need tp be able to create a text based suffix for backups
+            create_backup_file(db_filename);
 
             //delete existing database file
             remove(db_filename);
@@ -1079,7 +1107,7 @@ int main(int argc, char *argv[]){
         if(argc==3) strcpy(filename, argv[2]);
 
         fprintf(stdout, "This option [E] replaces existing e3d data on the game server database with that" \
-        "uploaded from file name [%s]\n", E3D_FILE);
+        "uploaded from file name [%s]\n", filename);
         fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
 
         if(get_decision()==false){
@@ -1120,7 +1148,7 @@ int main(int argc, char *argv[]){
         if(argc==3) strcpy(filename, argv[2]);
 
         fprintf(stdout, "This option [O] replaces existing object data on the game server database with that " \
-        "uploaded from file name [%s]\n", OBJECT_FILE);
+        "uploaded from file name [%s]\n", filename);
         fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
 
         if(get_decision()==false){
@@ -1144,6 +1172,46 @@ int main(int argc, char *argv[]){
         open_database(db_filename);
         process_sql("DELETE FROM OBJECT_TABLE");
         batch_add_objects(filename);
+        close_database();
+
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
+    }
+
+    //execute add from harvest skill list
+    else if(option.load_harvest_skill_list==true){
+
+        char filename[80]=HARVESTING_SKILL_FILE;
+
+        //use object data file specified in command line if specified
+        if(argc==3) strcpy(filename, argv[2]);
+
+        fprintf(stdout, "This option [P] replaces existing harvest skill data on the game server database with that " \
+        "uploaded from file name [%s]\n", filename);
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
+
+        if(get_decision()==false){
+
+            log_text(EVENT_INITIALISATION, "Aborted replace harvest skill data");
+            fprintf(stdout, "Aborted replace harvest skill data\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use database file specified in command line if specified
+        if(argc==4) strcpy(db_filename, argv[5]);
+
+
+        log_text(EVENT_INITIALISATION, "LOAD HARVESTING SKILL LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+        fprintf(stderr, "LOAD HARVESTING SKILL LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+
+        //delete the existing table contents, add new data
+        open_database(db_filename);
+        delete_db_skill(HARVESTING_SKILL);
+        batch_add_skills(HARVESTING_SKILL, HARVESTING_SKILL_FILE);
         close_database();
 
         //Because server hasn't started we use exit rather than stop_server()
@@ -1266,7 +1334,7 @@ int main(int argc, char *argv[]){
 
             if(fgets(decision, sizeof(decision), stdin)==NULL){
 
-                log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_event(EVENT_ERROR, "something failed in fgets in function %s: module %s: line %i", GET_CALL_INFO);
                 exit(EXIT_FAILURE);
             }
 
@@ -1316,15 +1384,16 @@ int main(int argc, char *argv[]){
 
     //display command line options if no command line options are found or command line options are not recognised
     fprintf(stderr, "Command line options...\n");
-    fprintf(stderr, "create database    -C optional [""database file name""]\n");
-    fprintf(stderr, "start server       -S optional [""database file name""]\n");
-    fprintf(stderr, "upgrade database   -U optional [""database file name""]\n");
-    fprintf(stderr, "list loaded maps   -L optional [""database file name""]\n");
-    fprintf(stderr, "load map           -M [map id] [""elm filename""] optional [""database file name""]\n");
-    fprintf(stderr, "load e3d list      -E optional [""e3d file list""] optional [""database file name""]\n");
-    fprintf(stderr, "load object list   -O optional [""object file list""] optional [""database file name""]\n");
-    fprintf(stderr, "update map objects -R [""map file list""] optional [""database file name""]\n");
-    fprintf(stderr, "reload maps        -X [""map file list""] optional [""database file name""]\n");
+    fprintf(stderr, "create database         -C optional [""database file name""]\n");
+    fprintf(stderr, "start server            -S optional [""database file name""]\n");
+    fprintf(stderr, "upgrade database        -U optional [""database file name""]\n");
+    fprintf(stderr, "list loaded maps        -L optional [""database file name""]\n");
+    fprintf(stderr, "load map                -M [map id] [""elm filename""] optional [""database file name""]\n");
+    fprintf(stderr, "load e3d list           -E optional [""e3d file list""] optional [""database file name""]\n");
+    fprintf(stderr, "load object list        -O optional [""object file list""] optional [""database file name""]\n");
+    fprintf(stderr, "load harvest skill list -P optional [""harvest skill file list""] optional [""database file name""]\n");
+    fprintf(stderr, "update map objects      -R [""map file list""] optional [""database file name""]\n");
+    fprintf(stderr, "reload maps             -X [""map file list""] optional [""database file name""]\n");
 
     return 0;//otherwise we get 'control reached end of non void function'
 }

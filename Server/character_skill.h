@@ -21,28 +21,29 @@
 
 #define HARVESTING_SKILL_FILE "harvesting_skill.lst"
 
-#define MAX_LEVELS 127
-#define MAX_SKILLS 12
+#define MAX_LEVELS 255
+#define MAX_SKILLS 13
 
 struct {
 
     int max_exp[MAX_LEVELS];
-}skill_level[MAX_SKILLS];
+}skill_level[MAX_SKILLS+1];
 
 enum{//skill types
 
-    HARVESTING_SKILL    =1,
-    MAGIC_SKILL         =2,
-    MANUFACTURING_SKILL =3,
-    ALCHEMY_SKILL       =4,
-    DEFENCE_SKILL       =5,
-    ATTACK_SKILL        =6,
-    POTION_SKILL        =7,
-    SUMMONING_SKILL     =8,
-    CRAFTING_SKILL      =9,
-    ENGINEERING_SKILL   =10,
-    RANGING_SKILL       =11,
-    TAILORING_SKILL     =12,
+    NO_SKILL,
+    HARVESTING_SKILL,
+    MAGIC_SKILL,
+    MANUFACTURING_SKILL,
+    ALCHEMY_SKILL,
+    DEFENCE_SKILL,
+    ATTACK_SKILL,
+    POTION_SKILL,
+    SUMMONING_SKILL,
+    CRAFTING_SKILL,
+    ENGINEERING_SKILL,
+    RANGING_SKILL,
+    TAILORING_SKILL
 };
 
 struct skill_name_type{
@@ -62,6 +63,17 @@ extern struct skill_name_type skill_name[MAX_SKILLS];
     NOTES    :
 **/
 void add_exp(int actor_node, int skill_id, int exp);
+
+
+/** RESULT   : gets the level for an amount of skill experience
+
+    RETURNS  : level
+
+    PURPOSE  :
+
+    NOTES    :
+**/
+int get_lvl(int skill_type_id, int exp);
 
 
 #endif // CHARACTER_SKILL_H_INCLUDED

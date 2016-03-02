@@ -66,7 +66,7 @@ void update_guild_details(int character_id, int guild_id, time_t joined_guild, i
             //re-add char to map so that guild tag changes are immediately visible
             if(add_char_to_map(i, clients.client[i].map_id, clients.client[i].map_tile)==false){
 
-               log_event(EVENT_ERROR, "unable to add char[%s] to map in function %s: module %s: line %i", clients.client[i].char_name, __func__, __FILE__, __LINE__);
+               log_event(EVENT_ERROR, "unable to add char[%s] to map in function %s: module %s: line %i", clients.client[i].char_name, GET_CALL_INFO);
                stop_server();
             }
 
@@ -428,7 +428,7 @@ void send_guild_details(int actor_node, int guild_id){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     int member_count=0;
@@ -450,12 +450,12 @@ void send_guild_details(int actor_node, int guild_id){
 
     if (rc != SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_finalize(stmt);
     if (rc != SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize", GET_CALL_INFO, rc, sql);
     }
 }

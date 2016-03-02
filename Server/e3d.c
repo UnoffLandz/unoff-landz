@@ -40,21 +40,21 @@ void read_threed_object_list(char *elm_filename){
 
     if((file=fopen(elm_filename, "r"))==NULL) {
 
-        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
     //bounds check the threed object list
     if(elm_header.threed_object_count>MAX_MAP_OBJECTS){
 
-        log_event(EVENT_ERROR, "map object count [%i] exceeds maximum [%i] in map [%s] function %s: module %s: line %i", elm_header.threed_object_count, MAX_MAP_OBJECTS, elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "map object count [%i] exceeds maximum [%i] in map [%s] function %s: module %s: line %i", elm_header.threed_object_count, MAX_MAP_OBJECTS, elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
     //read data proceeding the threed object list
     if(fseek(file, elm_header.threed_object_offset, SEEK_SET)!=0){
 
-        log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
@@ -63,7 +63,7 @@ void read_threed_object_list(char *elm_filename){
 
     if(fread(threed_object_list, (size_t) threed_object_list_size, 1, file)!=1) {
 
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
@@ -83,7 +83,7 @@ int get_e3d_id(char *e3d_filename){
         }
     }
 
-    log_event(EVENT_ERROR, "unable to find object id for e3d file [%s] in function %s: module %s: line %i", e3d_filename, __func__, __FILE__, __LINE__);
+    log_event(EVENT_ERROR, "unable to find object id for e3d file [%s] in function %s: module %s: line %i", e3d_filename, GET_CALL_INFO);
 
     return 0;
 }

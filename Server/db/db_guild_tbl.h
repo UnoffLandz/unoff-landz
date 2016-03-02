@@ -65,5 +65,14 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
 **/
 bool get_db_guild_member_list(int guild_id, int order);
 
+/** RESULT  : loads guild data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of guild data
+
+    NOTES   :
+*/
+void batch_add_guilds(char *file_name);
 
 #endif // DB_GUILD_TBL_H_INCLUDED

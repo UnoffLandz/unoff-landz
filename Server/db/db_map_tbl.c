@@ -56,7 +56,7 @@ void load_db_maps(){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //read the sql query result into the map array
@@ -133,17 +133,11 @@ void load_db_maps(){
         i++;
     }
 
-    //test that we were able to read all the rows in the query result
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
    if(i==0){
@@ -169,13 +163,13 @@ bool get_db_map_exists(int map_id) {
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //bind the sql statement
     rc = sqlite3_bind_int(stmt, 1, map_id);
     if(rc!=SQLITE_OK) {
-        log_sqlite_error("sqlite3_bind_int failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_bind_int failed", GET_CALL_INFO, rc, sql);
     }
 
     //execute the sql statement
@@ -183,12 +177,6 @@ bool get_db_map_exists(int map_id) {
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         map_id_count=sqlite3_column_int(stmt, 0);
-    }
-
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-        stop_server();
     }
 
     //check for duplicates
@@ -202,7 +190,7 @@ bool get_db_map_exists(int map_id) {
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     //return false if map_id found otherwise true
@@ -227,27 +215,27 @@ void delete_map(int map_id){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //bind value to sql statement
     rc = sqlite3_bind_int(stmt, 1, map_id);
     if(rc!=SQLITE_OK) {
-        log_sqlite_error("sqlite3_bind_int failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_bind_int failed", GET_CALL_INFO, rc, sql);
     }
 
     //process sql statement
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
     }
 
     //destroy sql statement
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 }
 
@@ -280,7 +268,7 @@ void add_db_map(int map_id, char *elm_filename){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //load map id
@@ -308,13 +296,13 @@ void add_db_map(int map_id, char *elm_filename){
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     fprintf(stderr, "Map [%s] added successfully\n", elm_filename);
@@ -339,7 +327,7 @@ void list_db_maps(){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     fprintf(stderr, "%6s %s %s\n", "[MAP ID]", "[MAP_NAME]", "[ELM FILE]");
@@ -361,17 +349,11 @@ void list_db_maps(){
         fprintf(stderr, "[%6i] [%s] [%s]\n", map_id, map_name, map_file_name);
     }
 
-    //test that we were able to read all the rows in the query result
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 }
 
@@ -392,7 +374,7 @@ void change_db_map_name(int map_id, char *map_name){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     sqlite3_bind_text(stmt, 1, map_name, -1, SQLITE_STATIC);
@@ -401,13 +383,13 @@ void change_db_map_name(int map_id, char *map_name){
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     log_event(EVENT_SESSION, "Map [%i] name changed to [%s] on MAP_TABLE", map_id, map_name);
@@ -430,7 +412,7 @@ void change_db_map_description(int map_id, char *map_description){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     sqlite3_bind_text(stmt, 1, map_description, -1, SQLITE_STATIC);
@@ -439,13 +421,13 @@ void change_db_map_description(int map_id, char *map_description){
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     log_event(EVENT_SESSION, "Map [%i] description changed to [%s] on MAP_TABLE", map_id, map_description);
@@ -468,7 +450,7 @@ void change_db_map_author(int map_id, char *map_author){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     sqlite3_bind_text(stmt, 1, map_author, -1, SQLITE_STATIC);
@@ -477,13 +459,13 @@ void change_db_map_author(int map_id, char *map_author){
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     log_event(EVENT_SESSION, "Map [%i] author changed to [%s] on MAP_TABLE", map_id, map_author);
@@ -506,7 +488,7 @@ void change_db_map_author_email(int map_id, char *map_author_email){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     sqlite3_bind_text(stmt, 1, map_author_email, -1, SQLITE_STATIC);
@@ -515,13 +497,13 @@ void change_db_map_author_email(int map_id, char *map_author_email){
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     log_event(EVENT_SESSION, "Map [%i] author email changed to [%s] on MAP_TABLE", map_id, map_author_email);
@@ -544,7 +526,7 @@ void change_db_map_development_status(int map_id, int map_development_status){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     sqlite3_bind_int(stmt, 1, map_development_status);
@@ -553,13 +535,13 @@ void change_db_map_development_status(int map_id, int map_development_status){
     rc = sqlite3_step(stmt);
     if (rc!= SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     log_event(EVENT_SESSION, "Map [%i] development status changed to [%i] on MAP_TABLE", map_id, map_development_status);

@@ -20,6 +20,7 @@
 #include <stdio.h> //supports fopen function
 #include <sys/stat.h> //supports fstat function
 #include <stdbool.h> //supports true/false data type
+#include <string.h> //supports strlen and strcpy functions
 
 #include "logging.h"
 #include "server_start_stop.h"
@@ -95,19 +96,56 @@ FIN:
 }
 
 
-void create_backup_file(const char *existing_file_name, int backup_suffix) {
+void extract_filename_suffix(const char *str_in, char *str_out){
+
+    /** public function - see header */
+
+    for(size_t i=0; i<strlen(str_in); i++){
+
+        if(str_in[i]=='.'){
+
+            strncpy(str_out, str_in+i, strlen(str_in)-i);
+            return;
+        }
+    }
+
+    strcpy(str_out, "");
+}
+
+
+void extract_filename_prefix(const char *str_in, char *str_out){
+
+    /** public function - see header */
+
+    for(size_t i=0; i<strlen(str_in); i++){
+
+        if(str_in[i]=='.'){
+
+            strncpy(str_out, str_in, i);
+            return;
+        }
+    }
+
+    strcpy(str_out, str_in);
+}
+
+
+void create_backup_file(const char *existing_filename) {
 
     /** public function - see header **/
 
-    char backup_file_name[80]="";
-    sprintf(backup_file_name, "%s%i", existing_file_name, backup_suffix);
+    char prefix[80]="";
+    int version=0;
+    char filename_bck[80]="";
 
-    if(file_exists(backup_file_name)) {
+    extract_filename_prefix(existing_filename, prefix);
+    sprintf(filename_bck, "%s.%d", prefix, version);
 
-        log_event(EVENT_ERROR, "Backup file [%s] already exists in function %s: module %s: line %i", backup_file_name, __func__, __FILE__, __LINE__);
-        fprintf(stderr, "Backup file [%s] already exists\n", backup_file_name);
-        stop_server();
+    while(file_exists(filename_bck)==true){
+
+        version++;
+        sprintf(filename_bck, "%s.%d", prefix, version);
     }
 
-    fcopy(existing_file_name, backup_file_name);
+    fcopy(existing_filename, filename_bck);
 }

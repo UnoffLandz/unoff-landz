@@ -160,14 +160,14 @@ void read_elm_header(char *elm_filename){
 
     if((file=fopen(elm_filename, "r"))==NULL) {
 
-        log_event(EVENT_ERROR, "unable to open file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to open file [%s] in function %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
     //read the header
     if(fread(&elm_header, sizeof(elm_header), 1, file)!=1){
 
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
@@ -185,21 +185,21 @@ void read_elm_header(char *elm_filename){
                   elm_header.magic_number[1],
                   elm_header.magic_number[2],
                   elm_header.magic_number[3],
-                  __func__, __FILE__, __LINE__);
+                  GET_CALL_INFO);
         stop_server();
     }
 
     //check the vertical and horizontal tile counts are equal
     if(elm_header.h_tiles!=elm_header.v_tiles) {
 
-        log_event(EVENT_ERROR, "horizontal tile count [%i] and vertical tile count [%i] are unequal in function %s: module %s: line %i", elm_header.h_tiles, elm_header.v_tiles, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "horizontal tile count [%i] and vertical tile count [%i] are unequal in function %s: module %s: line %i", elm_header.h_tiles, elm_header.v_tiles, GET_CALL_INFO);
         stop_server();
     }
 
     //check the header length
     if(elm_header.tile_map_offset!=ELM_FILE_HEADER) {
 
-        log_event(EVENT_ERROR, "elm file header [%i] is not equal to [%i] in function %s: module %s: line %i", elm_header.tile_map_offset, ELM_FILE_HEADER, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "elm file header [%i] is not equal to [%i] in function %s: module %s: line %i", elm_header.tile_map_offset, ELM_FILE_HEADER, GET_CALL_INFO);
         stop_server();
     }
 }
@@ -215,7 +215,7 @@ void read_height_map(char *elm_filename, unsigned char *height_map){
 
     if((file=fopen(elm_filename, "r"))==NULL) {
 
-        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
@@ -224,21 +224,21 @@ void read_height_map(char *elm_filename, unsigned char *height_map){
 
     if(height_map_size>HEIGHT_MAP_MAX){
 
-        log_event(EVENT_ERROR, "height map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", height_map_size, HEIGHT_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "height map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", height_map_size, HEIGHT_MAP_MAX, elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
     //read data preceeding the height map
     if(fseek(file, elm_header.height_map_offset, SEEK_SET)!=0){
 
-        log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
     //read the height map
     if(fread(height_map, height_map_size, 1, file)!=1) {
 
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
@@ -256,7 +256,7 @@ void read_tile_map(char *elm_filename, unsigned char *tile_map){
 
     if((file=fopen(elm_filename, "r"))==NULL) {
 
-        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to open file [%s] in %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
@@ -265,21 +265,21 @@ void read_tile_map(char *elm_filename, unsigned char *tile_map){
     //bounds check the tile map size
     if(tile_map_size>TILE_MAP_MAX){
 
-        log_event(EVENT_ERROR, "tile map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", tile_map_size, TILE_MAP_MAX, elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "tile map size [%i] exceeds maximum [%i] in function %s: module %s: line %i", tile_map_size, TILE_MAP_MAX, elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
     //read data proceeding the tile map
     if(fseek(file, elm_header.tile_map_offset, SEEK_SET)!=0){
 
-        log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to seek file [%s] in function %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 
     //read the tile map
     if(fread(tile_map, (size_t) tile_map_size, 1, file)!=1) {
 
-        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unable to read file [%s] in function %s: module %s: line %i", elm_filename, GET_CALL_INFO);
         stop_server();
     }
 

@@ -32,9 +32,8 @@ struct client_inventory_type {
 
         int object_id;
         int amount;
-        int flags;
+        unsigned char flags;
 };
-extern struct client_inventory_type client_inventory;
 
 
 enum { //slot type
@@ -146,7 +145,25 @@ void pick_up_from_bag_to_inventory(int actor_node, int bag_slot, int amount, int
 int remove_from_inventory(int actor_node, int object_id, int amount, int slot);
 
 
+/** RESULT  : broadcasts the actor_wear_item packet to all clients in range
 
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_actor_equip_item(int actor_node, int equipable_item_type, int equipable_item_id);
+
+
+/** RESULT  : broadcasts the actor_unwear_item packet to all clients in range
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_actor_unequip_item(int actor_node, int equipable_item_type, int equipable_item_id);
 
 #endif // CHARACTER_INVENTORY_H_INCLUDED
-

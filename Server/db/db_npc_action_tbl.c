@@ -43,7 +43,7 @@ void load_db_npc_actions(){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     int i=0;
@@ -54,7 +54,7 @@ void load_db_npc_actions(){
 
         if(npc_action_id>MAX_NPC_ACTIONS){
 
-            log_event(EVENT_ERROR, "npc action id [%i] exceeds range [%i] in function %s: module %s: line %i", npc_action_id, MAX_NPC_ACTIONS, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "npc action id [%i] exceeds range [%i] in function %s: module %s: line %i", npc_action_id, MAX_NPC_ACTIONS, GET_CALL_INFO);
             stop_server();
         }
 
@@ -76,17 +76,11 @@ void load_db_npc_actions(){
         i++;
     }
 
-    //test that we were able to read all the rows in the query result
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK){
 
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     if(i==0){
@@ -98,8 +92,8 @@ void load_db_npc_actions(){
 
 
 void add_db_npc_action(int npc_action_id, int action_type, char *npc_text, char *options_list,
-char *text_success, char *text_fail, int choice, int object_id_required, int object_amount_required,
-int object_id_given, int object_amount_given, int boat_node, int destination){
+    char *text_success, char *text_fail, int choice, int object_id_required, int object_amount_required,
+    int object_id_given, int object_amount_given, int boat_node, int destination){
 
     /** public function - see header */
 

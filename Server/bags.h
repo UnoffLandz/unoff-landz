@@ -98,4 +98,34 @@ void remove_item_from_bag(int bag_id, int amount, int bag_slot);
 int get_bag_inventory_emu(int bag_id);
 
 
+/** RESULT  : broadcasts bag drop to all characters in the vicinity
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_get_new_bag_packet(int actor_node, int bag_id);
+
+
+/** RESULT  : broadcasts bag destroy to all characters in the vicinity
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_destroy_bag_packet(int bag_id);
+
+
+/** RESULT  : reveal/conceal bags to this client
+
+    RETURNS : void
+
+    PURPOSE :
+**/
+void broadcast_bags_to_client(int actor_node, int last_tile);
+
 #endif // BAGS_H_INCLUDED

@@ -56,7 +56,7 @@ void send_packet(int socket, void *packet, size_t packet_length){
 
             int errnum=errno;
 
-            log_event(EVENT_ERROR, "send failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "send failed in function %s: module %s: line %i", GET_CALL_INFO);
             log_text(EVENT_ERROR, "error [%i] [%s]", errnum, strerror(errnum));
 
             int32_t actor_node=client_socket[socket].actor_node;

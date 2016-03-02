@@ -51,4 +51,15 @@ void load_db_channels();
 **/
 void add_db_channel(int channel_id, int owner_id, int channel_type, char *password, char *channel_name, char*channel_description, int new_chars);
 
+
+/** RESULT  : loads channel data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of channel data
+
+    NOTES   :
+*/
+void batch_add_channels(char *file_name);
+
 #endif // DB_CHAT_CHANNEL_TBL_H_INCLUDED

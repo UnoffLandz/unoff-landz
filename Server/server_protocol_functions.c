@@ -35,6 +35,7 @@
 #include "server_start_stop.h"
 #include "server_protocol_functions.h"
 #include "npc.h"
+#include "character_skill.h"
 
 void send_new_minute(int socket, int minute){
 
@@ -266,7 +267,7 @@ void send_text(int socket, int channel_type, const char *fmt, ...){
 
     if (vsprintf(text_in, fmt, args)>SEND_TEXT_MAX){
 
-        log_event(EVENT_ERROR, "text string exceeds max in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "text string exceeds max in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -531,44 +532,61 @@ void send_here_your_stats(int socket){
 
         uint16_t physique_pp;
         uint16_t max_physique;
+
         uint16_t coordination_pp;
         uint16_t max_coordination;
+
         uint16_t reasoning_pp;
         uint16_t max_reasoning;
+
         uint16_t will_pp;
         uint16_t max_will;
+
         uint16_t instinct_pp;
         uint16_t max_instinct;
+
         uint16_t vitality_pp;
         uint16_t max_vitality;
 
         uint16_t human;
         uint16_t max_human;
+
         uint16_t animal;
         uint16_t max_animal;
+
         uint16_t vegetal;
         uint16_t max_vegetal;
+
         uint16_t inorganic;
         uint16_t max_inorganic;
+
         uint16_t artificial;
         uint16_t max_artificial;
+
         uint16_t magic;
         uint16_t max_magic;
 
         uint16_t manufacturing_lvl;
         uint16_t max_manufacturing_lvl;
+
         uint16_t harvest_lvl;
         uint16_t max_harvest_lvl;
+
         uint16_t alchemy_lvl;
         uint16_t max_alchemy_lvl;
+
         uint16_t overall_lvl;
         uint16_t max_overall_lvl;
+
         uint16_t attack_lvl;
         uint16_t max_attack_lvl;
+
         uint16_t defence_lvl;
         uint16_t max_defence_lvl;
+
         uint16_t magic_lvl;
         uint16_t max_magic_lvl;
+
         uint16_t potion_lvl;
         uint16_t max_potion_lvl;
 
@@ -577,27 +595,65 @@ void send_here_your_stats(int socket){
 
         uint16_t material_pts;
         uint16_t max_material_pts;
+
         uint16_t ethereal_pts;
         uint16_t max_ethereal_pts;
+
         uint16_t food_lvl;
+
         uint16_t elapsed_book_time;
+
         uint16_t unused;
 
         uint32_t manufacture_exp;
         uint32_t max_manufacture_exp;
+
         uint32_t harvest_exp;
         uint32_t max_harvest_exp;
+
         uint32_t alchemy_exp;
+        uint32_t max_alchemy_exp;
+
         uint32_t overall_exp;
         uint32_t max_overall_exp;
+
         uint32_t attack_exp;
         uint32_t max_attack_exp;
+
         uint32_t defence_exp;
         uint32_t max_defence_exp;
+
         uint32_t magic_exp;
         uint32_t max_magic_exp;
+
         uint32_t potion_exp;
         uint32_t max_potion_exp;
+
+        uint16_t summoning_lvl;
+        uint16_t max_summoning_lvl;
+        uint32_t summoning_exp;
+        uint32_t max_summoning_exp;
+
+        uint16_t crafting_lvl;
+        uint16_t max_crafting_lvl;
+        uint32_t crafting_exp;
+        uint32_t max_crafting_exp;
+
+        uint16_t engineering_lvl;
+        uint16_t max_engineering_lvl;
+        uint32_t engineering_exp;
+        uint32_t max_engineering_exp;
+
+        uint16_t tailoring_lvl;
+        uint16_t max_tailoring_lvl;
+        uint32_t tailoring_exp;
+        uint32_t max_tailoring_exp;
+
+        uint16_t ranging_lvl;
+        uint16_t max_ranging_lvl;
+        uint32_t ranging_exp;
+        uint32_t max_ranging_exp;
+
         uint16_t book_id;
         uint16_t max_book_time;
     }packet;
@@ -607,6 +663,7 @@ void send_here_your_stats(int socket){
     //clear the struct
     memset(&packet, 0, packet_length);
 
+    //find actor node
     int actor_node=client_socket[socket].actor_node;
 
     //add data
@@ -615,55 +672,71 @@ void send_here_your_stats(int socket){
 
     packet.physique_pp=(uint16_t)clients.client[actor_node].physique_pp;
     packet.max_physique=(uint16_t)clients.client[actor_node].max_physique;
+
     packet.coordination_pp=(uint16_t)clients.client[actor_node].coordination_pp;
     packet.max_coordination=(uint16_t)clients.client[actor_node].max_coordination;
+
     packet.reasoning_pp=(uint16_t)clients.client[actor_node].reasoning_pp;
     packet.max_reasoning=(uint16_t)clients.client[actor_node].max_reasoning;
+
     packet.will_pp=(uint16_t)clients.client[actor_node].will_pp;
     packet.max_will=(uint16_t)clients.client[actor_node].max_will;
+
     packet.instinct_pp=(uint16_t)clients.client[actor_node].instinct_pp;
     packet.max_instinct=(uint16_t)clients.client[actor_node].max_instinct;
+
     packet.vitality_pp=(uint16_t)clients.client[actor_node].vitality_pp;
     packet.max_vitality=(uint16_t)clients.client[actor_node].max_vitality;
 
     packet.human=(uint16_t)clients.client[actor_node].human;
     packet.max_human=(uint16_t)clients.client[actor_node].max_human;
+
     packet.animal=(uint16_t)clients.client[actor_node].animal;
     packet.max_animal=(uint16_t)clients.client[actor_node].max_animal;
+
     packet.vegetal=(uint16_t)clients.client[actor_node].vegetal;
     packet.max_vegetal=(uint16_t)clients.client[actor_node].max_vegetal;
+
     packet.inorganic=(uint16_t)clients.client[actor_node].inorganic;
     packet.max_inorganic=(uint16_t)clients.client[actor_node].max_inorganic;
+
     packet.artificial=(uint16_t)clients.client[actor_node].artificial;
     packet.max_artificial=(uint16_t)clients.client[actor_node].max_artificial;
+
     packet.magic=(uint16_t)clients.client[actor_node].magic;
     packet.max_magic=(uint16_t)clients.client[actor_node].max_magic;
+
     packet.inventory_emu=(uint16_t)get_inventory_emu(actor_node);
     packet.max_inventory_emu=(uint16_t)get_max_inventory_emu(actor_node);
 
     packet.material_pts=(uint16_t)clients.client[actor_node].material_pts;
     packet.max_material_pts=(uint16_t)clients.client[actor_node].max_material_pts;
+
     packet.ethereal_pts=(uint16_t)clients.client[actor_node].ethereal_pts;
     packet.max_ethereal_pts=(uint16_t)clients.client[actor_node].max_ethereal_pts;
-    packet.food_lvl=(uint16_t)clients.client[actor_node].food_lvl;
-    packet.elapsed_book_time=(uint16_t)clients.client[actor_node].elapsed_book_time;
-    packet.unused=0;
 
-    packet.manufacture_exp=(uint32_t)clients.client[actor_node].manufacture_exp;
-    packet.max_manufacture_exp=(uint32_t)clients.client[actor_node].max_manufacture_exp;
+    packet.food_lvl=(uint16_t)clients.client[actor_node].food_lvl;
+
+    packet.elapsed_book_time=(uint16_t)clients.client[actor_node].elapsed_book_time;
+
+    //current levels
+    packet.harvest_lvl=(uint16_t)clients.client[actor_node].harvest_lvl;
+
+    //test code to set pickpoints
+    packet.overall_lvl=(uint16_t)5;     //removes pickpoints
+    packet.max_overall_lvl=(uint16_t)10; //adds pickpoints
+
+    //maximum levels
+    packet.max_harvest_lvl=(uint16_t)clients.client[actor_node].harvest_lvl;
+
+    //current exp
     packet.harvest_exp=(uint32_t)clients.client[actor_node].harvest_exp;
-    packet.max_harvest_exp=(uint32_t)clients.client[actor_node].max_harvest_exp;
-    packet.alchemy_exp=(uint32_t)clients.client[actor_node].alchemy_exp;
-    packet.overall_exp=(uint32_t)clients.client[actor_node].overall_exp;
-    packet.max_overall_exp=(uint32_t)clients.client[actor_node].max_overall_exp;
-    packet.attack_exp=(uint32_t)clients.client[actor_node].attack_exp;
-    packet.max_attack_exp=(uint32_t)clients.client[actor_node].max_attack_exp;
-    packet.defence_exp=(uint32_t)clients.client[actor_node].defence_exp;
-    packet.max_defence_exp=(uint32_t)clients.client[actor_node].max_defence_exp;
-    packet.magic_exp=(uint32_t)clients.client[actor_node].magic_exp;
-    packet.max_magic_exp=(uint32_t)clients.client[actor_node].max_magic_exp;
-    packet.potion_exp=(uint32_t)clients.client[actor_node].potion_exp;
-    packet.max_potion_exp=(uint32_t)clients.client[actor_node].max_potion_exp;
+
+    //maximum exp
+    int lvl=clients.client[actor_node].harvest_lvl;
+    packet.max_harvest_exp=(uint32_t)skill_level[HARVESTING_SKILL].max_exp[lvl];
+
+
     packet.book_id=(uint16_t)clients.client[actor_node].book_id;
     packet.max_book_time=(uint16_t)clients.client[actor_node].max_book_time;
 
@@ -933,7 +1006,7 @@ void _add_new_enhanced_actor_packet(unsigned char *packet, size_t *packet_length
     _packet2.unknown=0;
     _packet2.char_size=64; //char size (min=2 normal=64 max=127)// TODO (themuntdregger#1#): add actor scale to actor struct and database table
     _packet2.riding=255; //riding (nothing=255  brown horse=200)
-    _packet2.neck_attachment=64; //neck attachment (none=64) // TODO (themuntdregger#1#): This setting on the enhanced actor packet might remove the blank medallions on chars
+    _packet2.neck_attachment=0;//neck attachment
 
     //create the complete packet
     memcpy(packet, &_packet1, sizeof(_packet1)-80 + banner_length+1);

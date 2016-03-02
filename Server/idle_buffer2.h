@@ -38,6 +38,7 @@ void process_idle_buffer2();
 
 void push_command(int actor_node, int process_type, char *char_name, int guild_id);
 
+
 #ifdef __cplusplus
 }
 #endif
@@ -50,7 +51,8 @@ enum{//database buffer processing types
     IDLE_BUFFER_PROCESS_LOGIN,
     IDLE_BUFFER_PROCESS_LIST_GUILD_BY_RANK,
     IDLE_BUFFER_PROCESS_LIST_GUILD_BY_TIME,
-    IDLE_BUFFER_PROCESS_GUILD_DETAILS
+    IDLE_BUFFER_PROCESS_GUILD_DETAILS,
+    IDLE_BUFFER_PROCESS_UPDATE_INVENTORY
 };
 
 #endif // IDLE_BUFFER2_H_INCLUDED

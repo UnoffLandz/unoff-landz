@@ -31,8 +31,6 @@
 #include "logging.h"
 #include "server_start_stop.h"
 #include "bags.h"
-#include "broadcast_movement.h"
-#include "broadcast_equipables.h"
 
 struct client_inventory_type client_inventory;
 
@@ -202,7 +200,8 @@ bool add_to_inventory(int actor_node, int object_id, int amount, int slot){
     send_partial_stat(socket,  CARRY_WGHT_CUR, get_inventory_emu(actor_node));
 
     //update_database
-    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[slot].amount, clients.client[actor_node].character_id, slot);
+    //push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[slot].amount, clients.client[actor_node].character_id, slot);
+    push_command(actor_node, IDLE_BUFFER_PROCESS_UPDATE_INVENTORY, "", 0);
 
     return true;
 }
@@ -235,7 +234,8 @@ int remove_from_inventory(int actor_node, int object_id, int amount, int slot){
     send_partial_stat(socket,  CARRY_WGHT_CUR, get_inventory_emu(actor_node));
 
     //update_database
-    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[slot].amount, clients.client[actor_node].character_id, slot);
+    //push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[slot].amount, clients.client[actor_node].character_id, slot);
+    push_command(actor_node, IDLE_BUFFER_PROCESS_UPDATE_INVENTORY, "", 0);
 
     return amount;
 }
@@ -297,8 +297,9 @@ void equip_inventory_item(int actor_node, int from_slot, int to_slot){
     broadcast_actor_equip_item(actor_node, equipable_item_type, equipable_item_id);
 
     //update_database
-    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[from_slot].amount, clients.client[actor_node].character_id, from_slot);
-    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[to_slot].amount, clients.client[actor_node].character_id, to_slot);
+    //push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[from_slot].amount, clients.client[actor_node].character_id, from_slot);
+    //push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[to_slot].amount, clients.client[actor_node].character_id, to_slot);
+    push_command(actor_node, IDLE_BUFFER_PROCESS_UPDATE_INVENTORY, "", 0);
 }
 
 
@@ -359,8 +360,9 @@ void unequip_inventory_item(int actor_node, int from_slot, int to_slot){
     broadcast_actor_unequip_item(actor_node, equipable_item_type, equipable_item_id);
 
     //update_database
-    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[from_slot].amount, clients.client[actor_node].character_id, from_slot);
-    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[to_slot].amount, clients.client[actor_node].character_id, to_slot);
+    //push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[from_slot].amount, clients.client[actor_node].character_id, from_slot);
+    //push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[to_slot].amount, clients.client[actor_node].character_id, to_slot);
+    push_command(actor_node, IDLE_BUFFER_PROCESS_UPDATE_INVENTORY, "", 0);
 }
 
 
@@ -397,8 +399,9 @@ void move_inventory_item(int actor_node, int from_slot, int to_slot){
     send_get_new_inventory_item(socket, object_id, amount, to_slot);
 
     //update_database
-    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[from_slot].amount, clients.client[actor_node].character_id, from_slot);
-    push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[to_slot].amount, clients.client[actor_node].character_id, to_slot);
+    //push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[from_slot].amount, clients.client[actor_node].character_id, from_slot);
+    //push_sql_command("UPDATE INVENTORY_TABLE SET IMAGE_ID=%i, AMOUNT=%i WHERE CHAR_ID=%i AND SLOT=%i", object_id, clients.client[actor_node].inventory[to_slot].amount, clients.client[actor_node].character_id, to_slot);
+    push_command(actor_node, IDLE_BUFFER_PROCESS_UPDATE_INVENTORY, "", 0);
 }
 
 
@@ -501,3 +504,82 @@ void pick_up_from_bag_to_inventory(int actor_node, int bag_slot, int amount, int
        broadcast_destroy_bag_packet(bag_id);
     }
 }
+
+
+void broadcast_actor_equip_item(int actor_node, int equipable_item_type, int equipable_item_id){
+
+    /** public function - see header */
+
+    int map_id=clients.client[actor_node].map_id;
+    int char_tile=clients.client[actor_node].map_tile;
+
+    //pre-create the add_new_enhanced_actor packet so we don't have to repeat this on each occasion when
+    //it needs to sent to other actors
+    unsigned char packet[MAX_PACKET_SIZE]={0};
+    size_t packet_length=0;
+
+    actor_wear_item_packet(actor_node, packet, &packet_length, equipable_item_type, equipable_item_id);
+
+    //cycle through all the actors
+    for(int i=0; i<MAX_ACTORS; i++){
+
+        //restrict to used nodes
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED
+        && clients.client[i].player_type==PLAYER){
+
+            //restrict to chars on the same map as broadcasting char
+            if(map_id==clients.client[i].map_id){
+
+                //select this char and those characters in visual range of this char
+                int receiver_char_visual_range=get_char_visual_range(i);
+                int receiver_char_tile=clients.client[i].map_tile;
+
+                //restrict to those chars that can see the broadcasting char
+                if(get_proximity(char_tile, receiver_char_tile, map_id) < receiver_char_visual_range){
+
+                    send_packet(clients.client[i].socket, packet, packet_length);
+                }
+            }
+        }
+    }
+}
+
+
+void broadcast_actor_unequip_item(int actor_node, int equipable_item_type, int equipable_item_id){
+
+    /** public function - see header */
+
+    int map_id=clients.client[actor_node].map_id;
+    int char_tile=clients.client[actor_node].map_tile;
+
+    //pre-create the add_new_enhanced_actor packet so we don't have to repeat this on each occasion when
+    //it needs to sent to other actors
+    unsigned char packet[MAX_PACKET_SIZE]={0};
+    size_t packet_length=0;
+
+    actor_unwear_item_packet(actor_node, packet, &packet_length, equipable_item_type, equipable_item_id);
+
+    //cycle through all the actors
+    for(int i=0; i<MAX_ACTORS; i++){
+
+        //restrict to used nodes
+        if(clients.client[i].client_node_status==CLIENT_NODE_USED
+        && clients.client[i].player_type==PLAYER){
+
+            //restrict to chars on the same map as broadcasting char
+            if(map_id==clients.client[i].map_id){
+
+                //select this char and those characters in visual range of this char
+                int receiver_char_visual_range=get_char_visual_range(i);
+                int receiver_char_tile=clients.client[i].map_tile;
+
+                //restrict to those chars that can see the broadcasting char
+                if(get_proximity(char_tile, receiver_char_tile, map_id) < receiver_char_visual_range){
+
+                    send_packet(clients.client[i].socket, packet, packet_length);
+                }
+            }
+        }
+    }
+}
+

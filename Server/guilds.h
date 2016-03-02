@@ -31,6 +31,8 @@
 #define GUILD_TAG_LENGTH 5
 #define MAX_GUILD_MEMBERS 100
 
+#define GUILD_FILE "guilds.lst"
+
 enum{//guild status
 
     GUILD_ACTIVE,

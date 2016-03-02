@@ -33,7 +33,6 @@
 #include "server_start_stop.h"
 #include "game_data.h"
 #include "packet.h"
-#include "broadcast_chat.h"
 #include "attributes.h"
 
 void process_log_in(int actor_node, const unsigned char *packet){
@@ -108,7 +107,7 @@ void process_log_in(int actor_node, const unsigned char *packet){
         && clients.client[i].character_id==clients.client[actor_node].character_id){
 
             //transport duplicate char to an empty map
-            send_change_map(socket, "./maps/nomap.elm");
+            send_change_map(socket, "./maps/nomap.elm");// TODO (themuntdregger#1#): remove hardcoding
 
             send_login_ok(socket);//need to send login_ok otherwise screen will not display
                                   //message indicating that char is already logged in
@@ -129,7 +128,7 @@ void process_log_in(int actor_node, const unsigned char *packet){
 
     if(add_char_to_map(actor_node, map_id, map_tile)==false){
 
-        log_event(EVENT_ERROR, "cannot add char [%s] to map [%s] in function %s: module %s: line %i", char_name, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "cannot add char [%s] to map [%s] in function %s: module %s: line %i", char_name, maps.map[map_id].map_name, GET_CALL_INFO);
         stop_server();
     }
 

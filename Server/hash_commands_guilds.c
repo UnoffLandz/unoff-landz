@@ -39,7 +39,6 @@
 #include "game_data.h"
 #include "guilds.h"
 #include "idle_buffer2.h"
-#include "broadcast_chat.h"
 #include "server_start_stop.h"
 
 int hash_set_guild_tag_colour(int actor_node, char *text) {
@@ -79,7 +78,7 @@ int hash_set_guild_tag_colour(int actor_node, char *text) {
             //re-add char to map so that guild tag changes are immediately visible
             if(add_char_to_map(i, clients.client[i].map_id, clients.client[i].map_tile)==false){
 
-               log_event(EVENT_ERROR, "unable to add char[%s] to map in function %s: module %s: line %i", clients.client[i].char_name, __func__, __FILE__, __LINE__);
+               log_event(EVENT_ERROR, "unable to add char[%s] to map in function %s: module %s: line %i", clients.client[i].char_name, GET_CALL_INFO);
                stop_server();
             }
         }
@@ -374,7 +373,7 @@ int hash_leave_guild(int actor_node, char *text) {
     //re-add char to map so that guild tag changes are immediately visible
     if(add_char_to_map(actor_node, clients.client[actor_node].map_id, clients.client[actor_node].map_tile)==false){
 
-       log_event(EVENT_ERROR, "unable to add char[%s] to map in function %s: module %s: line %i", clients.client[actor_node].char_name, __func__, __FILE__, __LINE__);
+       log_event(EVENT_ERROR, "unable to add char[%s] to map in function %s: module %s: line %i", clients.client[actor_node].char_name, GET_CALL_INFO);
        stop_server();
     }
 

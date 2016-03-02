@@ -53,7 +53,7 @@ void load_db_map_objects(){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //read the sql query result into the map object array
@@ -76,17 +76,11 @@ void load_db_map_objects(){
         i++;
     }
 
-    //test that we were able to read all the rows in the query result
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK){
 
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     if(i==0){
@@ -135,13 +129,13 @@ void add_db_map_objects(int map_id, char *elm_filename){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_exec failed", GET_CALL_INFO, rc, sql);
     }
 
     int reserve=0;
@@ -175,7 +169,7 @@ void add_db_map_objects(int map_id, char *elm_filename){
         rc = sqlite3_step(stmt);
         if (rc!= SQLITE_DONE) {
 
-            log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+            log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
         }
 
        sqlite3_clear_bindings(stmt);
@@ -185,13 +179,13 @@ void add_db_map_objects(int map_id, char *elm_filename){
     rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
     if (rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_exec failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 }
 
@@ -227,19 +221,19 @@ void update_db_map_objects(int map_id){
             int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
             if(rc!=SQLITE_OK) {
 
-                log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+                log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
             }
 
             rc = sqlite3_step(stmt);
             if (rc!= SQLITE_DONE) {
 
-                log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+                log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
             }
 
             rc=sqlite3_finalize(stmt);
             if(rc!=SQLITE_OK) {
 
-                log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+                log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
             }
         }
     }

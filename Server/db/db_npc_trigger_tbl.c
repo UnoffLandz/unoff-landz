@@ -43,7 +43,7 @@ void load_db_npc_triggers(){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     int i=0;
@@ -54,7 +54,7 @@ void load_db_npc_triggers(){
 
         if(npc_trigger_id>MAX_NPC_TRIGGERS){
 
-            log_event(EVENT_ERROR, "npc trigger id [%i] exceeds range [%i] in function %s: module %s: line %i", npc_trigger_id, MAX_NPC_TRIGGERS, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "npc trigger id [%i] exceeds range [%i] in function %s: module %s: line %i", npc_trigger_id, MAX_NPC_TRIGGERS, GET_CALL_INFO);
             stop_server();
         }
 
@@ -69,17 +69,11 @@ void load_db_npc_triggers(){
         i++;
     }
 
-    //test that we were able to read all the rows in the query result
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK){
 
-         log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     if(i==0){
@@ -91,7 +85,7 @@ void load_db_npc_triggers(){
 
 
 void add_db_npc_trigger(int npc_trigger_id, int trigger_type, int trigger_time,
-int select_option, int action_node){
+    int select_option, int action_node){
 
     /** public function - see header */
 

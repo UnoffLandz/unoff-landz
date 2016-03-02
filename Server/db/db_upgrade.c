@@ -106,7 +106,7 @@ static int upgrade_v0_to_v1(const char *dbname) {
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //process the sql statement
@@ -116,7 +116,7 @@ static int upgrade_v0_to_v1(const char *dbname) {
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     //set the new database version
@@ -206,7 +206,7 @@ void upgrade_database(const char *dbname) {
 
         if(!entry){
 
-            log_event(EVENT_ERROR, "can't find entry for database in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "can't find entry for database in function %s: module %s: line %i", GET_CALL_INFO);
             stop_server();
         }
 
@@ -214,7 +214,7 @@ void upgrade_database(const char *dbname) {
         log_event(EVENT_ERROR, "Database version update %d to %d:", entry->from_version, entry->to_version);
 
         // backup is created before calling each upgrade function
-        create_backup_file(dbname, game_data.database_version);
+        create_backup_file(dbname);
 
         if(entry->fn(dbname)==0) {
 

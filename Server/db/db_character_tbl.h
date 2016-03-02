@@ -57,10 +57,11 @@
         WILL_PP             INT, \
         COORDINATION_PP     INT, \
         OVERALL_EXP         INT, \
-        HARVEST_EXP         INT)"
+        HARVEST_EXP         INT, \
+        HARVEST_LVL         INT, \
+        INVENTORY           BLOB)"
 
 #include "../clients.h"
-
 
 /** RESULT  : determines if a char_id exists in the database CHARACTER_TABLE
 
@@ -109,6 +110,18 @@ void get_db_last_char_created();
 **/
 int get_db_char_count();
 
+
+/** RESULT  : loads char data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of char data
+
+    NOTES   :
+*/
+void batch_add_characters(char *file_name);
+
+
 /*****************************************************************************************************
 ***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
 ******************************************************************************************************/
@@ -138,6 +151,16 @@ bool get_db_char_data(const char *char_name, int char_id);
     NOTES   :
 **/
 void load_npc_characters();
+
+/** RESULT  : updates the database with the actors inventory
+
+    RETURNS : void
+
+    PURPOSE : permanent storage of changes to that actors inventory
+
+    NOTES   :
+**/
+void db_update_inventory(int actor_node);
 
 
 #ifdef __cplusplus

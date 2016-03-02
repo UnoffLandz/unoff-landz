@@ -286,7 +286,7 @@ void add_tile_to_explore_stack(int new_value, int new_tile){
             //catch if explore stack array is exceeded
             if(explore_stack_count>HEIGHT_MAP_MAX-1){
 
-                log_event(EVENT_ERROR, "explore stack array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_event(EVENT_ERROR, "explore stack array exceeded in function %s: module %s: line %i", GET_CALL_INFO);
                 stop_server();
             }
 
@@ -305,7 +305,7 @@ void add_tile_to_explore_stack(int new_value, int new_tile){
     //catch if explore stack array is exceeded
     if(explore_stack_count>HEIGHT_MAP_MAX-1){
 
-        log_event(EVENT_ERROR, "explore stack array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "explore stack array exceeded in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 }
@@ -521,7 +521,7 @@ bool explore_path(int actor_node, int destination_tile){
         if(node==-1 ) {
 
             send_text(clients.client[actor_node].socket, CHAT_PERSONAL, "%cthat destination is unreachable", c_red1+127);
-            log_event(EVENT_ERROR, "no explorable tiles remain in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "no explorable tiles remain in function %s: module %s: line %i", GET_CALL_INFO);
 
             return false;
         }
@@ -552,7 +552,7 @@ bool explore_path(int actor_node, int destination_tile){
             //catch if explore stack array is exceeded
             if(path_stack_count==HEIGHT_MAP_MAX-1){
 
-                log_event(EVENT_ERROR, "path stack array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+                log_event(EVENT_ERROR, "path stack array exceeded in function %s: module %s: line %i", GET_CALL_INFO);
                 stop_server();
             }
         }
@@ -627,7 +627,7 @@ bool get_astar_path(int actor_node, int start_tile, int destination_tile){
 
         if(clients.client[actor_node].path_count>PATH_MAX-1) {
 
-            log_event(EVENT_ERROR, "client path array exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "client path array exceeded in function %s: module %s: line %i", GET_CALL_INFO);
             stop_server();
         }
 

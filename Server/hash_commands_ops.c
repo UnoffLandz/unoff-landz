@@ -6,7 +6,6 @@
 #include "maps.h"
 #include "guilds.h"
 #include "server_protocol_functions.h"
-#include "broadcast_chat.h"
 
 int hash_jump(int actor_node, char *text) {
 

@@ -24,6 +24,7 @@
 
 struct skill_name_type skill_name[] = {
 
+    {NO_SKILL, "NO SKILL"},
     {HARVESTING_SKILL, "HARVESTING"},
     {MAGIC_SKILL, "MAGIC"},
     {MANUFACTURING_SKILL, "MANUFACTURING"},
@@ -39,7 +40,24 @@ struct skill_name_type skill_name[] = {
 };
 
 
+int get_lvl(int skill_type_id, int exp){
+
+    /** public function - see header */
+
+    int lvl=0;
+
+    while(exp>skill_level[skill_type_id].max_exp[lvl] && lvl<MAX_LEVELS){
+
+        lvl++;
+    }
+
+    return lvl;
+}
+
+
 void add_exp(int actor_node, int skill_id, int exp){
+
+    /** public function - see header */
 
     int socket=clients.client[actor_node].socket;
 
@@ -47,23 +65,36 @@ void add_exp(int actor_node, int skill_id, int exp){
 
         case HARVESTING_SKILL:{
 
-            int level=clients.client[actor_node].harvest_lvl;
+            //increment experience
             clients.client[actor_node].harvest_exp+=exp;
             send_partial_stat(socket, HARV_EXP, clients.client[actor_node].harvest_exp);
 
-            int max_exp=skill_level[skill_id].max_exp[level];
-            send_partial_stat(socket, HARV_EXP_NEXT, max_exp);
+            //get current level
+            int lvl=clients.client[actor_node].harvest_lvl;
 
-            //increase level
+            //get maximum experience for the current level
+            int max_exp=skill_level[skill_id].max_exp[lvl];
+
+            //check if we've reached the maximum experience for the current level
             if(clients.client[actor_node].harvest_exp>=max_exp){
 
+                //increase level
                 clients.client[actor_node].harvest_lvl++;
+
+                //zero experience
+                clients.client[actor_node].harvest_exp=0;
+
+                //calculate new level and send to client
                 send_partial_stat(socket,  HARV_S_CUR, clients.client[actor_node].harvest_lvl);
-                send_partial_stat(socket,  HARV_S_BASE, 127);
+                send_partial_stat(socket,  HARV_S_BASE, clients.client[actor_node].harvest_lvl);//this causes the levelling effect
+
+                //send max exp for new level to client
+                send_partial_stat(socket, HARV_EXP, exp);
+                send_partial_stat(socket, HARV_EXP_NEXT, skill_level[skill_id].max_exp[lvl+1]);
             }
 
             //update_database
-            push_sql_command("UPDATE CHARACTER_TABLE SET HARVEST_EXP=%i WHERE CHAR_ID=%i", clients.client[actor_node].character_id, clients.client[actor_node].harvest_exp);
+            push_sql_command("UPDATE CHARACTER_TABLE SET HARVEST_EXP=%i, HARVEST_LVL=%i WHERE CHAR_ID=%i", clients.client[actor_node].harvest_exp, clients.client[actor_node].harvest_lvl, clients.client[actor_node].character_id);
 
             break;
         }

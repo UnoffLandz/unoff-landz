@@ -56,7 +56,7 @@ void load_db_objects(){
 
         if(object_id>MAX_OBJECT_ID){
 
-            log_event(EVENT_ERROR, "object id [%i] exceeds range [%i] in function %s: module %s: line %i", object_id, MAX_OBJECT_ID, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "object id [%i] exceeds range [%i] in function %s: module %s: line %i", object_id, MAX_OBJECT_ID, GET_CALL_INFO);
             stop_server();
         }
 
@@ -73,6 +73,7 @@ void load_db_objects(){
         i++;
     }
 
+    //destroy query
     destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){

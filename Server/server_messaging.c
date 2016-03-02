@@ -50,7 +50,7 @@ void send_motd_header(int socket){
     time_diff=time_diff-(time_hrs*60*60);
     long int time_mins=time_diff/60;
 
-    send_text(socket, CHAT_SERVER, "%cWelcome to the %s server", c_blue2+127, SERVER_NAME);
+    send_text(socket, CHAT_SERVER, "%cWelcome to the %s server", c_blue2+127, game_data.server_name);
     send_text(socket, CHAT_SERVER, "%cWe're running on %s build %s\n", c_blue2+127, VERSION, BUILD);
     send_text(socket, CHAT_SERVER, "%cServer up                  : %i days %i hrs %i mins", c_blue2+127, time_days, time_hrs, time_mins);
 

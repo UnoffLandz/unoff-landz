@@ -19,106 +19,126 @@
 #ifndef SERVER_BUILD_DETAILS_H_INCLUDED
 #define SERVER_BUILD_DETAILS_H_INCLUDED
 
-#define SERVER_NAME "OL Map Walker"
 #define VERSION "UnoffLandz 4"
-#define BUILD "10"
+#define BUILD "11"
 #define BUILD_DATE __DATE__
 
 /***************************************************************************************************
-                                BUILD 10
+                                    BUILD 11
 
-Done -  Implemented sqlite_prepare and sqlite_finalize reporting wrappers
+Done - replaced separate database table for inventory data with binary blob in character table
 
-Done -  add emu equipable_item_type and equipable_item_id to object table
+Done - added command line option to load harvesting skill
 
-Done -  refactored functions in database_functions.c
+Done - hard-coded server name now held on database/array
 
-Done -  database functions now check to make sure database is open/closed
+Done(34 partial) - game data, channel data, character data, guild data  now loaded from text file
 
-Done -  corrected database functions which did not test or incorrectly handled the
-        return code of sqlite3_finalize statement
+Done - removed broadcast modules and moved functions to other modules
 
-Done -  replaced printf with fprintf for console messages
+Done(40 partial) - started to convert sql statements to use parameters rather than inserted values
 
-Done -  implemented batch loading of char races, genders, char types, seasons
+Done - fixed bug in HERE_YOUR_STATS protocol command
 
-Done -  refactored functions in db_upgrade.c
+Done - removed unused character_type_name column from character type table
 
-Done - implemented carry capacity values on hud and inventory grid
+Done - fixed bug in exp accumulation
 
-Done - corrected bug spotted by Life where equipping more than 1 item causes client to
-crash.
+Done - exp and levels now saved to database
 
-Done - implemented char object equipping
+Done - increased max levels to 255
 
-Done - #object command
+Done - improved backup file naming
 
-Done - implemented skills exp and levels
+Fixed - bug that resulted in starting channels not being loaded for default char
 
-Done - implemented batch loading of skills data
+Dumped -(25) duplicated by to-do list item 35
+
+Fixed - (44) bug resulting in black ring around chars neck
+
+Done - (38) implement GET_CALL_INFO macro in log functions
+
+Fixed - (45) bug resulting in player sit/stand not properly saved to database
+
+Dumped - (41) can't use sqlite_exec with sqlite_bind, hence, the sqlite_exec can't be
+used to replace prepare/step/finalize on update and insert queries
+
+Done - replaced sqlite prepare/step/finalize with exec on process_sql function
+
+Done - create_table function now acts as a convenience wrapper for process_sql function
+
+added inventory column to character table
+added harvest_lvl column to character table
+added server_name column to game_data table
+add neck details to add_enhanced_character
 
 ***************************************************************************************************
 
                                 TO - DO
+Ref Item
+--- -------------------------------------------------------------
 
-Need command line option to load skill
-Fix bug duplicate skills table error
+50. Implement specific function to update char to database
 
-Put broadcast_get_new_bag_packet etc in new module broadcast_bags
+49. Implement function callback for idle buffer
 
-TEST whether db skills add from list to database
+48. Add char neck attachment to client array and database table
 
-implement prepare_sql and destroy_sql functions in place of raw sqlite functions
-implement GET_CALL_INFO macro in log functions
+47. Implement harvest events
 
-function to calculate level from exp
-Load exp/skills from list
-BUG send_here_your_stats not working
+46. Add actor scale to client array and database table
 
-TEST multiple guild application handling
-TEST database upgrade
-TEST map object upgrade
+43. implement harvest node restrictions
+42. implement seasonal changes on harvest nodes
 
-for NPC's introduce time trigger to sell/boat ticket purchase so that different responses
+40. change sql statements to use bind parameters rather than inserts (can't do this process_sql relies on
+39. implement prepare and destroy wrapper functions
+
+37. check need for initial_emu field on race table
+36. check need for char_count column on character type table
+
+35. implement pickpoints, wraith and nexus/attributes
+
+34. load attributes from text file
+
+33. create bag table
+
+32. TEST multiple guild application handling
+31. TEST database upgrade
+30. TEST map object upgrade
+
+29. for NPC's introduce time trigger to sell/boat ticket purchase so that different responses
 can be engineered for different times of day.
 
-load game data, guilds, chars, channels and attributes from text file
-add npc wear item action
-add npc sit/stand action
+28. add npc wear item action
+27. add npc sit/stand action
 
-determine how to add water lilly to item dds (object 673  items27.dds in textures plant1.dds in 3d objects)
-implement nexus, pick-points (apply to equipable items)
+26. determine how to add water lilly to item dds (object 673  items27.dds in textures plant1.dds in 3d objects)
+24. harvest red bush, blue bush
+23. implement fish
 
-harvest red bush, blue bush
-implement fish
-change all sql to use parameters rather than inserts (can't do this process_sql relies on
-a sql string being passed to the function)
-replace snprintf with ssnprintf
-bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
-need #command to withdraw application to join guild
-need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
-transfer server welcome message to the database
-#command to change guild chan join/leave notification colours
-remove character_type_name field from CHARACTER_TYPE_TABLE
-map object reserve respawn
-#command to #letter all members of a guild
-#IG guild channel functionality
-OPS #command to #letter all chars
-need #command to #letter all guild members (guild master only)
-implement guild stats
-Table to separately record all drops/pick ups in db
-Table to separately record chars leaving and joining guilds
-save guild applicant list to database
-document idle_buffer2.h
-convert attribute struct so as attribute type can be addressed programatically
-identify cause of stall after login (likely to be loading of inventory from db)
-identify cause of char bobbing
-put inventory slots in a binary blob (may solve stall on log in)
-create circular buffer for receiving packets
-need #function to describe char and what it is wearing)
-document new database/struct relationships
-finish char_race_stats and char_gender_stats functions in db_char_tbl.c
-banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveyard)
+22. replace snprintf with ssnprintf
+21. bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
+20. need #command to withdraw application to join guild
+19. need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
+18. #command to change guild chan join/leave notification colours
+17. map object reserve respawn
+16. #command to #letter all members of a guild
+15. #IG guild channel functionality
+14. OPS #command to #letter all chars
+13. need #command to #letter all guild members (guild master only)
+12. implement guild stats
+11. Table to separately record all drops/pick ups in db
+10. Table to separately record chars leaving and joining guilds
+9. save guild applicant list to database
+8. document idle_buffer2.h
+7. convert attribute struct so as attribute type can be addressed programatically
+6. fix char bobbing
+5. create circular buffer for receiving packets
+4. need #function to describe char and what it is wearing)
+3. document new database/struct relationships
+2. finish char_race_stats and char_gender_stats functions in db_char_tbl.c
+1. banned chars go to ban map (jail). Dead chars got to dead map (ghost and graveyard)
 
 ***************************************************************************************************/
 

@@ -42,14 +42,6 @@ void load_db_char_types(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("CHARACTER_TYPE_TABLE", GET_CALL_INFO);
 
-    //check database table exists
-    const char database_table[]="CHARACTER_TYPE_TABLE";
-    if(table_exists(database_table)==false){
-
-        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
-        stop_server();
-    }
-
     sqlite3_stmt *stmt;
 
     char sql[MAX_SQL_LEN]="SELECT * FROM CHARACTER_TYPE_TABLE";
@@ -58,7 +50,7 @@ void load_db_char_types(){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //read the sql query result into the char type array
@@ -69,28 +61,23 @@ void load_db_char_types(){
 
         if(char_type_id>MAX_CHARACTER_TYPES) {
 
-            log_event(EVENT_ERROR, "character_type_id [%i] exceeds max [%i] in function %s: module %s: line %i", char_type_id, MAX_CHARACTER_TYPES, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "character_type_id [%i] exceeds max [%i] in function %s: module %s: line %i", char_type_id, MAX_CHARACTER_TYPES, GET_CALL_INFO);
             stop_server();
         }
 
-        character_type[char_type_id].race_id=sqlite3_column_int(stmt, 2);
-        character_type[char_type_id].gender_id=sqlite3_column_int(stmt, 3);
+        character_type[char_type_id].race_id=sqlite3_column_int(stmt, 1);
+        character_type[char_type_id].gender_id=sqlite3_column_int(stmt, 2);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] %s %s", char_type_id, race[character_type[char_type_id].race_id].race_name, gender[character_type[char_type_id].gender_id].gender_name);
 
         i++;
     }
 
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy the prepared sql statement
     rc=sqlite3_finalize(stmt);
     if (rc != SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     if(i==0){
@@ -112,19 +99,34 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
         NOTES   :
     **/
 
+    sqlite3_stmt *stmt=NULL;
+
     //check database is open and table exists
     check_db_open(GET_CALL_INFO);
     check_table_exists("CHARACTER_TYPE_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO CHARACTER_TYPE_TABLE("  \
+    //prepare sql query
+    char sql[MAX_SQL_LEN]="INSERT INTO CHARACTER_TYPE_TABLE("  \
         "CHARACTER_TYPE_ID," \
         "RACE_ID," \
         "GENDER_ID" \
-        ") VALUES(%i, %i, %i)", char_type_id, race_id, gender_id);
+        ") VALUES(?, ?, ?)";
 
-    process_sql(sql);
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, char_type_id);
+    sqlite3_bind_int(stmt, 2, race_id);
+    sqlite3_bind_int(stmt, 3, gender_id);
+
+    //process sql statement
+    int rc=sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
+    }
+
+    //destroy query
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "Character type [%i] gender [%s] race [%s] added successfully\n", char_type_id, gender[gender_id].gender_name, race[race_id].race_name);
 

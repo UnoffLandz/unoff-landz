@@ -25,7 +25,6 @@
 #include "maps.h"
 #include "date_time_functions.h"
 #include "server_protocol_functions.h"
-#include "broadcast_movement.h"
 #include "colour.h"
 #include "server_messaging.h"
 #include "characters.h"
@@ -74,7 +73,7 @@ int get_move_command(int tile_pos, int tile_dest, int map_axis){
     else if(move==-1) i=6;
 
     else {
-        log_event(EVENT_ERROR, "illegal move in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "illegal move in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "current tile [%i] destination tile [%i] move distance [%i]", tile_pos, tile_dest, move);
         stop_server();
     }
@@ -194,7 +193,7 @@ bool add_char_to_map(int actor_node, int map_id, int map_tile){
     //if map is outside bounds then abort map move and alert client
     if(map_id>MAX_MAPS || map_id<0) {
 
-        log_event(EVENT_ERROR, "illegal map id[%i] name %s])in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "illegal map id[%i] name %s])in function %s: module %s: line %i", map_id, maps.map[map_id].map_name, GET_CALL_INFO);
 
         send_text(socket, CHAT_SERVER, "%cmap %i is outside bounds", c_red1+127, map_id);
         return false;
@@ -203,7 +202,7 @@ bool add_char_to_map(int actor_node, int map_id, int map_tile){
     //check that map exists
     if(strcmp(maps.map[map_id].elm_filename, "")==0){
 
-        log_event(EVENT_ERROR, "map id[%i] doesn't exist in function %s: module %s: line %i", map_id, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "map id[%i] doesn't exist in function %s: module %s: line %i", map_id, GET_CALL_INFO);
 
         send_text(socket, CHAT_SERVER, "%cmap %i doesn't exist", c_red3+127, map_id);
         return false;
@@ -215,7 +214,7 @@ bool add_char_to_map(int actor_node, int map_id, int map_tile){
     //ensure map tile is walkable
     if(tile_walkable(map_id, map_tile)==false){
 
-        log_event(EVENT_ERROR, "tile [%i] of map [%i] is not walkable in function %s: module %s: line %i", map_tile, map_id, maps.map[map_id].map_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "tile [%i] of map [%i] is not walkable in function %s: module %s: line %i", map_tile, map_id, maps.map[map_id].map_name, GET_CALL_INFO);
 
         send_text(socket, CHAT_SERVER, "%ctile %i of map %s is not walkable", c_red3+127, map_tile, maps.map[map_id].map_name);
         return false;
@@ -284,7 +283,7 @@ bool move_char_between_maps(int actor_node, int map_id, int map_tile){
         //return char to original map if jump to new map fails
         if(add_char_to_map(actor_node, old_map_id, old_map_tile)==false){
 
-            log_event(EVENT_ERROR, "cannot return char to original map in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "cannot return char to original map in function %s: module %s: line %i", GET_CALL_INFO);
             stop_server();
         }
 

@@ -22,6 +22,8 @@
 
 #include <sys/time.h>   // supports time_t data type
 
+#define GAME_DATA_FILE "game_data.lst"
+
 struct game_data_type {
 
     time_t server_start_time;
@@ -36,6 +38,7 @@ struct game_data_type {
     int start_map_tile;
     int year_length;
     int database_version;
+    char server_name[80];
 };
 extern struct game_data_type game_data;
 

@@ -4,16 +4,13 @@
 #include "clients.h"
 #include "idle_buffer2.h"
 #include "db/database_functions.h"
-#include "broadcast_chat.h"
-#include "broadcast_movement.h"
 #include "logging.h"
 #include "server_start_stop.h"
 #include "colour.h"
-
+#include "movement.h"
 
 struct client_list_type clients;
 struct client_socket_type client_socket[MAX_SOCKETS];
-
 
 int get_next_free_actor_node(){
 
@@ -65,7 +62,7 @@ void close_connection_slot(int actor_node){
     }
     else {
 
-        log_event(EVENT_ERROR, "attempt to close unused socket [%i] in function %s: module %s: line %i", socket, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "attempt to close unused socket [%i] in function %s: module %s: line %i", socket, GET_CALL_INFO);
         stop_server();
     }
 

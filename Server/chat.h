@@ -26,6 +26,9 @@
 #define MAX_CHAN_SLOTS 3
 #define LOCAL_CHAT_RANGE 10
 
+#define CHANNELS_FILE "channels.lst"
+
+
 struct channel_node_type{
 
     enum {CHAN_VACANT, CHAN_SYSTEM, CHAN_PERMANENT, CHAN_UNUSED, CHAN_CHAT} chan_type;
@@ -158,5 +161,70 @@ bool chat_chan_open(int actor_node);
     NOTES   :
 **/
 bool is_chan_active(int actor_node, int chan);
+
+/** RESULT  : broadcasts an event to all clients in the chat channel
+
+    RETURNS : void
+
+    PURPOSE : announces players joining and leaving the chat channel
+
+    NOTES   :
+*/
+void broadcast_channel_event(int chan, int actor_node, char *text_in);
+
+
+/** RESULT  : broadcasts channel chat to all clients in the chat channel
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_channel_chat(int chan, int actor_node, char *text_in);
+
+
+/** RESULT  : broadcasts guild chat to all clients in the guild
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_guild_chat(int guild_id, int actor_node, char *text_in);
+
+
+/** RESULT  : broadcasts local chat to all characters in the vicinity
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_local_chat(int actor_node, char *text_in);
+
+
+/** RESULT  : broadcasts server message to all connected clients
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void broadcast_server_message(char *text_in);
+
+
+/** RESULT  : Adds default chat channels to a new char
+
+    RETURNS : void
+
+    PURPOSE :
+
+    NOTES   :
+*/
+void add_new_char_chat_channels();
 
 #endif // CHAT_H_INCLUDED

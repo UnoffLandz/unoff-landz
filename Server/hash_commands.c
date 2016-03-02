@@ -38,7 +38,6 @@
 #include "game_data.h"
 #include "guilds.h"
 #include "idle_buffer2.h"
-#include "broadcast_chat.h"
 #include "hash_commands.h"
 #include "hash_commands_guilds.h"
 #include "hash_commands_chat.h"

@@ -22,7 +22,6 @@
 
 #define CHARACTER_TYPE_TABLE_SQL "CREATE TABLE CHARACTER_TYPE_TABLE( \
         CHARACTER_TYPE_ID   INTEGER PRIMARY KEY     NOT NULL, \
-        CHARACTER_TYPE_NAME TEXT, \
         RACE_ID             INT, \
         GENDER_ID           INT, \
         CHAR_COUNT          INT)"

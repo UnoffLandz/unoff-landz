@@ -50,7 +50,7 @@ struct {// struct used to transfer data to the _add_enhanced_actor_packet and
     int current_health;
     int player_type;
     char banner[80];
-} actor;
+}actor;
 
 
 /** RESULT  : sends the log_in_ok packet to the client
@@ -387,7 +387,6 @@ void actor_wear_item_packet(int actor_id, unsigned char *packet, size_t *packet_
     NOTES   :
 */
 void actor_unwear_item_packet(int actor_id, unsigned char *packet, size_t *packet_length, int equipable_item_type, int equipable_item_id);
-
 
 
 /*****************************************************************************************************

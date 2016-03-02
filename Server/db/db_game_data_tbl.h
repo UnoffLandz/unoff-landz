@@ -29,7 +29,8 @@
         GAME_MINUTES        INT, \
         GAME_DAYS           INT, \
         YEAR_LENGTH         INT, \
-        DB_VERSION          INT  \
+        DB_VERSION          INT, \
+        SERVER_NAME         TEXT \
         )"
 
 
@@ -50,8 +51,19 @@ void load_db_game_data();
 
     PURPOSE : a test function to load game data to the game data table
 
-    NOTES   : to eventually be outsourced to a separate utility
+    NOTES   :
 **/
-void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int start_map_tile, int year_length, int db_version);
+void add_db_game_data(int beam_map_id, int beam_map_tile, int start_map_id, int start_map_tile, int year_length, int db_version, char *server_name);
+
+
+/** RESULT  : loads game data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of game data
+
+    NOTES   :
+*/
+void batch_add_game_data(char *file_name);
 
 #endif // DB_GAME_DATA_TBL_H_INCLUDED

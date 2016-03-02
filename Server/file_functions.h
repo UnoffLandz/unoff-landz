@@ -60,8 +60,11 @@ extern int fcopy(const char *name,const char *newname);
 
     NOTES   :
 **/
-void create_backup_file(const char *existing_file_name, int backup_suffix);
+void create_backup_file(const char *existing_file_name);
 
 
+// TODO (themuntdregger#1#): document functions
+void extract_filename_suffix(const char *str_in, char *str_out);
+void extract_filename_prefix(const char *str_in, char *str_out);
 
 #endif // FILE_FUNCTIONS_H_INCLUDED

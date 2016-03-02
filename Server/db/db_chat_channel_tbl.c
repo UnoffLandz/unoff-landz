@@ -19,11 +19,13 @@
 
 #include <string.h> //support for strcpy
 #include <stdio.h> //support for snprintf
+#include <stdlib.h> //support for EXIT_FAILURE macro and exit functions
 
 #include "database_functions.h"
 #include "../logging.h"
 #include "../chat.h"
 #include "../server_start_stop.h"
+#include "../string_functions.h"
 
 
 void load_db_channels(){
@@ -40,20 +42,11 @@ void load_db_channels(){
 
     char sql[MAX_SQL_LEN]="SELECT * FROM CHANNEL_TABLE";
 
-    //check database table exists
-    char database_table[80];
-    strcpy(database_table, strstr(sql, "FROM")+5);
-    if(table_exists(database_table)==false){
-
-        log_event(EVENT_ERROR, "table [%s] not found in database", database_table);
-        stop_server();
-    }
-
     //prepare sql statement
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     int i=0;
@@ -63,7 +56,7 @@ void load_db_channels(){
 
         if(i>MAX_CHANNELS) {
 
-            log_event(EVENT_ERROR, "chan_id [%i] exceeds range [0 - %i] in function %s: module %s: line %i", chan_id, MAX_CHANNELS, __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "chan_id [%i] exceeds range [0 - %i] in function %s: module %s: line %i", chan_id, MAX_CHANNELS, GET_CALL_INFO);
             stop_server();
         }
 
@@ -87,17 +80,11 @@ void load_db_channels(){
         i++;
     }
 
-    //test that we were able to read all the rows in the query result
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
-
     //destroy prepared sql statemnent
     rc=sqlite3_finalize(stmt);
     if (rc != SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     if(i==0){
@@ -131,4 +118,39 @@ void add_db_channel(int channel_id, int owner_id, int channel_type, char *passwo
     process_sql(sql);
 
     log_event(EVENT_INITIALISATION, "Added channel [%i] [%s] to CHANNEL_TABLE", channel_id, channel_name);
+}
+
+
+void batch_add_channels(char *file_name){
+
+    /** public function - see header */
+
+    FILE* file;
+
+    if((file=fopen(file_name, "r"))==NULL){
+
+        log_event(EVENT_ERROR, "channels load file [%s] not found", file_name);
+        exit(EXIT_FAILURE);
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    log_event(EVENT_INITIALISATION, "\nAdding channels specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding channels specified in file [%s]\n", file_name);
+
+    while (fgets(line, sizeof(line), file)) {
+
+        line_counter++;
+
+        sscanf(line, "%*s");
+
+        char output[7][80];
+        memset(&output, 0, sizeof(output));
+        parse_line(line, output);
+
+        add_db_channel(atoi(output[0]), atoi(output[1]), atoi(output[2]), output[3], output[4], output[5], atoi(output[6]));
+     }
+
+    fclose(file);
 }

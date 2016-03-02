@@ -49,7 +49,7 @@ void load_db_attributes(){
             int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
             if(rc!=SQLITE_OK){
 
-                log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+                log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
             }
 
             while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -79,14 +79,14 @@ void load_db_attributes(){
 
             if (rc!= SQLITE_DONE) {
 
-                log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+                log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
             }
 
             //destroy the prepared sql statement
             rc=sqlite3_finalize(stmt);
             if(rc!=SQLITE_OK){
 
-             log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+             log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
             }
         }
 
@@ -121,13 +121,13 @@ void add_db_attribute(int race_id, int attribute_type_id, int attribute_value[50
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_exec failed", GET_CALL_INFO, rc, sql);
     }
 
     for(int pick_points=0; pick_points<MAX_PICKPOINTS; pick_points++){
@@ -140,7 +140,7 @@ void add_db_attribute(int race_id, int attribute_type_id, int attribute_value[50
         rc = sqlite3_step(stmt);
         if (rc!= SQLITE_DONE) {
 
-            log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+            log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
         }
 
         sqlite3_clear_bindings(stmt);
@@ -150,13 +150,13 @@ void add_db_attribute(int race_id, int attribute_type_id, int attribute_value[50
     sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
     if (rc != SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_exec failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_exec failed", GET_CALL_INFO, rc, sql);
     }
 
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     fprintf(stderr, "Attribute [%s] added successfully\n", attribute_name[attribute_type_id]);

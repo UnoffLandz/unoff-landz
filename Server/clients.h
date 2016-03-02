@@ -114,9 +114,9 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     bool harvest_flag;
     int harvest_amount;    //amount harvested each cycle
     int harvest_object_id; //object being harvested
-    int harvest_interval;  //interval between each harvest
-    int harvest_inventory_slot;
-    time_t time_of_last_harvest;
+    int harvest_interval;  //inter val between each harvest
+    int harvest_inventory_slot; //slot to which harvest item is to be placed
+    time_t time_of_last_harvest; //time item last harvested
 
     char char_name[MAX_CHAR_NAME_LEN];
     char password[MAX_CHAR_PASSWORD_LEN];
@@ -190,21 +190,22 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     int max_magic;
 
     int manufacturing_lvl;
-    int max_manufacturing_lvl;
+    //int max_manufacturing_lvl;
     int harvest_lvl;
-    int max_harvest_lvl;
+    //int max_harvest_lvl;
     int alchemy_lvl;
-    int max_alchemy_lvl;
+    //int max_alchemy_lvl;
     int overall_lvl;
-    int max_overall_lvl;
+    //int max_overall_lvl;
     int attack_lvl;
-    int max_attack_lvl;
+    //int max_attack_lvl;
     int defence_lvl;
-    int max_defence_lvl;
+    //int max_defence_lvl;
     int magic_lvl;
-    int max_magic_lvl;
+    //int max_magic_lvl;
     int potion_lvl;
-    int max_potion_lvl;
+    //int max_potion_lvl;
+
     int material_pts;
     int max_material_pts;
     int ethereal_pts;
@@ -213,21 +214,21 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     int food_lvl;
 
     int manufacture_exp;
-    int max_manufacture_exp;
+    //int max_manufacture_exp;
     int harvest_exp;
-    int max_harvest_exp;
+    //int max_harvest_exp;
     int alchemy_exp;
-    int max_alchemy_exp;
+    //int max_alchemy_exp;
     int overall_exp;
-    int max_overall_exp;
+    //int max_overall_exp;
     int attack_exp;
-    int max_attack_exp;
+    //int max_attack_exp;
     int defence_exp;
-    int max_defence_exp;
+    //int max_defence_exp;
     int magic_exp;
-    int max_magic_exp;
+    //int max_magic_exp;
     int potion_exp;
-    int max_potion_exp;
+    //int max_potion_exp;
 
     int book_id;
     int max_book_time;

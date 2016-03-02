@@ -23,6 +23,7 @@
 #include "log_in.h"
 #include "character_creation.h"
 #include "db/database_functions.h"
+#include "db/db_character_tbl.h"
 #include "server_start_stop.h"
 #include "characters.h"
 #include "guilds.h"
@@ -71,7 +72,7 @@ void push_idle_buffer2(int actor_node, int process_type, const unsigned char *pa
     if(idle_buffer2.size()>=IDLE_BUFFER2_MAX) {
 
         //buffer overflow
-        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -87,7 +88,7 @@ void push_idle_buffer2(int actor_node, int process_type, const unsigned char *pa
 
         if(packet_len > MAX_PROTOCOL_PACKET_SIZE2-1){
 
-            log_event(EVENT_ERROR, "maximum protocol packet size exceeded in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+            log_event(EVENT_ERROR, "maximum protocol packet size exceeded in function %s: module %s: line %i", GET_CALL_INFO);
             stop_server();
         }
 
@@ -105,7 +106,7 @@ void push_command(int actor_node, int process_type, char *char_name, int guild_i
     if(idle_buffer2.size()>=IDLE_BUFFER2_MAX) {
 
         //buffer overflow
-        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -132,14 +133,14 @@ void push_sql_command(const char *fmt, ...){
 
     if (vsprintf(sql, fmt, args)>MAX_SQL_LEN){
 
-        log_event(EVENT_ERROR, "sql string exceeds max [%i] in function %s: module %s: line %i", MAX_SQL_LEN, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "sql string exceeds max [%i] in function %s: module %s: line %i", MAX_SQL_LEN, GET_CALL_INFO);
         stop_server();
     }
 
     if(idle_buffer2.size()>=IDLE_BUFFER2_MAX) {
 
         //buffer overflow
-        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "database buffer overflow in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 
@@ -228,14 +229,21 @@ void process_idle_buffer2(){
 
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_GUILD_DETAILS){
 
-        D_PRINT("IDLE_BUFFER2_PROCESS_LIST_GUILD_BY_TIME\n");
+        D_PRINT("IDLE_BUFFER_PROCESS_GUILD_DETAILS\n");
         send_guild_details(actor_node, command.guild_id);
+    }
+    /**********************************************************************************************/
+
+    else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_UPDATE_INVENTORY){
+
+        D_PRINT("IIDLE_BUFFER_PROCESS_UPDATE_INVENTORY\n");
+        db_update_inventory(actor_node);
     }
     /**********************************************************************************************/
 
     else {
 
-        log_event(EVENT_ERROR, "unknown process type in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "unknown process type in function %s: module %s: line %i", GET_CALL_INFO);
         stop_server();
     }
 

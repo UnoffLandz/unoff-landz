@@ -42,11 +42,11 @@ extern sqlite3 *db; // database handle which is set when function open_database 
 extern "C" {
 #endif
 
-/** RESULT  : processes a sql string
+/** RESULT   : processes a sql string
 
     RETURNS  : void
 
-    PURPOSE  : used by function idle_buffer to execute sql to update or add to database.
+    PURPOSE  : used to process sql statements where there is no output
 
     NOTES    :
 **/
@@ -108,8 +108,8 @@ int database_table_count();
 
     RETURNS  : void
 
-    PURPOSE  : used by function create_new_database. Made public so that individual tables can be
-               added from main.c during development
+    PURPOSE  : convenience wrapper for process_sql function which provides logging when
+               adding database tables
 
     NOTES    :
 **/

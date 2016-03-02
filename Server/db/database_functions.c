@@ -26,7 +26,6 @@
 #include "db_map_tbl.h"
 #include "db_character_type_tbl.h"
 #include "db_character_race_tbl.h"
-#include "db_character_inventory_tbl.h"
 #include "db_gender_tbl.h"
 #include "db_chat_channel_tbl.h"
 #include "db_attribute_tbl.h"
@@ -146,7 +145,7 @@ void close_database(){
 
         //don't use log_sqlite_error function as this already contains a call to close_database
         //and therefore creates an infinite loop
-        log_event(EVENT_ERROR, "sqlite3_close failed in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "sqlite3_close failed in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "error code %i", rc);
     }
 
@@ -199,7 +198,7 @@ bool table_exists(const char *table_name) {
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //process the sql statement - we use a while loop instead of testing the return
@@ -215,14 +214,14 @@ bool table_exists(const char *table_name) {
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
         //server stopped automatically
     }
 
     //catch duplicated tables (only likely to happen if the entire database is corrupted)
     if(count>1){
 
-        log_event(EVENT_ERROR, "more than 1 table named [%s] found in function %s: module %s: line %i", table_name, __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "more than 1 table named [%s] found in function %s: module %s: line %i", table_name, GET_CALL_INFO);
         stop_server();
     }
 
@@ -233,8 +232,6 @@ bool table_exists(const char *table_name) {
 
 
 void check_table_exists(char *table_name, const char *module, const char *func, const int line){
-
-    /** public function - see header **/
 
     if(table_exists(table_name)==false){
 
@@ -263,7 +260,7 @@ bool column_exists(const char *table_name, const char *column_name) {
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
         //server stopped automatically
     }
 
@@ -280,13 +277,13 @@ bool column_exists(const char *table_name, const char *column_name) {
     //if sqlite_master has no field called 'name' then report as error
     if(field_idx==-1) {
 
-        log_event(EVENT_ERROR, "sqlite_master has no 'name field in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "sqlite_master has no 'name field in function %s: module %s: line %i", GET_CALL_INFO);
 
         rc = sqlite3_finalize(stmt);
 
         if(rc!=SQLITE_OK){
 
-            log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+            log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
             //server stopped automatically
         }
     }
@@ -322,14 +319,14 @@ int database_table_count(){
     int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
     }
 
     //process the sql statement
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
 
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
         //server stopped automatically
     }
 
@@ -339,7 +336,7 @@ int database_table_count(){
     rc=sqlite3_finalize(stmt);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
+        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
     }
 
     return table_count;
@@ -357,41 +354,18 @@ void create_database_table(char *sql){
        NOTES    :
     **/
 
-    sqlite3_stmt *stmt;
-
     //check database is open
     check_db_open(GET_CALL_INFO);
 
     //check that sql str contains a valid table creation instruction
     if(strncmp(sql, "CREATE TABLE", 12)!=0){
 
-        log_event(EVENT_ERROR, "sql statement does not contain 'CREATE TABLE' instruction in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "sql statement does not contain 'CREATE TABLE' instruction in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "[%s]", sql);
         stop_server();
     }
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
-        //server stopped automatically
-    }
-
-    //process the sql statement
-    rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite_step failed", __func__, __FILE__, __LINE__, rc, sql);
-        //server stopped automatically
-    }
-
-    //destroy the sql statement
-    rc = sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
-    }
+    process_sql(sql);
 
     //extract table name for use in logging
     char table_name[80]="";
@@ -407,7 +381,7 @@ void create_database_table(char *sql){
 
     if(strlen(table_name)==0){
 
-        log_event(EVENT_ERROR, "table name not found in sql statement in function %s: module %s: line %i", __func__, __FILE__, __LINE__);
+        log_event(EVENT_ERROR, "table name not found in sql statement in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "[%s]", sql);
         stop_server();
     }
@@ -421,33 +395,18 @@ void process_sql(const char *sql){
 
     /** public function - see header **/
 
-    sqlite3_stmt *stmt;
-
     //check database is open
     check_db_open(GET_CALL_INFO);
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    char *errMsg;
+
+    //use sqlite3_exec in place of sqlite3_prepare as there is no need to query output
+    int rc = sqlite3_exec(db, sql, NULL, NULL, &errMsg);
+
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", __func__, __FILE__, __LINE__, rc, sql);
-        //server stopped automatically
-    }
-
-    //process the sql statement
-    rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", __func__, __FILE__, __LINE__, rc, sql);
-        //server stopped automatically
-    }
-
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc != SQLITE_OK){
-
-        log_sqlite_error("sqlite3_finalize failed", __func__, __FILE__, __LINE__, rc, sql);
-        //server stopped automatically
+        log_event(EVENT_ERROR, "sqlite3_exec failed, return code [%i], error message [%s] in module: %s, function %s: line: %i", rc, errMsg, GET_CALL_INFO);
+        log_text(EVENT_ERROR, "[%s]", sql);
     }
 }
 
@@ -465,7 +424,6 @@ void populate_database(const char *db_filename){
 
     //create database tables
     create_database_table(CHARACTER_TABLE_SQL);
-    create_database_table(INVENTORY_TABLE_SQL);
     create_database_table(GENDER_TABLE_SQL);
     create_database_table(E3D_TABLE_SQL);
     create_database_table(OBJECT_TABLE_SQL);
@@ -483,15 +441,12 @@ void populate_database(const char *db_filename){
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");
 
-    add_db_game_data(1, 27225, 1, 27225, 360, REQUIRED_DATABASE_VERSION);
+    batch_add_game_data(GAME_DATA_FILE);
+    batch_add_channels(CHANNELS_FILE);
+    batch_add_races(RACE_FILE); //add race before char type
+    batch_add_gender(GENDER_FILE); //add gender before char type
 
-    add_db_channel(1, 0, CHAN_PERMANENT, "", "Main Channel", "A channel for chatting", 1);
-
-    batch_add_races(RACE_FILE); //add race before gender and char type
-    batch_add_gender(GENDER_FILE);
-
-    //load race and gender data so that we can have meaningful messages when logging
-    //batch_add_char_types
+    //load race and gender before adding char type
     load_db_char_races();
     load_db_genders();
     batch_add_char_types(CHAR_TYPE_FILE);
@@ -552,52 +507,14 @@ void populate_database(const char *db_filename){
         attribute_id++;
     }
 
-    // TODO (themuntdregger#1#): change add_db_guild so that it works in a similar way to add_db_map
-    add_db_guild("Operators", "OPS", c_grey3, "The server operators guild", PERMISSION_3, GUILD_ACTIVE);
+    batch_add_guilds(GUILD_FILE);
 
-    //load game data so that starting map and tile can be found
+    //load game data so that starting map and tile can be found for new chars
     load_db_game_data();
+    //set starting channels for new chars
+    load_db_channels();
 
-    //clear the character struct
-    memset(&character, 0, sizeof(character));
+    batch_add_characters(CHARACTER_FILE);
 
-    //create the master character
-    strcpy(character.char_name, "Player");
-    strcpy(character.password, "test");
-    character.char_created=time(NULL);
-    character.character_id=1;
-    character.char_status=CHAR_ALIVE;
-    character.skin_type=1;
-    character.hair_type=1;
-    character.shirt_type=1;
-    character.pants_type=1;
-    character.boots_type=1;
-    character.char_type=1;
-    character.head_type=1;
-    character.frame=frame_stand;
-    character.char_created=time(NULL);
-    character.map_id=game_data.beam_map_id;
-    character.map_tile=game_data.beam_map_tile;
-    character.guild_id=1;
-    character.joined_guild=time(NULL);
-    character.guild_rank=20;
-
-    //set starting channels
-    int j=0;
-    for(int i=0; i<MAX_CHANNELS; i++){
-
-        if(channel[i].new_chars==1){
-
-            if(j<MAX_CHAN_SLOTS){
-
-                if(j==0) character.active_chan=i-CHAT_CHANNEL_0;
-                character.chan[j]=i;
-            }
-        }
-    }
-
-    add_db_char_data(character);
-    fprintf(stderr, "Player [master_character][test] added successfully\n");
-
-    fprintf(stderr, "Database [%s] created\n", db_filename);
+    fprintf(stderr, "\nDatabase [%s] created\n", db_filename);
 }
