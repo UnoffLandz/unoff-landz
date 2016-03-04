@@ -67,16 +67,22 @@ Done - replaced sqlite prepare/step/finalize with exec on process_sql function
 
 Done - create_table function now acts as a convenience wrapper for process_sql function
 
-added inventory column to character table
-added harvest_lvl column to character table
-added server_name column to game_data table
-add neck details to add_enhanced_character
-
 ***************************************************************************************************
 
                                 TO - DO
 Ref Item
 --- -------------------------------------------------------------
+
+54. On wiki, link neck attachment codes to weapons and neck attachment codes. Also, add
+    explanation to neck attachment codes indicating that these are specified in xml files
+    with the exception of no_neck_attachment. Also, correct the descriptions of neck items
+
+53. Unoff-64 fails on 'Player' log in, but not on new char (need to create all new chars)
+
+52. server crash seems to be caused by broadcasting guild event to closed socked. Need to
+    update socket/actor status in close_connection function
+
+51. prevent null database strings from causing segfaults
 
 50. Implement specific function to update char to database
 
