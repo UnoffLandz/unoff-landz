@@ -59,8 +59,9 @@ void load_db_objects(){
             log_event(EVENT_ERROR, "object id [%i] exceeds range [%i] in function %s: module %s: line %i", object_id, MAX_OBJECT_ID, GET_CALL_INFO);
             stop_server();
         }
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(object[object_id].object_name, (char*)sqlite3_column_text(stmt, 1));
 
-        strcpy(object[object_id].object_name, (char*)sqlite3_column_text(stmt, 1));
         if(sqlite3_column_int(stmt, 2)==1) object[object_id].harvestable=true; else object[object_id].harvestable=false;
         if(sqlite3_column_int(stmt, 3)==1) object[object_id].edible=true; else object[object_id].edible=false;
         object[object_id].harvest_interval=sqlite3_column_int(stmt, 4);

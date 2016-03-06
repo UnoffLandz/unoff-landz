@@ -20,69 +20,47 @@
 #define SERVER_BUILD_DETAILS_H_INCLUDED
 
 #define VERSION "UnoffLandz 4"
-#define BUILD "11"
+#define BUILD "11.1"
 #define BUILD_DATE __DATE__
 
 /***************************************************************************************************
-                                    BUILD 11
+                                    BUILD 12
 
-Done - replaced separate database table for inventory data with binary blob in character table
+Fixed (52) stopped guild events being broadcast to closed socked.
 
-Done - added command line option to load harvesting skill
+Fixed (53) existing sqlite database on server replaced to prevent server crash arising from legacy
+           inventory data.
 
-Done - hard-coded server name now held on database/array
+Fixed (51) prevented null strings from causing seg fault in strcpy
 
-Done(34 partial) - game data, channel data, character data, guild data  now loaded from text file
+Fixed server name not being transferred to database on startup
 
-Done - removed broadcast modules and moved functions to other modules
+Fixed (54) server-up time shown on console is incorrect
 
-Done(40 partial) - started to convert sql statements to use parameters rather than inserted values
+Fixed (56) race Description in database shows "average
 
-Done - fixed bug in HERE_YOUR_STATS protocol command
+Partial (40) change sql statements to use bind parameters rather than inserts
+Partial (39) implement prepare and destroy wrapper functions
 
-Done - removed unused character_type_name column from character type table
+Done (34) load attributes from text file
 
-Done - fixed bug in exp accumulation
+Dropped (7) convert attribute struct so as attribute type can be addressed programatically
 
-Done - exp and levels now saved to database
-
-Done - increased max levels to 255
-
-Done - improved backup file naming
-
-Fixed - bug that resulted in starting channels not being loaded for default char
-
-Dumped -(25) duplicated by to-do list item 35
-
-Fixed - (44) bug resulting in black ring around chars neck
-
-Done - (38) implement GET_CALL_INFO macro in log functions
-
-Fixed - (45) bug resulting in player sit/stand not properly saved to database
-
-Dumped - (41) can't use sqlite_exec with sqlite_bind, hence, the sqlite_exec can't be
-used to replace prepare/step/finalize on update and insert queries
-
-Done - replaced sqlite prepare/step/finalize with exec on process_sql function
-
-Done - create_table function now acts as a convenience wrapper for process_sql function
 
 ***************************************************************************************************
 
-                                TO - DO
+                                        TO - DO
 Ref Item
 --- -------------------------------------------------------------
 
-54. On wiki, link neck attachment codes to weapons and neck attachment codes. Also, add
+57. Fix error in map jump command
+
+55. We have three lots of identical code in main.c to close a connection.
+    Try and amalgamate
+
+    On wiki, link neck attachment codes to weapons and neck attachment codes. Also, add
     explanation to neck attachment codes indicating that these are specified in xml files
     with the exception of no_neck_attachment. Also, correct the descriptions of neck items
-
-53. Unoff-64 fails on 'Player' log in, but not on new char (need to create all new chars)
-
-52. server crash seems to be caused by broadcasting guild event to closed socked. Need to
-    update socket/actor status in close_connection function
-
-51. prevent null database strings from causing segfaults
 
 50. Implement specific function to update char to database
 
@@ -104,8 +82,6 @@ Ref Item
 36. check need for char_count column on character type table
 
 35. implement pickpoints, wraith and nexus/attributes
-
-34. load attributes from text file
 
 33. create bag table
 
@@ -138,7 +114,6 @@ can be engineered for different times of day.
 10. Table to separately record chars leaving and joining guilds
 9. save guild applicant list to database
 8. document idle_buffer2.h
-7. convert attribute struct so as attribute type can be addressed programatically
 6. fix char bobbing
 5. create circular buffer for receiving packets
 4. need #function to describe char and what it is wearing)

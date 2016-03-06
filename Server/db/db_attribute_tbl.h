@@ -48,4 +48,15 @@ void add_db_attribute(int race_id, int attribute_type_id, int attribute_value[50
 **/
 void load_db_attributes();
 
+
+/** RESULT  : loads attribute data specified in a text file
+
+    RETURNS : void
+
+    PURPOSE : batch loading of attribute data
+
+    NOTES   :
+*/
+void batch_add_attributes(char *file_name, int attribute_type_id);
+
 #endif // DB_ATTRIBUTE_TBL_H_INCLUDED

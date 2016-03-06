@@ -72,16 +72,19 @@ void load_db_maps(){
         }
 
         //get map name
-        strcpy(maps.map[map_id].map_name, (char*)sqlite3_column_text(stmt, 1));
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(maps.map[map_id].map_name, (char*)sqlite3_column_text(stmt, 1));
         log_event(EVENT_MAP_LOAD, "Loading map [%i] map_name [%s]", map_id,  maps.map[map_id].map_name);
 
         //get map description
-        strcpy(maps.map[map_id].description, (char*)sqlite3_column_text(stmt, 2));
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 2)) strcpy(maps.map[map_id].description, (char*)sqlite3_column_text(stmt, 2));
         log_text(EVENT_MAP_LOAD, "map description [%s]", maps.map[map_id].description);
 
-        //get elm filename
         char elm_filename[80]="";
-        strcpy(elm_filename, (char*)sqlite3_column_text(stmt, 3));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 3)) strcpy(elm_filename, (char*)sqlite3_column_text(stmt, 3));
         sprintf(maps.map[map_id].elm_filename, "%s%s", CLIENT_MAP_PATH, elm_filename);
         log_text(EVENT_MAP_LOAD, "elm filename [%s]", elm_filename);
 
@@ -109,12 +112,12 @@ void load_db_maps(){
         //this temporary code reads the 3d object list directly from the elm file
         //read_threed_object_list(elm_filename);
 
-        //get map author
-        strcpy(maps.map[map_id].author, (char*)sqlite3_column_text(stmt, 7));
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 7)) strcpy(maps.map[map_id].author, (char*)sqlite3_column_text(stmt, 7));
         log_text(EVENT_MAP_LOAD, "map author [%s]", maps.map[map_id].author);
 
-        //get map author email
-        strcpy(maps.map[map_id].author_email, (char*)sqlite3_column_text(stmt, 8));
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 8)) strcpy(maps.map[map_id].author_email, (char*)sqlite3_column_text(stmt, 8));
         log_text(EVENT_MAP_LOAD, "map author email[%s]", maps.map[map_id].author_email);
 
         //get map status
@@ -340,11 +343,15 @@ void list_db_maps(){
 
         //get map name
         char map_name[80]="";
-        strcpy(map_name, (char*)sqlite3_column_text(stmt, 1));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(map_name, (char*)sqlite3_column_text(stmt, 1));
 
         //get map elm file and add client map path so that send_change_map protocol tells client where to find the file
         char map_file_name[80]="";
-        strcpy(map_file_name, (char*)sqlite3_column_text(stmt, 2));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 2)) strcpy(map_file_name, (char*)sqlite3_column_text(stmt, 2));
 
         fprintf(stderr, "[%6i] [%s] [%s]\n", map_id, map_name, map_file_name);
     }

@@ -25,6 +25,10 @@
 #define MAX_ATTRIBUTES 4
 #define MAX_PICKPOINTS 50
 
+#define ATTR_DAY_VISION_FILE "day_vision.lst"
+#define ATTR_NIGHT_VISION_FILE "night_vision.lst"
+#define ATTR_CARRY_CAPACITY_FILE "carry_capacity.lst"
+
 struct attribute_ {
 
     int night_vision[MAX_PICKPOINTS];

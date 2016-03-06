@@ -29,43 +29,33 @@ void close_connection_slot(int actor_node){
 
     /** public function - see header */
 
+    //update last in game time for char
+    clients.client[actor_node].time_of_last_minute=time(NULL);
+    push_sql_command("UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[actor_node].time_of_last_minute, clients.client[actor_node].character_id);
+
+    //set the actor node to UNUSED otherwise we could end up broadcasting to a closed socket
+    clients.client[actor_node].client_node_status=CLIENT_NODE_UNUSED;
+
     //notify guild that char has logged off
     int guild_id=clients.client[actor_node].guild_id;
 
     if(guild_id>0){
 
-        // TODO (themuntdregger#1#): create broadcast_guild_event function to hold this code and to allow ...
-        //guild master to modify leaving/joining messages and colours
         char text_out[80]="";
+
         sprintf(text_out, "%c%s LEFT THE GAME", c_blue3+127, clients.client[actor_node].char_name);
         broadcast_guild_chat(guild_id, actor_node, text_out);
     }
 
-    //close client socket connection
     int socket=clients.client[actor_node].socket;
 
+    //only remove the actor from the game if the char is actually logged in
     if(client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
 
-        //broadcast actor removal
         broadcast_remove_actor_packet(actor_node);
-
-        //update last in game time for char
-        clients.client[actor_node].time_of_last_minute=time(NULL);
-        push_sql_command("UPDATE CHARACTER_TABLE SET LAST_IN_GAME=%i WHERE CHAR_ID=%i;",(int)clients.client[actor_node].time_of_last_minute, clients.client[actor_node].character_id);
-
-        log_event(EVENT_SESSION, "socket [%i] closed on char [%s] whilst LOGGED_IN", socket, clients.client[actor_node].char_name);
-    }
-    else if(client_socket[socket].socket_node_status==CLIENT_CONNECTED){
-
-        log_event(EVENT_SESSION, "socket [%i] closed whilst CONNECTED", socket);
-
-    }
-    else {
-
-        log_event(EVENT_ERROR, "attempt to close unused socket [%i] in function %s: module %s: line %i", socket, GET_CALL_INFO);
-        stop_server();
     }
 
-    //hasta la vista baby
     close(socket);
+
+    log_event(EVENT_SESSION, "socket [%i] closed for char [%s]", socket, clients.client[actor_node].char_name);
 }

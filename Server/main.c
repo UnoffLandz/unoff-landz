@@ -136,6 +136,10 @@ void start_server(){
     //clear array and load game data
     memset(&game_data, 0, sizeof(game_data));
     load_db_game_data();
+
+    //set server start time so we can calculate server 'up' time
+    game_data.server_start_time=time(NULL);
+
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //check database version (can only be done once game data has been loaded)

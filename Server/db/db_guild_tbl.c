@@ -53,10 +53,18 @@ void load_db_guilds(){
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int id=sqlite3_column_int(stmt, 0);
-        strcpy(guilds.guild[id].guild_name, (char*)sqlite3_column_text(stmt, 1));
-        strcpy(guilds.guild[id].guild_tag, (char*)sqlite3_column_text(stmt, 2));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(guilds.guild[id].guild_name, (char*)sqlite3_column_text(stmt, 1));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 2)) strcpy(guilds.guild[id].guild_tag, (char*)sqlite3_column_text(stmt, 2));
+
         guilds.guild[id].guild_tag_colour=sqlite3_column_int(stmt, 3);
-        strcpy(guilds.guild[id].guild_description, (char*)sqlite3_column_text(stmt, 4));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 4)) strcpy(guilds.guild[id].guild_description, (char*)sqlite3_column_text(stmt, 4));
+
         guilds.guild[id].date_guild_created=sqlite3_column_int(stmt, 5);
         guilds.guild[id].permission_level=sqlite3_column_int(stmt, 6);
         guilds.guild[id].status=sqlite3_column_int(stmt, 7);
@@ -201,8 +209,9 @@ void get_db_guild_member_list(int guild_id, int order){
     //execute sql command
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(guild_member_list.guild_member[i].character_name, (char*) sqlite3_column_text(stmt, 1));
 
-        strcpy(guild_member_list.guild_member[i].character_name, (char*) sqlite3_column_text(stmt, 1));
         guild_member_list.guild_member[i].date_joined_guild=sqlite3_column_int(stmt, 30);
         guild_member_list.guild_member[i].guild_rank=sqlite3_column_int(stmt, 13);
 

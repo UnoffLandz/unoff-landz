@@ -62,8 +62,8 @@ void load_db_genders(){
             stop_server();
         }
 
-        //get gender name
-        strcpy(gender[gender_id].gender_name, (char*)sqlite3_column_text(stmt, 1));
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(gender[gender_id].gender_name, (char*)sqlite3_column_text(stmt, 1));
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", gender_id, gender[gender_id].gender_name);
 
@@ -100,18 +100,33 @@ void add_db_gender(int gender_id, char *gender_name){
     check_db_open(GET_CALL_INFO);
     check_table_exists("GENDER_TABLE", GET_CALL_INFO);
 
+    sqlite3_stmt *stmt=NULL;
+
     char sql[MAX_SQL_LEN]="";
     snprintf(sql, MAX_SQL_LEN,
         "INSERT INTO GENDER_TABLE("  \
         "GENDER_ID," \
         "GENDER_NAME"  \
-        ") VALUES(%i, '%s')", gender_id, gender_name);
+        ") VALUES(?, ?)");
 
-    process_sql(sql);
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
-    fprintf(stderr, "Gender [%s] added successfully\n", gender_name);
+    sqlite3_bind_int(stmt, 1, gender_id);
+    sqlite3_bind_text(stmt, 2, gender_name, -1, SQLITE_STATIC);
 
-    log_event(EVENT_SESSION, "Added gender [%s] to GENDER_TABLE", gender_name);
+    //process sql statement
+    int rc=sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) {
+
+        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
+    }
+
+    //destroy query
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
+    fprintf(stderr, "Gender [%i] [%s] added successfully\n", gender_id, gender_name);
+
+    log_event(EVENT_SESSION, "Added gender [%i] [%s] to GENDER_TABLE", gender_id, gender_name);
 }
 
 

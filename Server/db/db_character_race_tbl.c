@@ -59,8 +59,11 @@ void load_db_char_races(){
             stop_server();
         }
 
-        strcpy(race[race_id].race_name, (char*)sqlite3_column_text(stmt, 1));
-        strcpy(race[race_id].race_description, (char*)sqlite3_column_text(stmt, 2));
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(race[race_id].race_name, (char*)sqlite3_column_text(stmt, 1));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 2)) strcpy(race[race_id].race_description, (char*)sqlite3_column_text(stmt, 2));
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", race_id, race[race_id].race_name);
 

@@ -62,7 +62,9 @@ void load_db_e3ds(){
             stop_server();
         }
 
-        strcpy(e3d[id].e3d_filename, (char*)sqlite3_column_text(stmt, 1));
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(e3d[id].e3d_filename, (char*)sqlite3_column_text(stmt, 1));
+
         e3d[id].object_id=sqlite3_column_int(stmt, 2);
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", id, e3d[id].e3d_filename);

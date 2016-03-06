@@ -118,8 +118,12 @@ bool get_db_char_data(const char *char_name, int char_id){
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         character.character_id=sqlite3_column_int(stmt, 0);
-        strcpy(character.char_name, (char*) sqlite3_column_text(stmt, 1));
-        strcpy(character.password, (char*) sqlite3_column_text(stmt,2));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(character.char_name, (char*) sqlite3_column_text(stmt, 1));
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 2)) strcpy(character.password, (char*) sqlite3_column_text(stmt,2));
+
         character.char_status=sqlite3_column_int(stmt, 3);
         character.active_chan=sqlite3_column_int(stmt, 4);
         character.chan[0]=sqlite3_column_int(stmt, 5);

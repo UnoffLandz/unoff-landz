@@ -70,7 +70,9 @@ void load_db_game_data(){
         game_data.game_days=sqlite3_column_int(stmt, 6);
         game_data.year_length=sqlite3_column_int(stmt, 7);
         game_data.database_version=sqlite3_column_int(stmt, 8);
-        strcpy(game_data.server_name, (char*)sqlite3_column_text(stmt, 9));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 9)) strcpy(game_data.server_name, (char*)sqlite3_column_text(stmt, 9));
 
         i++;
     }
@@ -173,7 +175,6 @@ void batch_add_game_data(char *file_name){
             atoi(output[4]), REQUIRED_DATABASE_VERSION, output[6]);
     }
 
+
     fclose(file);
 }
-
-

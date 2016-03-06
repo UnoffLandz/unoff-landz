@@ -69,7 +69,9 @@ void load_db_map_objects(){
         map_object[threedol_id][map_id].e3d_id=sqlite3_column_int(stmt, 4);
         if(sqlite3_column_int(stmt, 5)==1) map_object[threedol_id][map_id].harvestable=true; else map_object[threedol_id][map_id].harvestable=false;
         map_object[threedol_id][map_id].reserve=sqlite3_column_int(stmt, 6);
-        strcpy(map_object[threedol_id][map_id].e3d_filename, (char*)sqlite3_column_text(stmt, 7));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 7)) strcpy(map_object[threedol_id][map_id].e3d_filename, (char*)sqlite3_column_text(stmt, 7));
 
         log_event(EVENT_INITIALISATION, "loaded [%i]", id);
 

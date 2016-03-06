@@ -459,53 +459,9 @@ void populate_database(const char *db_filename){
     batch_add_maps(MAP_FILE);//also adds map objects
     batch_add_skills(HARVESTING_SKILL, HARVESTING_SKILL_FILE);
 
-    int attribute_id=0;
-    int attribute_value[50];
-
-    // create day vision attribute
-    for(int race_id=1; race_id<=6; race_id++){
-
-        float i=10.0f;
-
-        for(int pick_points=0; pick_points<=50; pick_points++){
-
-            attribute_value[pick_points]=(int)i;
-            i=i + 0.20f;
-         }
-
-        add_db_attribute(race_id, ATTR_DAY_VISION, attribute_value);
-        attribute_id++;
-    }
-
-    //create night vision attribute
-    for(int race_id=1; race_id<=6; race_id++){
-
-        float i=10.0f;
-
-        for(int pick_points=0; pick_points<=50; pick_points++){
-
-            attribute_value[pick_points]=(int)i;
-            i=i+18.0f;
-        }
-
-        add_db_attribute(race_id, ATTR_NIGHT_VISION, attribute_value);
-        attribute_id++;
-    }
-
-    //create carry capacity attribute
-    for(int race_id=1; race_id<=MAX_RACES; race_id++){
-
-        float i=50.0f;
-
-        for(int pick_points=0; pick_points<=50; pick_points++){
-
-            attribute_value[pick_points]=(int)i;
-            i=i + 0.20f;
-        }
-
-        add_db_attribute(race_id, ATTR_CARRY_CAPACITY, attribute_value);
-        attribute_id++;
-    }
+    batch_add_attributes(ATTR_DAY_VISION_FILE, ATTR_DAY_VISION);
+    batch_add_attributes(ATTR_NIGHT_VISION_FILE, ATTR_NIGHT_VISION);
+    batch_add_attributes(ATTR_CARRY_CAPACITY_FILE, ATTR_CARRY_CAPACITY);
 
     batch_add_guilds(GUILD_FILE);
 

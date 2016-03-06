@@ -59,10 +59,19 @@ void load_db_npc_actions(){
         }
 
         npc_action[npc_action_id].action_type=sqlite3_column_int(stmt, 1);
-        strcpy(npc_action[npc_action_id].text, (char*)sqlite3_column_text(stmt, 2));
-        strcpy(npc_action[npc_action_id].options_list, (char*)sqlite3_column_text(stmt, 3));
-        strcpy(npc_action[npc_action_id].text_success, (char*)sqlite3_column_text(stmt, 4));
-        strcpy(npc_action[npc_action_id].text_fail, (char*)sqlite3_column_text(stmt, 5));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 2)) strcpy(npc_action[npc_action_id].text, (char*)sqlite3_column_text(stmt, 2));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 3)) strcpy(npc_action[npc_action_id].options_list, (char*)sqlite3_column_text(stmt, 3));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 4)) strcpy(npc_action[npc_action_id].text_success, (char*)sqlite3_column_text(stmt, 4));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 5)) strcpy(npc_action[npc_action_id].text_fail, (char*)sqlite3_column_text(stmt, 5));
+
         npc_action[npc_action_id].choice=sqlite3_column_int(stmt, 6);
         npc_action[npc_action_id].object_id_required=sqlite3_column_int(stmt, 7);
         npc_action[npc_action_id].object_amount_required=sqlite3_column_int(stmt, 8);

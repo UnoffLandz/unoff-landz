@@ -56,8 +56,12 @@ void load_db_seasons(){
         //get the game data id and check that there is only one set
         int id=sqlite3_column_int(stmt,0);
 
-        strcpy(season[id].season_name, (char*)sqlite3_column_text(stmt, 1));
-        strcpy(season[id].season_description, (char*)sqlite3_column_text(stmt, 2));
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 1)) strcpy(season[id].season_name, (char*)sqlite3_column_text(stmt, 1));
+
+        //handle null string which would crash strcpy
+        if(sqlite3_column_text(stmt, 2)) strcpy(season[id].season_description, (char*)sqlite3_column_text(stmt, 2));
+
         season[id].start_day=sqlite3_column_int(stmt, 3);
         season[id].end_day=sqlite3_column_int(stmt, 4);
 
