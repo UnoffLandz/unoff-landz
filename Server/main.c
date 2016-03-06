@@ -1055,19 +1055,19 @@ int main(int argc, char *argv[]){
 
             log_text(EVENT_INITIALISATION, "CREATE DATABASE using %s at %s on %s", db_filename, time_stamp_str, verbose_date_stamp_str);
             fprintf(stdout, "\nCREATE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
-
-            //creates empty database file and opens it for use
-            create_empty_database_file(db_filename);
-
-            //populate new database with starting data
-            populate_database(db_filename);
-
-            close_database();
-
-            //Because server hasn't started we use exit rather than stop_server()
-            //We also use EXIT_SUCCESS as this is not an error situation
-            exit(EXIT_SUCCESS);
         }
+
+        //creates empty database file and opens it for use
+        create_empty_database_file(db_filename);
+
+        //populate new database with starting data
+        populate_database(db_filename);
+
+        close_database();
+
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
     }
 
     //execute upgrade database

@@ -46,6 +46,7 @@ Done (34) load attributes from text file
 
 Dropped (7) convert attribute struct so as attribute type can be addressed programatically
 
+Fixed bug in command line option 'C' (create database) will not work if no existing sqlite file
 
 ***************************************************************************************************
 
