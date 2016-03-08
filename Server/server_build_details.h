@@ -24,7 +24,7 @@
 #define BUILD_DATE __DATE__
 
 /***************************************************************************************************
-                                    BUILD 12
+                                    BUILD 11.1
 
 Fixed (52) stopped guild events being broadcast to closed socked.
 
@@ -54,14 +54,12 @@ Fixed bug in command line option 'C' (create database) will not work if no exist
 Ref Item
 --- -------------------------------------------------------------
 
+58. Command line options to reload attributes from text file
+
 57. Fix error in map jump command
 
 55. We have three lots of identical code in main.c to close a connection.
     Try and amalgamate
-
-    On wiki, link neck attachment codes to weapons and neck attachment codes. Also, add
-    explanation to neck attachment codes indicating that these are specified in xml files
-    with the exception of no_neck_attachment. Also, correct the descriptions of neck items
 
 50. Implement specific function to update char to database
 
@@ -76,7 +74,7 @@ Ref Item
 43. implement harvest node restrictions
 42. implement seasonal changes on harvest nodes
 
-40. change sql statements to use bind parameters rather than inserts (can't do this process_sql relies on
+40. change sql statements to use bind parameters rather than inserts
 39. implement prepare and destroy wrapper functions
 
 37. check need for initial_emu field on race table
@@ -105,7 +103,7 @@ can be engineered for different times of day.
 20. need #command to withdraw application to join guild
 19. need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
 18. #command to change guild chan join/leave notification colours
-17. map object reserve respawn
+17. map object reserve respawn (duplicate 43)
 16. #command to #letter all members of a guild
 15. #IG guild channel functionality
 14. OPS #command to #letter all chars
