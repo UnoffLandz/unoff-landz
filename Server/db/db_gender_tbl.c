@@ -39,17 +39,13 @@ void load_db_genders(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("GENDER_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM GENDER_TABLE";
+    char *sql="SELECT * FROM GENDER_TABLE";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //read the sql query result into the gender array
     int i=0;
+    int rc=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -68,14 +64,10 @@ void load_db_genders(){
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", gender_id, gender[gender_id].gender_name);
 
         i++;
+
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
 
@@ -102,26 +94,18 @@ void add_db_gender(int gender_id, char *gender_name){
 
     sqlite3_stmt *stmt=NULL;
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO GENDER_TABLE("  \
+    char *sql="INSERT INTO GENDER_TABLE("  \
         "GENDER_ID," \
         "GENDER_NAME"  \
-        ") VALUES(?, ?)");
+        ") VALUES(?, ?)";
 
     prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_int(stmt, 1, gender_id);
     sqlite3_bind_text(stmt, 2, gender_name, -1, SQLITE_STATIC);
 
-    //process sql statement
-    int rc=sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //destroy query
     destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "Gender [%i] [%s] added successfully\n", gender_id, gender_name);

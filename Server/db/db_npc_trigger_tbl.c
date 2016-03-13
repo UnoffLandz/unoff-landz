@@ -37,16 +37,12 @@ void load_db_npc_triggers(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("NPC_TRIGGER_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM NPC_TRIGGER_TABLE";
+    char *sql="SELECT * FROM NPC_TRIGGER_TABLE";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     int i=0;
+    int rc=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -69,12 +65,7 @@ void load_db_npc_triggers(){
         i++;
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
 
@@ -93,17 +84,27 @@ void add_db_npc_trigger(int npc_trigger_id, int trigger_type, int trigger_time,
     check_db_open(GET_CALL_INFO);
     check_table_exists("NPC_TRIGGER_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO NPC_TRIGGER_TABLE("
+    char *sql="INSERT INTO NPC_TRIGGER_TABLE(" \
         "NPC_TRIGGER_ID," \
         "NPC_TRIGGER_TYPE,"
         "NPC_TRIGGER_TIME,"  \
         "NPC_SELECT_OPTION,"
         "NPC_ACTION_NODE"
-        ") VALUES(%i, %i, %i, %i, %i)", npc_trigger_id, trigger_type, trigger_time, select_option, action_node);
+        ") VALUES(?, ?, ?, ?, ?)";
 
-    process_sql(sql);
+    sqlite3_stmt *stmt=NULL;
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, npc_trigger_id);
+    sqlite3_bind_int(stmt, 2, trigger_type);
+    sqlite3_bind_int(stmt, 3, trigger_time);
+    sqlite3_bind_int(stmt, 4, select_option);
+    sqlite3_bind_int(stmt, 5, action_node);
+
+    step_query(sql, &stmt, GET_CALL_INFO);
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "NPC trigger [%i] added successfully\n", npc_trigger_id);
 

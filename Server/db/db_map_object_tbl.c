@@ -47,17 +47,13 @@ void load_db_map_objects(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("MAP_OBJECT_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM MAP_OBJECT_TABLE";
+    char *sql="SELECT * FROM MAP_OBJECT_TABLE";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //read the sql query result into the map object array
     int i=0;
+    int rc=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -78,12 +74,7 @@ void load_db_map_objects(){
         i++;
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
 
@@ -117,7 +108,7 @@ void add_db_map_objects(int map_id, char *elm_filename){
 
     //as there's likely to be thousands of entries that take an age to load, create a sql statement to which
     //values can be replaced within TRANSACTION
-    char sql[MAX_SQL_LEN]="INSERT INTO MAP_OBJECT_TABLE("  \
+    char *sql="INSERT INTO MAP_OBJECT_TABLE("  \
          "THREEDOL_ID," \
          "MAP_ID,"  \
          "TILE," \
@@ -127,17 +118,13 @@ void add_db_map_objects(int map_id, char *elm_filename){
          "E3D_FILENAME"
          ") VALUES(?, ?, ?, ?, ?, ?, ?)";
 
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    int rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_exec failed", GET_CALL_INFO, rc, sql);
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *&sErrMsg, sql);
     }
 
     int reserve=0;
@@ -163,32 +150,23 @@ void add_db_map_objects(int map_id, char *elm_filename){
         int object_id=e3d[e3d_id].object_id;
         bool harvestable=object[object_id].harvestable;
         sqlite3_bind_int(stmt, 5, harvestable);
-
         sqlite3_bind_int(stmt, 6, reserve);
-
         sqlite3_bind_text(stmt, 7, e3d_filename, -1, SQLITE_STATIC);
 
-        rc = sqlite3_step(stmt);
-        if (rc!= SQLITE_DONE) {
+        step_query(sql, &stmt, GET_CALL_INFO);
 
-            log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-        }
-
-       sqlite3_clear_bindings(stmt);
-       sqlite3_reset(stmt);
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
     }
 
     rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
     if (rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite3_exec failed", GET_CALL_INFO, rc, sql);
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *sErrMsg, sql);
     }
 
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 
@@ -220,23 +198,15 @@ void update_db_map_objects(int map_id){
             char sql[MAX_SQL_LEN]="";
             sprintf(sql, "UPDATE MAP_OBJECT_TABLE SET E3D_ID=%i WHERE MAP_ID=%i AND THREEDOL_ID=%i", e3d_id, map_id, i);
 
-            int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-            if(rc!=SQLITE_OK) {
+            prepare_query(sql, &stmt, GET_CALL_INFO);
 
-                log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-            }
+            sqlite3_bind_int(stmt, 1, e3d_id);
+            sqlite3_bind_int(stmt, 2, map_id);
+            sqlite3_bind_int(stmt, 3, i);
 
-            rc = sqlite3_step(stmt);
-            if (rc!= SQLITE_DONE) {
+            step_query(sql, &stmt, GET_CALL_INFO);
 
-                log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-            }
-
-            rc=sqlite3_finalize(stmt);
-            if(rc!=SQLITE_OK) {
-
-                log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-            }
+            destroy_query(sql, &stmt, GET_CALL_INFO);
         }
     }
 }

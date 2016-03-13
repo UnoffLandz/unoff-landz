@@ -50,7 +50,7 @@ void load_db_guilds();
 
     NOTES   :
 **/
-int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *guild_description,
+void add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *guild_description,
     int guild_permission_level,
     int guild_status);
 

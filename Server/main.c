@@ -211,7 +211,7 @@ void start_server(){
     load_db_guilds();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
-    //clear skill array and load data
+    //clear skill array and 1load data
     memset(&skill_level, 0, sizeof(skill_level));
     load_db_skills();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
@@ -235,6 +235,8 @@ void start_server(){
     clients.client[0].helmet_type=0;
     clients.client[0].frame=0;
     clients.client[0].portrait_id=1;
+    clients.client[0].actor_scale=64;
+    clients.client[0].neck_attachment_type=NECK_NO_ITEM;
 
     npc_trigger[0].trigger_node_status=TRIGGER_NODE_USED;
     npc_trigger[0].actor_node=0; //npc actor node
@@ -287,6 +289,8 @@ void start_server(){
     clients.client[1].helmet_type=0;
     clients.client[1].frame=0;
     clients.client[1].portrait_id=2;
+    clients.client[1].actor_scale=64;
+    clients.client[1].neck_attachment_type=NECK_NO_ITEM;
 
     npc_trigger[2].trigger_node_status=TRIGGER_NODE_USED;
     npc_trigger[2].actor_node=1; //npc actor node
@@ -336,6 +340,7 @@ void start_server(){
 
     //gather initial stats
     get_db_last_char_created(); //loads details of the last char created from the database into the game_data struct
+
     game_data.char_count=get_db_char_count();
 
     //create the master socket
@@ -1003,7 +1008,7 @@ int main(int argc, char *argv[]){
         log_text(EVENT_INITIALISATION, "SERVER START using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
         fprintf(stdout, "SERVER START using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
-        open_database(db_filename);
+        open_database(db_filename, GET_CALL_INFO);
 
         start_server();
 
@@ -1058,12 +1063,12 @@ int main(int argc, char *argv[]){
         }
 
         //creates empty database file and opens it for use
-        create_empty_database_file(db_filename);
+        open_database(db_filename, GET_CALL_INFO);
 
         //populate new database with starting data
         populate_database(db_filename);
 
-        close_database();
+        close_database(GET_CALL_INFO);
 
         //Because server hasn't started we use exit rather than stop_server()
         //We also use EXIT_SUCCESS as this is not an error situation
@@ -1092,10 +1097,10 @@ int main(int argc, char *argv[]){
         log_text(EVENT_INITIALISATION, "UPGRADE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
         fprintf(stderr, "UPGRADE DATABASE using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
-        open_database(db_filename);
+        open_database(db_filename, GET_CALL_INFO);
         upgrade_database(db_filename);
 
-        close_database();
+        close_database(GET_CALL_INFO);
 
         //Because server hasn't started we use exit rather than stop_server()
         //We also use EXIT_SUCCESS as this is not an error situation
@@ -1131,12 +1136,12 @@ int main(int argc, char *argv[]){
         log_text(EVENT_INITIALISATION, "LOAD E3D LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
 
         //open database, delete the table contents, load new data, update map objects
-        open_database(db_filename);
-        process_sql("DELETE FROM E3D_TABLE");
+        open_database(db_filename, GET_CALL_INFO);
+        process_sql("DELETE FROM E3D_TABLE", GET_CALL_INFO);
         batch_add_e3ds(filename);
         batch_update_map_objects(MAP_FILE);
 
-        close_database();
+        close_database(GET_CALL_INFO);
 
         //Because server hasn't started we use exit rather than stop_server()
         //We also use EXIT_SUCCESS as this is not an error situation
@@ -1173,10 +1178,10 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "LOAD OBJECT LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
 
         //delete the existing table contents, add new data
-        open_database(db_filename);
-        process_sql("DELETE FROM OBJECT_TABLE");
+        open_database(db_filename, GET_CALL_INFO);
+        process_sql("DELETE FROM OBJECT_TABLE", GET_CALL_INFO);
         batch_add_objects(filename);
-        close_database();
+        close_database(GET_CALL_INFO);
 
         //Because server hasn't started we use exit rather than stop_server()
         //We also use EXIT_SUCCESS as this is not an error situation
@@ -1208,15 +1213,14 @@ int main(int argc, char *argv[]){
         //use database file specified in command line if specified
         if(argc==4) strcpy(db_filename, argv[5]);
 
-
         log_text(EVENT_INITIALISATION, "LOAD HARVESTING SKILL LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
         fprintf(stderr, "LOAD HARVESTING SKILL LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
 
         //delete the existing table contents, add new data
-        open_database(db_filename);
+        open_database(db_filename, GET_CALL_INFO);
         delete_db_skill(HARVESTING_SKILL);
-        batch_add_skills(HARVESTING_SKILL, HARVESTING_SKILL_FILE);
-        close_database();
+        batch_add_skills(HARVESTING_SKILL_FILE, HARVESTING_SKILL);
+        close_database(GET_CALL_INFO);
 
         //Because server hasn't started we use exit rather than stop_server()
         //We also use EXIT_SUCCESS as this is not an error situation
@@ -1251,10 +1255,10 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "UPDATE MAP OBJECTS at %s on %s\n", time_stamp_str, verbose_date_stamp_str);
 
         //update the map objects for all maps specified in MAP_FILE
-        open_database(db_filename);
+        open_database(db_filename, GET_CALL_INFO);
         batch_update_map_objects(map_filename);
 
-        close_database();
+        close_database(GET_CALL_INFO);
 
         //Because server hasn't started we use exit rather than stop_server()
         //We also use EXIT_SUCCESS as this is not an error situation
@@ -1284,17 +1288,17 @@ int main(int argc, char *argv[]){
         //use optional database file specified in command line
         if(argc==4) strcpy(db_filename, argv[5]);
 
-        open_database(db_filename);
+        open_database(db_filename, GET_CALL_INFO);
 
         log_text(EVENT_INITIALISATION, "RELOAD MAP LIST using %s at %s on %s\n", map_filename, time_stamp_str, verbose_date_stamp_str);
         fprintf(stderr, "RELOAD MAP LIST using %s at %s on %s\n", map_filename, time_stamp_str, verbose_date_stamp_str);
 
         //delete the existing table contents and add new data
-        process_sql("DELETE FROM MAP_TABLE");
-        process_sql("DELETE FROM MAP_OBJECT_TABLE");
+        process_sql("DELETE FROM MAP_TABLE", GET_CALL_INFO);
+        process_sql("DELETE FROM MAP_OBJECT_TABLE", GET_CALL_INFO);
         batch_add_maps(map_filename); // also adds map objects
 
-        close_database();
+        close_database(GET_CALL_INFO);
 
         //Because server hasn't started we use exit rather than stop_server()
         //We also use EXIT_SUCCESS as this is not an error situation
@@ -1324,7 +1328,7 @@ int main(int argc, char *argv[]){
         char elm_filename[80]="";
         strcpy(elm_filename, argv[3]);
 
-        open_database(db_filename);
+        open_database(db_filename, GET_CALL_INFO);
 
         //load maps so we can find out if a map exists
         load_db_maps();
@@ -1364,7 +1368,7 @@ int main(int argc, char *argv[]){
         add_db_map(map_id, elm_filename);
         add_db_map_objects(map_id, elm_filename);
 
-        close_database();
+        close_database(GET_CALL_INFO);
 
         return 0;
     }
@@ -1378,10 +1382,10 @@ int main(int argc, char *argv[]){
 
         log_text(EVENT_INITIALISATION, "LIST MAPS using %s at %s on %s\n", db_filename, time_stamp_str, verbose_date_stamp_str);
 
-        open_database(db_filename);
+        open_database(db_filename, GET_CALL_INFO);
         list_db_maps();
 
-        close_database();
+        close_database(GET_CALL_INFO);
 
         return 0;
     }

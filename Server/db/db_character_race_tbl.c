@@ -38,17 +38,14 @@ void load_db_char_races(){
     log_event(EVENT_INITIALISATION, "loading races...");
 
     sqlite3_stmt *stmt;
-    char sql[MAX_SQL_LEN]="SELECT * FROM RACE_TABLE";
+    char *sql="SELECT * FROM RACE_TABLE";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //read the sql query result into the race array
     int i=0;
+    int rc=0;
+
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int race_id=sqlite3_column_int(stmt, 0);
@@ -70,12 +67,7 @@ void load_db_char_races(){
         i++;
     }
 
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
 
@@ -85,48 +77,20 @@ void load_db_char_races(){
 }
 
 
-void add_db_race(int race_id, char *race_name, char *race_description){
+void add_db_race(sqlite3_stmt **stmt, int race_id, char *race_name, char *race_description){
 
-    /** RESULT  : loads an entry to the race table
+    /** RESULT   : binds race data for loading to the database
 
-        RETURNS : void
+        RETURNS  : void
 
-        PURPOSE : used in batch_add_races
+        PURPOSE  :
 
-        NOTES   :
+        NOTES    : used by batch_add_attributes
     **/
 
-    sqlite3_stmt *stmt=NULL;
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("RACE_TABLE", GET_CALL_INFO);
-
-    char sql[MAX_SQL_LEN]="INSERT INTO RACE_TABLE("  \
-        "RACE_ID," \
-        "RACE_NAME," \
-        "RACE_DESCRIPTION" \
-        ") VALUES(?, ?, ?)";
-
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    sqlite3_bind_int(stmt, 1, race_id);
-    sqlite3_bind_text(stmt, 2, race_name, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, race_description, -1, SQLITE_STATIC);
-
-    //process sql statement
-    int rc=sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //destroy query
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    fprintf(stderr, "Race [%s] added successfully\n", race_name);
-
-    log_event(EVENT_SESSION, "Added race [%i] [%s] to RACE_TABLE", race_id, race_name);
+    sqlite3_bind_int(*stmt, 1, race_id);
+    sqlite3_bind_text(*stmt, 2, race_name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(*stmt, 3, race_description, -1, SQLITE_STATIC);
 }
 
 
@@ -138,7 +102,7 @@ void batch_add_races(char *file_name){
 
     if((file=fopen(file_name, "r"))==NULL){
 
-        log_event(EVENT_ERROR, "race list file [%s] not found", file_name);
+        log_event(EVENT_ERROR, "file [%s] not found", file_name);
         stop_server();
     }
 
@@ -147,6 +111,28 @@ void batch_add_races(char *file_name){
 
     log_event(EVENT_INITIALISATION, "\nAdding races specified in file [%s]", file_name);
     fprintf(stderr, "\nAdding races specified in file [%s]\n", file_name);
+
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("RACE_TABLE", GET_CALL_INFO);
+
+    sqlite3_stmt *stmt;
+    char *sErrMsg = 0;
+
+    char *sql="INSERT INTO RACE_TABLE("  \
+        "RACE_ID," \
+        "RACE_NAME," \
+        "RACE_DESCRIPTION" \
+        ") VALUES(?, ?, ?)";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    int rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    if(rc!=SQLITE_OK){
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *&sErrMsg, sql);
+    }
 
     while (fgets(line, sizeof(line), file)) {
 
@@ -158,8 +144,25 @@ void batch_add_races(char *file_name){
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_race(atoi(output[0]), output[1], output[2]);
+        add_db_race(&stmt, atoi(output[0]), output[1], output[2]);
+
+        step_query(sql, &stmt, GET_CALL_INFO);
+
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+
+        fprintf(stderr, "Race [%i] [%s] added successfully\n", atoi(output[0]), output[1]);
+        log_event(EVENT_SESSION, "Added race [%i] [%s] to RACE_TABLE", atoi(output[0]), output[1]);
     }
+
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    if (rc!=SQLITE_OK) {
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *sErrMsg, sql);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fclose(file);
 }

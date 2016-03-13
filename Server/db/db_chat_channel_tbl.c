@@ -40,16 +40,13 @@ void load_db_channels(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("CHANNEL_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM CHANNEL_TABLE";
+    char *sql="SELECT * FROM CHANNEL_TABLE";
 
-    //prepare sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     int i=0;
+    int rc=0;
+
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int chan_id=sqlite3_column_int(stmt, 0);
@@ -73,25 +70,26 @@ void load_db_channels(){
         if(sqlite3_column_text(stmt, 5))
             strcpy(channel[chan_id].description, (char*)sqlite3_column_text(stmt, 5));
 
-        channel[chan_id].new_chars=sqlite3_column_int(stmt, 6);
+        if(sqlite3_column_int(stmt, 6)==1) {
+
+            channel[chan_id].new_chars=true;
+        }
+        else if(sqlite3_column_int(stmt, 6)==0){
+
+            channel[chan_id].new_chars=false;
+        }
+        else {
+
+            log_event(EVENT_ERROR, "illegal value for newchars in entry [%i] of channel table", sqlite3_column_int(stmt, 1), GET_CALL_INFO);
+            stop_server();
+        }
 
         log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", chan_id, channel[chan_id].channel_name);
 
         i++;
     }
 
-    //destroy prepared sql statemnent
-    rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
-
-    if(i==0){
-
-        log_event(EVENT_ERROR, "no chat channels found in database", i);
-        stop_server();
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 
@@ -103,9 +101,7 @@ void add_db_channel(int channel_id, int owner_id, int channel_type, char *passwo
     check_db_open(GET_CALL_INFO);
     check_table_exists("CHANNEL_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO CHANNEL_TABLE("  \
+    char *sql="INSERT INTO CHANNEL_TABLE("  \
         "CHANNEL_ID," \
         "OWNER_ID," \
         "TYPE," \
@@ -113,9 +109,25 @@ void add_db_channel(int channel_id, int owner_id, int channel_type, char *passwo
         "NAME,"  \
         "DESCRIPTION," \
         "NEW_CHARS " \
-        ") VALUES(%i, %i, %i, '%s','%s', '%s', %i)", channel_id, owner_id, channel_type, password, channel_name, channel_description, new_chars);
+        ") VALUES(?, ?, ?, ?, ?, ?, ?)";
 
-    process_sql(sql);
+    sqlite3_stmt *stmt;
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, channel_id);
+    sqlite3_bind_int(stmt, 2, owner_id);
+    sqlite3_bind_int(stmt, 3, channel_type);
+    sqlite3_bind_text(stmt, 4, password, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 5, channel_name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 6, channel_description, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 7, new_chars);
+
+    step_query(sql, &stmt, GET_CALL_INFO);
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
+    fprintf(stderr, "Channel [%i] [%s] added successfully\n", channel_id, channel_name);
 
     log_event(EVENT_INITIALISATION, "Added channel [%i] [%s] to CHANNEL_TABLE", channel_id, channel_name);
 }

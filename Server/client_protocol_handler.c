@@ -265,8 +265,6 @@ int client_look_at_map_object(int actor_node, unsigned char *packet){
 
     send_text(clients.client[actor_node].socket, CHAT_SERVER, text_out);
 
-    printf("%i %s\n", threed_object_list_pos, map_object[threed_object_list_pos][map_id].e3d_filename);
-
     return 0;
 }
 
@@ -623,40 +621,41 @@ struct protocol_array_entry {
     bool process_when_logged_in;
     bool stop_harvesting;
     bool stop_moving;
+    bool stop_sitting;
     protocol_function fn;
 };
 
 
 struct protocol_array_entry protocol_entries[] = {
 
-//                              Process When Process When  Stop       Stop
-//   Client-Server Protocol     Connected    Logged-in     Harvesting Moving  callback function
-//   -------------------------- ------ -------- ---------- ---------- ------- -----------------
-    {RAW_TEXT,                  true,        true,         false,      false, client_raw_text},
-    {MOVE_TO,                   false,       true,         true,       false, client_move_to},
-    {SEND_PM,                   false,       true,         false,      false, client_send_pm},
-    {SIT_DOWN,                  false,       true,         false,      false,  client_sit_down},
-    {GET_PLAYER_INFO,           false,       true,         true,       false,  client_get_player_info},
-    {SEND_VERSION,              true,        true,         false,      false, client_send_version},
-    {HEARTBEAT,                 true,        true,         false,      false, client_heart_beat},
-    {USE_OBJECT,                false,       true,         true,       false,  client_use_object},
-    {MOVE_INVENTORY_ITEM,       false,       true,         true,       false,  client_move_inventory_item},
-    {HARVEST,                   false,       true,         false,      false,  client_harvest},
-    {DROP_ITEM,                 false,       true,         true,       false,  client_drop_item},
-    {PICK_UP_ITEM,              false,       true,         true,       false,  client_pick_up_item},
-    {INSPECT_BAG,               false,       true,         true,       false,  client_inspect_bag},
-    {LOOK_AT_MAP_OBJECT,        false,       true,         true,       false,  client_look_at_map_object},
-    {TOUCH_PLAYER,              false,       true,         true,       false,  client_touch_player},
-    {RESPOND_TO_NPC,            false,       true,         true,       false,  client_respond_to_npc},
-    {SET_ACTIVE_CHANNEL,        false,       true,         false,      false, client_set_active_channel},
-    {LOG_IN,                    true,        false,        false,      false, client_log_in},
-    {GET_DATE,                  false,       true,         false,      false, client_get_date},
-    {GET_TIME,                  false,       true,         false,      false, client_get_time},
-    {CREATE_CHAR,               true,        false,        false,      false, client_create_char},
-    {LOOK_AT_INVENTORY_ITEM,    false,       true,         true,       false, client_look_at_inventory_item},
-    {SERVER_STATS,              false,       true,         false,      false, client_server_stats},
+//                              Process When Process When  Stop       Stop    Stop
+//   Client-Server Protocol     Connected    Logged-in     Harvesting Moving  Sitting callback function
+//   -------------------------- ------ -------- ---------- ---------- ------- ------- ---------
+    {RAW_TEXT,                  true,        true,         false,      false, false,  client_raw_text},
+    {MOVE_TO,                   false,       true,         true,       false, true,   client_move_to},
+    {SEND_PM,                   false,       true,         false,      false, false,  client_send_pm},
+    {SIT_DOWN,                  false,       true,         false,      false, false,  client_sit_down},
+    {GET_PLAYER_INFO,           false,       true,         true,       false, false,  client_get_player_info},
+    {SEND_VERSION,              true,        true,         false,      false, false,  client_send_version},
+    {HEARTBEAT,                 true,        true,         false,      false, false,  client_heart_beat},
+    {USE_OBJECT,                false,       true,         true,       false, true,   client_use_object},
+    {MOVE_INVENTORY_ITEM,       false,       true,         true,       false, false,  client_move_inventory_item},
+    {HARVEST,                   false,       true,         false,      false, false,  client_harvest},
+    {DROP_ITEM,                 false,       true,         true,       false, false,  client_drop_item},
+    {PICK_UP_ITEM,              false,       true,         true,       false, false,  client_pick_up_item},
+    {INSPECT_BAG,               false,       true,         true,       false, false,  client_inspect_bag},
+    {LOOK_AT_MAP_OBJECT,        false,       true,         true,       false, false,  client_look_at_map_object},
+    {TOUCH_PLAYER,              false,       true,         true,       false, false,  client_touch_player},
+    {RESPOND_TO_NPC,            false,       true,         true,       false, false,  client_respond_to_npc},
+    {SET_ACTIVE_CHANNEL,        false,       true,         false,      false, false,  client_set_active_channel},
+    {LOG_IN,                    true,        false,        false,      false, false,  client_log_in},
+    {GET_DATE,                  false,       true,         false,      false, false,  client_get_date},
+    {GET_TIME,                  false,       true,         false,      false, false,  client_get_time},
+    {CREATE_CHAR,               true,        false,        false,      false, false,  client_create_char},
+    {LOOK_AT_INVENTORY_ITEM,    false,       true,         true,       false, false,  client_look_at_inventory_item},
+    {SERVER_STATS,              false,       true,         false,      false, false,  client_server_stats},
 
-    {255, false, false, false, false, 0}
+    //{255, false, false, false, false, false, 0}
 };
 
 
@@ -733,6 +732,18 @@ void process_packet(int actor_node, unsigned char *packet){
     && client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
 
         stop_char_move(actor_node);
+    }
+
+    //stop sitting on certain commands
+    if(protocol_entry->stop_sitting==true
+    && (clients.client[actor_node].frame==frame_sit_idle || clients.client[actor_node].frame==frame_sit)
+    && client_socket[socket].socket_node_status==CLIENT_LOGGED_IN){
+
+        clients.client[actor_node].frame=frame_stand;
+        broadcast_actor_packet(actor_node, actor_cmd_stand_up, clients.client[actor_node].map_tile);
+
+        //update database
+        push_sql_command("UPDATE CHARACTER_TABLE SET FRAME=%i WHERE CHAR_ID=%i",clients.client[actor_node].frame, clients.client[actor_node].character_id);
     }
 
     //execute the protocol command

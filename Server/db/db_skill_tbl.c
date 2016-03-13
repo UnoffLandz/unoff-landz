@@ -40,7 +40,7 @@ void load_db_skills(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("SKILL_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM SKILL_TABLE WHERE SKILL_TYPE_ID=?";
+    char *sql="SELECT * FROM SKILL_TABLE WHERE SKILL_TYPE_ID=?";
 
     //prepare query
     prepare_query(sql, &stmt, GET_CALL_INFO);
@@ -76,48 +76,17 @@ void load_db_skills(){
         sqlite3_reset(stmt);
     }
 
-    //destroy query
     destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 
-void add_db_skill_level(int skill_type_id, int level, int exp){
+void add_db_skill_level(sqlite3_stmt **stmt, int skill_type_id, int level, int exp){
 
     /** public function - see header */
 
-    sqlite3_stmt *stmt;
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("SKILL_TABLE", GET_CALL_INFO);
-
-    char sql[MAX_SQL_LEN]="INSERT INTO SKILL_TABLE("  \
-        "SKILL_TYPE_ID," \
-        "LEVEL," \
-        "EXP " \
-        ") VALUES(?, ?, ?)";
-
-    //prepare query
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    //bind the data to the query
-    sqlite3_bind_int(stmt, 1, skill_type_id);
-    sqlite3_bind_int(stmt, 2, level);
-    sqlite3_bind_int(stmt, 3, exp);
-
-    //process the query
-    int rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //destroy query
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    //log the result
-    fprintf(stderr, "Skill_level [%i] of skill [%s] added successfully\n", level, skill_name[skill_type_id].skill);
-    log_event(EVENT_SESSION, "Added skill level [%i] of skill [%s] to SKILL_TABLE", level, skill_name[skill_type_id].skill);
+    sqlite3_bind_int(*stmt, 1, skill_type_id);
+    sqlite3_bind_int(*stmt, 2, level);
+    sqlite3_bind_int(*stmt, 3, exp);
 }
 
 
@@ -131,22 +100,14 @@ void delete_db_skill(int skill_type_id){
     check_db_open(GET_CALL_INFO);
     check_table_exists("SKILL_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="DELETE FROM SKILL_TABLE WHERE SKILL_TYPE_ID=?";
+    char *sql="DELETE FROM SKILL_TABLE WHERE SKILL_TYPE_ID=?";
 
-    //prepare query
     prepare_query(sql, &stmt, GET_CALL_INFO);
 
-    //bind the data to the query
     sqlite3_bind_int(stmt, 1, skill_type_id);
 
-    //process the query
-    int rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //destroy query
     destroy_query(sql, &stmt, GET_CALL_INFO);
 
     //log results
@@ -155,26 +116,45 @@ void delete_db_skill(int skill_type_id){
 }
 
 
-void batch_add_skills(int skill_type_id, char *file_name){
+void batch_add_skills(char *file_name, int skill_type_id){
 
     /** public function - see header */
 
     FILE* file;
 
-    char line[160]="";
-    int line_counter=0;
-
-
     if((file=fopen(file_name, "r"))==NULL){
 
-        log_event(EVENT_ERROR, "harvest skill list file [%s] not found", file_name);
+        log_event(EVENT_ERROR, "file [%s] not found", file_name);
         stop_server();
     }
 
-    log_event(EVENT_INITIALISATION, "\nAdding harvest skill specified in file [%s]", file_name);
-    fprintf(stderr, "\nAdding harvest skill specified in file [%s]\n", file_name);
+    char line[160]="";
+    int line_counter=0;
 
-    line_counter=0;
+    log_event(EVENT_INITIALISATION, "\nAdding skills specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding skills specified in file [%s]\n", file_name);
+
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("SKILL_TABLE", GET_CALL_INFO);
+
+    sqlite3_stmt *stmt;
+    char *sErrMsg = 0;
+
+    char *sql="INSERT INTO SKILL_TABLE("  \
+        "SKILL_TYPE_ID," \
+        "LEVEL," \
+        "EXP " \
+        ") VALUES(?, ?, ?)";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    int rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    if(rc!=SQLITE_OK){
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *&sErrMsg, sql);
+    }
 
     while (fgets(line, sizeof(line), file)) {
 
@@ -182,12 +162,29 @@ void batch_add_skills(int skill_type_id, char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[8][80];
+        char output[2][80];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_skill_level(skill_type_id, atoi(output[0]), atoi(output[1]));
+        add_db_skill_level(&stmt, skill_type_id, atoi(output[0]), atoi(output[1]));
+
+        step_query(sql, &stmt, GET_CALL_INFO);
+
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+
+        fprintf(stderr, "Skill_level [%i] of skill [%s] added successfully\n", atoi(output[0]), skill_name[skill_type_id].skill);
+        log_event(EVENT_SESSION, "Added skill level [%i] of skill [%s] to SKILL_TABLE", atoi(output[0]), skill_name[skill_type_id].skill);
     }
+
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    if (rc!=SQLITE_OK) {
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *sErrMsg, sql);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fclose(file);
 }

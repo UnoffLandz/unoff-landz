@@ -50,7 +50,7 @@ extern "C" {
 
     NOTES    :
 **/
-void process_sql(const char *sql_str);
+void process_sql(const char *sql, const char *module, const char *func, const int line);
 
 #ifdef __cplusplus
 }
@@ -67,19 +67,7 @@ void process_sql(const char *sql_str);
 
     NOTES   :
 **/
-void open_database(const char *database_name);
-
-
-/** RESULT  :   Creates an empty sqlite database file and the handle [db] which can
-                then be called by other database functions.
-
-    RETURNS :   void
-
-    PURPOSE :   Creates a new sqlite database
-
-    NOTES   :
-**/
-void create_empty_database_file (const char *db_filename);
+void open_database(const char *db_filename, const char *module, const char *func, const int line);
 
 
 /** RESULT  : Closes the currently opened sqlite database file
@@ -90,7 +78,7 @@ void create_empty_database_file (const char *db_filename);
 
     NOTES   :
 **/
-void close_database();
+void close_database(const char *module, const char *func, const int line);
 
 
 /** RESULT  : Determines the number of tables in the database
@@ -182,25 +170,36 @@ void check_db_closed(const char *module, const char *func, const int line);
 void check_table_exists(char *table_name, const char *module, const char *func, const int line);
 
 
-/** RESULT   : prepares a sql statement for processing
+/** RESULT   : wrapper for sqlite3_prepare_v2 function
 
     RETURNS  : void
 
-    PURPOSE  : reporting wrapper
+    PURPOSE  : wraps reporting code
 
     NOTES    :
 **/
 void prepare_query(const char *sql, sqlite3_stmt **stmt, const char *module, const char *func, const int line);
 
 
-/** RESULT   : disposes of a sql statement after processing
+/** RESULT   : wrapper for sqlite3_finalize function
 
     RETURNS  : void
 
-    PURPOSE  : reporting wrapper
+    PURPOSE  : wraps reporting code
 
     NOTES    :
 **/
 void destroy_query(const char *sql, sqlite3_stmt **stmt, const char *module, const char *func, const int line);
+
+/** RESULT   : wrapper for sqlite3_step function
+
+    RETURNS  : void
+
+    PURPOSE  : wraps reporting code
+
+    NOTES    :
+**/
+void step_query(const char *sql, sqlite3_stmt **stmt, const char *module, const char *func, const int line);
+
 
 #endif // DATABASE_FUNCTIONS_H_INCLUDED

@@ -59,7 +59,10 @@
         OVERALL_EXP         INT, \
         HARVEST_EXP         INT, \
         HARVEST_LVL         INT, \
-        INVENTORY           BLOB)"
+        INVENTORY           BLOB, \
+        NECK_ATTACHMENT_TYPE INT, \
+        ACTOR_SCALE         INT \
+        )"
 
 #include "../clients.h"
 
@@ -74,15 +77,15 @@
 bool get_db_char_exists(int char_id);
 
 
-/** RESULT  : Retrieves char data from the Character Table and places it in the Character struct
+/** RESULT  : adds a new char to the database
 
-    RETURNS : true/false
+    RETURNS : void
 
-    PURPOSE : retrieves char data from the database based on char name or char id
+    PURPOSE :
 
-    NOTES   : either char name or char_id must be specified.
+    NOTES   :
 **/
-int add_db_char_data(struct client_node_type character);
+void add_db_char_data(struct client_node_type character);
 
 
 /** RESULT  : Fetches the name and date of last character to be created from the Character Table and
@@ -121,6 +124,15 @@ int get_db_char_count();
 */
 void batch_add_characters(char *file_name);
 
+/** RESULT   : gets the highest char id
+
+    RETURNS  : highest char id
+
+    PURPOSE  : to determine the id assigned by sqlite when a char is created
+
+    NOTES    :
+**/
+int get_db_last_char_id();
 
 /*****************************************************************************************************
 ***                                   C FUNCTIONS CALLED FROM C++ MODULES                          ***
@@ -130,16 +142,26 @@ void batch_add_characters(char *file_name);
 extern "C" {
 #endif
 
+/** RESULT  : gets char id
+
+    RETURNS : char id
+
+    PURPOSE : determins char id from a char name
+
+    NOTES   :
+**/
+int get_db_char_id(const char *char_name);
+
+
 /** RESULT  : loads data from the character table into the client array
 
     RETURNS : FOUND if char with the char_name is found in database, else NOT_FOUND
 
-    PURPOSE : Loads character data from the database to memory.
-              Also used to check if a new character name duplicates an existing character
+    PURPOSE : Loads character data from the database to character array
 
     NOTES   :
 **/
-bool get_db_char_data(const char *char_name, int char_id);
+bool get_db_char_data(int char_id);
 
 
 /** RESULT  : loads npcs from the client table into the client array

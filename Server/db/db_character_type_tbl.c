@@ -44,17 +44,14 @@ void load_db_char_types(){
 
     sqlite3_stmt *stmt;
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM CHARACTER_TYPE_TABLE";
+    char *sql="SELECT * FROM CHARACTER_TYPE_TABLE";
 
-    //prepare sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //read the sql query result into the char type array
     int i=0;
+    int rc=0;
+
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int char_type_id=sqlite3_column_int(stmt, 0);
@@ -73,12 +70,7 @@ void load_db_char_types(){
         i++;
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
 
@@ -106,7 +98,7 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
     check_table_exists("CHARACTER_TYPE_TABLE", GET_CALL_INFO);
 
     //prepare sql query
-    char sql[MAX_SQL_LEN]="INSERT INTO CHARACTER_TYPE_TABLE("  \
+    char *sql="INSERT INTO CHARACTER_TYPE_TABLE("  \
         "CHARACTER_TYPE_ID," \
         "RACE_ID," \
         "GENDER_ID" \
@@ -118,14 +110,8 @@ void add_db_char_type(int char_type_id, int race_id, int gender_id){
     sqlite3_bind_int(stmt, 2, race_id);
     sqlite3_bind_int(stmt, 3, gender_id);
 
-    //process sql statement
-    int rc=sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //destroy query
     destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "Character type [%i] gender [%s] race [%s] added successfully\n", char_type_id, gender[gender_id].gender_name, race[race_id].race_name);

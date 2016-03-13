@@ -68,7 +68,8 @@ void check_new_character(int actor_node, const unsigned char *packet){
     }
 
     //check if the character name already exists
-    if(get_db_char_data(char_name, 0)==true){
+    int char_id=get_db_char_id(char_name);
+    if(char_id!=0){
 
         //if the char name exists, abort character creation and send warning to client
         int socket=clients.client[actor_node].socket;
@@ -77,14 +78,14 @@ void check_new_character(int actor_node, const unsigned char *packet){
         send_create_char_not_ok(socket);
 
         log_event(EVENT_NEW_CHAR, "new character name [%s] rejected", char_name);
-    }
-    else {
 
-        //if char name does not exist, tell idle buffer to create a new character with that name
-        push_idle_buffer2(actor_node, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet, packet_length);
-
-        log_event(EVENT_NEW_CHAR, "new character name [%s] accepted. Proceed to add to db", char_name);
+        return;
     }
+
+    //if char name does not exist, tell idle buffer to create a new character with that name
+    push_idle_buffer2(actor_node, IDLE_BUFFER_PROCESS_ADD_NEWCHAR, packet, packet_length);
+
+    log_event(EVENT_NEW_CHAR, "new character name [%s] accepted. Proceed to add to db", char_name);
 }
 
 
@@ -150,8 +151,8 @@ void add_new_character(int actor_node, const unsigned char *packet){
     character.map_id=game_data.beam_map_id;
     character.map_tile=get_nearest_unoccupied_tile(game_data.beam_map_id, game_data.beam_map_tile);
 
-    //add character data to the database and retrieve the database entry for the character
-    character.character_id=add_db_char_data(character);
+    //add character data to the database
+    add_db_char_data(character);
 
     //add initial items to inventory
     //character.client_inventory[0].slot=1; //slots run from 1

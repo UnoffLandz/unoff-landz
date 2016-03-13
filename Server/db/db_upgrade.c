@@ -70,13 +70,21 @@ void set_db_version(int db_version) {
         NOTES   :
     **/
 
-    //check database is open
+    //check database is open and table exists
     check_db_open(GET_CALL_INFO);
+    check_table_exists("GAME_DATA_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
+    char *sql="UPDATE GAME_DATA_TABLE SET DB_VERSION = ?";
 
-    snprintf(sql, MAX_SQL_LEN,"UPDATE GAME_DATA_TABLE SET DB_VERSION = %d", db_version);
-    process_sql(sql);
+    sqlite3_stmt *stmt=NULL;
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, db_version);
+
+    step_query(sql, &stmt, GET_CALL_INFO);
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,32 +104,15 @@ static int upgrade_v0_to_v1(const char *dbname) {
 
     (void) dbname;
 
-    sqlite3_stmt *stmt;
-
     //check database is open
     check_db_open(GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="ALTER TABLE GAME_DATA_TABLE ADD COLUMN TEST TEXT";
+    char *sql="ALTER TABLE GAME_DATA_TABLE ADD COLUMN TEST TEXT";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //process the sql statement
-    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW);
-
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    process_sql(sql, GET_CALL_INFO);
 
     //set the new database version
     set_db_version(1);
-
 
     fprintf(stdout,"Database upgrade from version 0 to version 1 successful\n");
 

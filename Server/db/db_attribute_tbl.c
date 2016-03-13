@@ -44,14 +44,14 @@ void load_db_attributes(){
 
             sqlite3_stmt *stmt;
 
-            char sql[MAX_SQL_LEN]="";
-            snprintf(sql, MAX_SQL_LEN, "SELECT * FROM ATTRIBUTE_TABLE WHERE ATTRIBUTE_TYPE_ID=%i AND RACE_ID=%i", attribute_type_id, race_id);
+            char *sql="SELECT * FROM ATTRIBUTE_TABLE WHERE ATTRIBUTE_TYPE_ID=? AND RACE_ID=?";
 
-            int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-            if(rc!=SQLITE_OK){
+            prepare_query(sql, &stmt, GET_CALL_INFO);
 
-                log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-            }
+            sqlite3_bind_int(stmt, 1, attribute_type_id);
+            sqlite3_bind_int(stmt, 2, race_id);
+
+            int rc=0;
 
             while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -78,12 +78,7 @@ void load_db_attributes(){
                 }
             }
 
-            //destroy the prepared sql statement
-            rc=sqlite3_finalize(stmt);
-            if(rc!=SQLITE_OK){
-
-             log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-            }
+            destroy_query(sql, &stmt, GET_CALL_INFO);
         }
 
         i++;
@@ -97,49 +92,21 @@ void load_db_attributes(){
 }
 
 
-void add_db_attribute(int attribute_type_id, int race_id, int pick_points, int attribute_value){
+void add_db_attribute(sqlite3_stmt **stmt, int attribute_type_id, int race_id, int pick_points, int attribute_value){
 
-    /** public function - see header */
+    /** RESULT   : binds attribute data for loading to the database
 
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("ATTRIBUTE_TABLE", GET_CALL_INFO);
+        RETURNS  : void
 
-    sqlite3_stmt *stmt;
+        PURPOSE  :
 
-    char sql[MAX_SQL_LEN]="INSERT INTO ATTRIBUTE_TABLE("  \
-        "RACE_ID," \
-        "ATTRIBUTE_TYPE_ID,"  \
-        "PICKPOINTS," \
-        "ATTRIBUTE_VALUE" \
-        ") VALUES(?, ?, ?, ?)";
+        NOTES    : used by batch_add_attributes
+    **/
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
-
-    sqlite3_bind_int(stmt, 1, race_id);
-    sqlite3_bind_int(stmt, 2, attribute_type_id);
-    sqlite3_bind_int(stmt, 3, pick_points);
-    sqlite3_bind_int(stmt, 4, attribute_value);
-
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
-
-    fprintf(stderr, "Attribute [%s] added successfully\n", attribute_name[attribute_type_id]);
-
-    log_event(EVENT_SESSION, "Added attribute [%s] to ATTRIBUTE_TABLE", attribute_name[attribute_type_id]);
+    sqlite3_bind_int(*stmt, 1, race_id);
+    sqlite3_bind_int(*stmt, 2, attribute_type_id);
+    sqlite3_bind_int(*stmt, 3, pick_points);
+    sqlite3_bind_int(*stmt, 4, attribute_value);
 }
 
 
@@ -151,7 +118,7 @@ void batch_add_attributes(char *file_name, int attribute_type_id){
 
     if((file=fopen(file_name, "r"))==NULL){
 
-        log_event(EVENT_ERROR, "day vision list file [%s] not found", file_name);
+        log_event(EVENT_ERROR, "file [%s] not found", file_name);
         stop_server();
     }
 
@@ -160,6 +127,29 @@ void batch_add_attributes(char *file_name, int attribute_type_id){
 
     log_event(EVENT_INITIALISATION, "\nAdding attributes specified in file [%s]", file_name);
     fprintf(stderr, "\nAdding attributes specified in file [%s]\n", file_name);
+
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("ATTRIBUTE_TABLE", GET_CALL_INFO);
+
+    sqlite3_stmt *stmt;
+    char *sErrMsg = 0;
+
+    char *sql="INSERT INTO ATTRIBUTE_TABLE("  \
+        "RACE_ID," \
+        "ATTRIBUTE_TYPE_ID,"  \
+        "PICKPOINTS," \
+        "ATTRIBUTE_VALUE" \
+        ") VALUES(?, ?, ?, ?)";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    int rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    if(rc!=SQLITE_OK){
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *&sErrMsg, sql);
+    }
 
     while (fgets(line, sizeof(line), file)) {
 
@@ -171,8 +161,25 @@ void batch_add_attributes(char *file_name, int attribute_type_id){
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_attribute(attribute_type_id, atoi(output[0]), atoi(output[1]), atoi(output[2]));
+        add_db_attribute(&stmt, attribute_type_id, atoi(output[0]), atoi(output[1]), atoi(output[2]));
+
+        step_query(sql, &stmt, GET_CALL_INFO);
+
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+
+        fprintf(stderr, "Attribute pickpoint [%i] of attribute [%s] added successfully\n", atoi(output[1]), attribute_name[attribute_type_id]);
+        log_event(EVENT_SESSION, "Added pickpoint [%i] of attribute [%s] to ATTRIBUTE_TABLE", atoi(output[1]), attribute_name[attribute_type_id]);
     }
+
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    if (rc!=SQLITE_OK) {
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *sErrMsg, sql);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fclose(file);
 }

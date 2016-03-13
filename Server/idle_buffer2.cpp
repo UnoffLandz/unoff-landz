@@ -201,7 +201,7 @@ void process_idle_buffer2(){
     else if(idle_buffer2.front().process_type==IDLE_BUFFER_PROCESS_SQL){
 
         D_PRINT("IDLE_BUFFER2_PROCESS_SQL\n");
-        process_sql(command.sql.c_str());
+        process_sql(command.sql.c_str(), GET_CALL_INFO);
     }
     /**********************************************************************************************/
 

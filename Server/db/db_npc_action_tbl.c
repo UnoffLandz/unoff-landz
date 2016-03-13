@@ -37,16 +37,12 @@ void load_db_npc_actions(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("NPC_ACTION_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM NPC_ACTION_TABLE";
+    char *sql="SELECT * FROM NPC_ACTION_TABLE";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     int i=0;
+    int rc=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -85,12 +81,7 @@ void load_db_npc_actions(){
         i++;
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
 
@@ -110,9 +101,7 @@ void add_db_npc_action(int npc_action_id, int action_type, char *npc_text, char 
     check_db_open(GET_CALL_INFO);
     check_table_exists("NPC_ACTION_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO NPC_ACTION_TABLE("
+    char *sql="INSERT INTO NPC_ACTION_TABLE(" \
         "NPC_ACTION_ID," \
         "NPC_ACTION_TYPE,"
         "NPC_TEXT," \
@@ -126,12 +115,29 @@ void add_db_npc_action(int npc_action_id, int action_type, char *npc_text, char 
         "OBJECT_AMOUNT_GIVEN," \
         "BOAT_NODE," \
         "DESTINATION," \
-        ") VALUES(%i, %i, '%s', %s', '%s', '%s', %i, %i, %i, %i, %i, %i, %i)",
-        npc_action_id, action_type, npc_text, options_list, text_success, text_fail, choice,
-        object_id_required, object_amount_required, object_id_given, object_amount_given,
-        boat_node, destination);
+        ") VALUES(?, ?, ?, ?, ?', ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    process_sql(sql);
+    sqlite3_stmt *stmt=NULL;
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, npc_action_id);
+    sqlite3_bind_int(stmt, 2, action_type);
+    sqlite3_bind_text(stmt, 3, npc_text, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, options_list, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 5, text_success, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 6, text_fail, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 7, choice);
+    sqlite3_bind_int(stmt, 8, object_id_required);
+    sqlite3_bind_int(stmt, 9, object_amount_required);
+    sqlite3_bind_int(stmt, 10, object_id_given);
+    sqlite3_bind_int(stmt, 11, object_amount_given);
+    sqlite3_bind_int(stmt, 12, boat_node);
+    sqlite3_bind_int(stmt, 13, destination);
+
+    step_query(sql, &stmt, GET_CALL_INFO);
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "NPC action [%i] added successfully\n", npc_action_id);
 

@@ -26,11 +26,14 @@
 
 void stop_server(){
 
+    /** public function - see header */
+
     char time_stamp_str[9]="";
     char verbose_date_stamp_str[50]="";
     time_t stop_time=time(NULL);
 
-    close_database();
+    //close the db if it's open
+    if(db) close_database(GET_CALL_INFO);
 
     get_time_stamp_str(stop_time, time_stamp_str);
     get_verbose_date_str(stop_time, verbose_date_stamp_str);

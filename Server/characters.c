@@ -111,11 +111,18 @@ void send_char_details(int actor_node, const char *char_name){
 
     int socket=clients.client[actor_node].socket;
 
-    if(get_db_char_data(char_name, -1)==false){
+    //get the id for the char
+    int char_id=get_db_char_id(char_name);
+
+    //check that the char id is valid
+    if(char_id==0){
 
         send_text(socket, CHAT_SERVER, "%c%s", c_red3+127, "character does not exist");
         return;
     }
+
+    //if the char id is valid then load the char data from the database
+    get_db_char_data(char_id);
 
     send_text(socket, CHAT_SERVER, "%cCharacter    :%s", c_green3+127, character.char_name);
 

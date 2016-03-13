@@ -17,35 +17,16 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef DB_ATTRIBUTE_TBL_H_INCLUDED
-#define DB_ATTRIBUTE_TBL_H_INCLUDED
+#ifndef DB_SQLITE_RETURN_CODES_H_INCLUDED
+#define DB_SQLITE_RETURN_CODES_H_INCLUDED
 
-#define ATTRIBUTE_TABLE_SQL "CREATE TABLE ATTRIBUTE_TABLE( \
-        ATTRIBUTE_ID  INTEGER PRIMARY KEY        NOT NULL,  \
-        RACE_ID             INT, \
-        ATTRIBUTE_TYPE_ID   INT, \
-        PICKPOINTS          INT, \
-        ATTRIBUTE_VALUE     INT)"
+#define MAX_SQLITE_RETURN_CODES 255
 
-/** RESULT   : loads attributes and associated attribute values from the database to memory array
+struct sqlite_return_code_type{
 
-    RETURNS  : void
+    char err_msg[80];
+};
 
-    PURPOSE  : retrieves attribute/attribute value data from permanent storage
+extern struct sqlite_return_code_type sqlite_return_code[MAX_SQLITE_RETURN_CODES];
 
-    NOTES    :
-**/
-void load_db_attributes();
-
-
-/** RESULT  : loads attribute data specified in a text file
-
-    RETURNS : void
-
-    PURPOSE : batch loading of attribute data
-
-    NOTES   :
-*/
-void batch_add_attributes(char *file_name, int attribute_type_id);
-
-#endif // DB_ATTRIBUTE_TBL_H_INCLUDED
+#endif // DB_SQLITE_RETURN_CODES_H_INCLUDED

@@ -20,39 +20,71 @@
 #define SERVER_BUILD_DETAILS_H_INCLUDED
 
 #define VERSION "UnoffLandz 4"
-#define BUILD "11.1"
+#define BUILD "12"
 #define BUILD_DATE __DATE__
 
 /***************************************************************************************************
-                                    BUILD 11.1
+                                    BUILD 12
 
-Fixed (52) stopped guild events being broadcast to closed socked.
+Done (48) Add char neck attachment to client array and database table
 
-Fixed (53) existing sqlite database on server replaced to prevent server crash arising from legacy
-           inventory data.
+Done (46) Add actor scale to client array and database table
 
-Fixed (51) prevented null strings from causing seg fault in strcpy
+Fixed (61) chan details not shown during database creation
 
-Fixed server name not being transferred to database on startup
+Done Refactored add_db_guild
 
-Fixed (54) server-up time shown on console is incorrect
+Done Refactored add_db_char_data
 
-Fixed (56) race Description in database shows "average
+Done (60) replace SELECT MAX(CHAR_ID) FROM CHARACTER_TABLE") with sqlite3_get_last_insert_rowid
 
-Partial (40) change sql statements to use bind parameters rather than inserts
-Partial (39) implement prepare and destroy wrapper functions
+Dropped (59) replace get_db_char_count with char count field in game_data table (bad idea)
 
-Done (34) load attributes from text file
+Done (40) change sql statements to use bind parameters rather than inserts
 
-Dropped (7) convert attribute struct so as attribute type can be addressed programatically
+Done (39) implement prepare and destroy wrapper functions
 
-Fixed bug in command line option 'C' (create database) will not work if no existing sqlite file
+Dropped (17) map object reserve respawn (duplicate of 43)
+
+Done (63) replace log_sqlite_error functions
+
+Done added sqlite return code explanation to logging
+
+Fixed (6) Char bobbing
+
+Done char now automatically stands and remains standing if moved from sitting position
+
+Dropped (67) insert callback function within sqlite prepare/step/finalise (won't work)
+
+Done refactored protocol array to remove redundant placeholders
+
+Done refactored get_db_char_data function
+
+Partial (65) added sqlite_exec to skills, attributes, races when loading from file to database
+
+Partial (69) change char sql[MAX_SQL_LEN] to char *sql
+
 
 ***************************************************************************************************
 
                                         TO - DO
 Ref Item
 --- -------------------------------------------------------------
+
+70. refactor get_db_guild_member_list and update_db_map_objects to use bind
+
+69. change char sql[MAX_SQL_LEN] to char *sql (only get_db_guild_member_list and update_db_map_objects remaining)
+
+68. add #notes field to lst files
+
+66. stop_server needs to get function module and line from calling process
+
+65. use sqlite3_exec to speed up loading from file for chars, char types, chans, e3d,
+gender, guilds, map_objects, maps, npc_action, npc_trigger, objects, seasons
+
+64. transfer function send_guild_details in guild.c to db_guild_tbl
+
+62. add load_data function within batch add functions
 
 58. Command line options to reload attributes from text file
 
@@ -65,17 +97,9 @@ Ref Item
 
 49. Implement function callback for idle buffer
 
-48. Add char neck attachment to client array and database table
-
 47. Implement harvest events
-
-46. Add actor scale to client array and database table
-
 43. implement harvest node restrictions
 42. implement seasonal changes on harvest nodes
-
-40. change sql statements to use bind parameters rather than inserts
-39. implement prepare and destroy wrapper functions
 
 37. check need for initial_emu field on race table
 36. check need for char_count column on character type table
@@ -83,6 +107,7 @@ Ref Item
 35. implement pickpoints, wraith and nexus/attributes
 
 33. create bag table
+21. bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
 
 32. TEST multiple guild application handling
 31. TEST database upgrade
@@ -99,21 +124,21 @@ can be engineered for different times of day.
 23. implement fish
 
 22. replace snprintf with ssnprintf
-21. bag_proximity (reveal and unreveal) use destroy and create in place of revised client code
+
 20. need #command to withdraw application to join guild
-19. need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
 18. #command to change guild chan join/leave notification colours
-17. map object reserve respawn (duplicate 43)
 16. #command to #letter all members of a guild
 15. #IG guild channel functionality
-14. OPS #command to #letter all chars
 13. need #command to #letter all guild members (guild master only)
+19. need #letter system to inform ppl if guild application has been approved/rejected also if guild member leaves
 12. implement guild stats
+9. save guild applicant list to database
+
+14. OPS #command to #letter all chars
 11. Table to separately record all drops/pick ups in db
 10. Table to separately record chars leaving and joining guilds
-9. save guild applicant list to database
 8. document idle_buffer2.h
-6. fix char bobbing
+
 5. create circular buffer for receiving packets
 4. need #function to describe char and what it is wearing)
 3. document new database/struct relationships

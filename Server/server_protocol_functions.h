@@ -50,6 +50,8 @@ struct {// struct used to transfer data to the _add_enhanced_actor_packet and
     int current_health;
     int player_type;
     char banner[80];
+    int neck_attachment_type;
+    int actor_scale;
 }actor;
 
 

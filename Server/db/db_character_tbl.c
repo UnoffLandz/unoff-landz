@@ -40,33 +40,21 @@ bool get_db_char_exists(int char_id){
 
     sqlite3_stmt *stmt;
 
-    char sql[MAX_SQL_LEN]="SELECT count(*) FROM CHARACTER_TABLE WHERE CHAR_ID=?";
+    char *sql="SELECT count(*) FROM CHARACTER_TABLE WHERE CHAR_ID=?";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_int(stmt, 1, char_id);
 
     int char_count=0;
+    int rc=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
          char_count=sqlite3_column_int(stmt, 0);
     }
 
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     // if count of char_id is greater than 1 then we have a duplicate and need to close the server
     if(char_count>1){
@@ -81,7 +69,7 @@ bool get_db_char_exists(int char_id){
 }
 
 
-bool get_db_char_data(const char *char_name, int char_id){
+int get_db_char_id(const char *char_name){
 
     /** public function - see header */
 
@@ -90,32 +78,50 @@ bool get_db_char_data(const char *char_name, int char_id){
 
     sqlite3_stmt *stmt;
 
+    char *sql="SELECT * FROM CHARACTER_TABLE WHERE UPPER(CHAR_NAME)=?";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
     //create upper case copy of char name
     char char_name_uc[MAX_CHAR_NAME_LEN]="";
     strcpy(char_name_uc, char_name);
     str_conv_upper(char_name_uc);
+    sqlite3_bind_text(stmt, 1, char_name_uc, -1, SQLITE_STATIC);
 
-    char sql[MAX_SQL_LEN]="";
-
-    if(strcmp(char_name, "")!=0 || char_id==-1){
-
-        snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE UPPER(CHAR_NAME)='%s'", char_name_uc);
-    }
-    else {
-
-        snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE CHAR_ID=%i", char_id);
-    }
-
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //zero the struct (critical that we set character_id element to zero as we use this to flag if char has been found
-    memset(&character, 0, sizeof(character));
+    int rc=0;
+    int char_id=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        char_id=sqlite3_column_int(stmt, 0);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
+    return char_id;
+}
+
+
+bool get_db_char_data(int char_id){
+
+    /** public function - see header */
+
+    //check database is open
+    check_db_open(GET_CALL_INFO);
+
+    sqlite3_stmt *stmt;
+
+    char *sql="SELECT * FROM CHARACTER_TABLE WHERE CHAR_ID=?";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, char_id);
+
+    int rc=0;
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        //zero the struct (critical that we set character_id element to zero as we use this to flag if char has been found
+        memset(&character, 0, sizeof(character));
 
         character.character_id=sqlite3_column_int(stmt, 0);
 
@@ -160,13 +166,11 @@ bool get_db_char_data(const char *char_name, int char_id){
         character.harvest_exp=sqlite3_column_int(stmt, 36);
         character.harvest_lvl=sqlite3_column_int(stmt, 37);
         memcpy(character.inventory, (unsigned char*)sqlite3_column_blob(stmt, 38), sizeof(character.inventory));
+        character.neck_attachment_type=sqlite3_column_int(stmt, 39);
+        character.actor_scale=sqlite3_column_int(stmt, 40);
     }
 
-    rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(character.character_id==0) return false;
 
@@ -183,32 +187,52 @@ int get_db_char_count(){
 
     sqlite3_stmt *stmt;
 
-    char sql[MAX_SQL_LEN]="SELECT count(*) FROM CHARACTER_TABLE";
+    char *sql="SELECT count(*) FROM CHARACTER_TABLE";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     int max_id=0;
 
+    int rc=0;
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         max_id=sqlite3_column_int(stmt, 0);
     }
 
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     return max_id;
 }
 
 
-int add_db_char_data(struct client_node_type character){
+int get_db_last_char_id(){
+
+    /** public function - see header **/
+
+    sqlite3_stmt *stmt;
+
+    //check database is open
+    check_db_open(GET_CALL_INFO);
+
+    char *sql="SELECT MAX(CHAR_ID) FROM CHARACTER_TABLE";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    int rc=0;
+    int char_id=0;
+
+    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
+        char_id=sqlite3_column_int(stmt, 0);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
+    return char_id;
+}
+
+
+void add_db_char_data(struct client_node_type character){
 
     /** public function - see header **/
 
@@ -218,7 +242,7 @@ int add_db_char_data(struct client_node_type character){
     check_db_open(GET_CALL_INFO);
     check_table_exists("CHARACTER_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="INSERT INTO CHARACTER_TABLE(" \
+    char *sql="INSERT INTO CHARACTER_TABLE(" \
         "CHAR_NAME," \
         "PASSWORD," \
         "CHAR_STATUS," \
@@ -248,14 +272,12 @@ int add_db_char_data(struct client_node_type character){
         "CURRENT_HEALTH," \
         "CHAR_CREATED," \
         "JOINED_GUILD," \
-        "INVENTORY" \
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "INVENTORY," \
+        "NECK_ATTACHMENT_TYPE," \
+        "ACTOR_SCALE" \
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_text(stmt, 1, character.char_name, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, character.password, -1, SQLITE_STATIC);
@@ -287,53 +309,19 @@ int add_db_char_data(struct client_node_type character){
     sqlite3_bind_int(stmt, 28, (int)character.char_created);
     sqlite3_bind_int(stmt, 29, (int)character.joined_guild);
     sqlite3_bind_blob(stmt, 30, character.inventory, sizeof(character.inventory), NULL);
+    sqlite3_bind_int(stmt, 31, character.neck_attachment_type);
+    sqlite3_bind_int(stmt, 32, character.actor_scale);
 
-    //process sql statement
-    rc=sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
+    //get the id of the char we've just created
+    int char_id=get_db_last_char_id();
 
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    fprintf(stderr, "char [%i] [%s] added successfully\n", char_id, character.char_name);
 
-    //find the id of the new entry
-    strcpy(sql, "SELECT MAX(CHAR_ID) FROM CHARACTER_TABLE");
-
-    //prepare the sql statement
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //process the sql statement
-    int id=0;
-    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-
-        id=sqlite3_column_int(stmt, 0);
-    }
-
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
-
-    log_event(EVENT_SESSION, "char [%s] added to database", character.char_name);
-
-    return id;
+    log_event(EVENT_SESSION, "char [%i] [%s] added to database", char_id, character.char_name);
 }
 
 
@@ -346,25 +334,18 @@ void get_db_last_char_created(){
     //check database is open
     check_db_open(GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT CHAR_NAME, CHAR_CREATED FROM CHARACTER_TABLE ORDER BY CHAR_CREATED DESC LIMIT 1";
+    char *sql="SELECT CHAR_NAME, CHAR_CREATED FROM CHARACTER_TABLE ORDER BY CHAR_CREATED DESC LIMIT 1";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
-
+    int rc=0;
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         strcpy(game_data.name_last_char_created, (char*)sqlite3_column_text(stmt, 0));
         game_data.date_last_char_created=sqlite3_column_int(stmt,1);
     }
 
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 
@@ -392,19 +373,15 @@ void load_npc_characters(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("CHARACTER_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM CHARACTER_TABLE WHERE PLAYER_TYPE=?";
+    char *sql="SELECT * FROM CHARACTER_TABLE WHERE PLAYER_TYPE=?";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_int(stmt, 0, NPC);
 
     //read the sql query result into the client array
     int i=0;
+    int rc=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -433,6 +410,8 @@ void load_npc_characters(){
             clients.client[actor_node].helmet_type=sqlite3_column_int(stmt, 24);
             clients.client[actor_node].frame=sqlite3_column_int(stmt, 25);
             clients.client[actor_node].char_created=sqlite3_column_int(stmt, 29);
+            clients.client[actor_node].neck_attachment_type=sqlite3_column_int(stmt, 39);
+            clients.client[actor_node].actor_scale=sqlite3_column_int(stmt, 40);
 
             log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", i, clients.client[actor_node].char_name);
 
@@ -440,12 +419,7 @@ void load_npc_characters(){
         }
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 
@@ -460,29 +434,16 @@ void db_update_inventory(int actor_node){
     check_table_exists("CHARACTER_TABLE", GET_CALL_INFO);
 
     //prepare sql statement
-    char sql[MAX_SQL_LEN]="UPDATE CHARACTER_TABLE SET INVENTORY=? WHERE CHAR_ID=?";
+    char *sql="UPDATE CHARACTER_TABLE SET INVENTORY=? WHERE CHAR_ID=?";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_blob(stmt, 1, clients.client[actor_node].inventory, sizeof(clients.client[actor_node].inventory), NULL);
     sqlite3_bind_int(stmt, 2, clients.client[actor_node].character_id);
 
-    //process the sql statement
-    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        //do nothing
-    }
-
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 
@@ -510,7 +471,7 @@ void batch_add_characters(char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[13][80];
+        char output[15][80];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
@@ -531,6 +492,9 @@ void batch_add_characters(char *file_name){
         character.pants_type=atoi(output[10]);
         character.boots_type=atoi(output[11]);
         character.head_type=atoi(output[12]);
+        character.neck_attachment_type=atoi(output[13]);
+        character.actor_scale=atoi(output[14]);
+
         character.shield_type=SHIELD_NONE;
         character.weapon_type=WEAPON_NONE;
         character.cape_type=CAPE_NONE;
@@ -543,6 +507,8 @@ void batch_add_characters(char *file_name){
         character.map_id=game_data.beam_map_id;
         character.map_tile=game_data.beam_map_tile;
 
+        //runs through all the chat channels and if any are shown as default for new chars
+        //then adds them to the char struct
         add_new_char_chat_channels();
 
         add_db_char_data(character);
@@ -550,4 +516,3 @@ void batch_add_characters(char *file_name){
 
     fclose(file);
 }
-

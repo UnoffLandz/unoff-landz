@@ -39,17 +39,13 @@ void load_db_e3ds(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("E3D_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM E3D_TABLE";
+    char *sql="SELECT * FROM E3D_TABLE";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //read the sql query result into the e3d array
     int i=0;
+    int rc=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
@@ -72,12 +68,7 @@ void load_db_e3ds(){
         i++;
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
 
@@ -87,7 +78,7 @@ void load_db_e3ds(){
 }
 
 
-void add_db_e3d(int id, char *e3d_filename, int object_id){
+void add_db_e3d(int e3d_id, char *e3d_filename, int object_id){
 
     /** RESULT  : adds an e3d to the e3d table
 
@@ -102,15 +93,23 @@ void add_db_e3d(int id, char *e3d_filename, int object_id){
     check_db_open(GET_CALL_INFO);
     check_table_exists("E3D_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-
-    snprintf(sql, MAX_SQL_LEN, "INSERT INTO E3D_TABLE("  \
+    char *sql="INSERT INTO E3D_TABLE("  \
         "E3D_ID," \
         "E3D_FILENAME,"  \
         "OBJECT_ID" \
-        ") VALUES(%i, '%s', %i)", id, e3d_filename, object_id);
+        ") VALUES(?, ?, ?)";
 
-    process_sql(sql);
+    sqlite3_stmt *stmt=NULL;
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, e3d_id);
+    sqlite3_bind_text(stmt, 2, e3d_filename, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, object_id);
+
+    step_query(sql, &stmt, GET_CALL_INFO);
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "e3d [%s] added successfully\n", e3d_filename);
 

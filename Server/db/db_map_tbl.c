@@ -50,16 +50,13 @@ void load_db_maps(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM MAP_TABLE";
+    char *sql="SELECT * FROM MAP_TABLE";
 
-    //prepare sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //read the sql query result into the map array
+    int rc=0;
+
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         //get the map id and check that the value does not exceed the maximum permitted number of maps
@@ -136,14 +133,9 @@ void load_db_maps(){
         i++;
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
-
-   if(i==0){
+    if(i==0){
 
         log_event(EVENT_ERROR, "no maps found in database", i);
         stop_server();
@@ -157,26 +149,20 @@ bool get_db_map_exists(int map_id) {
 
     sqlite3_stmt *stmt;
 
-    //check database is open
+    //check database is open and table exists
     check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT count(*) FROM MAP_TABLE WHERE MAP_ID=?";
+    char *sql="SELECT count(*) FROM MAP_TABLE WHERE MAP_ID=?";
 
-    //prepare the sql statement
-    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //bind the sql statement
-    rc = sqlite3_bind_int(stmt, 1, map_id);
-    if(rc!=SQLITE_OK) {
-        log_sqlite_error("sqlite3_bind_int failed", GET_CALL_INFO, rc, sql);
-    }
+    sqlite3_bind_int(stmt, 1, map_id);
 
     //execute the sql statement
     int map_id_count=0;
+    int rc=0;
+
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         map_id_count=sqlite3_column_int(stmt, 0);
@@ -189,12 +175,7 @@ bool get_db_map_exists(int map_id) {
         stop_server();
     }
 
-    //discard sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     //return false if map_id found otherwise true
     if(map_id_count==0) return false;
@@ -210,36 +191,17 @@ void delete_map(int map_id){
     //check database is open and table exists
     check_db_open(GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="DELETE FROM MAP_TABLE WHERE MAP_ID=?";
+    char *sql="DELETE FROM MAP_TABLE WHERE MAP_ID=?";
 
     sqlite3_stmt *stmt;
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    sqlite3_bind_int(stmt, 1, map_id);
 
-    //bind value to sql statement
-    rc = sqlite3_bind_int(stmt, 1, map_id);
-    if(rc!=SQLITE_OK) {
-        log_sqlite_error("sqlite3_bind_int failed", GET_CALL_INFO, rc, sql);
-    }
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-    //process sql statement
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //destroy sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 
@@ -256,7 +218,7 @@ void add_db_map(int map_id, char *elm_filename){
     read_height_map(elm_filename, maps.map[map_id].height_map);
 
     //insert map data (as we are inserting blobs, we need to bind values rather that adding values to the string
-    char sql[MAX_SQL_LEN]="INSERT INTO MAP_TABLE("  \
+    char *sql="INSERT INTO MAP_TABLE("  \
                 "MAP_ID," \
                 "ELM_FILE_NAME, " \
                 "MAP_AXIS," \
@@ -268,11 +230,7 @@ void add_db_map(int map_id, char *elm_filename){
 
     sqlite3_stmt *stmt;
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //load map id
     sqlite3_bind_int(stmt, 1, map_id);
@@ -296,17 +254,9 @@ void add_db_map(int map_id, char *elm_filename){
     //load threed object count
     sqlite3_bind_int(stmt, 7, elm_header.threed_object_count);
 
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "Map [%s] added successfully\n", elm_filename);
 
@@ -324,18 +274,15 @@ void list_db_maps(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM MAP_TABLE";
+    char *sql="SELECT * FROM MAP_TABLE";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "%6s %s %s\n", "[MAP ID]", "[MAP_NAME]", "[ELM FILE]");
 
     //read the sql query result into the map array
+    int rc=0;
+
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         //get the map id and check that the value does not exceed the maximum permitted number of maps
@@ -356,12 +303,7 @@ void list_db_maps(){
         fprintf(stderr, "[%6i] [%s] [%s]\n", map_id, map_name, map_file_name);
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 
@@ -371,33 +313,20 @@ void change_db_map_name(int map_id, char *map_name){
 
     sqlite3_stmt *stmt;
 
-    //check database is open
+    //check database is open and table exists
     check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
-    //use parameters rather than inserting values as this enables apostrophe characters
-    //to be handled
-    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_NAME=? WHERE MAP_ID=?";
+    char *sql="UPDATE MAP_TABLE SET MAP_NAME=? WHERE MAP_ID=?";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_text(stmt, 1, map_name, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, map_id);
 
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     log_event(EVENT_SESSION, "Map [%i] name changed to [%s] on MAP_TABLE", map_id, map_name);
 }
@@ -411,31 +340,18 @@ void change_db_map_description(int map_id, char *map_description){
 
     //check database is open and table exists
     check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
-    //use parameters rather than inserting values as this enables apostrophe characters
-    //to be handled
-    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_DESCRIPTION=? WHERE MAP_ID=?";
+    char *sql="UPDATE MAP_TABLE SET MAP_DESCRIPTION=? WHERE MAP_ID=?";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_text(stmt, 1, map_description, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, map_id);
 
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     log_event(EVENT_SESSION, "Map [%i] description changed to [%s] on MAP_TABLE", map_id, map_description);
 }
@@ -449,31 +365,18 @@ void change_db_map_author(int map_id, char *map_author){
 
     //check database is open and table exists
     check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
-    //use parameters rather than inserting values as this enables apostrophe characters
-    //to be handled
-    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_AUTHOR=? WHERE MAP_ID=?";
+    char *sql="UPDATE MAP_TABLE SET MAP_AUTHOR=? WHERE MAP_ID=?";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_text(stmt, 1, map_author, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, map_id);
 
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     log_event(EVENT_SESSION, "Map [%i] author changed to [%s] on MAP_TABLE", map_id, map_author);
 }
@@ -485,33 +388,20 @@ void change_db_map_author_email(int map_id, char *map_author_email){
 
     sqlite3_stmt *stmt;
 
-    //check database is open
+    //check database is open and table exists
     check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
-    //use parameters rather than inserting values as this enables apostrophe characters
-    //to be handled
-    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_AUTHOR_EMAIL=? WHERE MAP_ID=?";
+    char *sql="UPDATE MAP_TABLE SET MAP_AUTHOR_EMAIL=? WHERE MAP_ID=?";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_text(stmt, 1, map_author_email, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, map_id);
 
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     log_event(EVENT_SESSION, "Map [%i] author email changed to [%s] on MAP_TABLE", map_id, map_author_email);
 }
@@ -523,33 +413,20 @@ void change_db_map_development_status(int map_id, int map_development_status){
 
     sqlite3_stmt *stmt;
 
-    //check database is open
+    //check database is open and table exists
     check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
 
-    //use parameters rather than inserting values as this enables apostrophe characters
-    //to be handled
-    char sql[MAX_SQL_LEN]="UPDATE MAP_TABLE SET MAP_STATUS=? WHERE MAP_ID=?";
+    char *sql="UPDATE MAP_TABLE SET MAP_STATUS=? WHERE MAP_ID=?";
 
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     sqlite3_bind_int(stmt, 1, map_development_status);
     sqlite3_bind_int(stmt, 2, map_id);
 
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     log_event(EVENT_SESSION, "Map [%i] development status changed to [%i] on MAP_TABLE", map_id, map_development_status);
 }

@@ -159,76 +159,75 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     int weapon_type;
     int cape_type;
     int helmet_type;
+    int neck_attachment_type;
+    int actor_scale;
+
     int frame;
+
     int max_health;
     int current_health;
 
     int physique_pp;
     int max_physique;
+
     int coordination_pp;
     int max_coordination;
+
     int reasoning_pp;
     int max_reasoning;
+
     int will_pp;
     int max_will;
+
     int instinct_pp;
     int max_instinct;
+
     int vitality_pp;
     int max_vitality;
 
     int human;
     int max_human;
+
     int animal;
     int max_animal;
+
     int vegetal;
     int max_vegetal;
+
     int inorganic;
     int max_inorganic;
+
     int artificial;
     int max_artificial;
+
     int magic;
     int max_magic;
 
     int manufacturing_lvl;
-    //int max_manufacturing_lvl;
     int harvest_lvl;
-    //int max_harvest_lvl;
     int alchemy_lvl;
-    //int max_alchemy_lvl;
     int overall_lvl;
-    //int max_overall_lvl;
     int attack_lvl;
-    //int max_attack_lvl;
     int defence_lvl;
-    //int max_defence_lvl;
     int magic_lvl;
-    //int max_magic_lvl;
     int potion_lvl;
-    //int max_potion_lvl;
 
     int material_pts;
     int max_material_pts;
+
     int ethereal_pts;
     int max_ethereal_pts;
 
     int food_lvl;
 
     int manufacture_exp;
-    //int max_manufacture_exp;
     int harvest_exp;
-    //int max_harvest_exp;
     int alchemy_exp;
-    //int max_alchemy_exp;
     int overall_exp;
-    //int max_overall_exp;
     int attack_exp;
-    //int max_attack_exp;
     int defence_exp;
-    //int max_defence_exp;
     int magic_exp;
-    //int max_magic_exp;
     int potion_exp;
-    //int max_potion_exp;
 
     int book_id;
     int max_book_time;

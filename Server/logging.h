@@ -100,17 +100,6 @@ void log_text(int event_type, char *fmt, ...);
 void initialise_logs();
 
 
-/** RESULT  : logs sqlite function errors
-
-    RETURNS : void
-
-    PURPOSE : provides a standard format for sqlite error reporting
-
-    NOTES   :
-*/
-void log_sqlite_error(char *error_type, const char *function_name, const char *module_name, int line_number, int return_code, const char *sql_stmt);
-
-
 /** RESULT  : logs a protocol packet
 
     RETURNS : void

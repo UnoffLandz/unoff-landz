@@ -45,7 +45,7 @@ void load_db_skills();
 
     NOTES   :
 */
-void batch_add_skills(int skill_type_id, char *file_name);
+void batch_add_skills(char *file_name, int skill_type_id);
 
 
 /** RESULT  : removes a specific skill type from the database

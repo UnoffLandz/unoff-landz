@@ -214,12 +214,18 @@ void kick_guild_member(int actor_node, char *guild_tag, char *char_name){
         return;
     }
 
-    //check char name exists
-    if(get_db_char_data(char_name, 0)==false){
+    //get char id
+    int char_id=get_db_char_id(char_name);
+
+    //check char id is valid
+    if(char_id==0){
 
         log_event(EVENT_ERROR, "char[%s] does not exist", char_name);
         stop_server();
     }
+
+    //load char data from database
+    get_db_char_data(char_id);
 
     // check if char is already in a guild
     if(character.guild_id!=get_guild_id(guild_tag)){
@@ -249,12 +255,18 @@ void join_guild(int actor_node, char *char_name, char *guild_tag){
         return;
     }
 
-    //check char name exists
-    if(get_db_char_data(char_name, 0)==false){
+    //get char id
+    int char_id=get_db_char_id(char_name);
+
+    //check char id is valid
+    if(char_id==0){
 
         send_text(socket, CHAT_SERVER, "%c%s does not exist", c_red3+127, char_name);
         return;
     }
+
+    //load char data from database
+    get_db_char_data(char_id);
 
     // check if char is already in a guild
     if(character.guild_id>0){
@@ -299,12 +311,18 @@ void change_guild_rank(int actor_node, char *char_name, char *guild_tag, int new
         return;
     }
 
-    //check char name exists
-    if(get_db_char_data(char_name, 0)==false){
+    //get char id
+    int char_id=get_db_char_id(char_name);
+
+    //check char id is valid
+    if(char_id==0){
 
         log_event(EVENT_ERROR, "char[%s] does not exist", char_name);
         stop_server();
     }
+
+    //get char data from database
+    get_db_char_data(char_id);
 
     // check if char is in guild
     if(character.guild_id!=guild_id){
@@ -424,16 +442,13 @@ void send_guild_details(int actor_node, int guild_id){
 
     snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE GUILD_ID=%i", guild_id);
 
-// TODO (themuntdregger#1#): transfer to idle buffer
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    // TODO (themuntdregger#1#): transfer to idle buffer
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     int member_count=0;
     char guild_masters[1024]="";
 
+    int rc=0;
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         //list the guild masters (chars with rank 20)
@@ -448,14 +463,5 @@ void send_guild_details(int actor_node, int guild_id){
     send_text(socket, CHAT_SERVER, "%cGuild Masters:%s", c_green3+127, guild_masters);
     send_text(socket, CHAT_SERVER, "%cMember Count :%i", c_green3+127, member_count);
 
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }

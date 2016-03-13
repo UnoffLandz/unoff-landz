@@ -37,6 +37,7 @@
 #include "db_guild_tbl.h"
 #include "db_skill_tbl.h"
 #include "db_upgrade.h"
+#include "db_sqlite_return_codes.h"
 #include "../server_start_stop.h"
 #include "../attributes.h"
 #include "../chat.h"
@@ -86,45 +87,23 @@ void check_db_closed(const char *module, const char *func, const int line){
 }
 
 
-void create_empty_database_file (const char *db_filename){
+void open_database(const char *db_filename, const char *module, const char *func, const int line ){
 
     /** public function - see header **/
 
     //check database is closed
-    check_db_closed(GET_CALL_INFO);
-
-    //statement creates an empty database file if none exists
-    int rc = sqlite3_open(db_filename, &db);
-    if(rc!=SQLITE_OK ){
-
-        fprintf(stderr, "unable to create sqlite file [%s]\n", db_filename);
-        log_event(EVENT_ERROR, "unable to create sqlite file [%s]", db_filename);
-    }
-}
-
-
-void open_database(const char *db_filename){
-
-    /** public function - see header **/
-
-    //check database is closed
-    check_db_closed(GET_CALL_INFO);
-
-    //make sure we have an existing file to open, otherwise warn that no file exists
-    if(file_exists(db_filename)==false){
-
-        fprintf(stderr, "database file [%s] not found\n", db_filename);
-        log_event(EVENT_ERROR, "database file [%s] not found", db_filename);
-
-        return;
-    }
+    check_db_closed(func, module, line);
 
     //open the database
     int rc = sqlite3_open(db_filename, &db);
+
     if( rc !=SQLITE_OK ){
 
-        log_sqlite_error("sqlite3_open", __func__ , __FILE__, __LINE__, rc, "");
-        //server stopped automatically
+        log_event(EVENT_ERROR, "sqlite3_open failed in function %s: module %s: line %i", db_filename, func, module, line);
+        log_text(EVENT_ERROR, "return code [%i] [%s]", rc, sqlite_return_code[rc].err_msg);
+
+        fprintf(stderr, "Program failed - see error log\n");
+        exit(EXIT_FAILURE);
     }
 
     fprintf(stderr, "database file [%s] opened\n", db_filename);
@@ -132,21 +111,23 @@ void open_database(const char *db_filename){
 }
 
 
-void close_database(){
+void close_database(const char *module, const char *func, const int line){
 
     /** public function - see header **/
 
     //check database is open
-    check_db_open(GET_CALL_INFO);
+    check_db_open(func, module, line);
 
     //close the database
     int rc=sqlite3_close(db);
+
     if(rc != SQLITE_OK ){
 
-        //don't use log_sqlite_error function as this already contains a call to close_database
-        //and therefore creates an infinite loop
-        log_event(EVENT_ERROR, "sqlite3_close failed in function %s: module %s: line %i", GET_CALL_INFO);
-        log_text(EVENT_ERROR, "error code %i", rc);
+        log_event(EVENT_ERROR, "sqlite3_close failed in function %s: module %s: line %i", func, module, line);
+        log_text(EVENT_ERROR, "return code [%i] [%s]", rc, sqlite_return_code[rc].err_msg);
+
+        fprintf(stderr, "Program failed - see error log\n");
+        exit(EXIT_FAILURE);
     }
 
     fprintf(stderr, "database file closed\n");
@@ -162,8 +143,11 @@ void prepare_query(const char *sql, sqlite3_stmt **stmt, const char *module, con
 
     if(rc!=SQLITE_OK) {
 
-        log_sqlite_error("sqlite_prepare_v2 failed", func, module, line, rc, sql);
-        exit(EXIT_FAILURE);
+        log_event(EVENT_ERROR, "sqlite3_prepare_v2 failed in function %s: module %s: line %i", module, func, line);
+        log_text(EVENT_ERROR, "return code [%i] [%s]", rc, sqlite_return_code[rc].err_msg);
+        log_text(EVENT_ERROR, "sql [%s]", sql);
+
+        stop_server();
     }
 }
 
@@ -176,8 +160,38 @@ void destroy_query(const char *sql, sqlite3_stmt **stmt, const char *module, con
 
     if(rc!=SQLITE_OK){
 
-        log_sqlite_error("sqlite3_finalize failed", func, module, line, rc, sql);
-        exit(EXIT_FAILURE);
+        log_event(EVENT_ERROR, "sqlite3_finalize failed in function %s: module %s: line %i", module, func, line);
+        log_text(EVENT_ERROR, "return code [%i] [%s]", rc, sqlite_return_code[rc].err_msg);
+        log_text(EVENT_ERROR, "sql [%s]", sql);
+
+        stop_server();
+    }
+}
+
+void step_query(const char *sql, sqlite3_stmt **stmt, const char *module, const char *func, const int line){
+
+    int rc=0;
+    int i=0;
+
+    while ( (rc = sqlite3_step(*stmt)) == SQLITE_ROW) {
+
+        i++;
+    }
+
+    if(i>0){
+
+        log_event(EVENT_ERROR, "multiple result from single sql execution in function %s: module %s: line %i", func, module, line);
+
+        stop_server();
+    }
+
+    if (rc != SQLITE_DONE) {
+
+        log_event(EVENT_ERROR, "sqlite3_step failed in function %s: module %s: line %i", func, module, line);
+        log_text(EVENT_ERROR, "return code [%i] [%s]", rc, sqlite_return_code[rc].err_msg);
+        log_text(EVENT_ERROR, "sql [%s]", sql);
+
+        stop_server();
     }
 }
 
@@ -191,38 +205,31 @@ bool table_exists(const char *table_name) {
     //check database is open
     check_db_open(GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "SELECT count(*) FROM sqlite_master WHERE tbl_name='%s'", table_name);
+    char *sql="SELECT count(*) FROM sqlite_master WHERE tbl_name=?";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    sqlite3_bind_text(stmt, 1, table_name, -1, SQLITE_STATIC);
 
     //process the sql statement - we use a while loop instead of testing the return
     //value using 'rc != SQLITE_DONE' as the latter returns strange errors
     int count=0;
+    int rc=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         count=sqlite3_column_int(stmt, 0);
-   }
-
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-        //server stopped automatically
     }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     //catch duplicated tables (only likely to happen if the entire database is corrupted)
     if(count>1){
 
         log_event(EVENT_ERROR, "more than 1 table named [%s] found in function %s: module %s: line %i", table_name, GET_CALL_INFO);
-        stop_server();
+
+        fprintf(stderr, "Program failed - see error log\n");
+        exit(EXIT_FAILURE);
     }
 
     if(count==0) return false;
@@ -233,11 +240,13 @@ bool table_exists(const char *table_name) {
 
 void check_table_exists(char *table_name, const char *module, const char *func, const int line){
 
+    /** public function - see header **/
+
     if(table_exists(table_name)==false){
 
         log_event(EVENT_ERROR, "no table named [%s] found in database in function %s: module %s: line %i", table_name, func, module, line);
-        fprintf(stderr, "no table named [%s] found in database in function %s: module %s: line %i", table_name,func, module, line);
 
+        fprintf(stderr, "Program failed - see error log\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -253,16 +262,11 @@ bool column_exists(const char *table_name, const char *column_name) {
     //check database is open
     check_db_open(GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-    snprintf(sql, MAX_SQL_LEN, "PRAGMA table_info('%s')", table_name);
+    char *sql="PRAGMA table_info(?)";
 
-    //prepare sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-        //server stopped automatically
-    }
+    sqlite3_bind_text(stmt, 1, table_name, -1, SQLITE_STATIC);
 
     //loop through fields in the sqlite_master table until we find one called 'name'
     for (int i=0; i<sqlite3_column_count(stmt); i++) {
@@ -277,29 +281,36 @@ bool column_exists(const char *table_name, const char *column_name) {
     //if sqlite_master has no field called 'name' then report as error
     if(field_idx==-1) {
 
+        destroy_query(sql, &stmt, GET_CALL_INFO);
+
         log_event(EVENT_ERROR, "sqlite_master has no 'name field in function %s: module %s: line %i", GET_CALL_INFO);
 
-        rc = sqlite3_finalize(stmt);
-
-        if(rc!=SQLITE_OK){
-
-            log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-            //server stopped automatically
-        }
+        fprintf(stderr, "Program failed - see error log\n");
+        exit(EXIT_FAILURE);
     }
+
+    int rc=0;
+    int count=0;
 
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         //compare the field name to the target
-        if(strcmp(column_name, (const char *)sqlite3_column_text(stmt, field_idx))==0) {
-
-            return 1;
-        }
+        if(strcmp(column_name, (const char *)sqlite3_column_text(stmt, field_idx))==0) count++;
     }
 
-    sqlite3_finalize(stmt);
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
-    return 0;
+    if(count==1) return true;
+
+    else if(count>1){
+
+        log_event(EVENT_ERROR, "database has more than 1 field called [%s] in function %s: module %s: line %i", column_name, GET_CALL_INFO);
+
+        fprintf(stderr, "Program failed - see error log\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return false;
 }
 
 
@@ -313,31 +324,15 @@ int database_table_count(){
     check_db_open(GET_CALL_INFO);
 
     //create the sql statement
-    char sql[MAX_SQL_LEN]="SELECT count(*) FROM sqlite_master WHERE type='table'";
+    char *sql="SELECT count(*) FROM sqlite_master WHERE type='table'";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //process the sql statement
-    rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
-
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-        //server stopped automatically
-    }
+    step_query(sql, &stmt, GET_CALL_INFO);
 
     int table_count=sqlite3_column_int(stmt, 0);
 
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     return table_count;
 }
@@ -362,10 +357,12 @@ void create_database_table(char *sql){
 
         log_event(EVENT_ERROR, "sql statement does not contain 'CREATE TABLE' instruction in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "[%s]", sql);
-        stop_server();
+
+        fprintf(stderr, "Program failed - see error log\n");
+        exit(EXIT_FAILURE);
     }
 
-    process_sql(sql);
+    process_sql(sql, GET_CALL_INFO);
 
     //extract table name for use in logging
     char table_name[80]="";
@@ -383,7 +380,9 @@ void create_database_table(char *sql){
 
         log_event(EVENT_ERROR, "table name not found in sql statement in function %s: module %s: line %i", GET_CALL_INFO);
         log_text(EVENT_ERROR, "[%s]", sql);
-        stop_server();
+
+        fprintf(stderr, "Program failed - see error log\n");
+        exit(EXIT_FAILURE);
     }
 
     log_event(EVENT_INITIALISATION, "Created table [%s]", table_name);
@@ -391,7 +390,7 @@ void create_database_table(char *sql){
 }
 
 
-void process_sql(const char *sql){
+void process_sql(const char *sql, const char *module, const char *func, const int line){
 
     /** public function - see header **/
 
@@ -400,13 +399,16 @@ void process_sql(const char *sql){
 
     char *errMsg;
 
-    //use sqlite3_exec in place of sqlite3_prepare as there is no need to query output
+    //use sqlite3_exec in place of sqlite3_prepare as there are no binds or need to query output
     int rc = sqlite3_exec(db, sql, NULL, NULL, &errMsg);
 
     if(rc!=SQLITE_OK){
 
-        log_event(EVENT_ERROR, "sqlite3_exec failed, return code [%i], error message [%s] in module: %s, function %s: line: %i", rc, errMsg, GET_CALL_INFO);
-        log_text(EVENT_ERROR, "[%s]", sql);
+        log_event(EVENT_ERROR, "sqlite3_exec failed, return code [%i], error message [%s] in module: %s, function %s: line: %i", rc, errMsg, func, module, line);
+        log_text(EVENT_ERROR, "return code [%i] [%s]", rc, sqlite_return_code[rc].err_msg);
+        log_text(EVENT_ERROR, "sql [%s]", sql);
+
+        stop_server();
     }
 }
 
@@ -441,14 +443,14 @@ void populate_database(const char *db_filename){
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");
 
-    batch_add_game_data(GAME_DATA_FILE);
-    batch_add_channels(CHANNELS_FILE);
-    batch_add_races(RACE_FILE); //add race before char type
-    batch_add_gender(GENDER_FILE); //add gender before char type
-
-    //load race and gender before adding char type
+    //add and load race before char type
+    batch_add_races(RACE_FILE);
     load_db_char_races();
+
+    //add and load gender before char type
+    batch_add_gender(GENDER_FILE);
     load_db_genders();
+
     batch_add_char_types(CHAR_TYPE_FILE);
 
     batch_add_seasons(SEASON_FILE);
@@ -457,7 +459,8 @@ void populate_database(const char *db_filename){
 
     batch_add_e3ds(E3D_FILE);
     batch_add_maps(MAP_FILE);//also adds map objects
-    batch_add_skills(HARVESTING_SKILL, HARVESTING_SKILL_FILE);
+
+    batch_add_skills(HARVESTING_SKILL_FILE, HARVESTING_SKILL);
 
     batch_add_attributes(ATTR_DAY_VISION_FILE, ATTR_DAY_VISION);
     batch_add_attributes(ATTR_NIGHT_VISION_FILE, ATTR_NIGHT_VISION);
@@ -465,9 +468,12 @@ void populate_database(const char *db_filename){
 
     batch_add_guilds(GUILD_FILE);
 
-    //load game data so that starting map and tile can be found for new chars
+    //add and load game data before chars
+    batch_add_game_data(GAME_DATA_FILE);
     load_db_game_data();
-    //set starting channels for new chars
+
+    //add and load channels before chars
+    batch_add_channels(CHANNELS_FILE);
     load_db_channels();
 
     batch_add_characters(CHARACTER_FILE);

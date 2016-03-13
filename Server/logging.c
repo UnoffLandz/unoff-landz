@@ -32,36 +32,39 @@
 
 struct protocol_type protocol[] = {
 
-    {"RAW_TEXT", "RAW_TEXT"}, //0
-    {"", "MOVE_TO"}, //1
-    {"ADD_ACTOR", "SEND_PM"}, //2
-    {"YOU_ARE", ""},    //3
-    {"SYNC_CLOCK", ""}, //4
-    {"NEW_MINUTE", "GET_PLAYER_INFO"}, //5
-    {"REMOVE_ACTOR", ""}, //6
-    {"CHANGE_MAP", "SIT_DOWN"}, //7
-    {"", "SEND_ME_MY_ACTORS"}, //8
-    {"", "SEND_OPENING_SCREEN"}, //9
-    {"", "SEND_VERSION"}, //10
+    [0]={"RAW_TEXT", "RAW_TEXT"}, //0
+    [1]={"", "MOVE_TO"}, //1
+    [2]={"ADD_ACTOR", "SEND_PM"}, //2
+    [3]={"YOU_ARE", ""},    //3
+    [4]={"SYNC_CLOCK", ""}, //4
+    [5]={"NEW_MINUTE", "GET_PLAYER_INFO"}, //5
+    [6]={"REMOVE_ACTOR", ""}, //6
+    [7]={"CHANGE_MAP", "SIT_DOWN"}, //7
+    [8]={"", "SEND_ME_MY_ACTORS"}, //8
+    [9]={"", "SEND_OPENING_SCREEN"}, //9
+    [10]={"", "SEND_VERSION"}, //10
+/*
     {"", ""}, //11
     {"", ""}, //12
     {"", ""}, //13
-    {"", "HEARTBEAT"}, //14
-    {"", ""}, //15
-    {"", "USE_OBJECT"}, //16
-    {"", ""}, //17
-    {"HERE_YOUR_STATS", ""},//18
-    {"HERE_YOUR_INVENTORY", "LOOK_AT_INVENTORY_ITEM"}, //19
-    {"", "MOVE_INVENTORY_ITEM"},//20
-    {"GET_NEW_INVENTORY_ITEM", "HARVEST"},//21
-    {"", "DROP_ITEM"}, //22
-    {"HERE_YOUR_GROUND_ITEMS", "PICK_UP_ITEM"},//23
-    {"GET_NEW_GROUND_ITEM", ""},//24
-    {"", "INSPECT_BAG"}, //25
-    {"CLOSE_BAG", ""},//26
-    {"GET_NEW_BAG", "LOOK_AT_MAP_OBJECT"},//27
-    {"GET_BAGS_LIST", ""}, //28
-    {"DESTROY_BAG", ""},//29
+*/
+    [14]={"", "HEARTBEAT"}, //14
+    //{"", ""}, //15
+    [16]={"", "USE_OBJECT"}, //16
+    //{"", ""}, //17
+    [18]={"HERE_YOUR_STATS", ""},//18
+    [19]={"HERE_YOUR_INVENTORY", "LOOK_AT_INVENTORY_ITEM"}, //19
+    [20]={"", "MOVE_INVENTORY_ITEM"},//20
+    [21]={"GET_NEW_INVENTORY_ITEM", "HARVEST"},//21
+    [22]={"", "DROP_ITEM"}, //22
+    [23]={"HERE_YOUR_GROUND_ITEMS", "PICK_UP_ITEM"},//23
+    [24]={"GET_NEW_GROUND_ITEM", ""},//24
+    [25]={"", "INSPECT_BAG"}, //25
+    [26]={"CLOSE_BAG", ""},//26
+    [27]={"GET_NEW_BAG", "LOOK_AT_MAP_OBJECT"},//27
+    [28]={"GET_BAGS_LIST", ""}, //28
+    [29]={"DESTROY_BAG", ""},//29
+/*
     {"", ""}, //30
     {"", ""}, //31
     {"", ""}, //32
@@ -81,19 +84,23 @@ struct protocol_type protocol[] = {
     {"", ""}, //46
     {"", ""}, //47
     {"", ""}, //48
-    {"SEND_PARTIAL_STATS", ""}, //49
-    {"", ""}, //50
-    {"ADD_NEW_ENHANCED_ACTOR", ""}, //51
-    {"ACTOR_WEAR_ITEM", ""}, //52
-    {"ACTOR_UNWEAR_ITEM", ""}, //53
+*/
+    [49]={"SEND_PARTIAL_STATS", ""}, //49
+    //{"", ""}, //50
+    [51]={"ADD_NEW_ENHANCED_ACTOR", ""}, //51
+    [52]={"ACTOR_WEAR_ITEM", ""}, //52
+    [53]={"ACTOR_UNWEAR_ITEM", ""}, //53
+/*
     {"", ""}, //54
     {"", ""}, //55
     {"", ""}, //56
     {"", ""}, //57
     {"", ""}, //58
     {"", ""}, //59
-    {"", "PING_RESPONSE"}, //60
-    {"", "SET_ACTIVE_CHANNEL"}, //61
+*/
+    [60]={"", "PING_RESPONSE"}, //60
+    [61]={"", "SET_ACTIVE_CHANNEL"}, //61
+/*
     {"", ""}, //62
     {"", ""}, //63
     {"", ""}, //64
@@ -103,7 +110,9 @@ struct protocol_type protocol[] = {
     {"", ""}, //68
     {"", ""}, //69
     {"", ""}, //70
-    {"GET_ACTIVE_CHANNELS", ""}, //71
+*/
+    [71]={"GET_ACTIVE_CHANNELS", ""}, //71
+/*
     {"", ""}, //72
     {"", ""}, //73
     {"", ""}, //74
@@ -172,8 +181,10 @@ struct protocol_type protocol[] = {
     {"", ""}, //137
     {"", ""}, //138
     {"", ""}, //139
-    {"", "LOG_IN"}, //140
-    {"", "CREATE_CHAR"}, //141
+*/
+    [140]={"", "LOG_IN"}, //140
+    [141]={"", "CREATE_CHAR"}, //141
+/*
     {"", ""}, //142
     {"", ""}, //143
     {"", ""}, //144
@@ -262,9 +273,11 @@ struct protocol_type protocol[] = {
     {"", ""}, //227
     {"", ""}, //228
     {"", ""}, //229
-    {"", "GET_DATE"}, //230
-    {"", "GET_TIME"}, //231
-    {"", "SERVER_STATS"}, //232
+*/
+    [230]={"", "GET_DATE"}, //230
+    [231]={"", "GET_TIME"}, //231
+    [232]={"", "SERVER_STATS"}, //232
+/*
     {"", ""}, //233
     {"", ""}, //234
     {"", ""}, //235
@@ -281,13 +294,16 @@ struct protocol_type protocol[] = {
     {"", ""}, //246
     {"", ""}, //247
     {"", ""}, //248
-    {"YOU_DONT_EXIST", ""}, //249
-    {"LOG_IN_OK", ""}, //250
-    {"LOG_IN_NOT_OK", ""}, //251
-    {"CREATE_CHAR_OK", ""},//252
-    {"CREATE_CHAR_NOT_OK", ""},//253
+*/
+    [249]={"YOU_DONT_EXIST", ""}, //249
+    [250]={"LOG_IN_OK", ""}, //250
+    [251]={"LOG_IN_NOT_OK", ""}, //251
+    [252]={"CREATE_CHAR_OK", ""},//252
+    [253]={"CREATE_CHAR_NOT_OK", ""},//253
+/*
     {"", ""}, //254
     {"", ""}, //255
+*/
 };
 
 
@@ -546,20 +562,6 @@ void initialise_logs(){
 
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");
-}
-
-
-void log_sqlite_error(char *error_type, const char *function_name, const char *module_name, int line_number, int return_code, const char *sql_stmt){
-
-        /** public function - see header */
-
-        //N.B we use const char in prototype so we can use __func__ and __FILE__ without causing compiler warnings
-
-        log_event(EVENT_ERROR, "%s at line [%i] in function %s: module %s", error_type, line_number, function_name, module_name);
-        log_text(EVENT_ERROR, "sql statement [%s]", sql_stmt);
-        log_text(EVENT_ERROR, "return code [%i]: error type [%s]", return_code, sqlite3_errmsg(db));
-
-        stop_server();
 }
 
 

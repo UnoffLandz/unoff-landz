@@ -40,8 +40,7 @@ void load_db_objects(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("OBJECT_TABLE", GET_CALL_INFO);
 
-    //prepare the sql statement
-    char sql[MAX_SQL_LEN]="SELECT * FROM OBJECT_TABLE";
+    char *sql="SELECT * FROM OBJECT_TABLE";
 
     prepare_query(sql, &stmt, GET_CALL_INFO);
 
@@ -64,6 +63,7 @@ void load_db_objects(){
 
         if(sqlite3_column_int(stmt, 2)==1) object[object_id].harvestable=true; else object[object_id].harvestable=false;
         if(sqlite3_column_int(stmt, 3)==1) object[object_id].edible=true; else object[object_id].edible=false;
+
         object[object_id].harvest_interval=sqlite3_column_int(stmt, 4);
         object[object_id].emu=sqlite3_column_int(stmt, 5);
         object[object_id].equipable_item_type=sqlite3_column_int(stmt, 6);
@@ -74,7 +74,6 @@ void load_db_objects(){
         i++;
     }
 
-    //destroy query
     destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
@@ -100,14 +99,12 @@ void add_db_object(int object_id, char *object_name, bool harvestable, bool edib
     check_db_open(GET_CALL_INFO);
     check_table_exists("OBJECT_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-
     int _harvest=0, _edible=0;
 
     if(harvestable==true)_harvest=1; else _harvest=0;
     if(edible==true)_edible=1; else _edible=0;
 
-    snprintf(sql, MAX_SQL_LEN, "INSERT INTO OBJECT_TABLE("  \
+    char *sql="INSERT INTO OBJECT_TABLE("  \
         "OBJECT_ID," \
         "OBJECT_NAME," \
         "HARVESTABLE," \
@@ -116,9 +113,24 @@ void add_db_object(int object_id, char *object_name, bool harvestable, bool edib
         "EMU," \
         "EQUIPABLE_ITEM_TYPE, " \
         "EQUIPABLE_ITEM_ID" \
-        ") VALUES(%i, '%s', %i, %i, %i, %f, %i, %i)", object_id, object_name, _harvest, _edible, interval, emu, equipable_item_type, equipable_item_id);
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
-    process_sql(sql);
+    sqlite3_stmt *stmt=NULL;
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, object_id);
+    sqlite3_bind_text(stmt, 2, object_name, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, _harvest);
+    sqlite3_bind_int(stmt, 4, _edible);
+    sqlite3_bind_int(stmt, 5, interval);
+    sqlite3_bind_double(stmt, 6, emu);
+    sqlite3_bind_int(stmt, 7, equipable_item_type);
+    sqlite3_bind_int(stmt, 8, equipable_item_id);
+
+    step_query(sql, &stmt, GET_CALL_INFO);
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "Object [%s] added successfully\n", object_name);
 

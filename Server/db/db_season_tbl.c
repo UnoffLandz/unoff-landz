@@ -40,18 +40,16 @@ void load_db_seasons(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("SEASON_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM SEASON_TABLE";
+    char *sql="SELECT * FROM SEASON_TABLE";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //read the sql query result into the game data array
     int i=0;
+    int rc=0;
+
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+
 
         //get the game data id and check that there is only one set
         int id=sqlite3_column_int(stmt,0);
@@ -68,12 +66,7 @@ void load_db_seasons(){
         i++;
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
 
@@ -98,17 +91,27 @@ void add_db_season(int season_id, char *season_name, char *season_description, i
     check_db_open(GET_CALL_INFO);
     check_table_exists("SEASON_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="";
-    ssnprintf(sql, MAX_SQL_LEN,
-        "INSERT INTO SEASON_TABLE("  \
+    char *sql="INSERT INTO SEASON_TABLE("  \
         "SEASON_ID,"   \
         "SEASON_NAME,"    \
         "SEASON_DESCRIPTION,"  \
         "START_DAY,"   \
         "END_DAY" \
-        ") VALUES(%i, '%s', '%s', %i, %i)", season_id, season_name, season_description, start_day, end_day);
+        ") VALUES(?, ?, ?, ?, ?)";
 
-    process_sql(sql);
+    sqlite3_stmt *stmt;
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, season_id);
+    sqlite3_bind_text(stmt, 2, season_name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, season_description, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 4, start_day);
+    sqlite3_bind_int(stmt, 5, end_day);
+
+    step_query(sql, &stmt, GET_CALL_INFO);
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "Season [%s] added successfully\n", season_name);
 

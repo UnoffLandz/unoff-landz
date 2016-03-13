@@ -39,17 +39,14 @@ void load_db_guilds(){
     check_db_open(GET_CALL_INFO);
     check_table_exists("GUILD_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="SELECT * FROM GUILD_TABLE";
+    char *sql="SELECT * FROM GUILD_TABLE";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //read the sql query result into the guild array
     int i=0;
+    int rc=0;
+
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 
         int id=sqlite3_column_int(stmt, 0);
@@ -74,12 +71,7 @@ void load_db_guilds(){
         i++;
     }
 
-    //destroy the prepared sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK){
-
-         log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     if(i==0){
 
@@ -89,7 +81,7 @@ void load_db_guilds(){
 }
 
 
-int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *guild_description,
+void add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *guild_description,
     int guild_permission_level,
     int guild_status){
 
@@ -101,7 +93,7 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
     check_db_open(GET_CALL_INFO);
     check_table_exists("GUILD_TABLE", GET_CALL_INFO);
 
-    char sql[MAX_SQL_LEN]="INSERT INTO GUILD_TABLE("  \
+    char *sql="INSERT INTO GUILD_TABLE("  \
         "GUILD_NAME," \
         "GUILD_TAG," \
         "GUILD_TAG_COLOUR, " \
@@ -111,12 +103,7 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
         "STATUS" \
         ") VALUES(?, ?, ?, ?, ?, ?, ?)";
 
-    //prepare the sql statement
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //bind the data
     int date_guild_created=(int)time(NULL);
@@ -129,42 +116,13 @@ int add_db_guild(char *guild_name, char *guild_tag, int guild_tag_colour, char *
     sqlite3_bind_int(stmt, 6, guild_permission_level);
     sqlite3_bind_int(stmt, 7, guild_status);
 
-    //process the sql statement
-    rc = sqlite3_step(stmt);
-    if (rc!= SQLITE_DONE) {
+    step_query(sql, &stmt, GET_CALL_INFO);
 
-        log_sqlite_error("sqlite3_step failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //find the id of the new entry
-    strcpy(sql, "SELECT MAX(GUILD_ID) FROM GUILD_TABLE");
-
-    //prepare the sql statement
-    rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
-
-    //process the sql statement
-    int id=0;
-    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-
-        id=sqlite3_column_int(stmt, 0);
-    }
-
-    //destroy the sql statement
-    rc=sqlite3_finalize(stmt);
-    if(rc!=SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize failed", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fprintf(stderr, "Guild [%s] added successfully\n", guild_tag);
 
     log_event(EVENT_INITIALISATION, "Added guild [%s] to GUILD_TABLE", guild_tag);
-
-    return id;
 }
 
 
@@ -194,17 +152,13 @@ void get_db_guild_member_list(int guild_id, int order){
         stop_server();
     }
 
-    //prepare sql command
-    int rc=sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if(rc!=SQLITE_OK){
-
-        log_sqlite_error("sqlite3_prepare_v2 failed", GET_CALL_INFO, rc, sql);
-    }
+    prepare_query(sql, &stmt, GET_CALL_INFO);
 
     //zero the struct
     memset(&guild_member_list, 0, sizeof(guild_member_list));
 
     int i=0;
+    int rc=0;
 
     //execute sql command
     while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -227,12 +181,7 @@ void get_db_guild_member_list(int guild_id, int order){
 
     guild_member_list.guild_member_count=i;
 
-    //destroy sql command
-    rc=sqlite3_finalize(stmt);
-    if (rc != SQLITE_OK) {
-
-        log_sqlite_error("sqlite3_finalize", GET_CALL_INFO, rc, sql);
-    }
+    destroy_query(sql, &stmt, GET_CALL_INFO);
 }
 
 
@@ -269,4 +218,3 @@ void batch_add_guilds(char *file_name){
 
     fclose(file);
 }
-

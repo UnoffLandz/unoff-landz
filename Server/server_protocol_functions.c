@@ -906,6 +906,8 @@ void add_new_enhanced_actor_packet(int actor_node, unsigned char *packet, size_t
     actor.max_health=clients.client[actor_node].max_health;
     actor.current_health=clients.client[actor_node].current_health;
     actor.player_type=clients.client[actor_node].player_type;
+    actor.neck_attachment_type=clients.client[actor_node].neck_attachment_type;
+    actor.actor_scale=clients.client[actor_node].actor_scale;
 
     _add_new_enhanced_actor_packet(packet, packet_length);
 }
@@ -985,8 +987,7 @@ void _add_new_enhanced_actor_packet(unsigned char *packet, size_t *packet_length
     _packet1.rot=45; //rotation angle (set to 45 pending further development)
 
     _packet1.char_type=(unsigned char)actor.char_type;
-    _packet1.unused=0; //unused (set to 0)
-
+    _packet1.unused=(unsigned char)0;
     _packet1.skin_type=(unsigned char)actor.skin_type;
     _packet1.hair_type=(unsigned char)actor.hair_type;
     _packet1.shirt_type=(unsigned char)actor.shirt_type;
@@ -997,16 +998,17 @@ void _add_new_enhanced_actor_packet(unsigned char *packet, size_t *packet_length
     _packet1.weapon_type=(unsigned char)actor.weapon_type;
     _packet1.cape_type=(unsigned char)actor.cape_type;
     _packet1.helmet_type=(unsigned char)actor.helmet_type;
+
     _packet1.frame_type=(unsigned char)actor.frame;
     _packet1.max_health=(unsigned char)actor.max_health;
     _packet1.current_health=(unsigned char)actor.current_health;
     _packet1.player_type=(unsigned char)actor.player_type;
 
     //add data to packet 2
-    _packet2.unknown=0;
-    _packet2.char_size=64; //char size (min=2 normal=64 max=127)// TODO (themuntdregger#1#): add actor scale to actor struct and database table
-    _packet2.riding=255; //riding (nothing=255  brown horse=200)
-    _packet2.neck_attachment=0;//neck attachment
+    _packet2.unknown=(unsigned char)0;
+    _packet2.char_size=(unsigned char)actor.actor_scale;
+    _packet2.riding=(unsigned char)255; //riding (nothing=255  brown horse=200)
+    _packet2.neck_attachment=(unsigned char)actor.neck_attachment_type;
 
     //create the complete packet
     memcpy(packet, &_packet1, sizeof(_packet1)-80 + banner_length+1);

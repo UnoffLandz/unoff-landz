@@ -66,16 +66,18 @@ void process_log_in(int actor_node, const unsigned char *packet){
 
     log_event(EVENT_SESSION, "login attempt char name [%s] password [%s]", char_name, password);
 
-    //get the char_id corresponding to the char name and load char from the database into
-    //the character struct
-    int char_id=get_db_char_data(char_name, 0);
+    //get the char_id corresponding to the char name
+    int char_id=get_db_char_id(char_name);
 
-    if(char_id==-1) {
+    if(char_id==0) {
 
         send_you_dont_exist(socket);
         log_event(EVENT_SESSION, "login rejected - unknown char name");
         return;
     }
+
+    //load the char data into the char struct
+    get_db_char_data(char_id);
 
     //check we have the correct password for our char
     if(strcmp(password, character.password)!=0){
