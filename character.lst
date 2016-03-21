@@ -1,1 +1,6 @@
-Player test 1 1 1 20 1 1 1 1 1 1 1 0 64
+#char   char     char   player guild guild char skin hair shirt pants boots head neck             map map
+#name   password status type   id    rank  type type type type  type  type  type attachment scale id  tile
+#------ -------- ------ ------ ----- ----- ---- ---- ---- ----- ----- ----- ---- ---------- ----- --- -----
+ NPC_1  ""       1      2      0     0     1    0    0    0     0     0     0    0          64    1   27226
+ NPC_2  ""       1      2      0     0     1    0    0    0     0     0     0    0          64    1   27227
+ Player test     1      1      1     20    1    1    1    1     1     1     1    0          64    1   27225

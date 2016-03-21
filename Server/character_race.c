@@ -21,7 +21,7 @@
 #include "clients.h"
 #include "character_type.h"
 
-struct race_type race[MAX_RACES];
+struct race_list_type races;
 
 int get_char_race_id(int actor_node){
 
@@ -29,5 +29,5 @@ int get_char_race_id(int actor_node){
 
     int char_type_id=clients.client[actor_node].char_type;
 
-    return character_type[char_type_id].race_id;
+    return character_types.character_type[char_type_id].race_id;
 }

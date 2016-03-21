@@ -162,7 +162,7 @@ void batch_add_skills(char *file_name, int skill_type_id){
 
         sscanf(line, "%*s");
 
-        char output[2][80];
+        char output[2][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 

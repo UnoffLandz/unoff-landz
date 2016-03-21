@@ -52,7 +52,7 @@ void batch_add_skills(char *file_name, int skill_type_id);
 
     RETURNS : void
 
-    PURPOSE : allows updating of skills data
+    PURPOSE : allows updating of skills profiles
 
     NOTES   :
 */

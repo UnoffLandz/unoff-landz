@@ -139,7 +139,7 @@ void extract_file_name(char *str_in, char *str_out){
 }
 
 
-void parse_line(char *line, char output[][80]){
+void parse_line(char *line, char output[][MAX_LST_LINE_LEN]){
 
     /** public function - see header */
 

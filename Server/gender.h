@@ -20,15 +20,22 @@
 #ifndef CHARACTER_GENDER_H_INCLUDED
 #define CHARACTER_GENDER_H_INCLUDED
 
-#define MAX_GENDER 2
+#define MAX_GENDERS 2
 #define GENDER_FILE "gender.lst"
+
+#include <stdbool.h> //supports bool datatype
 
 struct gender_type{
     char gender_name[20];
     char char_count;
 };
-extern struct gender_type gender[MAX_GENDER];
 
+struct gender_list_type {
+
+    bool data_loaded;
+    struct gender_type gender[MAX_GENDERS];
+};
+extern struct gender_list_type genders;
 
 /** RESULT  : gets the character gender
 

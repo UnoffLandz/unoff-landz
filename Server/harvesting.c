@@ -41,7 +41,7 @@ void process_char_harvest(int actor_node, time_t current_time){
 
         //get the harvest interval for item
         int object_id=clients.client[actor_node].harvest_object_id;
-        int harvest_interval=object[object_id].harvest_interval;
+        int harvest_interval=objects.object[object_id].harvest_interval;
 
         if(clients.client[actor_node].time_of_last_harvest + harvest_interval < current_time){
 
@@ -78,7 +78,7 @@ void stop_harvesting(int actor_node){
     send_text(socket, CHAT_SERVER, "%cYou stopped harvesting.", c_green3+127);
 
     int object_id=clients.client[actor_node].harvest_object_id;
-    log_text(EVENT_SESSION, " char [%s] stopped harvesting [%s]", clients.client[actor_node].char_name, object[object_id].object_name);
+    log_text(EVENT_SESSION, " char [%s] stopped harvesting [%s]", clients.client[actor_node].char_name, objects.object[object_id].object_name);
 }
 
 
@@ -103,7 +103,7 @@ void start_harvesting(int actor_node, int threed_object_list_pos){
     }
 
     //check if item is harvestable
-    if(object[object_id].harvestable==false){
+    if(objects.object[object_id].harvestable==false){
 
         send_text(socket, CHAT_SERVER, "%cItem isn't harvestable!", c_red3+122);
         return;
@@ -118,7 +118,7 @@ void start_harvesting(int actor_node, int threed_object_list_pos){
         return;
     }
 
-    send_text(socket, CHAT_SERVER, "%cYou started to harvest %s!. ", c_green3+127, object[object_id].object_name);
+    send_text(socket, CHAT_SERVER, "%cYou started to harvest %s!. ", c_green3+127, objects.object[object_id].object_name);
 
     //set the chars harvest flag to show that it is now harvesting and set the item
     clients.client[actor_node].harvest_flag=true;
@@ -133,8 +133,8 @@ void start_harvesting(int actor_node, int threed_object_list_pos){
     clients.client[actor_node].harvest_amount=1; //default amount
 
     //set the harvest interval
-    clients.client[actor_node].harvest_interval=object[object_id].harvest_interval;
+    clients.client[actor_node].harvest_interval=objects.object[object_id].harvest_interval;
 
-    log_text(EVENT_SESSION, "char [%s] started harvesting [%s]", clients.client[actor_node].char_name, object[object_id].object_name);
+    log_text(EVENT_SESSION, "char [%s] started harvesting [%s]", clients.client[actor_node].char_name, objects.object[object_id].object_name);
 }
 

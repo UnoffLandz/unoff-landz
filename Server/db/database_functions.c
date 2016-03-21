@@ -57,6 +57,8 @@
 #include "../season.h"
 #include "../character_skill.h"
 
+struct database_table_type database_table[MAX_DB_TABLES];
+
 sqlite3 *db; // declare the database handle as global
 
 void check_db_open(const char *module, const char *func, const int line){
@@ -443,39 +445,21 @@ void populate_database(const char *db_filename){
     // inserts a blank line to create a logical separator with subsequent log entries
     log_text(EVENT_INITIALISATION, "");
 
-    //add and load race before char type
-    batch_add_races(RACE_FILE);
-    load_db_char_races();
-
-    //add and load gender before char type
-    batch_add_gender(GENDER_FILE);
-    load_db_genders();
-
+    batch_add_races(RACE_FILE); //add races before char types
+    batch_add_genders(GENDER_FILE);//add genders before char types
     batch_add_char_types(CHAR_TYPE_FILE);
-
     batch_add_seasons(SEASON_FILE);
-
     batch_add_objects(OBJECT_FILE); //add objects before e3ds and maps
-
-    batch_add_e3ds(E3D_FILE);
-    batch_add_maps(MAP_FILE);//also adds map objects
-
+    batch_add_e3ds(E3D_FILE); //add e3ds before map objects
+    batch_add_maps(MAP_FILE); //add maps before map objects
+    batch_add_map_objects();
     batch_add_skills(HARVESTING_SKILL_FILE, HARVESTING_SKILL);
-
     batch_add_attributes(ATTR_DAY_VISION_FILE, ATTR_DAY_VISION);
     batch_add_attributes(ATTR_NIGHT_VISION_FILE, ATTR_NIGHT_VISION);
     batch_add_attributes(ATTR_CARRY_CAPACITY_FILE, ATTR_CARRY_CAPACITY);
-
     batch_add_guilds(GUILD_FILE);
-
-    //add and load game data before chars
     batch_add_game_data(GAME_DATA_FILE);
-    load_db_game_data();
-
-    //add and load channels before chars
-    batch_add_channels(CHANNELS_FILE);
-    load_db_channels();
-
+    batch_add_channels(CHANNELS_FILE); //add channels before characters
     batch_add_characters(CHARACTER_FILE);
 
     fprintf(stderr, "\nDatabase [%s] created\n", db_filename);

@@ -21,7 +21,7 @@
 #include "clients.h"
 #include "character_type.h"
 
-struct gender_type gender[MAX_GENDER];
+struct gender_list_type genders;
 
 int get_char_gender_id(int actor_node){
 
@@ -29,5 +29,5 @@ int get_char_gender_id(int actor_node){
 
     int char_type_id=clients.client[actor_node].char_type;
 
-    return character_type[char_type_id].gender_id;
+    return character_types.character_type[char_type_id].gender_id;
 }

@@ -33,8 +33,13 @@ struct e3d_type{
     float z;
     int object_id;
 };
-extern struct e3d_type e3d[MAX_E3D_TYPES];
 
+struct e3d_list_type {
+
+    bool data_loaded;
+    struct e3d_type e3d[MAX_E3D_TYPES];
+};
+extern struct e3d_list_type e3ds;
 
 struct __attribute__((__packed__)){
 

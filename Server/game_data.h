@@ -20,6 +20,7 @@
 #ifndef GAME_DATA_H_INCLUDED
 #define GAME_DATA_H_INCLUDED
 
+#include <stdbool.h>    // supports bool data type
 #include <sys/time.h>   // supports time_t data type
 
 #define GAME_DATA_FILE "game_data.lst"
@@ -39,6 +40,7 @@ struct game_data_type {
     int year_length;
     int database_version;
     char server_name[80];
+    bool data_loaded;
 };
 extern struct game_data_type game_data;
 

@@ -126,11 +126,11 @@ void send_char_details(int actor_node, const char *char_name){
 
     send_text(socket, CHAT_SERVER, "%cCharacter    :%s", c_green3+127, character.char_name);
 
-    int race_id=character_type[character.char_type].race_id;
-    send_text(socket, CHAT_SERVER, "%cRace         :%s", c_green3+127, race[race_id].race_name);
+    int race_id=character_types.character_type[character.char_type].race_id;
+    send_text(socket, CHAT_SERVER, "%cRace         :%s", c_green3+127, races.race[race_id].race_name);
 
-    int gender_id=character_type[character.char_type].gender_id;
-    send_text(socket, CHAT_SERVER, "%cGender       :%s", c_green3+127, gender[gender_id].gender_name);
+    int gender_id=character_types.character_type[character.char_type].gender_id;
+    send_text(socket, CHAT_SERVER, "%cGender       :%s", c_green3+127, genders.gender[gender_id].gender_name);
 
     char time_stamp_str[9]="";
     char date_stamp_str[11]="";

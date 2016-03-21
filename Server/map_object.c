@@ -27,16 +27,14 @@
 #include "string_functions.h"
 #include "db/db_map_object_tbl.h"
 
-struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
-
 
 int get_object_id(int map_id, int threed_object_list_pos){
 
     /** public function - see header */
 
-    int e3d_id=map_object[threed_object_list_pos][map_id].e3d_id;
+    int e3d_id=map_objects.map_object[threed_object_list_pos][map_id].e3d_id;
 
-    return e3d[e3d_id].object_id;
+    return e3ds.e3d[e3d_id].object_id;
 }
 
 
@@ -44,7 +42,5 @@ int get_object_tile(int map_id, int threed_object_list_pos){
 
     /** public function - see header */
 
-    return map_object[threed_object_list_pos][map_id].tile;
+    return map_objects.map_object[threed_object_list_pos][map_id].tile;
 }
-
-

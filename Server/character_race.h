@@ -21,15 +21,24 @@
 #ifndef CHARACTER_RACES_H_INCLUDED
 #define CHARACTER_RACES_H_INCLUDED
 
+#include <stdbool.h>
+
 #define MAX_RACES 7
 #define RACE_FILE "race.lst"
 
 struct race_type{
+
     char race_name[20];
     char race_description[160];
     int char_count;
 };
-extern struct race_type race[MAX_RACES];
+
+struct race_list_type {
+
+    bool data_loaded;
+    struct race_type race[MAX_RACES];
+};
+extern struct race_list_type races;
 
 
 /** RESULT  : gets the character race

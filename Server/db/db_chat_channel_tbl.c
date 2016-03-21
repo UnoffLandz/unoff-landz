@@ -57,26 +57,26 @@ void load_db_channels(){
             stop_server();
         }
 
-        channel[chan_id].chan_type=sqlite3_column_int(stmt, 1);
-        channel[chan_id].owner_id=sqlite3_column_int(stmt, 2);
+        channels.channel[chan_id].chan_type=sqlite3_column_int(stmt, 1);
+        channels.channel[chan_id].owner_id=sqlite3_column_int(stmt, 2);
 
         //test each string for null values otherwise the strcpy will segfault
         if(sqlite3_column_text(stmt, 3))
-            strcpy(channel[chan_id].password, (char*)sqlite3_column_text(stmt, 3));
+            strcpy(channels.channel[chan_id].password, (char*)sqlite3_column_text(stmt, 3));
 
         if(sqlite3_column_text(stmt, 4))
-            strcpy(channel[chan_id].channel_name, (char*)sqlite3_column_text(stmt, 4));
+            strcpy(channels.channel[chan_id].channel_name, (char*)sqlite3_column_text(stmt, 4));
 
         if(sqlite3_column_text(stmt, 5))
-            strcpy(channel[chan_id].description, (char*)sqlite3_column_text(stmt, 5));
+            strcpy(channels.channel[chan_id].description, (char*)sqlite3_column_text(stmt, 5));
 
         if(sqlite3_column_int(stmt, 6)==1) {
 
-            channel[chan_id].new_chars=true;
+            channels.channel[chan_id].new_chars=true;
         }
         else if(sqlite3_column_int(stmt, 6)==0){
 
-            channel[chan_id].new_chars=false;
+            channels.channel[chan_id].new_chars=false;
         }
         else {
 
@@ -84,7 +84,7 @@ void load_db_channels(){
             stop_server();
         }
 
-        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", chan_id, channel[chan_id].channel_name);
+        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", chan_id, channels.channel[chan_id].channel_name);
 
         i++;
     }
@@ -157,7 +157,7 @@ void batch_add_channels(char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[7][80];
+        char output[7][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
@@ -165,4 +165,12 @@ void batch_add_channels(char *file_name){
      }
 
     fclose(file);
+
+    //load channel data to memory so this can be used by batch_add_character
+    load_db_channels();
+
+    //mark data as loaded
+    channels.data_loaded=true;
+
+
 }

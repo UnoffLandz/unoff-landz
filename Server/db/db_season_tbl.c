@@ -55,13 +55,13 @@ void load_db_seasons(){
         int id=sqlite3_column_int(stmt,0);
 
         //handle null string which would crash strcpy
-        if(sqlite3_column_text(stmt, 1)) strcpy(season[id].season_name, (char*)sqlite3_column_text(stmt, 1));
+        if(sqlite3_column_text(stmt, 1)) strcpy(seasons.season[id].season_name, (char*)sqlite3_column_text(stmt, 1));
 
         //handle null string which would crash strcpy
-        if(sqlite3_column_text(stmt, 2)) strcpy(season[id].season_description, (char*)sqlite3_column_text(stmt, 2));
+        if(sqlite3_column_text(stmt, 2)) strcpy(seasons.season[id].season_description, (char*)sqlite3_column_text(stmt, 2));
 
-        season[id].start_day=sqlite3_column_int(stmt, 3);
-        season[id].end_day=sqlite3_column_int(stmt, 4);
+        seasons.season[id].start_day=sqlite3_column_int(stmt, 3);
+        seasons.season[id].end_day=sqlite3_column_int(stmt, 4);
 
         i++;
     }
@@ -76,49 +76,6 @@ void load_db_seasons(){
 }
 
 
-void add_db_season(int season_id, char *season_name, char *season_description, int start_day, int end_day){
-
-    /** RESULT  : adds season data to the season data table
-
-        RETURNS : void
-
-        PURPOSE : used in batch_add_seasons function
-
-        NOTES   :
-    **/
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("SEASON_TABLE", GET_CALL_INFO);
-
-    char *sql="INSERT INTO SEASON_TABLE("  \
-        "SEASON_ID,"   \
-        "SEASON_NAME,"    \
-        "SEASON_DESCRIPTION,"  \
-        "START_DAY,"   \
-        "END_DAY" \
-        ") VALUES(?, ?, ?, ?, ?)";
-
-    sqlite3_stmt *stmt;
-
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    sqlite3_bind_int(stmt, 1, season_id);
-    sqlite3_bind_text(stmt, 2, season_name, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, season_description, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 4, start_day);
-    sqlite3_bind_int(stmt, 5, end_day);
-
-    step_query(sql, &stmt, GET_CALL_INFO);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    fprintf(stderr, "Season [%s] added successfully\n", season_name);
-
-    log_event(EVENT_SESSION, "Added season [%s] to SEASON_TABLE", season_name);
-}
-
-
 void batch_add_seasons(char *file_name){
 
     /** public function - see header */
@@ -127,7 +84,7 @@ void batch_add_seasons(char *file_name){
 
     if((file=fopen(file_name, "r"))==NULL){
 
-        log_event(EVENT_ERROR, "season list file [%s] not found", file_name);
+        log_event(EVENT_ERROR, "file [%s] not found", file_name);
         stop_server();
     }
 
@@ -137,18 +94,69 @@ void batch_add_seasons(char *file_name){
     log_event(EVENT_INITIALISATION, "\nAdding seasons specified in file [%s]", file_name);
     fprintf(stderr, "\nAdding seasons specified in file [%s]\n", file_name);
 
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("SEASON_TABLE", GET_CALL_INFO);
+
+    sqlite3_stmt *stmt;
+    char *sErrMsg = 0;
+
+char *sql="INSERT INTO SEASON_TABLE("  \
+        "SEASON_ID,"   \
+        "SEASON_NAME,"    \
+        "SEASON_DESCRIPTION,"  \
+        "START_DAY,"   \
+        "END_DAY" \
+        ") VALUES(?, ?, ?, ?, ?)";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    int rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    if(rc!=SQLITE_OK){
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *&sErrMsg, sql);
+    }
+
     while (fgets(line, sizeof(line), file)) {
 
         line_counter++;
 
         sscanf(line, "%*s");
 
-        char output[5][80];
+        char output[5][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_season(atoi(output[0]), output[1], output[2], atoi(output[3]), atoi(output[4]));
+        sqlite3_bind_int(stmt, 1, atoi(output[0]));                 //season_id
+        sqlite3_bind_text(stmt, 2, output[1], -1, SQLITE_STATIC);   //season name
+        sqlite3_bind_text(stmt, 3, output[2], -1, SQLITE_STATIC);   //season description
+        sqlite3_bind_int(stmt, 4, atoi(output[3]));                 //start day
+        sqlite3_bind_int(stmt, 5, atoi(output[4]));                 //end_day
+
+        step_query(sql, &stmt, GET_CALL_INFO);
+
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+
+        fprintf(stderr, "season [%i] [%s] added successfully\n", atoi(output[0]), output[1]);
+        log_event(EVENT_SESSION, "Added season [%i] [%s] to SEASON_TABLE", atoi(output[0]), output[1]);
     }
 
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    if (rc!=SQLITE_OK) {
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *sErrMsg, sql);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
     fclose(file);
+
+    //load data to memory so this can be used by other functions
+    load_db_seasons();
+
+    //mark data as loaded
+    seasons.data_loaded=true;
 }

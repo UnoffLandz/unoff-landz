@@ -57,7 +57,7 @@ void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node){
 
     if(slot==-1){
 
-        sprintf(text_out, "Sorry %s.\n\nI'm buying %s but you don't appear to have any.", clients.client[actor_node].char_name, object[object_id_required].object_name );
+        sprintf(text_out, "Sorry %s.\n\nI'm buying %s but you don't appear to have any.", clients.client[actor_node].char_name, objects.object[object_id_required].object_name );
         send_npc_info(socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
         send_npc_text(socket, text_out);
         return;
@@ -89,7 +89,7 @@ void npc_give_sale_options(int actor_node, int npc_actor_node, int action_node){
     //send npc communication
     int object_id_given=npc_action[action_node].object_id_given;
 
-    sprintf(text_out, "Hello %s.\n\nI am buying %i %s for 1 %s. How many would you like to sell to me?", clients.client[actor_node].char_name,  npc_action[action_node].object_amount_required, object[object_id_required].object_name, object[object_id_given].object_name);
+    sprintf(text_out, "Hello %s.\n\nI am buying %i %s for 1 %s. How many would you like to sell to me?", clients.client[actor_node].char_name,  npc_action[action_node].object_amount_required, objects.object[object_id_required].object_name, objects.object[object_id_given].object_name);
     send_npc_text(socket, text_out);
     send_npc_info(socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
     send_npc_options_list(socket, npc_actor_node, option_str);
@@ -132,7 +132,7 @@ void npc_sell_object(int actor_node, int npc_actor_node, int choice){
     //check actor has payment for the object to be purchased
     if(item_required_slot==-1 || clients.client[actor_node].inventory[item_required_slot].amount < object_amount_required){
 
-        sprintf(text_out, "Sorry %s.\n\nYou don't have enough %s to buy that amount.", clients.client[actor_node].char_name, object[object_id_required].object_name);
+        sprintf(text_out, "Sorry %s.\n\nYou don't have enough %s to buy that amount.", clients.client[actor_node].char_name, objects.object[object_id_required].object_name);
         send_npc_info(clients.client[actor_node].socket, clients.client[npc_actor_node].char_name, clients.client[npc_actor_node].portrait_id);
         send_npc_text(socket, text_out);
         return;
@@ -197,7 +197,7 @@ void npc_give_boat_options(int actor_node, int npc_actor_node, int action_node){
                     clients.client[actor_node].npc_option[k].boat_departure_time / 60,
                     clients.client[actor_node].npc_option[k].boat_departure_time % 60,
                     clients.client[actor_node].npc_option[k].price,
-                    object[object_id_required].object_name);
+                    objects.object[object_id_required].object_name);
 
                 k++;
             }
@@ -240,7 +240,7 @@ void npc_sell_boat_ticket(int actor_node, int npc_actor_node, int ticket_node){
 
     if(slot==-1 || clients.client[actor_node].inventory[slot].amount < object_amount_required ){
 
-        sprintf(text_out, "Sorry %s.\n\nYou don't have enough %s to buy that ticket.", clients.client[actor_node].char_name, object[object_id_required].object_name);
+        sprintf(text_out, "Sorry %s.\n\nYou don't have enough %s to buy that ticket.", clients.client[actor_node].char_name, objects.object[object_id_required].object_name);
         send_npc_text(socket, text_out);
         return;
     }

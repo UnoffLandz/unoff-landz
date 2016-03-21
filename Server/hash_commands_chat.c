@@ -89,9 +89,9 @@ int hash_cl(int actor_node, char *text) {
 
     for(int i=0; i<MAX_CHANNELS; i++){
 
-        if(channel[i].chan_type!=CHAN_VACANT) {
+        if(channels.channel[i].chan_type!=CHAN_VACANT) {
 
-            send_text(socket, CHAT_SERVER, "%c%i %s %-10s %-30s", c_blue1+127, i, "  ", channel[i].channel_name, channel[i].description);
+            send_text(socket, CHAT_SERVER, "%c%i %s %-10s %-30s", c_blue1+127, i, "  ", channels.channel[i].channel_name, channels.channel[i].description);
         }
     }
 
@@ -117,8 +117,8 @@ int hash_cp(int actor_node, char *text) {
 
     int chan_id=clients.client[socket].chan[active_chan_slot-31];
 
-    send_text(socket, CHAT_SERVER, "%cListing for channel [%i]: %s", c_blue1+127, chan_id, channel[chan_id].channel_name);
-    send_text(socket, CHAT_SERVER, "%cDescription: %s", c_blue1+127, channel[chan_id].description);
+    send_text(socket, CHAT_SERVER, "%cListing for channel [%i]: %s", c_blue1+127, chan_id, channels.channel[chan_id].channel_name);
+    send_text(socket, CHAT_SERVER, "%cDescription: %s", c_blue1+127, channels.channel[chan_id].description);
     send_text(socket, CHAT_SERVER, "%cCharacters in channel...", c_blue1+127);
 
     for(int i=0; i<MAX_ACTORS; i++){

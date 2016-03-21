@@ -23,6 +23,8 @@
 #define MAX_SEASONS 4
 #define SEASON_FILE "season.lst"
 
+#include <stdbool.h> //supports bool datatype
+
 struct season_type{
 
     int season_id;
@@ -31,6 +33,23 @@ struct season_type{
     int start_day;
     int end_day;
 };
-extern struct season_type season[MAX_SEASONS];
+
+struct season_list_type {
+
+    bool data_loaded;
+    struct season_type season[MAX_SEASONS];
+};
+extern struct season_list_type seasons;
+
+
+/** RESULT  : gets the season name and description based on the number of game days
+
+    RETURNS : void
+
+    PURPOSE : code modularity
+
+    NOTES   : used by send_verbose_date
+**/
+void get_game_season(int game_days, char *season_name, char *season_description);
 
 #endif // SEASON_H_INCLUDED

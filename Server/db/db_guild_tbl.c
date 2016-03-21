@@ -140,19 +140,21 @@ void get_db_guild_member_list(int guild_id, int order){
 
     if(order==GUILD_ORDER_RANK){
 
-        snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE GUILD_ID=%i ORDER BY GUILD_RANK", guild_id);
+        strcpy(sql, "SELECT * FROM CHARACTER_TABLE WHERE GUILD_ID=? ORDER BY GUILD_RANK");
     }
     else if (order==GUILD_ORDER_TIME){
 
-        snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE GUILD_ID=%i ORDER BY JOINED_GUILD", guild_id);
+        strcpy(sql, "SELECT * FROM CHARACTER_TABLE WHERE GUILD_ID=? ORDER BY JOINED_GUILD");
     }
     else {
 
-        log_event(EVENT_ERROR, "unknown order type [%i] function %s: module %s: line %i", order, GET_CALL_INFO);
+        log_event(EVENT_ERROR, "unknown order type [%i] in function %s: module %s: line %i", order, GET_CALL_INFO);
         stop_server();
     }
 
     prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, guild_id);
 
     //zero the struct
     memset(&guild_member_list, 0, sizeof(guild_member_list));
@@ -209,7 +211,7 @@ void batch_add_guilds(char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[6][80];
+        char output[6][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 

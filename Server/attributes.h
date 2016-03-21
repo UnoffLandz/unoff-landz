@@ -37,11 +37,18 @@ struct attribute_ {
 };
 extern struct attribute_ attribute[MAX_RACES];
 
-enum{
+struct attribute_name_type{
 
-    ATTR_CARRY_CAPACITY=1,
-    ATTR_DAY_VISION=2,
-    ATTR_NIGHT_VISION=3
+    int attribute_id;
+    char attribute[80];
+};
+extern struct attribute_name_type attribute_name[MAX_ATTRIBUTES];
+
+enum{
+    ATTR_NONE,
+    ATTR_CARRY_CAPACITY,
+    ATTR_DAY_VISION,
+    ATTR_NIGHT_VISION,
 };
 
 enum{//attribute type values used in the SEND_PARTIAL_STAT command
@@ -136,7 +143,5 @@ enum{//attribute type values used in the SEND_PARTIAL_STAT command
     ACTION_POINTS_CUR=87,
     ACTION_POINTS_BASE=88
 };
-
-extern char attribute_name[MAX_ATTRIBUTES][40];
 
 #endif // ATTRIBUTES_H_INCLUDED

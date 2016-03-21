@@ -17,25 +17,34 @@
 	along with unoff_server_4.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************************************************/
 
-#ifndef CHARACTER_TYPE_H_INCLUDED
-#define CHARACTER_TYPE_H_INCLUDED
+#include <string.h> //support for strcpy function
 
-#define MAX_CHARACTER_TYPES 42 //the highest character type code used by the client
-#define CHAR_TYPE_FILE "char_type.lst"
+#include "season.h"
+#include "game_data.h"
+#include "logging.h"
+#include "server_start_stop.h"
 
-#include <stdbool.h> //supports bool datatype
+struct season_list_type seasons;
 
-struct character_type_type{
-    int race_id;
-    int gender_id;
-    int char_count;
-};
 
-struct character_type_list_type {
+void get_game_season(int game_days, char *season_name, char *season_description){
 
-    bool data_loaded;
-    struct character_type_type character_type[MAX_CHARACTER_TYPES];
-};
-extern struct character_type_list_type character_types;
+    /** public function - see header */
 
-#endif // CHARACTER_TYPE_H_INCLUDED
+   int season_days=game_days % game_data.year_length;
+
+    for(int i=0; i<MAX_SEASONS; i++){
+
+        if(season_days>=seasons.season[i].start_day && season_days<seasons.season[i].end_day){
+
+            strcpy(season_name, seasons.season[i].season_name);
+            strcpy(season_description, seasons.season[i].season_description);
+            return;
+        }
+    }
+
+    log_event(EVENT_ERROR, "cannot find season in function %s: module %s: line %i", GET_CALL_INFO);
+    stop_server();
+}
+
+

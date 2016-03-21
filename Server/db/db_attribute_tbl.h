@@ -48,4 +48,15 @@ void load_db_attributes();
 */
 void batch_add_attributes(char *file_name, int attribute_type_id);
 
+
+/** RESULT  : removes a specific attribute type from the database
+
+    RETURNS : void
+
+    PURPOSE : allows updating of attribute profiles
+
+    NOTES   :
+*/
+void delete_db_attribute(int attribute_type_id);
+
 #endif // DB_ATTRIBUTE_TBL_H_INCLUDED

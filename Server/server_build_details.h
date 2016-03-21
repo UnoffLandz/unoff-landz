@@ -42,7 +42,7 @@ Dropped (59) replace get_db_char_count with char count field in game_data table 
 
 Done (40) change sql statements to use bind parameters rather than inserts
 
-Done (39) implement prepare and destroy wrapper functions
+Done (39) implement prepare and destroy wrapper for sqlite functions
 
 Dropped (17) map object reserve respawn (duplicate of 43)
 
@@ -50,7 +50,7 @@ Done (63) replace log_sqlite_error functions
 
 Done added sqlite return code explanation to logging
 
-Fixed (6) Char bobbing
+Fixed (6) char bobbing now stopped
 
 Done char now automatically stands and remains standing if moved from sitting position
 
@@ -60,10 +60,37 @@ Done refactored protocol array to remove redundant placeholders
 
 Done refactored get_db_char_data function
 
-Partial (65) added sqlite_exec to skills, attributes, races when loading from file to database
+Partial (65) added sqlite_exec to skills, attributes, races, genders, char_types e3d, maps
+when loading from file to database
 
-Partial (69) change char sql[MAX_SQL_LEN] to char *sql
+Done (69) change char sql[MAX_SQL_LEN] to char *sql where possible
 
+Partial (62) add load_data at the end of batch_add functions so as data can be reused by
+other functions during database creation: races, genders, e3d, season, objects
+
+Partial (71) combine add_db functions into batch_add functions wherever possible
+races genders e3ds character_types, season, objects
+
+Done (72) implement struct wrapper so as this can record if required data has been loaded
+from database (required during database creation): races genders game_data channels
+character_types maps map_objects seasons objects
+
+Dropped (64) transfer send_guild_details function in guild.c to db_guild_tbl: this
+function has now been changed so that it doesn't directly interface with the database
+
+Done (58) Added command line options to reload attributes from text file
+
+Done reordered command line options
+
+Done (70) get_db_guild_member_list and update_db_map_objects functions now bind data
+to the sql statement rather than using sprintf
+
+Done map objects are now loaded through a separate batch_add function rather than as
+part of the batch_add_maps function
+
+Partial (68) added #notes field to lst files: character.lst
+
+Done (72) NPC's added from char list
 
 ***************************************************************************************************
 
@@ -71,29 +98,32 @@ Partial (69) change char sql[MAX_SQL_LEN] to char *sql
 Ref Item
 --- -------------------------------------------------------------
 
-70. refactor get_db_guild_member_list and update_db_map_objects to use bind
+74. Separate module for server functions in main (to reduce lines to less than 1000)
 
-69. change char sql[MAX_SQL_LEN] to char *sql (only get_db_guild_member_list and update_db_map_objects remaining)
+73. add weapons etc to CHARACTER TABLE and client struct
 
-68. add #notes field to lst files
+71. combine add_db functions into batch_add functions wherever possible:
+npc_action, npc_trigger
+
+65. use sqlite3_exec to speed up loading from file:
+chars, chans, guilds, npc_action, npc_trigger
+
+62. add load_data function within batch add functions:
+chars, chans, guilds, npc_action, npc_trigger
+
+68. add #notes field to lst files:
+attributes, races, char types, chat, e3d, game data, gender, guilds, maps, npc action
+npc trigger, objects, skills
 
 66. stop_server needs to get function module and line from calling process
-
-65. use sqlite3_exec to speed up loading from file for chars, char types, chans, e3d,
-gender, guilds, map_objects, maps, npc_action, npc_trigger, objects, seasons
-
-64. transfer function send_guild_details in guild.c to db_guild_tbl
-
-62. add load_data function within batch add functions
-
-58. Command line options to reload attributes from text file
 
 57. Fix error in map jump command
 
 55. We have three lots of identical code in main.c to close a connection.
     Try and amalgamate
 
-50. Implement specific function to update char to database
+50. Implement specific function to update char to database (to avoid database actions
+that don't use bind)
 
 49. Implement function callback for idle buffer
 

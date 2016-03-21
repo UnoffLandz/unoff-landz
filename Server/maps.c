@@ -36,6 +36,7 @@
 #include "db/db_map_object_tbl.h"
 
 struct map_list_type maps;
+struct map_object_list_type map_objects;
 
 
 int get_proximity(int tile_pos_1, int tile_pos_2, int map_id){

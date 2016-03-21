@@ -144,7 +144,7 @@ void batch_add_game_data(char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[7][80];
+        char output[7][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
@@ -153,4 +153,10 @@ void batch_add_game_data(char *file_name){
     }
 
     fclose(file);
+
+    //load data so it can be used by other functions
+    load_db_game_data();
+
+    //mark data as loaded
+    game_data.data_loaded=true;
 }

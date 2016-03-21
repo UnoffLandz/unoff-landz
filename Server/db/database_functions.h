@@ -31,10 +31,18 @@
 #ifndef DATABASE_FUNCTIONS_H_INCLUDED
 #define DATABASE_FUNCTIONS_H_INCLUDED
 
+#include <sqlite3.h>
+
 #define DEFAULT_DATABASE_FILE_NAME "unoff.sqlite"
 #define MAX_SQL_LEN 1024
+#define MAX_DB_TABLES 10
 
-#include <sqlite3.h>
+struct database_table_type{
+
+    char tbl_name[80];
+    char sql[1024];
+};
+extern struct database_table_type database_table[MAX_DB_TABLES];
 
 extern sqlite3 *db; // database handle which is set when function open_database is called
 
@@ -190,6 +198,7 @@ void prepare_query(const char *sql, sqlite3_stmt **stmt, const char *module, con
     NOTES    :
 **/
 void destroy_query(const char *sql, sqlite3_stmt **stmt, const char *module, const char *func, const int line);
+
 
 /** RESULT   : wrapper for sqlite3_step function
 

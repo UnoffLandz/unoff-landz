@@ -27,7 +27,4 @@
 #include "logging.h"
 #include "db/db_object_tbl.h"
 
-struct object_type object[MAX_OBJECT_ID];
-
-
-
+struct object_list_type objects;

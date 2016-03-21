@@ -157,12 +157,12 @@ void start_server(){
     memset(&clients, 0, sizeof(clients));
 
     //clear e3d array and load data
-    memset(&e3d, 0, sizeof(e3d));
+    memset(&e3ds, 0, sizeof(e3ds));
     load_db_e3ds();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //clear object array and load data
-    memset(&object, 0, sizeof(object));
+    memset(&objects, 0, sizeof(objects));
     load_db_objects();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
@@ -172,22 +172,22 @@ void start_server(){
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //clear map object array and load data
-    memset(&map_object, 0, sizeof(map_object));
+    memset(&map_objects, 0, sizeof(map_objects));
     load_db_map_objects();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //clear race array and load data
-    memset(&race, 0, sizeof(race));
+    memset(&races, 0, sizeof(races));
     load_db_char_races();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //clear gender array and load data
-    memset(&gender, 0, sizeof(gender));
+    memset(&genders, 0, sizeof(genders));
     load_db_genders();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //clear char type array and load data
-    memset(&character_type, 0, sizeof(character_type));
+    memset(&character_types, 0, sizeof(character_types));
     load_db_char_types();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
@@ -197,12 +197,12 @@ void start_server(){
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //clear channel array and load data
-    memset(&channel, 0, sizeof(channel));
+    memset(&channels, 0, sizeof(channels));
     load_db_channels();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     //clear season array and load data
-    memset(&season, 0, sizeof(season));
+    memset(&seasons, 0, sizeof(seasons));
     load_db_seasons();
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
@@ -217,27 +217,6 @@ void start_server(){
     log_text(EVENT_INITIALISATION, "");//insert logical separator in log file
 
     /** Experimental NPC code **/
-    clients.client[0].client_node_status=CLIENT_NODE_USED;
-    clients.client[0].player_type=NPC;
-    strcpy(clients.client[0].char_name, "NPC_1");
-    clients.client[0].map_id=1;
-    clients.client[0].map_tile=27225;
-    clients.client[0].char_type=1;
-    clients.client[0].skin_type=0;
-    clients.client[0].hair_type=0;
-    clients.client[0].shirt_type=0;
-    clients.client[0].pants_type=0;
-    clients.client[0].boots_type=0;
-    clients.client[0].head_type=0;
-    clients.client[0].shield_type=0;
-    clients.client[0].weapon_type=0;
-    clients.client[0].cape_type=0;
-    clients.client[0].helmet_type=0;
-    clients.client[0].frame=0;
-    clients.client[0].portrait_id=1;
-    clients.client[0].actor_scale=64;
-    clients.client[0].neck_attachment_type=NECK_NO_ITEM;
-
     npc_trigger[0].trigger_node_status=TRIGGER_NODE_USED;
     npc_trigger[0].actor_node=0; //npc actor node
     npc_trigger[0].trigger_type=TOUCHED;
@@ -270,27 +249,6 @@ void start_server(){
     strcpy(boat[0].arrival_message, "Thank you for sailing with Salty Sea Lines. We hope you enjoyed your voyage and will sail with us again");
     boat[0].boat_map_id=3;
     boat[0].boat_map_tile=4651;
-
-    clients.client[1].client_node_status=CLIENT_NODE_USED;
-    clients.client[1].player_type=NPC;
-    strcpy(clients.client[1].char_name, "NPC_2");
-    clients.client[1].map_id=1;
-    clients.client[1].map_tile=27227;
-    clients.client[1].char_type=1;
-    clients.client[1].skin_type=0;
-    clients.client[1].hair_type=0;
-    clients.client[1].shirt_type=0;
-    clients.client[1].pants_type=0;
-    clients.client[1].boots_type=0;
-    clients.client[1].head_type=0;
-    clients.client[1].shield_type=0;
-    clients.client[1].weapon_type=0;
-    clients.client[1].cape_type=0;
-    clients.client[1].helmet_type=0;
-    clients.client[1].frame=0;
-    clients.client[1].portrait_id=2;
-    clients.client[1].actor_scale=64;
-    clients.client[1].neck_attachment_type=NECK_NO_ITEM;
 
     npc_trigger[2].trigger_node_status=TRIGGER_NODE_USED;
     npc_trigger[2].actor_node=1; //npc actor node
@@ -958,7 +916,10 @@ int main(int argc, char *argv[]){
         bool help;
         bool load_e3d_list;
         bool load_object_list;
-        bool load_harvest_skill_list;
+        bool load_skill_harvest;
+        bool load_attribute_day_vision;
+        bool load_attribute_night_vision;
+        bool load_attribute_carry_capacity;
         bool update_map_objects;
         bool reload_maps;
     }option;
@@ -984,20 +945,32 @@ int main(int argc, char *argv[]){
 
     for(int i=0; i<argc; i++){
 
-        if (strcmp(argv[i], "-S") == 0)option.start_server=true;
         if (strcmp(argv[i], "-C") == 0)option.create_database=true;
-        if (strcmp(argv[i], "-U") == 0)option.upgrade_database=true;
-        if (strcmp(argv[i], "-M") == 0)option.load_map=true;
-        if (strcmp(argv[i], "-L") == 0)option.list_maps=true;
-        if (strcmp(argv[i], "-H") == 0)option.help=true;
+
         if (strcmp(argv[i], "-E") == 0)option.load_e3d_list=true;
-        if (strcmp(argv[i], "-O") == 0)option.load_object_list=true;
-        if (strcmp(argv[i], "-P") == 0)option.load_harvest_skill_list=true;
-        if (strcmp(argv[i], "-R") == 0)option.update_map_objects=true;
-        if (strcmp(argv[i], "-X") == 0)option.reload_maps=true;
+
+        if (strcmp(argv[i], "-H") == 0)option.help=true;
+
+        if (strcmp(argv[i], "-I") == 0)option.load_object_list=true;
+        if (strcmp(argv[i], "-J") == 0)option.load_skill_harvest=true;
+
+        if (strcmp(argv[i], "-M") == 0)option.load_map=true;
+        if (strcmp(argv[i], "-N") == 0)option.list_maps=true;
+        if (strcmp(argv[i], "-O") == 0)option.update_map_objects=true;
+        if (strcmp(argv[i], "-P") == 0)option.reload_maps=true;
+
+        if (strcmp(argv[i], "-S") == 0)option.start_server=true;
+
+        if (strcmp(argv[i], "-U") == 0)option.upgrade_database=true;
+
+        if (strcmp(argv[i], "-V") == 0)option.load_attribute_day_vision=true;
+        if (strcmp(argv[i], "-W") == 0)option.load_attribute_night_vision=true;
+        if (strcmp(argv[i], "-X") == 0)option.load_attribute_carry_capacity=true;
 
         log_text(EVENT_INITIALISATION, "%i [%s]", i, argv[i]);// log each command line option
     }
+
+/*********************************************************************************/
 
     //execute start server
     if(option.start_server==true){
@@ -1014,6 +987,8 @@ int main(int argc, char *argv[]){
 
         return 0;
     }
+
+/*********************************************************************************/
 
     //execute create database
     else if(option.create_database==true){
@@ -1075,6 +1050,8 @@ int main(int argc, char *argv[]){
         exit(EXIT_SUCCESS);
     }
 
+/*********************************************************************************/
+
     //execute upgrade database
     else if(option.upgrade_database==true){
 
@@ -1106,6 +1083,8 @@ int main(int argc, char *argv[]){
         //We also use EXIT_SUCCESS as this is not an error situation
         exit(EXIT_SUCCESS);
     }
+
+/*********************************************************************************/
 
     //execute add from e3d list
     else if(option.load_e3d_list==true){
@@ -1148,6 +1127,8 @@ int main(int argc, char *argv[]){
         exit(EXIT_SUCCESS);
     }
 
+/*********************************************************************************/
+
     //execute add from object list
     else if(option.load_object_list==true){
 
@@ -1188,22 +1169,23 @@ int main(int argc, char *argv[]){
         exit(EXIT_SUCCESS);
     }
 
+/*********************************************************************************/
+
     //execute add from harvest skill list
-    else if(option.load_harvest_skill_list==true){
+    else if(option.load_skill_harvest==true){
 
         char filename[80]=HARVESTING_SKILL_FILE;
 
         //use object data file specified in command line if specified
         if(argc==3) strcpy(filename, argv[2]);
 
-        fprintf(stdout, "This option [P] replaces existing harvest skill data on the game server database with that " \
-        "uploaded from file name [%s]\n", filename);
+        fprintf(stdout, "This option replaces the existing harvest skill profile with that specified in [%s]\n", filename);
         fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
 
         if(get_decision()==false){
 
-            log_text(EVENT_INITIALISATION, "Aborted replace harvest skill data");
-            fprintf(stdout, "Aborted replace harvest skill data\n");
+            log_text(EVENT_INITIALISATION, "Aborted load harvest skill profile");
+            fprintf(stdout, "Aborted load harvest skill profile\n");
 
             //Because server hasn't started we use exit rather than stop_server()
             //We also use EXIT_SUCCESS as this is not an error situation
@@ -1213,19 +1195,139 @@ int main(int argc, char *argv[]){
         //use database file specified in command line if specified
         if(argc==4) strcpy(db_filename, argv[5]);
 
-        log_text(EVENT_INITIALISATION, "LOAD HARVESTING SKILL LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
-        fprintf(stderr, "LOAD HARVESTING SKILL LIST using %s at %s on %s\n", filename, time_stamp_str, verbose_date_stamp_str);
+        log_text(EVENT_INITIALISATION, "LOAD HARVESTING SKILL PROFILE from %s\n", filename);
+        fprintf(stderr, "LOAD HARVESTING SKILL PROFILE from %s\n", filename);
 
         //delete the existing table contents, add new data
         open_database(db_filename, GET_CALL_INFO);
         delete_db_skill(HARVESTING_SKILL);
-        batch_add_skills(HARVESTING_SKILL_FILE, HARVESTING_SKILL);
+        batch_add_skills(filename, HARVESTING_SKILL);
         close_database(GET_CALL_INFO);
 
         //Because server hasn't started we use exit rather than stop_server()
         //We also use EXIT_SUCCESS as this is not an error situation
         exit(EXIT_SUCCESS);
     }
+
+/*********************************************************************************/
+
+    //execute add attribute day vision
+    else if(option.load_attribute_day_vision==true){
+
+        char filename[80]=ATTR_DAY_VISION_FILE;
+
+        //use object data file specified in command line if specified
+        if(argc==3) strcpy(filename, argv[2]);
+
+        fprintf(stdout, "This option replaces the existing day vision attribute profile with that in [%s]\n", filename);
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
+
+        if(get_decision()==false){
+
+            log_text(EVENT_INITIALISATION, "Aborted load day vision attribute profile");
+            fprintf(stdout, "Aborted load day vision attribute profile\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use database file specified in command line if specified
+        if(argc==4) strcpy(db_filename, argv[5]);
+
+        log_text(EVENT_INITIALISATION, "LOADING DAY VISION ATTRIBUTES from %s\n", filename);
+        fprintf(stderr, "LOADING DAY VISION ATTRIBUTES from %s\n", filename);
+
+        //delete the existing table contents, add new data
+        open_database(db_filename, GET_CALL_INFO);
+        delete_db_attribute(ATTR_DAY_VISION);
+        batch_add_skills(filename, ATTR_DAY_VISION);
+        close_database(GET_CALL_INFO);
+
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
+    }
+/*********************************************************************************/
+
+    //execute add attribute night vision
+    else if(option.load_attribute_day_vision==true){
+
+        char filename[80]=ATTR_NIGHT_VISION_FILE;
+
+        //use object data file specified in command line if specified
+        if(argc==3) strcpy(filename, argv[2]);
+
+        fprintf(stdout, "This option replaces the existing night vision attribute profile with that in [%s]\n", filename);
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
+
+        if(get_decision()==false){
+
+            log_text(EVENT_INITIALISATION, "Aborted load night vision attribute profile");
+            fprintf(stdout, "Aborted night vision attribute profile\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use database file specified in command line if specified
+        if(argc==4) strcpy(db_filename, argv[5]);
+
+        log_text(EVENT_INITIALISATION, "LOADING NIGHT VISION ATTRIBUTES from %s\n", filename);
+        fprintf(stderr, "LOADING NIGHT VISION ATTRIBUTES from %s\n", filename);
+
+        //delete the existing table contents, add new data
+        open_database(db_filename, GET_CALL_INFO);
+        delete_db_attribute(ATTR_NIGHT_VISION);
+        batch_add_skills(filename, ATTR_NIGHT_VISION);
+        close_database(GET_CALL_INFO);
+
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
+    }
+/*********************************************************************************/
+
+    //execute add attribute carry capacity
+    else if(option.load_attribute_carry_capacity==true){
+
+        char filename[80]=ATTR_CARRY_CAPACITY_FILE;
+
+        //use object data file specified in command line if specified
+        if(argc==3) strcpy(filename, argv[2]);
+
+        fprintf(stdout, "This option replaces the existing carry capacity attribute profile with that in [%s]\n", filename);
+        fprintf(stdout, "Are you sure you wish to proceed Y/N ?");
+
+        if(get_decision()==false){
+
+            log_text(EVENT_INITIALISATION, "Aborted load carry capacity attribute profile");
+            fprintf(stdout, "Aborted load carry capacity attribute profile\n");
+
+            //Because server hasn't started we use exit rather than stop_server()
+            //We also use EXIT_SUCCESS as this is not an error situation
+            exit(EXIT_SUCCESS);
+        }
+
+        //use database file specified in command line if specified
+        if(argc==4) strcpy(db_filename, argv[5]);
+
+        log_text(EVENT_INITIALISATION, "LOADING CARRY CAPACITY ATTRIBUTES from %s\n", filename);
+        fprintf(stderr, "LOADING CARRY CAPACITY ATTRIBUTES from %s\n", filename);
+
+        //delete the existing table contents, add new data
+        open_database(db_filename, GET_CALL_INFO);
+        delete_db_attribute(ATTR_CARRY_CAPACITY);
+        batch_add_skills(filename, ATTR_CARRY_CAPACITY);
+        close_database(GET_CALL_INFO);
+
+        //Because server hasn't started we use exit rather than stop_server()
+        //We also use EXIT_SUCCESS as this is not an error situation
+        exit(EXIT_SUCCESS);
+    }
+
+/*********************************************************************************/
 
     //execute update map_objects
     else if(option.update_map_objects==true){
@@ -1264,6 +1366,8 @@ int main(int argc, char *argv[]){
         //We also use EXIT_SUCCESS as this is not an error situation
         exit(EXIT_SUCCESS);
    }
+
+/*********************************************************************************/
 
     //reload maps
     else if(option.reload_maps==true){
@@ -1304,6 +1408,8 @@ int main(int argc, char *argv[]){
         //We also use EXIT_SUCCESS as this is not an error situation
         exit(EXIT_SUCCESS);
     }
+
+/*********************************************************************************/
 
     //execute load map
     else if(option.load_map==true && argc>=4){
@@ -1373,6 +1479,8 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
+/*********************************************************************************/
+
     //execute list maps
     else if(option.list_maps==true){
 
@@ -1390,18 +1498,25 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
+/*********************************************************************************/
+
     //display command line options if no command line options are found or command line options are not recognised
     fprintf(stderr, "Command line options...\n");
-    fprintf(stderr, "create database         -C optional [""database file name""]\n");
-    fprintf(stderr, "start server            -S optional [""database file name""]\n");
-    fprintf(stderr, "upgrade database        -U optional [""database file name""]\n");
-    fprintf(stderr, "list loaded maps        -L optional [""database file name""]\n");
-    fprintf(stderr, "load map                -M [map id] [""elm filename""] optional [""database file name""]\n");
-    fprintf(stderr, "load e3d list           -E optional [""e3d file list""] optional [""database file name""]\n");
-    fprintf(stderr, "load object list        -O optional [""object file list""] optional [""database file name""]\n");
-    fprintf(stderr, "load harvest skill list -P optional [""harvest skill file list""] optional [""database file name""]\n");
-    fprintf(stderr, "update map objects      -R [""map file list""] optional [""database file name""]\n");
-    fprintf(stderr, "reload maps             -X [""map file list""] optional [""database file name""]\n");
+
+    fprintf(stderr, "create database                       -C optional [""database file name""]\n");
+    fprintf(stderr, "load e3d list                         -E optional [""e3d file list""] optional [""database file name""]\n");
+    fprintf(stderr, "help                                  -H\n");
+    fprintf(stderr, "load object list                      -I optional [""object file list""] optional [""database file name""]\n");
+    fprintf(stderr, "load harvest skill list               -J optional [""harvest skill file list""] optional [""database file name""]\n");
+    fprintf(stderr, "load map                              -M [map id] [""elm filename""] optional [""database file name""]\n");
+    fprintf(stderr, "list loaded maps                      -N optional [""database file name""]\n");
+    fprintf(stderr, "update map objects                    -O [""map file list""] optional [""database file name""]\n");
+    fprintf(stderr, "reload maps                           -P [""map file list""] optional [""database file name""]\n");
+    fprintf(stderr, "start server                          -S optional [""database file name""]\n");
+    fprintf(stderr, "upgrade database                      -U optional [""database file name""]\n");
+    fprintf(stderr, "load day vision attribute profile     -V optional [""attribute file list""] optional [""database file name""]\n");
+    fprintf(stderr, "load night vision attribute profile   -W optional [""attribute file list""] optional [""database file name""]\n");
+    fprintf(stderr, "load carry capacity attribute profile -X optional [""attribute file list""] optional [""database file name""]\n");
 
     return 0;//otherwise we get 'control reached end of non void function'
 }

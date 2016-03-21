@@ -74,11 +74,15 @@ struct map_node_type{
     int lights_object_count;
 };
 
+
 struct map_list_type {
 
+    bool data_loaded;
+    int count;
     struct map_node_type map[MAX_MAPS];
 };
 extern struct map_list_type maps;
+
 
 struct __attribute__((__packed__)){
 
@@ -136,7 +140,14 @@ struct map_object_type{
     int reserve;
     char e3d_filename[80];
 };
-extern struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
+
+//place struct here rather than in map_object.h in order to avoid 'issues'
+struct map_object_list_type {
+
+    bool data_loaded;
+    struct map_object_type map_object[MAX_MAP_OBJECTS][MAX_MAPS];
+};
+extern struct map_object_list_type map_objects;
 
 
 /** RESULT  : calculates the distance between two entities on a map

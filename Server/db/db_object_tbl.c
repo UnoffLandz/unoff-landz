@@ -53,23 +53,23 @@ void load_db_objects(){
         //get the object id and check that the value does not exceed the maximum permitted
         int object_id=sqlite3_column_int(stmt, 0);
 
-        if(object_id>MAX_OBJECT_ID){
+        if(object_id>MAX_OBJECTS){
 
-            log_event(EVENT_ERROR, "object id [%i] exceeds range [%i] in function %s: module %s: line %i", object_id, MAX_OBJECT_ID, GET_CALL_INFO);
+            log_event(EVENT_ERROR, "object id [%i] exceeds range [%i] in function %s: module %s: line %i", object_id, MAX_OBJECTS, GET_CALL_INFO);
             stop_server();
         }
         //handle null string which would crash strcpy
-        if(sqlite3_column_text(stmt, 1)) strcpy(object[object_id].object_name, (char*)sqlite3_column_text(stmt, 1));
+        if(sqlite3_column_text(stmt, 1)) strcpy(objects.object[object_id].object_name, (char*)sqlite3_column_text(stmt, 1));
 
-        if(sqlite3_column_int(stmt, 2)==1) object[object_id].harvestable=true; else object[object_id].harvestable=false;
-        if(sqlite3_column_int(stmt, 3)==1) object[object_id].edible=true; else object[object_id].edible=false;
+        if(sqlite3_column_int(stmt, 2)==1) objects.object[object_id].harvestable=true; else objects.object[object_id].harvestable=false;
+        if(sqlite3_column_int(stmt, 3)==1) objects.object[object_id].edible=true; else objects.object[object_id].edible=false;
 
-        object[object_id].harvest_interval=sqlite3_column_int(stmt, 4);
-        object[object_id].emu=sqlite3_column_int(stmt, 5);
-        object[object_id].equipable_item_type=sqlite3_column_int(stmt, 6);
-        object[object_id].equipable_item_id=sqlite3_column_int(stmt, 7);
+        objects.object[object_id].harvest_interval=sqlite3_column_int(stmt, 4);
+        objects.object[object_id].emu=sqlite3_column_int(stmt, 5);
+        objects.object[object_id].equipable_item_type=sqlite3_column_int(stmt, 6);
+        objects.object[object_id].equipable_item_id=sqlite3_column_int(stmt, 7);
 
-        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", i, object[object_id].object_name);
+        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", i, objects.object[object_id].object_name);
 
         i++;
     }
@@ -84,25 +84,30 @@ void load_db_objects(){
 }
 
 
-void add_db_object(int object_id, char *object_name, bool harvestable, bool edible, int interval, double emu, int equipable_item_type, int equipable_item_id){
+void batch_add_objects(char *file_name){
 
-    /** RESULT  : adds an object to the object table
+    /** public function - see header */
 
-        RETURNS : void
+    FILE* file;
 
-        PURPOSE : used by batch_add_objects function
+    if((file=fopen(file_name, "r"))==NULL){
 
-        NOTES   :
-    **/
+        log_event(EVENT_ERROR, "file [%s] not found", file_name);
+        stop_server();
+    }
+
+    char line[160]="";
+    int line_counter=0;
+
+    log_event(EVENT_INITIALISATION, "\nAdding objects specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding objects specified in file [%s]\n", file_name);
 
     //check database is open and table exists
     check_db_open(GET_CALL_INFO);
     check_table_exists("OBJECT_TABLE", GET_CALL_INFO);
 
-    int _harvest=0, _edible=0;
-
-    if(harvestable==true)_harvest=1; else _harvest=0;
-    if(edible==true)_edible=1; else _edible=0;
+    sqlite3_stmt *stmt;
+    char *sErrMsg = 0;
 
     char *sql="INSERT INTO OBJECT_TABLE("  \
         "OBJECT_ID," \
@@ -115,46 +120,14 @@ void add_db_object(int object_id, char *object_name, bool harvestable, bool edib
         "EQUIPABLE_ITEM_ID" \
         ") VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 
-    sqlite3_stmt *stmt=NULL;
-
     prepare_query(sql, &stmt, GET_CALL_INFO);
 
-    sqlite3_bind_int(stmt, 1, object_id);
-    sqlite3_bind_text(stmt, 2, object_name, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, _harvest);
-    sqlite3_bind_int(stmt, 4, _edible);
-    sqlite3_bind_int(stmt, 5, interval);
-    sqlite3_bind_double(stmt, 6, emu);
-    sqlite3_bind_int(stmt, 7, equipable_item_type);
-    sqlite3_bind_int(stmt, 8, equipable_item_id);
+    int rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    if(rc!=SQLITE_OK){
 
-    step_query(sql, &stmt, GET_CALL_INFO);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    fprintf(stderr, "Object [%s] added successfully\n", object_name);
-
-    log_event(EVENT_SESSION, "Added object [%s] to OBJECT_TABLE", object_name);
-}
-
-
-void batch_add_objects(char *file_name){
-
-    /** public function - see header */
-
-    FILE* file;
-
-    if((file=fopen(file_name, "r"))==NULL){
-
-        log_event(EVENT_ERROR, "object list file [%s] not found", file_name);
-        stop_server();
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *&sErrMsg, sql);
     }
-
-    char line[160]="";
-    int line_counter=0;
-
-    log_event(EVENT_INITIALISATION, "\nAdding objects specified in file [%s]", file_name);
-    fprintf(stderr, "\nAdding objects specified in file [%s]\n", file_name);
 
     while (fgets(line, sizeof(line), file)) {
 
@@ -162,12 +135,42 @@ void batch_add_objects(char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[8][80];
+        char output[8][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_object(atoi(output[0]), output[1], atoi(output[2]), atoi(output[3]), atoi(output[4]), atof(output[5]), atoi(output[6]), atoi(output[7]));
+        sqlite3_bind_int(stmt, 1, atoi(output[0]));
+        sqlite3_bind_text(stmt, 2, output[1], -1, SQLITE_STATIC); //object name
+        sqlite3_bind_int(stmt, 3, atoi(output[2]));     //harvest
+        sqlite3_bind_int(stmt, 4, atoi(output[3]));     //edible
+        sqlite3_bind_int(stmt, 5, atoi(output[4]));     //interval
+        sqlite3_bind_double(stmt, 6, atoi(output[5]));  //emu
+        sqlite3_bind_int(stmt, 7, atoi(output[6]));     //equipable_item_type
+        sqlite3_bind_int(stmt, 8, atoi(output[7]));     //equipable_item_id
+
+        step_query(sql, &stmt, GET_CALL_INFO);
+
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+
+        fprintf(stderr, "object [%i] [%s] added successfully\n", atoi(output[0]), output[1]);
+        log_event(EVENT_SESSION, "Added object [%i] [%s] to RACE_TABLE", atoi(output[0]), output[1]);
     }
 
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    if (rc!=SQLITE_OK) {
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *sErrMsg, sql);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
     fclose(file);
+
+    //load data to memory so this can be used by other functions
+    load_db_objects();
+
+    //mark data as loaded
+    objects.data_loaded=true;
 }

@@ -31,7 +31,6 @@
 #include "server_protocol_functions.h"
 
 struct timeval time_check;//output struct for gettimeofday function
-struct season_type season[MAX_SEASONS];
 
 void get_time_stamp_str(time_t raw_time, char *buffer){
 
@@ -69,6 +68,7 @@ void get_verbose_date_str(time_t raw_time, char *buffer){
     strftime (buffer, 50, "%A %d %B %C%y", cooked_date);
 }
 
+
 void get_time_up_str(time_t raw_time, char *buffer){
 
     /** public function - see header */
@@ -81,33 +81,6 @@ void get_time_up_str(time_t raw_time, char *buffer){
     strftime (buffer, 15, "%H hrs %M mins", cooked_date);
 }
 
-void get_game_season(int game_days, char *season_name, char *season_description){
-
-    /** RESULT  : gets the season name and description based on the number of game days
-
-        RETURNS : void
-
-        PURPOSE : code modularity
-
-        NOTES   : used by send_verbose_date
-    **/
-
-    int season_days=game_days % game_data.year_length;
-
-    int i=0;
-    for(i=0; i<MAX_SEASONS; i++){
-
-        if(season_days>=season[i].start_day && season_days<season[i].end_day){
-
-            strcpy(season_name, season[i].season_name);
-            strcpy(season_description, season[i].season_description);
-            return;
-        }
-    }
-
-    log_event(EVENT_ERROR, "invalid season in function %s: module %s: line %i", GET_CALL_INFO);
-    stop_server();
-}
 
 void send_verbose_date(int socket, int game_days){
 

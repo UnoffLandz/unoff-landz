@@ -52,16 +52,16 @@ void load_db_genders(){
         //get the gender id and check that the value does not exceed the maximum permitted
         int gender_id=sqlite3_column_int(stmt,0);
 
-        if(gender_id>MAX_GENDER){
+        if(gender_id>MAX_GENDERS){
 
-            log_event(EVENT_ERROR, "gender id [%i] exceeds range [%i] in function %s: module %s: line %i", gender_id, MAX_GENDER, GET_CALL_INFO);
+            log_event(EVENT_ERROR, "gender id [%i] exceeds range [%i] in function %s: module %s: line %i", gender_id, MAX_GENDERS, GET_CALL_INFO);
             stop_server();
         }
 
         //handle null string which would crash strcpy
-        if(sqlite3_column_text(stmt, 1)) strcpy(gender[gender_id].gender_name, (char*)sqlite3_column_text(stmt, 1));
+        if(sqlite3_column_text(stmt, 1)) strcpy(genders.gender[gender_id].gender_name, (char*)sqlite3_column_text(stmt, 1));
 
-        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", gender_id, gender[gender_id].gender_name);
+        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", gender_id, genders.gender[gender_id].gender_name);
 
         i++;
 
@@ -77,44 +77,7 @@ void load_db_genders(){
 }
 
 
-void add_db_gender(int gender_id, char *gender_name){
-
-    /** RESULT  : adds a gender to the gender table
-
-        RETURNS : void
-
-        PURPOSE : a test function to load genders to the gender table
-
-        NOTES   : to eventually be outsourced to a separate utility
-    **/
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("GENDER_TABLE", GET_CALL_INFO);
-
-    sqlite3_stmt *stmt=NULL;
-
-    char *sql="INSERT INTO GENDER_TABLE("  \
-        "GENDER_ID," \
-        "GENDER_NAME"  \
-        ") VALUES(?, ?)";
-
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    sqlite3_bind_int(stmt, 1, gender_id);
-    sqlite3_bind_text(stmt, 2, gender_name, -1, SQLITE_STATIC);
-
-    step_query(sql, &stmt, GET_CALL_INFO);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    fprintf(stderr, "Gender [%i] [%s] added successfully\n", gender_id, gender_name);
-
-    log_event(EVENT_SESSION, "Added gender [%i] [%s] to GENDER_TABLE", gender_id, gender_name);
-}
-
-
-void batch_add_gender(char *file_name){
+void batch_add_genders(char *file_name){
 
     /** public function - see header */
 
@@ -122,7 +85,7 @@ void batch_add_gender(char *file_name){
 
     if((file=fopen(file_name, "r"))==NULL){
 
-        log_event(EVENT_ERROR, "gender list file [%s] not found", file_name);
+        log_event(EVENT_ERROR, "file [%s] not found", file_name);
         stop_server();
     }
 
@@ -132,18 +95,63 @@ void batch_add_gender(char *file_name){
     log_event(EVENT_INITIALISATION, "\nAdding genders specified in file [%s]", file_name);
     fprintf(stderr, "\nAdding genders specified in file [%s]\n", file_name);
 
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("GENDER_TABLE", GET_CALL_INFO);
+
+    sqlite3_stmt *stmt;
+    char *sErrMsg = 0;
+
+    char *sql="INSERT INTO GENDER_TABLE("  \
+        "GENDER_ID," \
+        "GENDER_NAME"  \
+        ") VALUES(?, ?)";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    int rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    if(rc!=SQLITE_OK){
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *&sErrMsg, sql);
+    }
+
     while (fgets(line, sizeof(line), file)) {
 
         line_counter++;
 
         sscanf(line, "%*s");
 
-        char output[2][80];
+        char output[2][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_gender(atoi(output[0]), output[1]);
+        sqlite3_bind_int(stmt, 1, atoi(output[0]));                 //gender id
+        sqlite3_bind_text(stmt, 2, output[1], -1, SQLITE_STATIC);   //gender name
+
+        step_query(sql, &stmt, GET_CALL_INFO);
+
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+
+        fprintf(stderr, "Gender [%i] [%s] added successfully\n", atoi(output[0]), output[1]);
+        log_event(EVENT_SESSION, "Added gender [%i] [%s] to GENDER_TABLE", atoi(output[0]), output[1]);
     }
 
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    if (rc!=SQLITE_OK) {
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *sErrMsg, sql);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
     fclose(file);
+
+    //load gender data to memory so this can be used by other functions
+    load_db_genders();
+
+    //mark data as loaded
+    genders.data_loaded=true;
 }

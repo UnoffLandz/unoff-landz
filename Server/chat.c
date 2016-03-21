@@ -30,8 +30,7 @@
 #include "idle_buffer2.h"
 #include "maps.h"
 
-
-struct channel_node_type channel[MAX_CHANNELS];
+struct channel_list_type channels;
 
 
 int player_in_chan(int actor_node, int chan){
@@ -91,14 +90,14 @@ int join_channel(int actor_node, int chan){
     }
 
     //stop players from joining system channels
-    else if(channel[chan].chan_type==CHAN_SYSTEM){
+    else if(channels.channel[chan].chan_type==CHAN_SYSTEM){
 
         send_text(socket, CHAT_SERVER, "%cchannel is reserved for system use", c_red3+127);
         return CHANNEL_NOT_JOINED;
     }
 
     //stop players from joining vacant channels
-    else if(channel[chan].chan_type==CHAN_VACANT){
+    else if(channels.channel[chan].chan_type==CHAN_VACANT){
 
         send_text(socket, CHAT_SERVER, "%cThat channel is not open", c_red3+127);
         return CHANNEL_NOT_JOINED;
@@ -117,7 +116,7 @@ int join_channel(int actor_node, int chan){
         //found free slot
         if(clients.client[actor_node].chan[i]==0) {
 
-            sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, clients.client[actor_node].char_name, channel[chan].channel_name);
+            sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, clients.client[actor_node].char_name, channels.channel[chan].channel_name);
             broadcast_channel_event(chan, actor_node, text_out);
 
             //set the new chan ans make it active
@@ -136,11 +135,11 @@ int join_channel(int actor_node, int chan){
             clients.client[actor_node].character_id);
 
             //echo back to player which channel was just joined and its description etc
-            send_text(socket, CHAT_SERVER, "%cYou joined channel %s", c_green3+127, channel[chan].channel_name);
-            send_text(socket, CHAT_SERVER, "%cDescription : %s", c_green2+127, channel[chan].description);
+            send_text(socket, CHAT_SERVER, "%cYou joined channel %s", c_green3+127, channels.channel[chan].channel_name);
+            send_text(socket, CHAT_SERVER, "%cDescription : %s", c_green2+127, channels.channel[chan].description);
 
             //tell other in chan that player has joined
-            sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, clients.client[actor_node].char_name, channel[chan].channel_name);
+            sprintf(text_out, "%c%s has joined channel %s", c_yellow2+127, clients.client[actor_node].char_name, channels.channel[chan].channel_name);
             broadcast_channel_event(chan, actor_node, text_out);
 
             return CHANNEL_JOINED;
@@ -170,17 +169,17 @@ int leave_channel(int actor_node, int chan){
     }
 
     //echo back to player which channel was just left
-    sprintf(text_out, "%c%s has left channel %s", c_yellow2+127, clients.client[actor_node].char_name, channel[chan].channel_name);
+    sprintf(text_out, "%c%s has left channel %s", c_yellow2+127, clients.client[actor_node].char_name, channels.channel[chan].channel_name);
     broadcast_channel_event(chan, actor_node, text_out);
 
     //null the channel slot
     clients.client[actor_node].chan[slot]=0;
 
     // need to echo back to player which channel was just joined and its description etc
-    send_text(socket, CHAT_SERVER, "%cyou left channel %s", c_green3+127, channel[chan].channel_name);
+    send_text(socket, CHAT_SERVER, "%cyou left channel %s", c_green3+127, channels.channel[chan].channel_name);
 
     //tell others in chan that player has left
-    sprintf(text_out, "%c%s has left channel %s", c_yellow2+127, clients.client[actor_node].char_name, channel[chan].channel_name);
+    sprintf(text_out, "%c%s has left channel %s", c_yellow2+127, clients.client[actor_node].char_name, channels.channel[chan].channel_name);
     broadcast_channel_event(chan, actor_node, text_out);
 
     //set active channel to next used channel slot or 0
@@ -385,7 +384,7 @@ void add_new_char_chat_channels(){
     for(int i=0; i<MAX_CHANNELS; i++){
 
         //if we find a channel marked as default for new chars, add it to the char
-        if(channel[i].new_chars==1){
+        if(channels.channel[i].new_chars==1){
 
             //ensure we don't add any more chans than the maximum available chan
             //slots for a char

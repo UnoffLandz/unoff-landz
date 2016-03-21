@@ -26,8 +26,7 @@
 #include "string_functions.h"
 #include "db/db_e3d_tbl.h"
 
-
-struct e3d_type e3d[MAX_E3D_TYPES];
+struct e3d_list_type e3ds;
 
 
 void read_threed_object_list(char *elm_filename){
@@ -77,7 +76,7 @@ int get_e3d_id(char *e3d_filename){
 
     for(int i=0; i<MAX_E3D_TYPES; i++){
 
-        if(strcmp(e3d[i].e3d_filename, e3d_filename)==0){
+        if(strcmp(e3ds.e3d[i].e3d_filename, e3d_filename)==0){
 
             return i;
         }

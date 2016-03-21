@@ -24,7 +24,7 @@
 
 #include "e3d.h"
 
-#define MAX_OBJECT_ID 2000
+#define MAX_OBJECTS 2000
 #define OBJECT_FILE "object.lst"
 
 struct object_type{
@@ -38,7 +38,13 @@ struct object_type{
     int equipable_item_type;
     int equipable_item_id;
 };
-extern struct object_type object[MAX_OBJECT_ID];
+//extern struct object_type object[MAX_OBJECT_ID];
 
+struct object_list_type {
+
+    bool data_loaded;
+    struct object_type object[MAX_OBJECTS];
+};
+extern struct object_list_type objects;
 
 #endif // MAP_OBJECTS_H_INCLUDED

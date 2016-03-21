@@ -61,13 +61,13 @@ void load_db_map_objects(){
         int threedol_id=sqlite3_column_int(stmt, 1);
         int map_id=sqlite3_column_int(stmt, 2);
 
-        map_object[threedol_id][map_id].tile=sqlite3_column_int(stmt, 3);
-        map_object[threedol_id][map_id].e3d_id=sqlite3_column_int(stmt, 4);
-        if(sqlite3_column_int(stmt, 5)==1) map_object[threedol_id][map_id].harvestable=true; else map_object[threedol_id][map_id].harvestable=false;
-        map_object[threedol_id][map_id].reserve=sqlite3_column_int(stmt, 6);
+        map_objects.map_object[threedol_id][map_id].tile=sqlite3_column_int(stmt, 3);
+        map_objects.map_object[threedol_id][map_id].e3d_id=sqlite3_column_int(stmt, 4);
+        if(sqlite3_column_int(stmt, 5)==1) map_objects.map_object[threedol_id][map_id].harvestable=true; else map_objects.map_object[threedol_id][map_id].harvestable=false;
+        map_objects.map_object[threedol_id][map_id].reserve=sqlite3_column_int(stmt, 6);
 
         //handle null string which would crash strcpy
-        if(sqlite3_column_text(stmt, 7)) strcpy(map_object[threedol_id][map_id].e3d_filename, (char*)sqlite3_column_text(stmt, 7));
+        if(sqlite3_column_text(stmt, 7)) strcpy(map_objects.map_object[threedol_id][map_id].e3d_filename, (char*)sqlite3_column_text(stmt, 7));
 
         log_event(EVENT_INITIALISATION, "loaded [%i]", id);
 
@@ -88,19 +88,29 @@ void add_db_map_objects(int map_id, char *elm_filename){
 
     /** public function - see header */
 
+    //check that map and e3d data is already loaded otherwise we'll be unable to load data
+    if(maps.data_loaded==false){
+
+        log_event(EVENT_ERROR, "map data not loaded before attempting to load map objects\n");
+        fprintf(stderr, "map data not loaded before attempting to load map objects\n");
+
+        exit(EXIT_FAILURE);
+    }
+
+    if(e3ds.data_loaded==false){
+
+        log_event(EVENT_ERROR, "e3d data not loaded before attempting to load map objects\n");
+        fprintf(stderr, "e3d data not loaded before attempting to load map objects\n");
+
+        exit(EXIT_FAILURE);
+    }
+
     //check database is open and table exists
     check_db_open(GET_CALL_INFO);
     check_table_exists("MAP_OBJECT_TABLE", GET_CALL_INFO);
 
-    //load e3d and object data, otherwise we'll be unable to populate the map object entries
-    //with links
-    load_db_e3ds();
-
     //read the 3d object list into the array
     read_threed_object_list(elm_filename);
-
-    //get the map axis
-    read_elm_header(elm_filename);
 
     //add the array data to the database
     sqlite3_stmt *stmt;
@@ -147,8 +157,8 @@ void add_db_map_objects(int map_id, char *elm_filename){
         sqlite3_bind_int(stmt, 4, e3d_id);
 
         //get whether object is harvestable from threed object list
-        int object_id=e3d[e3d_id].object_id;
-        bool harvestable=object[object_id].harvestable;
+        int object_id=e3ds.e3d[e3d_id].object_id;
+        bool harvestable=objects.object[object_id].harvestable;
         sqlite3_bind_int(stmt, 5, harvestable);
         sqlite3_bind_int(stmt, 6, reserve);
         sqlite3_bind_text(stmt, 7, e3d_filename, -1, SQLITE_STATIC);
@@ -189,14 +199,13 @@ void update_db_map_objects(int map_id){
     for(int i=0; i<threed_object_count; i++) {
 
         //get e3d id from threed object list
-        int e3d_id=get_e3d_id(map_object[i][map_id].e3d_filename);
+        int e3d_id=get_e3d_id(map_objects.map_object[i][map_id].e3d_filename);
 
-        if(e3d_id!=map_object[i][map_id].e3d_id){
+        if(e3d_id!=map_objects.map_object[i][map_id].e3d_id){
 
             // TODO (themuntdregger#1#): add logging
 
-            char sql[MAX_SQL_LEN]="";
-            sprintf(sql, "UPDATE MAP_OBJECT_TABLE SET E3D_ID=%i WHERE MAP_ID=%i AND THREEDOL_ID=%i", e3d_id, map_id, i);
+            char *sql="UPDATE MAP_OBJECT_TABLE SET E3D_ID=? WHERE MAP_ID=? AND THREEDOL_ID=?";
 
             prepare_query(sql, &stmt, GET_CALL_INFO);
 
@@ -235,7 +244,7 @@ void batch_update_map_objects(char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[8][80];
+        char output[8][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
@@ -245,4 +254,35 @@ void batch_update_map_objects(char *file_name){
       }
 
     fclose(file);
+}
+
+
+void batch_add_map_objects(){
+
+    /** public function - see header */
+
+    log_event(EVENT_INITIALISATION, "\nAdding map objects");
+    fprintf(stderr, "\nAdding map objects\n");
+
+    for(int i=0; i<maps.count; i++){
+
+        //remove './maps' from elm_filename
+        char elm_filename[80]="";
+        extract_file_name(maps.map[i].elm_filename, elm_filename);
+
+        //filter only those maps with an elm filename
+        if(strlen(elm_filename)>0){
+
+            add_db_map_objects(i, elm_filename);
+
+            fprintf(stderr, "Map Objects for [%s] added successfully\n", elm_filename);
+            log_event(EVENT_SESSION, "Added map objects for [%s] to MAP_OBJECT_TABLE", elm_filename);
+        }
+    }
+
+    //load map object data to memory so this can be used by other functions
+    load_db_map_objects();
+
+    //mark data as loaded
+    map_objects.data_loaded=true;
 }

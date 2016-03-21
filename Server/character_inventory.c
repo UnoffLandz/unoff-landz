@@ -54,7 +54,7 @@ int get_inventory_emu(int actor_node){
     for(int i=MIN_CARRY_SLOT; i<=MAX_EQUIP_SLOT; i++){
 
         int object_id=clients.client[actor_node].inventory[i].object_id;
-        total_emu += clients.client[actor_node].inventory[i].amount * object[object_id].emu;
+        total_emu += clients.client[actor_node].inventory[i].amount * objects.object[object_id].emu;
     }
 
     return total_emu;
@@ -186,7 +186,7 @@ bool add_to_inventory(int actor_node, int object_id, int amount, int slot){
     //check inventory max emu not exceeded
     int inventory_emu=get_inventory_emu(actor_node);
     int max_inventory_emu=get_max_inventory_emu(actor_node);
-    if(inventory_emu+(amount * object[object_id].emu) > max_inventory_emu) return false;
+    if(inventory_emu+(amount * objects.object[object_id].emu) > max_inventory_emu) return false;
 
     //add the item to the inventory
     clients.client[actor_node].inventory[slot].amount+=amount;
@@ -253,12 +253,12 @@ void equip_inventory_item(int actor_node, int from_slot, int to_slot){
     */
 
     int object_id=clients.client[actor_node].inventory[from_slot].object_id;
-    int equipable_item_type=object[object_id].equipable_item_type;
-    int equipable_item_id=object[object_id].equipable_item_id;
+    int equipable_item_type=objects.object[object_id].equipable_item_type;
+    int equipable_item_id=objects.object[object_id].equipable_item_id;
     int socket=clients.client[actor_node].socket;
 
     //prevent equipping of non-equipable objects
-    if(object[object_id].equipable_item_type==-1){
+    if(objects.object[object_id].equipable_item_type==-1){
 
         send_text(socket, CHAT_SERVER, "%cThat object is not equipable", c_red3+127);
         return;
@@ -315,8 +315,8 @@ void unequip_inventory_item(int actor_node, int from_slot, int to_slot){
     */
 
     int object_id=clients.client[actor_node].inventory[from_slot].object_id;
-    int equipable_item_type=object[object_id].equipable_item_type;
-    int equipable_item_id=object[object_id].equipable_item_id;
+    int equipable_item_type=objects.object[object_id].equipable_item_type;
+    int equipable_item_id=objects.object[object_id].equipable_item_id;
     int socket=clients.client[actor_node].socket;
 
     int slot=item_in_inventory(actor_node, object_id, CARRY_SLOTS);
@@ -465,7 +465,7 @@ void drop_from_inventory_to_bag(int actor_node, int inventory_slot, int withdraw
     if(amount_added != amount_withdrawn){
 
         log_event(EVENT_ERROR, "char [%s] error dropping item from inventory", clients.client[actor_node].char_name);
-        log_text(EVENT_ERROR, "item [%s]", object[object_id].object_name);
+        log_text(EVENT_ERROR, "item [%s]", objects.object[object_id].object_name);
         log_text(EVENT_ERROR, "amount withdrawn from inventory [%i]", amount_withdrawn);
         log_text(EVENT_ERROR, "amount added to bag [%i]", amount_added);
 

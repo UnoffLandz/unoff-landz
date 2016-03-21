@@ -43,7 +43,7 @@ void load_db_genders();
 
     NOTES   :
 */
-void batch_add_gender(char *file_name);
+void batch_add_genders(char *file_name);
 
 
 #endif // DB_CHARACTER_GENDER_TBL_H_INCLUDED

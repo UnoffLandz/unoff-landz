@@ -62,10 +62,10 @@ void load_db_char_types(){
             stop_server();
         }
 
-        character_type[char_type_id].race_id=sqlite3_column_int(stmt, 1);
-        character_type[char_type_id].gender_id=sqlite3_column_int(stmt, 2);
+        character_types.character_type[char_type_id].race_id=sqlite3_column_int(stmt, 1);
+        character_types.character_type[char_type_id].gender_id=sqlite3_column_int(stmt, 2);
 
-        log_event(EVENT_INITIALISATION, "loaded [%i] %s %s", char_type_id, race[character_type[char_type_id].race_id].race_name, gender[character_type[char_type_id].gender_id].gender_name);
+        log_event(EVENT_INITIALISATION, "loaded [%i] %s %s", char_type_id, races.race[character_types.character_type[char_type_id].race_id].race_name, genders.gender[character_types.character_type[char_type_id].gender_id].gender_name);
 
         i++;
     }
@@ -79,47 +79,6 @@ void load_db_char_types(){
     }
 }
 
-
-void add_db_char_type(int char_type_id, int race_id, int gender_id){
-
-    /** RESULT  : loads an entry to the character type table
-
-        RETURNS : void
-
-        PURPOSE : used in batch_add_char_types
-
-        NOTES   :
-    **/
-
-    sqlite3_stmt *stmt=NULL;
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("CHARACTER_TYPE_TABLE", GET_CALL_INFO);
-
-    //prepare sql query
-    char *sql="INSERT INTO CHARACTER_TYPE_TABLE("  \
-        "CHARACTER_TYPE_ID," \
-        "RACE_ID," \
-        "GENDER_ID" \
-        ") VALUES(?, ?, ?)";
-
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    sqlite3_bind_int(stmt, 1, char_type_id);
-    sqlite3_bind_int(stmt, 2, race_id);
-    sqlite3_bind_int(stmt, 3, gender_id);
-
-    step_query(sql, &stmt, GET_CALL_INFO);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    fprintf(stderr, "Character type [%i] gender [%s] race [%s] added successfully\n", char_type_id, gender[gender_id].gender_name, race[race_id].race_name);
-
-    log_event(EVENT_SESSION, "Added character type [%i] gender [%s] race [%s] to CHARACTER_TYPE_TABLE", char_type_id, gender[gender_id].gender_name, race[race_id].race_name);
-}
-
-
 void batch_add_char_types(char *file_name){
 
     /** public function - see header */
@@ -128,15 +87,55 @@ void batch_add_char_types(char *file_name){
 
     if((file=fopen(file_name, "r"))==NULL){
 
-        log_event(EVENT_ERROR, "char type list file [%s] not found", file_name);
+        log_event(EVENT_ERROR, "file [%s] not found", file_name);
         stop_server();
     }
 
     char line[160]="";
     int line_counter=0;
 
-    log_event(EVENT_INITIALISATION, "\nAdding char types specified in file [%s]", file_name);
-    fprintf(stderr, "\nAdding char types specified in file [%s]\n", file_name);
+    log_event(EVENT_INITIALISATION, "\nAdding races specified in file [%s]", file_name);
+    fprintf(stderr, "\nAdding races specified in file [%s]\n", file_name);
+
+    //check that race and gender data are already loaded otherwise we'll be unable
+    //to log meaningful messages
+    if(races.data_loaded==false){
+
+        log_event(EVENT_ERROR, "race data not loaded before attempting to load character types\n");
+        fprintf(stderr, "race data not loaded before attempting to load character types\n");
+
+        exit(EXIT_FAILURE);
+    }
+
+    if(genders.data_loaded==false){
+
+        log_event(EVENT_ERROR, "gender data not loaded before attempting to load character types\n");
+        fprintf(stderr, "gender data not loaded before attempting to load character types\n");
+
+        exit(EXIT_FAILURE);
+    }
+
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("CHARACTER_TYPE_TABLE", GET_CALL_INFO);
+
+    sqlite3_stmt *stmt;
+    char *sErrMsg = 0;
+
+    char *sql="INSERT INTO CHARACTER_TYPE_TABLE("  \
+        "CHARACTER_TYPE_ID," \
+        "RACE_ID," \
+        "GENDER_ID" \
+        ") VALUES(?, ?, ?)";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    int rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    if(rc!=SQLITE_OK){
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *&sErrMsg, sql);
+    }
 
     while (fgets(line, sizeof(line), file)) {
 
@@ -144,12 +143,37 @@ void batch_add_char_types(char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[4][80];
+        char output[3][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_char_type(atoi(output[0]), atoi(output[1]), atoi(output[2]));
+        sqlite3_bind_int(stmt, 1, atoi(output[0])); //char_type_id
+        sqlite3_bind_int(stmt, 2, atoi(output[1])); //race_id;
+        sqlite3_bind_int(stmt, 3, atoi(output[2])); //gender_id);
+
+        step_query(sql, &stmt, GET_CALL_INFO);
+
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+
+        fprintf(stderr, "Character type [%i] gender [%s] race [%s] added successfully\n", atoi(output[0]), genders.gender[atoi(output[2])].gender_name, races.race[atoi(output[1])].race_name);
+        log_event(EVENT_SESSION, "Added character type [%i] gender [%s] race [%s] to CHARACTER_TYPE_TABLE", atoi(output[0]), genders.gender[atoi(output[2])].gender_name, races.race[atoi(output[1])].race_name);
     }
 
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    if (rc!=SQLITE_OK) {
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *sErrMsg, sql);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
     fclose(file);
+
+    //load character type data to memory so this can be used by other functions
+    load_db_char_types();
+
+    //mark data as loaded
+    character_types.data_loaded=true;
 }

@@ -122,7 +122,7 @@ struct client_node_type{// TODO (themuntdregger#1#): convert struct name to refl
     char password[MAX_CHAR_PASSWORD_LEN];
 
     enum {
-
+        CHAR_UNKNOWN,
         CHAR_ALIVE,
         CHAR_DEAD,
         CHAR_BANNED

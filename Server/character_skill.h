@@ -51,8 +51,8 @@ struct skill_name_type{
     int skill_id;
     char skill[80];
 };
-
 extern struct skill_name_type skill_name[MAX_SKILLS];
+
 
 /** RESULT   : adds experience to a skill
 

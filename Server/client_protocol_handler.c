@@ -229,7 +229,7 @@ int client_look_at_map_object(int actor_node, unsigned char *packet){
     int threed_object_list_pos=*((int32_t*)(packet+3));
 
     int map_id=clients.client[actor_node].map_id;
-    int map_object_tile=map_object[threed_object_list_pos][map_id].tile;
+    int map_object_tile=map_objects.map_object[threed_object_list_pos][map_id].tile;
 
     if(get_proximity(clients.client[actor_node].map_tile, map_object_tile, map_id)>ACTOR_CONTACT_PROXIMITY){
 
@@ -243,14 +243,14 @@ int client_look_at_map_object(int actor_node, unsigned char *packet){
     //tell the client what the item is
     if (object_id>0){
 
-        sprintf(text_out, "%cyou see a %s. ", c_green3+127, object[object_id].object_name);
+        sprintf(text_out, "%cyou see a %s. ", c_green3+127, objects.object[object_id].object_name);
 
-        if(object[object_id].harvestable==true){
+        if(objects.object[object_id].harvestable==true){
 
             sprintf(text_out, "%sIt's harvestable", text_out);
         }
 
-        if(object[object_id].edible==true){
+        if(objects.object[object_id].edible==true){
 
             sprintf(text_out, "%s and it's edible", text_out);
         }
@@ -354,17 +354,17 @@ int client_look_at_inventory_item(int actor_node, unsigned char *packet){
     int item=clients.client[actor_node].inventory[slot].object_id;
     int socket=clients.client[actor_node].socket;
 
-    if(object[item].edible==true){
+    if(objects.object[item].edible==true){
 
         char text_out[SEND_TEXT_MAX]="";
-        sprintf(text_out, "%cYou see a %s. It's edible!", c_green3+127, object[item].object_name);
+        sprintf(text_out, "%cYou see a %s. It's edible!", c_green3+127, objects.object[item].object_name);
         send_inventory_item_text(socket, text_out);
     }
     else {
 
         char text_out[SEND_TEXT_MAX]="";
 
-        sprintf(text_out, "%cYou see a %s.", c_green3+127, object[item].object_name);
+        sprintf(text_out, "%cYou see a %s.", c_green3+127, objects.object[item].object_name);
         send_inventory_item_text(socket, text_out);
     }
 

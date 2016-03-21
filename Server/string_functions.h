@@ -20,6 +20,8 @@
 #ifndef STRING_FUNCTIONS_H_INCLUDED
 #define STRING_FUNCTIONS_H_INCLUDED
 
+#define MAX_LST_LINE_LEN 320
+
 #define ASCII_BACKSLASH 47 //used to separate file names from path
 #define ASCII_SPACE 32
 #define ASCII_UNDERSCORE 95 // used to remove underscores from item names
@@ -115,7 +117,7 @@ void str_remove_underscores(char *str_in);
 
     NOTES   :
 */
-void parse_line(char *line, char output[][80]);
+void parse_line(char *line, char output[][MAX_LST_LINE_LEN]);
 
 
 /** RESULT  : compares upper case of two strings

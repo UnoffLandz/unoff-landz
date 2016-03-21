@@ -307,131 +307,6 @@ void list_db_maps(){
 }
 
 
-void change_db_map_name(int map_id, char *map_name){
-
-    /** public function - see header */
-
-    sqlite3_stmt *stmt;
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("MAP_TABLE", GET_CALL_INFO);
-
-    char *sql="UPDATE MAP_TABLE SET MAP_NAME=? WHERE MAP_ID=?";
-
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    sqlite3_bind_text(stmt, 1, map_name, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 2, map_id);
-
-    step_query(sql, &stmt, GET_CALL_INFO);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    log_event(EVENT_SESSION, "Map [%i] name changed to [%s] on MAP_TABLE", map_id, map_name);
-}
-
-
-void change_db_map_description(int map_id, char *map_description){
-
-    /** public function - see header */
-
-    sqlite3_stmt *stmt;
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("MAP_TABLE", GET_CALL_INFO);
-
-    char *sql="UPDATE MAP_TABLE SET MAP_DESCRIPTION=? WHERE MAP_ID=?";
-
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    sqlite3_bind_text(stmt, 1, map_description, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 2, map_id);
-
-    step_query(sql, &stmt, GET_CALL_INFO);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    log_event(EVENT_SESSION, "Map [%i] description changed to [%s] on MAP_TABLE", map_id, map_description);
-}
-
-
-void change_db_map_author(int map_id, char *map_author){
-
-    /** public function - see header */
-
-    sqlite3_stmt *stmt;
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("MAP_TABLE", GET_CALL_INFO);
-
-    char *sql="UPDATE MAP_TABLE SET MAP_AUTHOR=? WHERE MAP_ID=?";
-
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    sqlite3_bind_text(stmt, 1, map_author, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 2, map_id);
-
-    step_query(sql, &stmt, GET_CALL_INFO);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    log_event(EVENT_SESSION, "Map [%i] author changed to [%s] on MAP_TABLE", map_id, map_author);
-}
-
-
-void change_db_map_author_email(int map_id, char *map_author_email){
-
-    /** public function - see header */
-
-    sqlite3_stmt *stmt;
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("MAP_TABLE", GET_CALL_INFO);
-
-    char *sql="UPDATE MAP_TABLE SET MAP_AUTHOR_EMAIL=? WHERE MAP_ID=?";
-
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    sqlite3_bind_text(stmt, 1, map_author_email, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 2, map_id);
-
-    step_query(sql, &stmt, GET_CALL_INFO);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    log_event(EVENT_SESSION, "Map [%i] author email changed to [%s] on MAP_TABLE", map_id, map_author_email);
-}
-
-
-void change_db_map_development_status(int map_id, int map_development_status){
-
-    /** public function - see header */
-
-    sqlite3_stmt *stmt;
-
-    //check database is open and table exists
-    check_db_open(GET_CALL_INFO);
-    check_table_exists("MAP_TABLE", GET_CALL_INFO);
-
-    char *sql="UPDATE MAP_TABLE SET MAP_STATUS=? WHERE MAP_ID=?";
-
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    sqlite3_bind_int(stmt, 1, map_development_status);
-    sqlite3_bind_int(stmt, 2, map_id);
-
-    step_query(sql, &stmt, GET_CALL_INFO);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
-
-    log_event(EVENT_SESSION, "Map [%i] development status changed to [%i] on MAP_TABLE", map_id, map_development_status);
-}
-
-
 void batch_add_maps(char *file_name){
 
     /** public function - see header */
@@ -440,8 +315,8 @@ void batch_add_maps(char *file_name){
 
     if((file=fopen(file_name, "r"))==NULL){
 
-        log_event(EVENT_ERROR, "map load file [%s] not found", file_name);
-        exit(EXIT_FAILURE);
+        log_event(EVENT_ERROR, "file [%s] not found", file_name);
+        stop_server();
     }
 
     char line[160]="";
@@ -450,26 +325,103 @@ void batch_add_maps(char *file_name){
     log_event(EVENT_INITIALISATION, "\nAdding maps specified in file [%s]", file_name);
     fprintf(stderr, "\nAdding maps specified in file [%s]\n", file_name);
 
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("MAP_TABLE", GET_CALL_INFO);
+
+    sqlite3_stmt *stmt;
+    char *sErrMsg = 0;
+
+    char *sql="INSERT INTO MAP_TABLE("  \
+                "MAP_ID," \
+                "MAP_NAME, " \
+                "MAP_DESCRIPTION," \
+                "ELM_FILE_NAME, " \
+                "MAP_AUTHOR, " \
+                "MAP_AUTHOR_EMAIL, " \
+                "MAP_STATUS, " \
+                "MAP_AXIS, " \
+                "TILE_MAP, " \
+                "HEIGHT_MAP, " \
+                "MAP_UPLOAD_DATE, " \
+                "THREED_OBJECT_COUNT" \
+                ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    int rc=sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    if(rc!=SQLITE_OK){
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *&sErrMsg, sql);
+    }
+
+    int count=0;
+
     while (fgets(line, sizeof(line), file)) {
 
         line_counter++;
 
         sscanf(line, "%*s");
 
-        char output[8][80];
+        char output[8][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
         int map_id=atoi(output[0]);
 
-        add_db_map(map_id, output[3]);
-        change_db_map_name(map_id, output[1]);
-        change_db_map_description(map_id, output[2]);
-        change_db_map_author(map_id, output[4]);
-        change_db_map_author_email(map_id, output[5]);
-        change_db_map_development_status(map_id, atoi(output[6]));
-        add_db_map_objects(map_id, output[3]);
+        sqlite3_bind_int(stmt, 1, map_id);                       //map id
+        sqlite3_bind_text(stmt, 2, output[1], -1, SQLITE_STATIC);   //map name
+        sqlite3_bind_text(stmt, 3, output[2], -1, SQLITE_STATIC);   //map description
+        sqlite3_bind_text(stmt, 4, output[3], -1, SQLITE_STATIC);   //elm filename
+        sqlite3_bind_text(stmt, 5, output[4], -1, SQLITE_STATIC);   //author
+        sqlite3_bind_text(stmt, 6, output[5], -1, SQLITE_STATIC);   //author email
+        sqlite3_bind_int(stmt, 7, atoi(output[6]));                 //map status
+
+        read_elm_header(output[3]);
+        read_tile_map(output[3], maps.map[map_id].tile_map);
+        read_height_map(output[3], maps.map[map_id].height_map);
+
+        int map_axis=elm_header.h_tiles * STEP_TILE_RATIO;
+        sqlite3_bind_int(stmt, 8, map_axis);
+
+        int tile_map_size=elm_header.height_map_offset - elm_header.tile_map_offset;
+        sqlite3_bind_blob(stmt, 9, maps.map[map_id].tile_map, tile_map_size, NULL);
+
+        int height_map_size=elm_header.threed_object_offset - elm_header.height_map_offset;
+        sqlite3_bind_blob(stmt, 10, maps.map[map_id].height_map, height_map_size, NULL);
+
+        sqlite3_bind_int(stmt, 11, (int)time(NULL));
+
+        sqlite3_bind_int(stmt, 12, elm_header.threed_object_count);
+
+        step_query(sql, &stmt, GET_CALL_INFO);
+
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+
+        fprintf(stderr, "Map [%s] added successfully\n", output[1]);
+        log_event(EVENT_SESSION, "Added map [%i] file name [%s] to MAP_TABLE", map_id, output[1]);
+
+        count++;
     }
 
+    rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    if (rc!=SQLITE_OK) {
+
+        log_event(EVENT_ERROR, "sqlite3_exec failed", GET_CALL_INFO);
+        log_text(EVENT_ERROR, "return code [%i] message [%s] sql [%s]", rc, *sErrMsg, sql);
+    }
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
     fclose(file);
+
+    //load map data to memory so this can be used by other functions
+    load_db_maps();
+
+    maps.count=count;
+
+    //mark data as loaded
+    maps.data_loaded=true;
 }

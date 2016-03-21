@@ -166,12 +166,12 @@ void add_new_character(int actor_node, const unsigned char *packet){
     game_data.date_last_char_created=character.char_created;
 
     //update race stats
-    int race_id=character_type[character.char_type].race_id;
-    race[race_id].char_count++;
+    int race_id=character_types.character_type[character.char_type].race_id;
+    races.race[race_id].char_count++;
 
     //update gender stats
-    int gender_id=character_type[character.char_type].gender_id;
-    gender[gender_id].char_count++;
+    int gender_id=character_types.character_type[character.char_type].gender_id;
+    genders.gender[gender_id].char_count++;
 
     //notify client that character has been created
     int socket=clients.client[actor_node].socket;

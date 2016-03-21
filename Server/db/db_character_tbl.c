@@ -236,6 +236,10 @@ void add_db_char_data(struct client_node_type character){
 
     /** public function - see header **/
 
+    //usually we'd combine this function into batch_add_char_data (as per the other
+    //batch_add functions) but we also need to able to add new characters individually
+    //when they are created by players during game play.
+
     sqlite3_stmt *stmt;
 
     //check database is open and table exists
@@ -465,53 +469,67 @@ void batch_add_characters(char *file_name){
     log_event(EVENT_INITIALISATION, "\nAdding characters specified in file [%s]", file_name);
     fprintf(stderr, "\nAdding characters specified in file [%s]\n", file_name);
 
+    //check that channels are already loaded otherwise we'll be unable
+    //to load all require data
+    if(channels.data_loaded==false){
+
+        log_event(EVENT_ERROR, "channel data not loaded before attempting to load character types\n");
+        fprintf(stderr, "channel data not loaded before attempting to load characters\n");
+
+        exit(EXIT_FAILURE);
+    }
+
     while (fgets(line, sizeof(line), file)) {
 
         line_counter++;
 
         sscanf(line, "%*s");
 
-        char output[15][80];
-        memset(&output, 0, sizeof(output));
-        parse_line(line, output);
+        //filter out comments
+        if(line[0]!='#'){
 
-        //clear struct
-        memset(&character, 0, sizeof(character));
+            char output[17][MAX_LST_LINE_LEN];
+            memset(&output, 0, sizeof(output));
+            parse_line(line, output);
 
-        //add data
-        strcpy(character.char_name, output[0]);
-        strcpy(character.password, output[1]);
-        character.char_status=atoi(output[2]);
-        character.player_type=atoi(output[3]);
-        character.guild_id=atoi(output[4]);
-        character.guild_rank=atoi(output[5]);
-        character.char_type=atoi(output[6]);
-        character.skin_type=atoi(output[7]);
-        character.hair_type=atoi(output[8]);
-        character.shirt_type=atoi(output[9]);
-        character.pants_type=atoi(output[10]);
-        character.boots_type=atoi(output[11]);
-        character.head_type=atoi(output[12]);
-        character.neck_attachment_type=atoi(output[13]);
-        character.actor_scale=atoi(output[14]);
+            //clear struct
+            memset(&character, 0, sizeof(character));
 
-        character.shield_type=SHIELD_NONE;
-        character.weapon_type=WEAPON_NONE;
-        character.cape_type=CAPE_NONE;
-        character.helmet_type=HELMET_NONE;
-        character.frame=frame_stand;
-        character.max_health=100;
-        character.current_health=100;
-        character.char_created=time(NULL);
-        character.joined_guild=time(NULL);
-        character.map_id=game_data.beam_map_id;
-        character.map_tile=game_data.beam_map_tile;
+            //add data
+            strcpy(character.char_name, output[0]);
+            strcpy(character.password, output[1]);
+            character.char_status=atoi(output[2]);
+            character.player_type=atoi(output[3]);
+            character.guild_id=atoi(output[4]);
+            character.guild_rank=atoi(output[5]);
+            character.char_type=atoi(output[6]);
+            character.skin_type=atoi(output[7]);
+            character.hair_type=atoi(output[8]);
+            character.shirt_type=atoi(output[9]);
+            character.pants_type=atoi(output[10]);
+            character.boots_type=atoi(output[11]);
+            character.head_type=atoi(output[12]);
+            character.neck_attachment_type=atoi(output[13]);
+            character.actor_scale=atoi(output[14]);
+            character.map_id=atoi(output[15]); //map id
+            character.map_tile=atoi(output[16]); //map tile
 
-        //runs through all the chat channels and if any are shown as default for new chars
-        //then adds them to the char struct
-        add_new_char_chat_channels();
+            character.shield_type=SHIELD_NONE;
+            character.weapon_type=WEAPON_NONE;
+            character.cape_type=CAPE_NONE;
+            character.helmet_type=HELMET_NONE;
+            character.frame=frame_stand;
+            character.max_health=100;
+            character.current_health=100;
+            character.char_created=time(NULL);
+            character.joined_guild=time(NULL);
 
-        add_db_char_data(character);
+            //runs through all the chat channels and if any are shown as default for new chars
+            //then adds them to the char struct
+            add_new_char_chat_channels();
+
+            add_db_char_data(character);
+        }
     }
 
     fclose(file);

@@ -57,12 +57,12 @@ void load_db_char_races(){
         }
 
         //handle null string which would crash strcpy
-        if(sqlite3_column_text(stmt, 1)) strcpy(race[race_id].race_name, (char*)sqlite3_column_text(stmt, 1));
+        if(sqlite3_column_text(stmt, 1)) strcpy(races.race[race_id].race_name, (char*)sqlite3_column_text(stmt, 1));
 
         //handle null string which would crash strcpy
-        if(sqlite3_column_text(stmt, 2)) strcpy(race[race_id].race_description, (char*)sqlite3_column_text(stmt, 2));
+        if(sqlite3_column_text(stmt, 2)) strcpy(races.race[race_id].race_description, (char*)sqlite3_column_text(stmt, 2));
 
-        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", race_id, race[race_id].race_name);
+        log_event(EVENT_INITIALISATION, "loaded [%i] [%s]", race_id, races.race[race_id].race_name);
 
         i++;
     }
@@ -140,11 +140,13 @@ void batch_add_races(char *file_name){
 
         sscanf(line, "%*s");
 
-        char output[3][80];
+        char output[3][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_race(&stmt, atoi(output[0]), output[1], output[2]);
+        sqlite3_bind_int(stmt, 1, atoi(output[0]));                //race id
+        sqlite3_bind_text(stmt, 2, output[1], -1, SQLITE_STATIC);  //race name
+        sqlite3_bind_text(stmt, 3, output[2], -1, SQLITE_STATIC);  //race description
 
         step_query(sql, &stmt, GET_CALL_INFO);
 
@@ -165,4 +167,10 @@ void batch_add_races(char *file_name){
     destroy_query(sql, &stmt, GET_CALL_INFO);
 
     fclose(file);
+
+    //load race data to memory so this can be used by batch_add_character_types
+    load_db_char_races();
+
+    //mark data as loaded
+    races.data_loaded=true;
 }

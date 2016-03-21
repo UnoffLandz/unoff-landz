@@ -92,21 +92,29 @@ void load_db_attributes(){
 }
 
 
-void add_db_attribute(sqlite3_stmt **stmt, int attribute_type_id, int race_id, int pick_points, int attribute_value){
+void delete_db_attribute(int attribute_type_id){
 
-    /** RESULT   : binds attribute data for loading to the database
+    /** public function - see header */
 
-        RETURNS  : void
+    sqlite3_stmt *stmt;
 
-        PURPOSE  :
+    //check database is open and table exists
+    check_db_open(GET_CALL_INFO);
+    check_table_exists("ATTRIBUTE_TABLE", GET_CALL_INFO);
 
-        NOTES    : used by batch_add_attributes
-    **/
+    char *sql="DELETE FROM ATTRIBUTE_TABLE WHERE ATTRIBUTE_TYPE_ID=?";
 
-    sqlite3_bind_int(*stmt, 1, race_id);
-    sqlite3_bind_int(*stmt, 2, attribute_type_id);
-    sqlite3_bind_int(*stmt, 3, pick_points);
-    sqlite3_bind_int(*stmt, 4, attribute_value);
+    prepare_query(sql, &stmt, GET_CALL_INFO);
+
+    sqlite3_bind_int(stmt, 1, attribute_type_id);
+
+    step_query(sql, &stmt, GET_CALL_INFO);
+
+    destroy_query(sql, &stmt, GET_CALL_INFO);
+
+    //log results
+    fprintf(stderr, "Attribute [%s] removed successfully\n", attribute_name[attribute_type_id].attribute);
+    log_event(EVENT_SESSION, "Attribute [%s] removed from ATTRIBUTE_TABLE", attribute_name[attribute_type_id].attribute);
 }
 
 
@@ -157,19 +165,22 @@ void batch_add_attributes(char *file_name, int attribute_type_id){
 
         sscanf(line, "%*s");
 
-        char output[3][80];
+        char output[3][MAX_LST_LINE_LEN];
         memset(&output, 0, sizeof(output));
         parse_line(line, output);
 
-        add_db_attribute(&stmt, attribute_type_id, atoi(output[0]), atoi(output[1]), atoi(output[2]));
+        sqlite3_bind_int(stmt, 1, atoi(output[0]));    //race id
+        sqlite3_bind_int(stmt, 2, attribute_type_id);  //attribute type
+        sqlite3_bind_int(stmt, 3, atoi(output[1]));    //pickpoints
+        sqlite3_bind_int(stmt, 4, atoi(output[2]));    //attribute value
 
         step_query(sql, &stmt, GET_CALL_INFO);
 
         sqlite3_clear_bindings(stmt);
         sqlite3_reset(stmt);
 
-        fprintf(stderr, "Attribute pickpoint [%i] of attribute [%s] added successfully\n", atoi(output[1]), attribute_name[attribute_type_id]);
-        log_event(EVENT_SESSION, "Added pickpoint [%i] of attribute [%s] to ATTRIBUTE_TABLE", atoi(output[1]), attribute_name[attribute_type_id]);
+        fprintf(stderr, "Attribute pickpoint [%i] of attribute [%s] added successfully\n", atoi(output[1]), attribute_name[attribute_type_id].attribute);
+        log_event(EVENT_SESSION, "Added pickpoint [%i] of attribute [%s] to ATTRIBUTE_TABLE", atoi(output[1]), attribute_name[attribute_type_id].attribute);
     }
 
     rc=sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &sErrMsg);

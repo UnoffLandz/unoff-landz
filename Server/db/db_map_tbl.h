@@ -128,61 +128,6 @@ void list_db_maps();
 void delete_map(int map_id);
 
 
-/** RESULT  : adds/changes map name to the database
-
-    RETURNS : void
-
-    PURPOSE :
-
-    NOTES   :used in function create_database
-**/
-void change_db_map_name(int map_id, char *map_name);
-
-
-/** RESULT  : adds/changes map description to the database
-
-    RETURNS : void
-
-    PURPOSE :
-
-    NOTES   :used in function create_database
-**/
-void change_db_map_description(int map_id, char *map_description);
-
-
-/** RESULT  : adds/changes map author to the database
-
-    RETURNS : void
-
-    PURPOSE :
-
-    NOTES   :used in function create_database
-**/
-void change_db_map_author(int map_id, char *map_author);
-
-
-/** RESULT  : adds/changes map author email to the database
-
-    RETURNS : void
-
-    PURPOSE :
-
-    NOTES   :used in function create_database
-**/
-void change_db_map_author_email(int map_id, char *map_author_email);
-
-
-/** RESULT  : adds/changes map development status to the database
-
-    RETURNS : void
-
-    PURPOSE :
-
-    NOTES   :used in function create_database
-**/
-void change_db_map_development_status(int map_id, int development_status);
-
-
 /** RESULT  : loads map data specified in a text file
 
     RETURNS : void

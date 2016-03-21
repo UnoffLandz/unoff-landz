@@ -436,32 +436,21 @@ void send_guild_details(int actor_node, int guild_id){
     get_date_stamp_str(guilds.guild[guild_id].date_guild_created, date_stamp_str);
     send_text(socket, CHAT_SERVER, "%cDate Created :%s %s", c_green3+127, date_stamp_str, time_stamp_str);
 
-    //list count members and list guild masters
-    sqlite3_stmt *stmt;
-    char sql[MAX_SQL_LEN]="";
+    get_db_guild_member_list(guild_id,  GUILD_ORDER_RANK);
 
-    snprintf(sql, MAX_SQL_LEN, "SELECT * FROM CHARACTER_TABLE WHERE GUILD_ID=%i", guild_id);
-
-    // TODO (themuntdregger#1#): transfer to idle buffer
-    prepare_query(sql, &stmt, GET_CALL_INFO);
-
-    int member_count=0;
+    //list guild masters
     char guild_masters[1024]="";
 
-    int rc=0;
-    while ( (rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+    // TODO (themuntdregger#1#): check to ensure that list string doesn't exceed max when char names are added
 
-        //list the guild masters (chars with rank 20)
-        if(sqlite3_column_int(stmt, 13)==20){
+    for(int i=0; i<guild_member_list.guild_member_count; i++){
 
-            sprintf(guild_masters, "%s %s", guild_masters, sqlite3_column_text(stmt, 1));
+        if(guild_member_list.guild_member[i].guild_rank==20) {
+
+            sprintf(guild_masters, "%s %s", guild_masters, guild_member_list.guild_member[i].character_name);
         }
-
-        member_count++;
     }
 
     send_text(socket, CHAT_SERVER, "%cGuild Masters:%s", c_green3+127, guild_masters);
-    send_text(socket, CHAT_SERVER, "%cMember Count :%i", c_green3+127, member_count);
-
-    destroy_query(sql, &stmt, GET_CALL_INFO);
+    send_text(socket, CHAT_SERVER, "%cMember Count :%i", c_green3+127, guild_member_list.guild_member_count);
 }

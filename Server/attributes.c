@@ -23,7 +23,10 @@
 
 struct attribute_ attribute[MAX_RACES];
 
-char attribute_name[][40] = {"", "Day Vision", "Night Vision", "Carry Capacity"};
+struct attribute_name_type attribute_name[] = {
 
-
-
+    {ATTR_NONE, "NO SKILL"},
+    {ATTR_DAY_VISION, "DAY VISION"},
+    {ATTR_NIGHT_VISION, "NIGHT VISION"},
+    {ATTR_CARRY_CAPACITY, "CARRY CAPACITY"},
+ };

@@ -75,4 +75,14 @@ void update_db_map_objects(int map_id);
 void batch_update_map_objects(char *file_name);
 
 
+/** RESULT  : loads map object data
+
+    RETURNS : void
+
+    PURPOSE : batch loading of map object data
+
+    NOTES   :
+*/
+void batch_add_map_objects();
+
 #endif // MAP_OBJECT_H_INCLUDED

@@ -141,7 +141,7 @@ int get_bag_inventory_emu(int bag_id){
     for(int i=0; i<MAX_BAG_SLOTS; i++){
 
         int object_id=bag[bag_id].inventory[i].object_id;
-        bag_emu+=bag[bag_id].inventory[i].amount * object[object_id].emu;
+        bag_emu+=bag[bag_id].inventory[i].amount * objects.object[object_id].emu;
     }
 
     return bag_emu;
